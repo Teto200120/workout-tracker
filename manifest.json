@@ -1,0 +1,30 @@
+{
+  "name": "Hector's Workout Tracker",
+  "short_name": "Workout Tracker",
+  "description": "Local-first workout tracker for workouts, routines, progress, body weight, and backups.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "categories": [
+    "fitness",
+    "health",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
