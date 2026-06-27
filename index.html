@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Workout Tracker" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
   <style>
     :root {
       --bg: #070b14;
@@ -2726,6 +2727,1299 @@
       animation: ctaSettleCompact 300ms cubic-bezier(.2, .9, .24, 1) !important;
     }
 
+    /* === Active Workout Redesign: scoped live-session surface === */
+    body:has(#sessionView:not(.hidden)) {
+      padding: 0;
+      background:
+        radial-gradient(circle at 50% -16%, rgba(50, 83, 124, 0.5), transparent 42%),
+        linear-gradient(180deg, #19304d 0%, #102540 42%, #071b31 100%);
+    }
+
+    body:has(#sessionView:not(.hidden)) .app {
+      width: min(100vw, 520px);
+      max-width: 520px;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    body:has(#sessionView:not(.hidden)) .app > header,
+    body:has(#sessionView:not(.hidden)) .tabs,
+    body:has(#sessionView:not(.hidden)) .today-floating-cta {
+      display: none !important;
+    }
+
+    body:has(#completionModal:not(.hidden)) .today-floating-cta {
+      display: none !important;
+    }
+
+    body:has(#sessionView:not(.hidden)) #log {
+      min-height: 100vh;
+      padding: 0;
+      animation: none !important;
+      transform: none !important;
+    }
+
+    #sessionView.live-session {
+      --live-bg: #0a1f37;
+      --live-panel: #223650;
+      --live-panel-2: #263b57;
+      --live-line: rgba(153, 177, 205, 0.23);
+      --live-muted: #9eb6d2;
+      --live-text: #edf6ff;
+      --live-coral: var(--coral, #ff6b45);
+      --live-coral-soft: rgba(255, 107, 69, 0.18);
+      --live-green: #22c55e;
+      position: relative;
+      min-height: 100vh;
+      padding: 0 0 calc(112px + env(safe-area-inset-bottom));
+      color: var(--live-text);
+      background:
+        linear-gradient(180deg, rgba(27, 48, 76, 0.96) 0, rgba(16, 36, 62, 0.98) 36%, rgba(7, 27, 49, 1) 100%);
+      overflow-x: hidden;
+      animation: none !important;
+      transform: none !important;
+    }
+
+    .live-session-shell {
+      min-height: 100vh;
+      padding-bottom: 10px;
+    }
+
+    .live-header {
+      position: sticky;
+      top: 0;
+      z-index: 34;
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr) 58px;
+      gap: 8px;
+      align-items: center;
+      padding: calc(16px + env(safe-area-inset-top)) 14px 16px;
+      background: rgba(26, 48, 77, 0.96);
+      border-bottom: 1px solid rgba(153, 177, 205, 0.18);
+      box-shadow: 0 14px 30px rgba(2, 10, 22, 0.18);
+      backdrop-filter: blur(16px);
+    }
+
+    .live-title-wrap {
+      min-width: 0;
+      text-align: center;
+    }
+
+    .live-title {
+      display: block;
+      overflow: hidden;
+      color: #f4f9ff;
+      font-size: 1.08rem;
+      font-weight: 950;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .live-session-time {
+      display: block;
+      margin-top: 3px;
+      color: var(--live-muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .live-icon-button,
+    .live-finish-button,
+    .drag-handle,
+    .control-stepper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.22);
+      border: 1px solid rgba(170, 194, 222, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .live-icon-button {
+      width: 52px;
+      min-width: 52px;
+      height: 52px;
+      min-height: 52px;
+      padding: 0;
+      border-radius: 999px;
+    }
+
+    .live-icon-button svg,
+    .control-stepper svg,
+    .guide-row svg,
+    .complete-set-button svg,
+    .live-finish-button svg,
+    .collapse-exercise svg,
+    .drag-handle svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.25;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .live-finish-button {
+      width: 52px;
+      min-width: 52px;
+      height: 52px;
+      min-height: 52px;
+      padding: 0;
+      border-radius: 999px;
+      color: var(--live-coral);
+      background: rgba(255, 107, 69, 0.11);
+      border-color: rgba(255, 107, 69, 0.23);
+    }
+
+    .live-progress-section {
+      padding: 16px 14px 12px;
+      border-bottom: 1px solid rgba(153, 177, 205, 0.13);
+      background: rgba(13, 34, 59, 0.54);
+    }
+
+    .live-progress-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--live-muted);
+      font-size: 0.95rem;
+      font-weight: 850;
+    }
+
+    .live-progress-count {
+      color: var(--live-coral);
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    #sessionView .progress-bar {
+      height: 11px;
+      margin: 0;
+      background: rgba(118, 147, 184, 0.25);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    #sessionView .progress-fill {
+      background: linear-gradient(90deg, var(--live-coral), #ff8a5d);
+      box-shadow: 0 0 14px rgba(255, 107, 69, 0.28);
+      transition: width 220ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .live-hidden-session-fields {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    #sessionView.live-session > .card:not(.session-toolbar) {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      clip: rect(0 0 0 0) !important;
+      clip-path: inset(50%) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    #sessionView.live-session > .session-toolbar.card {
+      position: sticky;
+      top: 0;
+      z-index: 34;
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr) 58px;
+      gap: 8px;
+      align-items: center;
+      margin: 0;
+      padding: calc(16px + env(safe-area-inset-top)) 14px 16px;
+      border: 0;
+      border-bottom: 1px solid rgba(153, 177, 205, 0.18);
+      border-radius: 0;
+      background: rgba(26, 48, 77, 0.96);
+      box-shadow: 0 14px 30px rgba(2, 10, 22, 0.18);
+      backdrop-filter: blur(16px);
+    }
+
+    #sessionView.live-session .session-title-small {
+      display: none;
+    }
+
+    #sessionView.live-session .session-toolbar > div {
+      min-width: 0;
+      text-align: center;
+    }
+
+    #sessionView.live-session .session-routine-title {
+      display: block;
+      overflow: hidden;
+      margin: 0;
+      color: #f4f9ff;
+      font-size: 1.08rem;
+      font-weight: 950;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #sessionView.live-session #sessionBack,
+    #sessionView.live-session #sessionSaveTop {
+      position: relative;
+      width: 52px;
+      min-width: 52px;
+      height: 52px;
+      min-height: 52px;
+      padding: 0;
+      border-radius: 999px;
+      font-size: 0;
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.22);
+      border: 1px solid rgba(170, 194, 222, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    #sessionView.live-session #sessionBack::before,
+    #sessionView.live-session #sessionBack::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transform-origin: center;
+    }
+
+    #sessionView.live-session #sessionBack::before {
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    #sessionView.live-session #sessionBack::after {
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    #sessionView.live-session #sessionSaveTop {
+      color: var(--live-coral);
+      background: rgba(255, 107, 69, 0.11);
+      border-color: rgba(255, 107, 69, 0.23);
+    }
+
+    #sessionView.live-session #sessionSaveTop::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      width: 18px;
+      height: 9px;
+      border-left: 2.5px solid currentColor;
+      border-bottom: 2.5px solid currentColor;
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    .live-utility-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px 0;
+    }
+
+    .live-utility-row button {
+      flex: 1;
+      min-height: 38px;
+      border-radius: 999px;
+      color: var(--live-muted);
+      background: rgba(38, 59, 87, 0.52);
+      border: 1px solid rgba(153, 177, 205, 0.14);
+      font-size: 0.8rem;
+    }
+
+    #sessionView .exercise-list {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 14px 14px 24px;
+    }
+
+    #sessionView .exercise {
+      position: relative;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at top right, rgba(149, 177, 210, 0.07), transparent 34%),
+        linear-gradient(180deg, rgba(39, 59, 87, 0.96), rgba(30, 48, 73, 0.96));
+      border: 1px solid var(--live-line);
+      box-shadow: 0 14px 28px rgba(1, 11, 24, 0.24);
+    }
+
+    #sessionView .exercise.is-active {
+      border-color: rgba(255, 107, 69, 0.58);
+      box-shadow:
+        0 18px 38px rgba(1, 11, 24, 0.36),
+        0 0 0 1px rgba(255, 107, 69, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    #sessionView .exercise.exercise-complete:not(.is-active) {
+      opacity: 0.7;
+      background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(35, 55, 82, 0.9), rgba(27, 45, 68, 0.9));
+    }
+
+    #sessionView .exercise.dragging {
+      opacity: 0.98;
+      border-color: rgba(255, 107, 69, 0.72);
+      box-shadow:
+        0 22px 48px rgba(1, 11, 24, 0.48),
+        0 0 0 1px rgba(255, 107, 69, 0.22);
+      pointer-events: none;
+      transform: scale(1.015);
+    }
+
+    .exercise-drag-placeholder {
+      border-radius: 20px;
+      border: 1px dashed rgba(255, 107, 69, 0.48);
+      background: rgba(255, 107, 69, 0.08);
+    }
+
+    #sessionView .exercise-top {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) auto 30px 30px;
+      gap: 8px;
+      align-items: center;
+      margin: 0;
+      padding: 18px 16px;
+      border-bottom: 0;
+      cursor: pointer;
+    }
+
+    #sessionView .exercise:not(.collapsed) .exercise-top {
+      border-bottom: 1px solid rgba(153, 177, 205, 0.12);
+    }
+
+    .exercise-status {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      background: rgba(96, 122, 156, 0.2);
+      color: var(--live-muted);
+      font-size: 1rem;
+      font-weight: 950;
+    }
+
+    #sessionView .exercise.is-active .exercise-status {
+      color: var(--live-coral);
+      background: rgba(255, 107, 69, 0.17);
+    }
+
+    #sessionView .exercise.exercise-complete .exercise-status {
+      color: #3be27b;
+      background: rgba(34, 197, 94, 0.13);
+    }
+
+    .exercise-status svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    #sessionView .exercise-summary {
+      min-width: 0;
+    }
+
+    #sessionView .exercise-title {
+      display: block;
+      overflow: hidden;
+      color: #edf6ff;
+      font-size: 1.05rem;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #sessionView .exercise-title::before {
+      content: none;
+    }
+
+    #sessionView .exercise-summary-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 3px;
+      color: var(--live-muted);
+      font-size: 0.92rem;
+      font-weight: 760;
+      line-height: 1.2;
+    }
+
+    .exercise-set-progress,
+    .exercise-rep-target {
+      white-space: nowrap;
+    }
+
+    .exercise-muscle-chip {
+      align-self: center;
+      max-width: 98px;
+      overflow: hidden;
+      padding: 7px 9px;
+      border-radius: 999px;
+      color: var(--live-muted);
+      background: rgba(96, 122, 156, 0.17);
+      font-size: 0.78rem;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #sessionView .collapse-exercise,
+    #sessionView .drag-handle {
+      width: 30px;
+      min-width: 30px;
+      height: 44px;
+      min-height: 44px;
+      padding: 0;
+      border-radius: 14px;
+      color: var(--live-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      box-shadow: none;
+    }
+
+    #sessionView .collapse-exercise .chevron-icon {
+      width: 20px;
+      height: 20px;
+      transition: transform 180ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    #sessionView .exercise:not(.collapsed) .collapse-exercise .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    #sessionView .drag-handle {
+      cursor: grab;
+      touch-action: none;
+      color: rgba(158, 182, 210, 0.78);
+    }
+
+    #sessionView .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    #sessionView .exercise-body {
+      display: grid;
+      gap: 18px;
+      max-height: 2400px;
+      padding: 18px 20px 20px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #sessionView .exercise.collapsed .exercise-body {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px);
+    }
+
+    .live-hidden-editor,
+    #sessionView .sets,
+    #sessionView .set-row,
+    #sessionView .exercise-actions,
+    #sessionView .exercise-flow-actions {
+      display: none !important;
+    }
+
+    .guide-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 11px;
+      align-items: center;
+      width: 100%;
+      min-height: 58px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      color: #d7eaff;
+      background: rgba(96, 122, 156, 0.13);
+      border: 1px solid rgba(153, 177, 205, 0.12);
+      font-size: 0.98rem;
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .guide-row .guide-info-icon {
+      color: var(--live-coral);
+    }
+
+    .guide-row .guide-chevron {
+      display: none;
+    }
+
+    #sessionView .last-performance {
+      display: none;
+      margin: -6px 0 0;
+    }
+
+    #sessionView .exercise.guide-open .last-performance {
+      display: block;
+    }
+
+    #sessionView .last-performance .detail,
+    #sessionView .guidance-card {
+      border-radius: 18px;
+      background: rgba(18, 39, 65, 0.78);
+      border-color: rgba(153, 177, 205, 0.16);
+    }
+
+    .current-set-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    #sessionView .exercise.exercise-complete .current-set-panel {
+      display: none;
+    }
+
+    .current-set-label {
+      display: block;
+      margin: 0;
+      color: var(--live-muted);
+      font-size: 0.92rem;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .current-set-label strong {
+      display: block;
+      margin-top: 3px;
+      color: var(--live-coral);
+      font-size: 1.34rem;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+    }
+
+    .live-control-row {
+      display: grid;
+      grid-template-columns: minmax(92px, 1fr) 54px 72px 54px;
+      gap: 12px;
+      align-items: center;
+      min-height: 58px;
+    }
+
+    .live-control-label {
+      color: var(--live-muted);
+      font-size: 0.95rem;
+      font-weight: 760;
+    }
+
+    .control-stepper {
+      width: 54px;
+      min-width: 54px;
+      height: 54px;
+      min-height: 54px;
+      padding: 0;
+      border-radius: 999px;
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.2);
+    }
+
+    .control-value {
+      display: block;
+      width: 72px;
+      min-width: 72px;
+      height: 54px;
+      min-height: 54px;
+      margin: 0;
+      padding: 0 4px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      color: #f4f9ff;
+      font-size: 1.6rem;
+      font-weight: 950;
+      line-height: 54px;
+      letter-spacing: -0.03em;
+      text-align: center;
+      box-shadow: none;
+      appearance: textfield;
+    }
+
+    .control-value::-webkit-outer-spin-button,
+    .control-value::-webkit-inner-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+
+    .control-value:focus {
+      border-color: rgba(255, 107, 69, 0.34);
+      background: rgba(10, 31, 55, 0.36);
+      box-shadow: 0 0 0 3px rgba(255, 107, 69, 0.12);
+    }
+
+    .control-value::placeholder {
+      color: #bfd4ed;
+      opacity: 0.72;
+    }
+
+    .live-rpe-row {
+      opacity: 0.74;
+    }
+
+    .live-rpe-row .control-value {
+      font-size: 1.2rem;
+      color: #bfd4ed;
+    }
+
+    .complete-set-button,
+    #sessionView .save-dock #saveWorkout {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 68px;
+      padding: 0 18px;
+      border-radius: 22px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--live-coral), #ff744c);
+      box-shadow: 0 15px 28px rgba(255, 107, 69, 0.22);
+      font-size: 1rem;
+      font-weight: 950;
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+
+    .complete-set-button {
+      margin-top: 2px;
+    }
+
+    .completed-set-chips {
+      display: none;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #sessionView .exercise.exercise-complete .completed-set-chips {
+      display: flex;
+    }
+
+    .completed-set-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      color: #37d46e;
+      background: rgba(34, 197, 94, 0.14);
+      font-size: 0.86rem;
+      font-weight: 950;
+    }
+
+    .live-notes-panel {
+      margin: 0 14px 18px;
+      border-radius: 18px;
+      background: rgba(35, 55, 82, 0.58);
+      border: 1px solid rgba(153, 177, 205, 0.14);
+      overflow: hidden;
+    }
+
+    .live-notes-panel summary {
+      padding: 14px 16px;
+      color: var(--live-muted);
+      font-weight: 900;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .live-notes-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .live-notes-panel textarea {
+      border: 0;
+      border-top: 1px solid rgba(153, 177, 205, 0.12);
+      border-radius: 0;
+      background: rgba(7, 27, 49, 0.42);
+    }
+
+    #sessionView .save-dock {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      z-index: 36;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 14px;
+      width: min(100vw, 520px);
+      margin: 0;
+      padding: 18px 20px calc(18px + env(safe-area-inset-bottom));
+      border: 0;
+      border-top: 1px solid rgba(153, 177, 205, 0.16);
+      border-radius: 0;
+      background: rgba(7, 24, 43, 0.92);
+      box-shadow: 0 -16px 34px rgba(1, 11, 24, 0.34);
+      transform: translateX(-50%);
+      backdrop-filter: blur(18px);
+    }
+
+    #sessionUndoSet {
+      width: 56px;
+      min-width: 56px;
+      height: 64px;
+      min-height: 64px;
+      padding: 0;
+      border-radius: 22px;
+    }
+
+    #sessionUndoSet:disabled {
+      opacity: 0.42;
+    }
+
+    .exercise-detail-view {
+      position: fixed;
+      inset: 0;
+      left: 50%;
+      z-index: 86;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      width: min(100vw, 520px);
+      min-height: 100vh;
+      color: var(--live-text);
+      background:
+        linear-gradient(180deg, rgba(27, 48, 76, 0.99) 0, rgba(16, 36, 62, 1) 40%, rgba(7, 27, 49, 1) 100%);
+      transform: translateX(-50%);
+    }
+
+    .exercise-detail-view.hidden {
+      display: none !important;
+    }
+
+    .exercise-detail-header {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: calc(18px + env(safe-area-inset-top)) 18px 18px;
+      border-bottom: 1px solid rgba(153, 177, 205, 0.18);
+      background: rgba(26, 48, 77, 0.98);
+    }
+
+    .exercise-detail-back {
+      display: inline-grid;
+      place-items: center;
+      justify-self: center;
+      align-self: center;
+      width: 52px;
+      min-width: 52px;
+      height: 52px;
+      min-height: 52px;
+      padding: 0;
+      box-sizing: border-box;
+      border-radius: 999px;
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.22);
+      border: 1px solid rgba(170, 194, 222, 0.18);
+      line-height: 0;
+    }
+
+    .exercise-detail-back svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2.25;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transform: translateX(-1px);
+    }
+
+    .exercise-detail-title-wrap {
+      min-width: 0;
+    }
+
+    .exercise-detail-title {
+      margin: 0;
+      overflow: hidden;
+      color: #f4f9ff;
+      font-size: 1.34rem;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .exercise-detail-subtitle {
+      display: block;
+      margin-top: 5px;
+      color: var(--live-muted);
+      font-size: 0.95rem;
+      font-weight: 760;
+    }
+
+    .exercise-detail-progress-pill {
+      padding: 9px 14px;
+      border-radius: 999px;
+      color: var(--live-coral);
+      background: rgba(255, 107, 69, 0.16);
+      font-size: 0.92rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .exercise-detail-scroll {
+      overflow: auto;
+      padding: 20px 18px calc(116px + env(safe-area-inset-bottom));
+    }
+
+    .exercise-detail-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin-bottom: 20px;
+      padding: 5px;
+      border-radius: 25px;
+      background: rgba(38, 59, 87, 0.78);
+      border: 1px solid rgba(153, 177, 205, 0.22);
+    }
+
+    .exercise-detail-tab {
+      min-height: 54px;
+      border-radius: 20px;
+      color: var(--live-muted);
+      background: transparent;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .exercise-detail-tab.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--live-coral), #ff744c);
+      box-shadow: 0 10px 20px rgba(255, 107, 69, 0.18);
+    }
+
+    .detail-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .detail-stat-card,
+    .exercise-detail-card,
+    .exercise-guide-card {
+      border-radius: 20px;
+      background: rgba(38, 59, 87, 0.88);
+      border: 1px solid rgba(153, 177, 205, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+    }
+
+    .detail-stat-card {
+      min-height: 116px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+
+    .detail-stat-card .detail-stat-icon {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--live-coral);
+      font-size: 1.34rem;
+      line-height: 1;
+    }
+
+    .detail-stat-card strong {
+      display: block;
+      color: #f4f9ff;
+      font-size: 1.42rem;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+    }
+
+    .detail-stat-card span:not(.detail-stat-icon) {
+      display: block;
+      margin-top: 6px;
+      color: var(--live-muted);
+      font-size: 0.9rem;
+      font-weight: 760;
+    }
+
+    .exercise-detail-card {
+      display: grid;
+      gap: 20px;
+      padding: 24px 20px 22px;
+    }
+
+    .exercise-detail-card .current-set-label strong {
+      font-size: 2.05rem;
+    }
+
+    .exercise-detail-view .live-control-row {
+      grid-template-columns: minmax(90px, 1fr) 64px 82px 64px;
+      gap: 11px;
+      min-height: 66px;
+    }
+
+    .exercise-detail-view .control-stepper {
+      width: 64px;
+      min-width: 64px;
+      height: 64px;
+      min-height: 64px;
+      border-radius: 18px;
+    }
+
+    .exercise-detail-view .control-value {
+      width: 82px;
+      min-width: 82px;
+      height: 64px;
+      min-height: 64px;
+      font-size: 2.24rem;
+      line-height: 64px;
+    }
+
+    .exercise-detail-view .live-rpe-row .control-value {
+      font-size: 1.55rem;
+    }
+
+    .exercise-guide-content {
+      display: grid;
+      gap: 20px;
+    }
+
+    .exercise-guide-card {
+      padding: 20px;
+    }
+
+    .exercise-guide-card.description {
+      color: #f0f7ff;
+      font-size: 1.08rem;
+      line-height: 1.45;
+    }
+
+    .guide-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .guide-info-card {
+      min-height: 118px;
+    }
+
+    .guide-info-card span {
+      display: block;
+      color: var(--live-muted);
+      font-size: 0.88rem;
+      font-weight: 760;
+      margin-bottom: 12px;
+    }
+
+    .guide-info-card strong {
+      color: var(--live-coral);
+      font-size: 1.02rem;
+      line-height: 1.35;
+    }
+
+    .exercise-guide-card.guide-accordion {
+      overflow: hidden;
+      padding: 0;
+      border-radius: 18px;
+      background: rgba(38, 59, 87, 0.84);
+    }
+
+    .exercise-guide-card.guide-accordion.guide-step {
+      border-color: rgba(255, 107, 69, 0.38);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.045),
+        0 0 0 1px rgba(255, 107, 69, 0.06);
+    }
+
+    .guide-accordion summary {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      min-height: 88px;
+      padding: 18px 22px 18px 20px;
+      cursor: pointer;
+      list-style: none;
+      color: #f4f9ff;
+      font-size: 1.12rem;
+      font-weight: 950;
+      line-height: 1.15;
+    }
+
+    .guide-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .guide-heading-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      color: var(--live-coral);
+      background: rgba(255, 107, 69, 0.17);
+    }
+
+    .guide-tips .guide-heading-icon {
+      color: #23d876;
+      background: rgba(34, 197, 94, 0.2);
+    }
+
+    .guide-mistakes .guide-heading-icon {
+      color: #ff4058;
+      background: rgba(244, 63, 94, 0.18);
+    }
+
+    .guide-heading-icon svg,
+    .guide-disclosure svg,
+    .guide-accordion summary > svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.25;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .guide-disclosure {
+      display: grid;
+      place-items: center;
+      color: var(--live-muted);
+      transition: transform 160ms ease, color 160ms ease;
+    }
+
+    .guide-accordion[open] .guide-disclosure {
+      color: #d7eaff;
+      transform: rotate(90deg);
+    }
+
+    .guide-accordion[open] summary {
+      border-bottom: 1px solid rgba(153, 177, 205, 0.12);
+    }
+
+    .guide-list {
+      display: grid;
+      gap: 18px;
+      margin: 0;
+      padding: 20px;
+      list-style: none;
+    }
+
+    .guide-list li {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      color: #f0f7ff;
+      font-size: 1.02rem;
+      line-height: 1.45;
+    }
+
+    .guide-list-index,
+    .guide-list-check,
+    .guide-list-x {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 950;
+    }
+
+    .guide-list-index {
+      color: var(--live-coral);
+      background: rgba(255, 107, 69, 0.18);
+    }
+
+    .guide-list-check {
+      color: #37d46e;
+      background: rgba(34, 197, 94, 0.14);
+    }
+
+    .guide-list-x {
+      color: #ff5d61;
+      background: rgba(239, 68, 68, 0.14);
+    }
+
+    .exercise-detail-dock {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      z-index: 88;
+      width: min(100vw, 520px);
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(153, 177, 205, 0.16);
+      background: rgba(7, 24, 43, 0.93);
+      box-shadow: 0 -16px 34px rgba(1, 11, 24, 0.34);
+      transform: translateX(-50%);
+      backdrop-filter: blur(18px);
+    }
+
+    .exercise-detail-dock button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 68px;
+      padding: 0 18px;
+      border-radius: 22px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--live-coral), #ff744c);
+      font-size: 1rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .exercise-detail-dock button:disabled {
+      opacity: 0.58;
+      filter: saturate(0.7);
+    }
+
+    @media (max-width: 420px) {
+      .live-header {
+        grid-template-columns: 52px minmax(0, 1fr) 52px;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .live-icon-button,
+      .live-finish-button {
+        width: 48px;
+        min-width: 48px;
+        height: 48px;
+        min-height: 48px;
+      }
+
+      #sessionView .exercise-top {
+        grid-template-columns: 54px minmax(0, 1fr) auto auto 28px;
+        gap: 8px;
+        padding: 16px 12px;
+      }
+
+      .exercise-status {
+        width: 48px;
+        height: 48px;
+      }
+
+      .exercise-muscle-chip {
+        max-width: 74px;
+        padding-left: 9px;
+        padding-right: 9px;
+        font-size: 0.8rem;
+      }
+
+      #sessionView .drag-handle {
+        width: 30px;
+        min-width: 30px;
+      }
+
+      #sessionView .exercise-body {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .live-control-row {
+        grid-template-columns: minmax(84px, 1fr) 50px 64px 50px;
+        gap: 11px;
+      }
+
+      .control-stepper {
+        width: 50px;
+        min-width: 50px;
+        height: 50px;
+        min-height: 50px;
+      }
+
+      .control-value {
+        width: 64px;
+        min-width: 64px;
+        height: 50px;
+        min-height: 50px;
+        font-size: 1.42rem;
+        line-height: 50px;
+      }
+
+      #sessionView .save-dock {
+        grid-template-columns: 54px 1fr;
+        gap: 12px;
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .exercise-detail-scroll {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .detail-stat-grid {
+        gap: 10px;
+      }
+
+      .detail-stat-card {
+        padding: 14px 10px;
+      }
+
+      .exercise-detail-card {
+        padding: 22px 16px 20px;
+      }
+
+      .exercise-detail-view .live-control-row {
+        grid-template-columns: minmax(80px, 1fr) 56px 72px 56px;
+        gap: 9px;
+      }
+
+      .exercise-detail-view .control-stepper {
+        width: 56px;
+        min-width: 56px;
+        height: 56px;
+        min-height: 56px;
+      }
+
+      .exercise-detail-view .control-value {
+        width: 72px;
+        min-width: 72px;
+        height: 56px;
+        min-height: 56px;
+        font-size: 1.9rem;
+        line-height: 56px;
+      }
+
+      .guide-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -2829,14 +4123,22 @@
 
         </div>
 
-        <div id="sessionView" class="hidden">
+        <div id="sessionView" class="hidden live-session">
           <div class="card session-toolbar">
             <button class="ghost" id="sessionBack" type="button">← Today</button>
             <div>
               <span class="session-title-small">Workout Session</span>
               <strong class="session-routine-title" id="sessionRoutineTitle">Workout</strong>
+              <span class="live-session-time" id="sessionElapsedTimer">0:00</span>
             </div>
-            <button class="success" id="sessionSaveTop" type="button">Save</button>
+            <button class="success" id="sessionSaveTop" type="button" aria-label="Finish workout">Finish</button>
+          </div>
+          <div class="live-progress-section">
+            <div class="live-progress-row">
+              <span>Progress</span>
+              <span class="live-progress-count" id="sessionProgressCount">0/0 sets</span>
+            </div>
+            <div class="progress-bar" aria-hidden="true"><div class="progress-fill" id="sessionProgressFill"></div></div>
           </div>
         <div class="card hero-card">
           <div class="screen-title-row">
@@ -2911,7 +4213,33 @@
         </div>
 
         <div class="save-dock">
-          <button class="success" id="saveWorkout" style="width:100%;">Save Workout</button>
+          <button class="live-icon-button" id="sessionUndoSet" type="button" aria-label="Undo last completed set">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a8 8 0 0 0-13.66-5.66L3 15"/></svg>
+          </button>
+          <button class="success" id="saveWorkout" type="button">Complete Set 1</button>
+        </div>
+
+        <div class="exercise-detail-view hidden" id="exerciseDetailView" aria-hidden="true">
+          <div class="exercise-detail-header">
+            <button class="exercise-detail-back" id="exerciseDetailBack" type="button" aria-label="Back to active workout">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            </button>
+            <div class="exercise-detail-title-wrap">
+              <h2 class="exercise-detail-title" id="exerciseDetailTitle">Exercise</h2>
+              <span class="exercise-detail-subtitle" id="exerciseDetailSubtitle">Muscle group</span>
+            </div>
+            <span class="exercise-detail-progress-pill" id="exerciseDetailProgress">0/0 sets</span>
+          </div>
+          <div class="exercise-detail-scroll">
+            <div class="exercise-detail-tabs" role="tablist" aria-label="Exercise detail tabs">
+              <button class="exercise-detail-tab active" id="exerciseDetailLogTab" type="button" data-detail-tab="log" role="tab">Log Set</button>
+              <button class="exercise-detail-tab" id="exerciseDetailGuideTab" type="button" data-detail-tab="guide" role="tab">Exercise Guide</button>
+            </div>
+            <div id="exerciseDetailContent"></div>
+          </div>
+          <div class="exercise-detail-dock">
+            <button id="exerciseDetailCompleteSet" type="button">Complete Set 1</button>
+          </div>
         </div>
 
         </div>
@@ -3311,6 +4639,11 @@
     let db = null;
     let timerInterval = null;
     let timerEnd = 0;
+    let sessionElapsedInterval = null;
+    let exerciseDragState = null;
+    let activeExerciseDetailEl = null;
+    let exerciseDetailTab = "log";
+    let exerciseDetailRenderToken = 0;
     let templateDraftExercises = [];
     let editingTemplateId = null;
     let editingWorkoutId = null;
@@ -3757,7 +5090,7 @@
 
     function saveDraftSilently() {
       if (!db) return;
-      const draft = collectWorkout();
+      const draft = collectWorkout({ includeEmptySets: true });
       draft.editingWorkoutId = editingWorkoutId;
       draft.activeExerciseIndex = getActiveExerciseIndex();
       draft.savedAt = new Date().toISOString();
@@ -3788,6 +5121,7 @@
     function updateSessionTitle() {
       const title = $("sessionRoutineTitle");
       if (title) title.textContent = $("workoutType")?.value || "Workout";
+      updateSessionElapsedTimer();
     }
 
     function showSessionView() {
@@ -3795,13 +5129,17 @@
       $("sessionView")?.classList.remove("hidden");
       syncTodayFloatingCta();
       updateSessionTitle();
+      startSessionElapsedTimer();
+      syncSessionUi();
       replayAnimation($("sessionView"), "settle-in", 260);
       window.scrollTo({ top: 0, behavior: motionBehavior() });
     }
 
     async function showTodayView() {
+      if (isExerciseDetailOpen()) closeExerciseDetail();
       $("sessionView")?.classList.add("hidden");
       $("todayView")?.classList.remove("hidden");
+      stopSessionElapsedTimer();
       await renderTodayView();
       syncTodayFloatingCta();
       replayAnimation($("todayView"), "settle-in", 260);
@@ -3869,10 +5207,10 @@
       const name = String(exerciseName || "").toLowerCase();
 
       if (/soccer|sprint|agility|conditioning|cooldown|warm.?up/.test(name)) return "Conditioning";
+      if (/rear delt|face pull|reverse fly/.test(name)) return "Rear Delts";
       if (/bench|chest|fly|pec|incline/.test(name)) return "Chest";
       if (/tricep|pushdown|skull|dip/.test(name)) return "Triceps";
       if (/shoulder|overhead|lateral|front raise|press/.test(name)) return "Shoulders";
-      if (/rear delt|face pull|reverse fly/.test(name)) return "Rear Delts";
       if (/lat|pulldown|row|back|pull.?up|chin.?up/.test(name)) return "Back";
       if (/bicep|curl|hammer/.test(name)) return "Biceps";
       if (/shrug|trap/.test(name)) return "Traps";
@@ -4021,7 +5359,6 @@
       await loadWorkoutTemplate();
       showSessionView();
       saveDraftSilently();
-      toast(`${selected} started.`);
     }
 
     async function resumeWorkoutFromToday() {
@@ -4157,6 +5494,848 @@
       if (Array.from($("historyFilter").options).some((option) => option.value === currentHistory)) $("historyFilter").value = currentHistory;
     }
 
+    function iconCheck() {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
+    }
+
+    function iconInfo() {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>`;
+    }
+
+    function iconChevron() {
+      return `<svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`;
+    }
+
+    function iconChevronRight() {
+      return `<svg class="chevron-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>`;
+    }
+
+    function iconPlayOutline() {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7-11-7Z"/></svg>`;
+    }
+
+    function iconGrip() {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg>`;
+    }
+
+    function iconPlus() {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>`;
+    }
+
+    function iconMinus() {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>`;
+    }
+
+    function formatElapsedClock(totalSeconds) {
+      const safeSeconds = Math.max(0, Math.floor(totalSeconds || 0));
+      const hours = Math.floor(safeSeconds / 3600);
+      const minutes = Math.floor((safeSeconds % 3600) / 60);
+      const seconds = safeSeconds % 60;
+      if (hours) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function timeToMinutes(value) {
+      if (!value || !value.includes(":")) return null;
+      const [hour, minute] = value.split(":").map(Number);
+      if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+      return hour * 60 + minute;
+    }
+
+    function getSessionElapsedSeconds() {
+      const startMinutes = timeToMinutes($("startTime")?.value || "");
+      if (startMinutes === null) return 0;
+      const endMinutes = timeToMinutes($("endTime")?.value || "");
+      const now = new Date();
+      let currentMinutes = endMinutes === null ? now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60 : endMinutes;
+      if (currentMinutes < startMinutes) currentMinutes += 24 * 60;
+      return Math.round((currentMinutes - startMinutes) * 60);
+    }
+
+    function updateSessionElapsedTimer() {
+      const target = $("sessionElapsedTimer");
+      if (target) target.textContent = formatElapsedClock(getSessionElapsedSeconds());
+    }
+
+    function startSessionElapsedTimer() {
+      updateSessionElapsedTimer();
+      if (sessionElapsedInterval) clearInterval(sessionElapsedInterval);
+      sessionElapsedInterval = setInterval(updateSessionElapsedTimer, 1000);
+    }
+
+    function stopSessionElapsedTimer() {
+      if (sessionElapsedInterval) clearInterval(sessionElapsedInterval);
+      sessionElapsedInterval = null;
+    }
+
+    function getWorkSetRows(exerciseEl) {
+      return Array.from(exerciseEl?.querySelectorAll(".set-row") || [])
+        .filter((row) => !row.querySelector(".set-warmup")?.checked);
+    }
+
+    function getDoneWorkSetRows(exerciseEl) {
+      return getWorkSetRows(exerciseEl).filter((row) => row.querySelector(".set-done")?.checked);
+    }
+
+    function isExerciseComplete(exerciseEl) {
+      const workSets = getWorkSetRows(exerciseEl);
+      return workSets.length > 0 && workSets.every((row) => row.querySelector(".set-done")?.checked);
+    }
+
+    function getActiveExercise() {
+      const exercises = all(".exercise");
+      return exercises.find((exercise) => !exercise.classList.contains("collapsed"))
+        || exercises.find((exercise) => !isExerciseComplete(exercise))
+        || exercises[0]
+        || null;
+    }
+
+    function getCurrentSetRow(exerciseEl) {
+      const workSets = getWorkSetRows(exerciseEl);
+      return workSets.find((row) => !row.querySelector(".set-done")?.checked) || null;
+    }
+
+    function getSessionSetStats() {
+      const exercises = all(".exercise");
+      const workSets = exercises.flatMap((exercise) => getWorkSetRows(exercise));
+      const completed = workSets.filter((row) => row.querySelector(".set-done")?.checked).length;
+      return { completed, total: workSets.length };
+    }
+
+    function updateSessionProgress() {
+      const { completed, total } = getSessionSetStats();
+      const count = $("sessionProgressCount");
+      const fill = $("sessionProgressFill");
+      if (count) count.textContent = `${completed}/${total} sets`;
+      if (fill) fill.style.width = `${total ? Math.min(100, Math.round((completed / total) * 100)) : 0}%`;
+    }
+
+    function setControlText(exerciseEl, selector, value) {
+      const targets = Array.from(exerciseEl?.querySelectorAll(selector) || []);
+      targets.forEach((target) => {
+        if (target instanceof HTMLInputElement) {
+          if (document.activeElement !== target) target.value = value;
+        } else {
+          target.textContent = value;
+        }
+      });
+    }
+
+    function sanitizeControlInputValue(field, value) {
+      let next = String(value ?? "").replace(",", ".").trim();
+      if (field === "reps") return next.replace(/[^\d]/g, "").slice(0, 3);
+      next = next.replace(/[^\d.]/g, "");
+      const parts = next.split(".");
+      if (parts.length > 1) next = `${parts.shift()}.${parts.join("")}`;
+      const decimals = field === "rpe" ? 1 : 2;
+      if (next.includes(".")) {
+        const [whole, fraction = ""] = next.split(".");
+        next = `${whole}.${fraction.slice(0, decimals)}`;
+      }
+      return next;
+    }
+
+    function formatCommittedControlValue(field, value) {
+      const clean = sanitizeControlInputValue(field, value);
+      if (clean === "" || clean === ".") return "";
+      let number = Number(clean);
+      if (!Number.isFinite(number)) return "";
+      if (field === "reps") return String(Math.max(0, Math.round(number)));
+      if (field === "rpe") {
+        number = Math.min(10, Math.max(1, Math.round(number * 2) / 2));
+        return Number.isInteger(number) ? String(number) : number.toFixed(1);
+      }
+      number = Math.max(0, number);
+      return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2)));
+    }
+
+    function getSetFieldInput(row, field) {
+      return row?.querySelector(`.set-${field}`) || null;
+    }
+
+    function writeCurrentSetValueFromControl(exerciseEl, field, rawValue, commit = false) {
+      const row = getCurrentSetRow(exerciseEl);
+      if (!row) return "";
+      const value = commit ? formatCommittedControlValue(field, rawValue) : sanitizeControlInputValue(field, rawValue);
+      const hiddenInput = getSetFieldInput(row, field);
+      if (hiddenInput) hiddenInput.value = value;
+      return value;
+    }
+
+    function bindControlValueInput(input, getExerciseEl) {
+      input.addEventListener("input", () => {
+        const exerciseEl = getExerciseEl();
+        if (!exerciseEl) return;
+        const value = writeCurrentSetValueFromControl(exerciseEl, input.dataset.field, input.value, false);
+        input.value = value;
+        updateExerciseSummary(exerciseEl);
+        saveDraftSilently();
+      });
+
+      input.addEventListener("blur", () => {
+        const exerciseEl = getExerciseEl();
+        if (!exerciseEl) return;
+        const value = writeCurrentSetValueFromControl(exerciseEl, input.dataset.field, input.value, true);
+        input.value = value;
+        updateExerciseSummary(exerciseEl);
+        saveDraftSilently();
+        if (isExerciseDetailOpen()) setTimeout(renderExerciseDetailView, 80);
+      });
+    }
+
+    function getNumericInputValue(input, fallback = 0) {
+      if (!input || input.value.trim() === "") return fallback;
+      const value = Number(input?.value);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function previousWeightForSet(exerciseEl, currentRow) {
+      const workSets = getWorkSetRows(exerciseEl);
+      const currentIndex = workSets.indexOf(currentRow);
+      const previous = workSets
+        .slice(0, Math.max(0, currentIndex))
+        .reverse()
+        .find((row) => row.querySelector(".set-weight")?.value);
+      return previous?.querySelector(".set-weight")?.value || "";
+    }
+
+    function ensureCurrentSetDefaults(exerciseEl, row) {
+      if (!row) return;
+      const name = exerciseEl.querySelector(".exercise-name")?.value || "";
+      const profile = getExerciseProfile(name);
+      const weightInput = row.querySelector(".set-weight");
+      const repsInput = row.querySelector(".set-reps");
+      if (weightInput && !weightInput.value) weightInput.value = previousWeightForSet(exerciseEl, row);
+      if (repsInput && !repsInput.value) repsInput.value = String(profile.min || 8);
+    }
+
+    function updateCurrentSetPanel(exerciseEl) {
+      if (!exerciseEl) return;
+      const workSets = getWorkSetRows(exerciseEl);
+      const currentRow = getCurrentSetRow(exerciseEl);
+      const currentIndex = currentRow ? workSets.indexOf(currentRow) : workSets.length - 1;
+      const safeIndex = Math.max(0, currentIndex);
+      const label = exerciseEl.querySelector(".current-set-label");
+
+      if (!workSets.length) {
+        if (label) label.innerHTML = `Current Set<strong>No work sets</strong>`;
+        setControlText(exerciseEl, ".weight-value", "-");
+        setControlText(exerciseEl, ".reps-value", "-");
+        setControlText(exerciseEl, ".rpe-value", "-");
+        return;
+      }
+
+      if (!currentRow) {
+        if (label) label.innerHTML = `Current Set<strong>Complete</strong>`;
+        return;
+      }
+
+      const profile = getExerciseProfile(exerciseEl.querySelector(".exercise-name")?.value || "");
+      const weight = currentRow.querySelector(".set-weight")?.value || previousWeightForSet(exerciseEl, currentRow) || "0";
+      const reps = currentRow.querySelector(".set-reps")?.value || String(profile.min || 8);
+      const rpe = currentRow.querySelector(".set-rpe")?.value || "-";
+      if (label) label.innerHTML = `Current Set<strong>Set ${safeIndex + 1} of ${workSets.length}</strong>`;
+      setControlText(exerciseEl, ".weight-value", weight);
+      setControlText(exerciseEl, ".reps-value", reps);
+      setControlText(exerciseEl, ".rpe-value", rpe);
+      const completeButton = exerciseEl.querySelector(".complete-set-button");
+      if (completeButton) completeButton.innerHTML = `${iconCheck()} Complete Set ${safeIndex + 1}`;
+    }
+
+    function adjustCurrentSetValue(exerciseEl, field, delta) {
+      const row = getCurrentSetRow(exerciseEl);
+      if (!row) return;
+      ensureCurrentSetDefaults(exerciseEl, row);
+      const input = row.querySelector(`.set-${field}`);
+      if (!input) return;
+      const settings = getAppSettings();
+      const step = field === "weight" ? Number(settings.defaultWeightJump || 5) : field === "rpe" ? 0.5 : 1;
+      const min = field === "rpe" ? 1 : 0;
+      const max = field === "rpe" ? 10 : 999;
+      const current = getNumericInputValue(input, field === "rpe" ? 8 : 0);
+      const next = Math.min(max, Math.max(min, current + delta * step));
+      input.value = field === "rpe" && !Number.isInteger(next) ? next.toFixed(1) : String(next);
+      updateExerciseSummary(exerciseEl);
+      saveDraftSilently();
+    }
+
+    function completedSetChips(exerciseEl) {
+      const workSets = getWorkSetRows(exerciseEl);
+      const chips = workSets
+        .map((row, index) => ({ row, index }))
+        .filter((item) => item.row.querySelector(".set-done")?.checked)
+        .map((item) => {
+          const reps = item.row.querySelector(".set-reps")?.value || "-";
+          return `<span class="completed-set-chip">Set ${item.index + 1}: ${cleanText(reps)} reps</span>`;
+        });
+      return chips.join("");
+    }
+
+    function renumberExerciseCards() {
+      all(".exercise").forEach((exercise, index) => {
+        const status = exercise.querySelector(".exercise-status");
+        if (!status) return;
+        status.innerHTML = isExerciseComplete(exercise) ? iconCheck() : String(index + 1);
+      });
+    }
+
+    function syncSessionUi() {
+      renumberExerciseCards();
+      updateSessionProgress();
+      all(".exercise").forEach(updateCurrentSetPanel);
+      updateSessionPrimaryAction();
+      if (isExerciseDetailOpen() && !document.activeElement?.closest("#exerciseDetailView .control-value-input")) {
+        renderExerciseDetailView();
+      }
+    }
+
+    function updateSessionPrimaryAction() {
+      const button = $("saveWorkout");
+      const undo = $("sessionUndoSet");
+      const active = getActiveExercise();
+      const { completed, total } = getSessionSetStats();
+      if (undo) undo.disabled = !all(".set-done").some((input) => input.checked);
+      if (!button) return;
+      if (!active || !total) {
+        button.textContent = "Log Set";
+        button.disabled = !active || !total;
+        return;
+      }
+      button.disabled = false;
+      if (total > 0 && completed >= total) {
+        button.textContent = "Finish Workout";
+        return;
+      }
+      if (isExerciseComplete(active)) {
+        button.textContent = "Next Exercise";
+        return;
+      }
+      const workSets = getWorkSetRows(active);
+      const currentRow = getCurrentSetRow(active);
+      const currentIndex = currentRow ? workSets.indexOf(currentRow) : 0;
+      button.textContent = `Complete Set ${currentIndex + 1}`;
+    }
+
+    function completeCurrentSet(exerciseEl) {
+      const row = getCurrentSetRow(exerciseEl);
+      if (!row) return false;
+      ensureCurrentSetDefaults(exerciseEl, row);
+      const done = row.querySelector(".set-done");
+      if (done) done.checked = true;
+      replayAnimation(row, "set-just-done", 460);
+      haptic([18, 28, 18]);
+      updateExerciseSummary(exerciseEl);
+      saveDraftSilently();
+      return true;
+    }
+
+    function undoLastCompletedSet() {
+      const exercises = all(".exercise");
+      const active = getActiveExercise();
+      const ordered = active ? [active, ...exercises.filter((exercise) => exercise !== active).reverse()] : exercises.reverse();
+      for (const exercise of ordered) {
+        const doneRows = getDoneWorkSetRows(exercise);
+        const row = doneRows[doneRows.length - 1];
+        if (!row) continue;
+        const done = row.querySelector(".set-done");
+        if (done) done.checked = false;
+        openExercise(exercise, false);
+        updateExerciseSummary(exercise);
+        saveDraftSilently();
+        haptic(16);
+        return;
+      }
+    }
+
+    function handleSessionPrimaryAction() {
+      const active = getActiveExercise();
+      const { completed, total } = getSessionSetStats();
+      if (!active) return;
+      if (total > 0 && completed >= total) {
+        saveWorkout();
+        return;
+      }
+      if (isExerciseComplete(active)) {
+        finishAndNextExercise(active);
+        return;
+      }
+      completeCurrentSet(active);
+    }
+
+    function isExerciseDetailOpen() {
+      return !$("exerciseDetailView")?.classList.contains("hidden");
+    }
+
+    function getExerciseSetProgress(exerciseEl) {
+      const workSets = getWorkSetRows(exerciseEl);
+      const doneSets = getDoneWorkSetRows(exerciseEl);
+      return { done: doneSets.length, total: workSets.length };
+    }
+
+    function getCurrentSetMeta(exerciseEl) {
+      const workSets = getWorkSetRows(exerciseEl);
+      const row = getCurrentSetRow(exerciseEl);
+      const index = row ? workSets.indexOf(row) : Math.max(0, workSets.length - 1);
+      return { row, workSets, index: Math.max(0, index), total: workSets.length };
+    }
+
+    function getCurrentSetDisplayValues(exerciseEl) {
+      const { row } = getCurrentSetMeta(exerciseEl);
+      if (!row) return { weight: "-", reps: "-", rpe: "-" };
+      const profile = getExerciseProfile(exerciseEl.querySelector(".exercise-name")?.value || "");
+      return {
+        weight: row.querySelector(".set-weight")?.value || previousWeightForSet(exerciseEl, row) || "0",
+        reps: row.querySelector(".set-reps")?.value || String(profile.min || 8),
+        rpe: row.querySelector(".set-rpe")?.value || ""
+      };
+    }
+
+    function controlInputHtml(field, value, label) {
+      const inputMode = field === "reps" ? "numeric" : "decimal";
+      const placeholder = field === "rpe" ? "-" : "0";
+      return `
+        <div class="live-control-row ${field === "rpe" ? "live-rpe-row" : ""}">
+          <span class="live-control-label">${cleanText(label)}</span>
+          <button class="control-stepper" type="button" data-field="${field}" data-delta="-1" aria-label="Decrease ${field}">${iconMinus()}</button>
+          <input class="control-value control-value-input ${field}-value" data-field="${field}" inputmode="${inputMode}" autocomplete="off" value="${cleanText(value || "")}" placeholder="${placeholder}" aria-label="${cleanText(label)}" />
+          <button class="control-stepper" type="button" data-field="${field}" data-delta="1" aria-label="Increase ${field}">${iconPlus()}</button>
+        </div>
+      `;
+    }
+
+    async function openExerciseDetail(exerciseEl, tab = "guide") {
+      if (!exerciseEl) return;
+      activeExerciseDetailEl = exerciseEl;
+      exerciseDetailTab = tab;
+      const view = $("exerciseDetailView");
+      if (!view) return;
+      view.classList.remove("hidden");
+      view.setAttribute("aria-hidden", "false");
+      await renderExerciseDetailView();
+      view.querySelector(".exercise-detail-scroll")?.scrollTo({ top: 0, behavior: "auto" });
+      haptic(12);
+    }
+
+    function closeExerciseDetail() {
+      const view = $("exerciseDetailView");
+      if (!view) return;
+      view.classList.add("hidden");
+      view.setAttribute("aria-hidden", "true");
+      activeExerciseDetailEl = null;
+      syncSessionUi();
+    }
+
+    function setExerciseDetailTab(tab) {
+      exerciseDetailTab = tab === "guide" ? "guide" : "log";
+      renderExerciseDetailView();
+    }
+
+    function getExerciseEquipment(name) {
+      const lower = String(name || "").toLowerCase();
+      if (/dumbbell|db/.test(lower)) return "Dumbbells";
+      if (/barbell|bench|squat|deadlift|row/.test(lower)) return /bench/.test(lower) ? "Barbell, Bench" : "Barbell";
+      if (/cable|pushdown|pulldown/.test(lower)) return "Cable Machine";
+      if (/machine|leg press/.test(lower)) return "Machine";
+      if (/bodyweight|pull.?up|chin.?up|dip/.test(lower)) return "Bodyweight";
+      return "Gym equipment";
+    }
+
+    function getExerciseGuideData(exerciseName) {
+      const name = String(exerciseName || "Exercise");
+      const lower = name.toLowerCase();
+      const muscle = inferMuscleTag(name) || "Target Muscle";
+      const equipment = getExerciseEquipment(name);
+      const generic = {
+        description: `${name} is a strength movement for building control, range of motion, and consistent progressive overload.`,
+        primaryMuscles: muscle,
+        equipment,
+        steps: [
+          "Set up with a stable stance and controlled breathing",
+          "Move through the full comfortable range of motion",
+          "Pause briefly in the strongest controlled position",
+          "Return slowly without losing tension",
+          "Repeat for the target number of repetitions"
+        ],
+        tips: [
+          "Use a weight you can control through every rep",
+          "Keep the movement smooth and repeatable",
+          "Stop the set when form starts to break down"
+        ],
+        mistakes: [
+          "Using momentum to move the weight",
+          "Cutting the range of motion short",
+          "Rushing the lowering portion"
+        ]
+      };
+
+      const guides = [
+        {
+          match: /bench press|flat bench/,
+          data: {
+            description: "The bench press is a compound exercise that primarily targets the chest while also engaging the shoulders and triceps.",
+            primaryMuscles: "Chest (Pectoralis Major)",
+            equipment: "Barbell, Flat Bench",
+            steps: [
+              "Lie flat on the bench with your eyes directly under the bar",
+              "Grip the bar with hands slightly wider than shoulder-width apart",
+              "Unrack the bar and position it directly over your chest",
+              "Lower the bar slowly to your mid-chest, keeping elbows at 45 degrees",
+              "Press the bar back up to the starting position, fully extending your arms",
+              "Repeat for the desired number of repetitions"
+            ],
+            tips: [
+              "Keep shoulder blades pulled back and down",
+              "Drive your feet into the floor",
+              "Control the bar path on every rep"
+            ],
+            mistakes: [
+              "Bouncing the bar off the chest",
+              "Letting elbows flare too wide",
+              "Losing upper-back tightness"
+            ]
+          }
+        },
+        {
+          match: /incline/,
+          data: {
+            description: "An upper chest focused pressing movement that emphasizes the clavicular head of the pectoralis major.",
+            primaryMuscles: "Upper Chest",
+            equipment,
+            steps: [
+              "Set the bench to a 30-45 degree incline",
+              "Sit back with the weight controlled at shoulder level",
+              "Press up and slightly inward until arms are extended",
+              "Lower slowly back to the starting position",
+              "Repeat for the target reps"
+            ],
+            tips: [
+              "Keep dumbbells in line with upper chest",
+              "Do not let elbows drop below shoulder level",
+              "Control the weight throughout the movement"
+            ],
+            mistakes: [
+              "Setting the incline too steep",
+              "Using momentum to lift the weight",
+              "Not controlling the negative portion"
+            ]
+          }
+        },
+        {
+          match: /pulldown|lat/,
+          data: {
+            description: `${name} trains the lats and upper back through a vertical pulling pattern.`,
+            primaryMuscles: "Back (Lats)",
+            equipment: "Cable Machine",
+            steps: [
+              "Set the thigh pad so your body stays anchored",
+              "Grip the handle and sit tall with chest lifted",
+              "Pull elbows down toward your ribs",
+              "Pause briefly without leaning far back",
+              "Return the handle with control until lats stretch"
+            ],
+            tips: [
+              "Think elbows down, not hands down",
+              "Keep shoulders away from your ears",
+              "Use a full controlled stretch at the top"
+            ],
+            mistakes: [
+              "Turning the pull into a row",
+              "Using body swing to start the rep",
+              "Stopping short of a full stretch"
+            ]
+          }
+        },
+        {
+          match: /row/,
+          data: {
+            description: `${name} builds mid-back strength with a horizontal pulling pattern.`,
+            primaryMuscles: "Back",
+            equipment,
+            steps: [
+              "Brace your torso and set your shoulders",
+              "Pull the handle or bar toward your lower ribs",
+              "Squeeze your back without shrugging",
+              "Lower with control until arms extend",
+              "Repeat without using momentum"
+            ],
+            tips: ["Keep ribs down", "Lead with elbows", "Control the stretch"],
+            mistakes: ["Shrugging each rep", "Jerking the weight", "Letting posture collapse"]
+          }
+        },
+        {
+          match: /curl/,
+          data: {
+            description: `${name} targets the biceps with elbow flexion and controlled arm positioning.`,
+            primaryMuscles: "Biceps",
+            equipment,
+            steps: [
+              "Stand tall with elbows close to your sides",
+              "Curl the weight up without swinging",
+              "Squeeze briefly at the top",
+              "Lower slowly until arms are extended",
+              "Repeat with the same tempo"
+            ],
+            tips: ["Keep wrists neutral", "Avoid shoulder movement", "Use a controlled negative"],
+            mistakes: ["Swinging the torso", "Letting elbows drift forward", "Dropping the weight quickly"]
+          }
+        },
+        {
+          match: /pushdown|tricep/,
+          data: {
+            description: `${name} isolates the triceps with a cable extension pattern.`,
+            primaryMuscles: "Triceps",
+            equipment: "Cable Machine",
+            steps: [
+              "Set the cable high and stand close to the stack",
+              "Pin elbows near your sides",
+              "Press down until elbows are extended",
+              "Squeeze briefly at the bottom",
+              "Return with control"
+            ],
+            tips: ["Keep shoulders relaxed", "Move only at the elbows", "Control the top position"],
+            mistakes: ["Leaning over the handle", "Flaring elbows", "Using too much weight"]
+          }
+        },
+        {
+          match: /shoulder press|overhead/,
+          data: {
+            description: `${name} builds shoulder strength with a vertical pressing pattern.`,
+            primaryMuscles: "Shoulders",
+            equipment,
+            steps: [
+              "Brace your core and set the weight at shoulder height",
+              "Press overhead without leaning back",
+              "Finish with biceps near your ears",
+              "Lower with control to shoulder height",
+              "Repeat with steady tempo"
+            ],
+            tips: ["Keep ribs down", "Press in a straight path", "Avoid locking out aggressively"],
+            mistakes: ["Overarching the lower back", "Pressing forward", "Bouncing from the bottom"]
+          }
+        },
+        {
+          match: /lateral raise|rear delt|fly|shrug/,
+          data: {
+            description: `${name} targets smaller upper-body muscles and rewards controlled reps over heavy loading.`,
+            primaryMuscles: muscle,
+            equipment,
+            steps: [
+              "Choose a light weight and set your posture",
+              "Move the weight with control",
+              "Pause briefly in the target position",
+              "Lower slowly without losing tension",
+              "Repeat for clean, consistent reps"
+            ],
+            tips: ["Use strict form", "Keep tension on the target muscle", "Stop before momentum takes over"],
+            mistakes: ["Going too heavy", "Rushing the lowering phase", "Turning it into a full-body movement"]
+          }
+        }
+      ];
+
+      return guides.find((guide) => guide.match.test(lower))?.data || generic;
+    }
+
+    function renderGuideList(items, markerClass, numbered = false) {
+      return `<ul class="guide-list">${items.map((item, index) => `
+        <li><span class="${markerClass}">${numbered ? index + 1 : markerClass === "guide-list-x" ? "x" : "✓"}</span><span>${cleanText(item)}</span></li>
+      `).join("")}</ul>`;
+    }
+
+    function renderExerciseGuideContent(exerciseEl) {
+      const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
+      const guide = getExerciseGuideData(name);
+      return `
+        <div class="exercise-guide-content">
+          <div class="exercise-guide-card description">${cleanText(guide.description)}</div>
+          <div class="guide-info-grid">
+            <div class="exercise-guide-card guide-info-card"><span>Primary Muscles</span><strong>${cleanText(guide.primaryMuscles)}</strong></div>
+            <div class="exercise-guide-card guide-info-card"><span>Equipment</span><strong>${cleanText(guide.equipment)}</strong></div>
+          </div>
+          <details class="exercise-guide-card guide-accordion guide-step">
+            <summary><span class="guide-heading-icon">${iconPlayOutline()}</span><span>Step-by-Step Guide</span><span class="guide-disclosure">${iconChevronRight()}</span></summary>
+            ${renderGuideList(guide.steps, "guide-list-index", true)}
+          </details>
+          <details class="exercise-guide-card guide-accordion guide-tips">
+            <summary><span class="guide-heading-icon">${iconCheck()}</span><span>Pro Tips</span><span class="guide-disclosure">${iconChevronRight()}</span></summary>
+            ${renderGuideList(guide.tips, "guide-list-check")}
+          </details>
+          <details class="exercise-guide-card guide-accordion guide-mistakes">
+            <summary><span class="guide-heading-icon">${iconInfo()}</span><span>Common Mistakes</span><span class="guide-disclosure">${iconChevronRight()}</span></summary>
+            ${renderGuideList(guide.mistakes, "guide-list-x")}
+          </details>
+        </div>
+      `;
+    }
+
+    async function renderExerciseLogContent(exerciseEl) {
+      const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
+      const profile = getExerciseProfile(name);
+      const { row, index, total } = getCurrentSetMeta(exerciseEl);
+      const values = getCurrentSetDisplayValues(exerciseEl);
+      const last = await getLastExercisePerformance(name);
+      const lastWorkSets = workSetsOnly(last?.sets || []);
+      const lastWeight = lastWorkSets.length ? formatPrimaryWeight(lastWorkSets) : values.weight;
+      const pr = await getExercisePr(name);
+      const lastLabel = lastWeight && lastWeight !== "-" ? `${lastWeight} lb` : "-";
+      const prLabel = pr ? `${pr.weight} x ${pr.reps}` : "-";
+
+      return `
+        <div class="detail-stat-grid">
+          <div class="detail-stat-card"><span class="detail-stat-icon">Last</span><strong>${cleanText(lastLabel)}</strong><span>Last Weight</span></div>
+          <div class="detail-stat-card"><span class="detail-stat-icon">Target</span><strong>${profile.min}-${profile.max}</strong><span>Target Reps</span></div>
+          <div class="detail-stat-card"><span class="detail-stat-icon">Sets</span><strong>${total}</strong><span>Total Sets</span></div>
+        </div>
+        <div class="exercise-detail-card">
+          <span class="current-set-label">Current Set<strong>${row ? `Set ${index + 1}` : "Complete"}</strong></span>
+          ${controlInputHtml("weight", values.weight === "-" ? "" : values.weight, "Weight (lbs)")}
+          ${controlInputHtml("reps", values.reps === "-" ? "" : values.reps, "Reps")}
+          ${controlInputHtml("rpe", values.rpe, "RPE")}
+        </div>
+        <div class="exercise-guide-card" style="margin-top:20px;">
+          <strong>PR</strong>
+          <p class="muted small" style="margin:6px 0 0;">${cleanText(prLabel)}${pr ? ` · est ${pr.estimated1rm.toFixed(1)} lb` : ""}</p>
+        </div>
+      `;
+    }
+
+    function updateExerciseDetailHeader(exerciseEl) {
+      const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
+      const muscle = inferMuscleTag(name) || "General";
+      const { done, total } = getExerciseSetProgress(exerciseEl);
+      $("exerciseDetailTitle").textContent = name;
+      $("exerciseDetailSubtitle").textContent = `${muscle} · Intermediate`;
+      $("exerciseDetailProgress").textContent = `${done}/${total} sets`;
+      all(".exercise-detail-tab").forEach((tab) => {
+        const active = tab.dataset.detailTab === exerciseDetailTab;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", String(active));
+      });
+    }
+
+    function updateExerciseDetailCompleteButton(exerciseEl) {
+      const button = $("exerciseDetailCompleteSet");
+      if (!button) return;
+      const { row, index } = getCurrentSetMeta(exerciseEl);
+      if (!row) {
+        button.textContent = "Exercise Complete";
+        button.disabled = true;
+        return;
+      }
+      button.disabled = false;
+      button.textContent = `Complete Set ${index + 1}`;
+    }
+
+    function bindExerciseDetailControls() {
+      const view = $("exerciseDetailView");
+      if (!view) return;
+      view.querySelectorAll(".control-stepper").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (!activeExerciseDetailEl) return;
+          adjustCurrentSetValue(activeExerciseDetailEl, button.dataset.field, Number(button.dataset.delta || 0));
+          renderExerciseDetailView();
+        });
+      });
+      view.querySelectorAll(".control-value-input").forEach((input) => {
+        bindControlValueInput(input, () => activeExerciseDetailEl);
+      });
+    }
+
+    async function renderExerciseDetailView() {
+      const view = $("exerciseDetailView");
+      const content = $("exerciseDetailContent");
+      const exerciseEl = activeExerciseDetailEl;
+      if (!view || !content || !exerciseEl || !document.body.contains(exerciseEl)) {
+        closeExerciseDetail();
+        return;
+      }
+      if (document.activeElement?.closest("#exerciseDetailView .control-value-input")) return;
+
+      const token = ++exerciseDetailRenderToken;
+      updateExerciseDetailHeader(exerciseEl);
+      content.innerHTML = exerciseDetailTab === "guide"
+        ? renderExerciseGuideContent(exerciseEl)
+        : await renderExerciseLogContent(exerciseEl);
+      if (token !== exerciseDetailRenderToken) return;
+      updateExerciseDetailCompleteButton(exerciseEl);
+      bindExerciseDetailControls();
+    }
+
+    function toggleExerciseGuide(exerciseEl) {
+      openExerciseDetail(exerciseEl, "guide");
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = Array.from(container.querySelectorAll(".exercise:not(.dragging)"));
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) return { offset, element: child };
+        return closest;
+      }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+    }
+
+    function startExerciseDrag(event, exerciseEl) {
+      if (event.button !== undefined && event.button !== 0) return;
+      const list = $("exerciseList");
+      if (!list || !exerciseEl) return;
+      event.preventDefault();
+      const rect = exerciseEl.getBoundingClientRect();
+      const placeholder = document.createElement("div");
+      placeholder.className = "exercise-drag-placeholder";
+      placeholder.style.height = `${rect.height}px`;
+      list.insertBefore(placeholder, exerciseEl.nextSibling);
+      exerciseEl.classList.add("dragging");
+      exerciseEl.style.position = "fixed";
+      exerciseEl.style.left = `${rect.left}px`;
+      exerciseEl.style.top = `${rect.top}px`;
+      exerciseEl.style.width = `${rect.width}px`;
+      exerciseEl.style.zIndex = "80";
+
+      exerciseDragState = {
+        exerciseEl,
+        list,
+        placeholder,
+        startY: event.clientY,
+        originTop: rect.top,
+        pointerId: event.pointerId
+      };
+
+      if (event.pointerId !== undefined) event.currentTarget.setPointerCapture?.(event.pointerId);
+      haptic(12);
+    }
+
+    function moveExerciseDrag(event) {
+      if (!exerciseDragState) return;
+      const { exerciseEl, list, placeholder, startY, originTop } = exerciseDragState;
+      const deltaY = event.clientY - startY;
+      exerciseEl.style.top = `${originTop + deltaY}px`;
+      const afterElement = getDragAfterElement(list, event.clientY);
+      if (!afterElement) list.appendChild(placeholder);
+      else list.insertBefore(placeholder, afterElement);
+
+      const viewportMargin = 74;
+      if (event.clientY < viewportMargin) window.scrollBy({ top: -10, behavior: "auto" });
+      if (window.innerHeight - event.clientY < viewportMargin) window.scrollBy({ top: 10, behavior: "auto" });
+    }
+
+    function endExerciseDrag() {
+      if (!exerciseDragState) return;
+      const { exerciseEl, list, placeholder } = exerciseDragState;
+      list.insertBefore(exerciseEl, placeholder);
+      placeholder.remove();
+      exerciseEl.classList.remove("dragging");
+      exerciseEl.style.position = "";
+      exerciseEl.style.left = "";
+      exerciseEl.style.top = "";
+      exerciseEl.style.width = "";
+      exerciseEl.style.zIndex = "";
+      exerciseDragState = null;
+      updateExerciseFlowButtons();
+      syncSessionUi();
+      saveDraftSilently();
+      haptic(18);
+    }
+
     function setRows(exerciseEl) {
       exerciseEl.querySelectorAll(".set-index").forEach((el, index) => { el.textContent = index + 1; });
       updateExerciseSummary(exerciseEl);
@@ -4187,23 +6366,42 @@
       const doneSets = workSets.filter((row) => row.querySelector(".set-done")?.checked);
       const title = exerciseEl.querySelector(".exercise-title");
       const line = exerciseEl.querySelector(".exercise-summary-line");
+      const setProgress = exerciseEl.querySelector(".exercise-set-progress");
+      const repTarget = exerciseEl.querySelector(".exercise-rep-target");
+      const muscleChip = exerciseEl.querySelector(".exercise-muscle-chip");
+      const completedChips = exerciseEl.querySelector(".completed-set-chips");
+      const profile = getExerciseProfile(name);
+      const targetText = `${profile.min}-${profile.max} reps`;
+      const muscle = inferMuscleTag(name) || "General";
 
       if (title) title.textContent = name;
+      if (setProgress) setProgress.textContent = workSets.length ? `${doneSets.length}/${workSets.length} sets` : "No sets";
+      if (repTarget) repTarget.textContent = targetText;
+      if (muscleChip) muscleChip.textContent = muscle;
+      if (completedChips) completedChips.innerHTML = completedSetChips(exerciseEl);
       if (line) {
         const status = workSets.length ? `${doneSets.length} / ${workSets.length} done` : "No work sets yet";
         const setSummary = compactSetSummary(workSets);
         line.textContent = setSummary ? `${status} • ${setSummary}` : status;
       }
 
+      if (line) {
+        line.innerHTML = `<span class="exercise-set-progress">${workSets.length ? `${doneSets.length}/${workSets.length} sets` : "No sets"}</span><span aria-hidden="true">&bull;</span><span class="exercise-rep-target">${cleanText(targetText)}</span>`;
+      }
+
       exerciseEl.classList.toggle("exercise-complete", workSets.length > 0 && doneSets.length === workSets.length);
       updateExerciseFlowButtons();
+      syncSessionUi();
     }
 
     function setExerciseCollapsed(exerciseEl, collapsed) {
       exerciseEl.classList.toggle("collapsed", collapsed);
       exerciseEl.classList.toggle("is-active", !collapsed);
       const button = exerciseEl.querySelector(".collapse-exercise");
-      if (button) button.textContent = collapsed ? "Open" : "Minimize";
+      if (button) {
+        button.setAttribute("aria-label", collapsed ? "Expand exercise" : "Collapse exercise");
+        button.setAttribute("aria-expanded", String(!collapsed));
+      }
       if (!collapsed) replayAnimation(exerciseEl, "settle-in", 260);
       updateExerciseSummary(exerciseEl);
     }
@@ -4220,11 +6418,15 @@
         exercise.classList.toggle("collapsed", !isActive);
         exercise.classList.toggle("is-active", isActive);
         const button = exercise.querySelector(".collapse-exercise");
-        if (button) button.textContent = !isActive ? "Open" : "Minimize";
+        if (button) {
+          button.setAttribute("aria-label", !isActive ? "Expand exercise" : "Collapse exercise");
+          button.setAttribute("aria-expanded", String(isActive));
+        }
         if (isActive) replayAnimation(exercise, "settle-in", 260);
         updateExerciseSummary(exercise);
       });
       updateExerciseFlowButtons();
+      syncSessionUi();
     }
 
     function collapseAllButFirstExercise() {
@@ -4341,6 +6543,67 @@
         </div>
       `;
 
+      exercise.innerHTML = `
+        <div class="exercise-top">
+          <div class="exercise-status">1</div>
+          <div class="exercise-summary">
+            <div class="exercise-title">Exercise</div>
+            <div class="exercise-summary-line"><span class="exercise-set-progress">0/0 sets</span><span aria-hidden="true">&bull;</span><span class="exercise-rep-target">8-12 reps</span></div>
+          </div>
+          <span class="exercise-muscle-chip">General</span>
+          <button class="collapse-exercise" type="button" aria-label="Collapse exercise" aria-expanded="true">${iconChevron()}</button>
+          <button class="drag-handle" type="button" aria-label="Reorder exercise">${iconGrip()}</button>
+        </div>
+        <div class="exercise-body stack">
+          <div class="live-hidden-editor">
+            <label>Exercise Name</label>
+            <input class="exercise-name exercise-name-input" type="text" placeholder="Example: Flat Bench Press" value="${cleanText(data.name || "")}" />
+          </div>
+          <button class="guide-row" type="button">
+            <span class="guide-info-icon">${iconInfo()}</span>
+            <span>View Exercise Guide</span>
+          </button>
+          <div class="last-performance muted small"></div>
+          <div class="current-set-panel">
+            <span class="current-set-label">Current Set<strong>Set 1</strong></span>
+            <div class="live-control-row">
+              <span class="live-control-label">Weight (lbs)</span>
+              <button class="control-stepper" type="button" data-field="weight" data-delta="-1" aria-label="Decrease weight">${iconMinus()}</button>
+              <input class="control-value control-value-input weight-value" data-field="weight" inputmode="decimal" autocomplete="off" value="0" aria-label="Weight (lbs)" />
+              <button class="control-stepper" type="button" data-field="weight" data-delta="1" aria-label="Increase weight">${iconPlus()}</button>
+            </div>
+            <div class="live-control-row">
+              <span class="live-control-label">Reps</span>
+              <button class="control-stepper" type="button" data-field="reps" data-delta="-1" aria-label="Decrease reps">${iconMinus()}</button>
+              <input class="control-value control-value-input reps-value" data-field="reps" inputmode="numeric" autocomplete="off" value="0" aria-label="Reps" />
+              <button class="control-stepper" type="button" data-field="reps" data-delta="1" aria-label="Increase reps">${iconPlus()}</button>
+            </div>
+            <div class="live-control-row live-rpe-row">
+              <span class="live-control-label">RPE</span>
+              <button class="control-stepper" type="button" data-field="rpe" data-delta="-1" aria-label="Decrease RPE">${iconMinus()}</button>
+              <input class="control-value control-value-input rpe-value" data-field="rpe" inputmode="decimal" autocomplete="off" value="" placeholder="-" aria-label="RPE" />
+              <button class="control-stepper" type="button" data-field="rpe" data-delta="1" aria-label="Increase RPE">${iconPlus()}</button>
+            </div>
+            <button class="complete-set-button" type="button">${iconCheck()} Complete Set 1</button>
+          </div>
+          <div class="completed-set-chips"></div>
+          <div class="exercise-actions">
+            <button class="ghost use-last-sets" type="button">Use Last Sets</button>
+            <button class="ghost add-set" type="button">Add Set</button>
+            <button class="danger delete-exercise" type="button">Remove</button>
+          </div>
+          <div class="sets"></div>
+          <div class="live-hidden-editor">
+            <label>Exercise Notes</label>
+            <textarea class="exercise-notes" placeholder="Grip, form cue, pain, rest, machine setting, etc.">${cleanText(data.notes || "")}</textarea>
+          </div>
+          <div class="exercise-flow-actions">
+            <button class="ghost prev-exercise" type="button" aria-label="Previous exercise">Previous</button>
+            <button class="primary next-exercise" type="button">Next</button>
+          </div>
+        </div>
+      `;
+
       const setsEl = exercise.querySelector(".sets");
       const sets = data.sets?.length ? data.sets : [{}, {}, {}];
       sets.forEach((set) => setsEl.appendChild(makeSetRow(set)));
@@ -4352,12 +6615,31 @@
         updateExerciseSummary(exercise);
         saveDraftSilently();
       });
+      exercise.querySelector(".use-last-sets").addEventListener("click", async () => {
+        await useLastSets(exercise);
+        updateExerciseSummary(exercise);
+        saveDraftSilently();
+      });
       exercise.querySelector(".delete-exercise").addEventListener("click", () => {
         exercise.remove();
         updateExerciseFlowButtons();
+        syncSessionUi();
         saveDraftSilently();
       });
       exercise.querySelector(".collapse-exercise").addEventListener("click", () => toggleExerciseCollapse(exercise));
+      exercise.querySelector(".guide-row").addEventListener("click", () => toggleExerciseGuide(exercise));
+      exercise.querySelector(".complete-set-button").addEventListener("click", () => completeCurrentSet(exercise));
+      exercise.querySelectorAll(".control-stepper").forEach((button) => {
+        button.addEventListener("click", () => adjustCurrentSetValue(exercise, button.dataset.field, Number(button.dataset.delta || 0)));
+      });
+      exercise.querySelectorAll(".control-value-input").forEach((input) => {
+        bindControlValueInput(input, () => exercise);
+      });
+      const dragHandle = exercise.querySelector(".drag-handle");
+      dragHandle.addEventListener("pointerdown", (event) => startExerciseDrag(event, exercise));
+      dragHandle.addEventListener("mousedown", (event) => {
+        if (!exerciseDragState) startExerciseDrag(event, exercise);
+      });
       exercise.querySelector(".exercise-top").addEventListener("click", (event) => {
         if (event.target.closest("button")) return;
         openExercise(exercise, true);
@@ -4770,7 +7052,8 @@
       toast(tags.length || customNote ? "Workout details updated." : "Workout saved.");
     }
 
-    function collectWorkout() {
+    function collectWorkout(options = {}) {
+      const includeEmptySets = Boolean(options.includeEmptySets);
       const exercises = all(".exercise").map((exercise) => {
         const sets = Array.from(exercise.querySelectorAll(".set-row")).map((row) => ({
           weight: row.querySelector(".set-weight").value.trim(),
@@ -4778,7 +7061,7 @@
           rpe: row.querySelector(".set-rpe").value.trim(),
           done: row.querySelector(".set-done")?.checked || false,
           warmup: row.querySelector(".set-warmup")?.checked || false
-        })).filter((set) => set.weight || set.reps || set.rpe);
+        })).filter((set) => includeEmptySets || set.weight || set.reps || set.rpe);
 
         return {
           name: exercise.querySelector(".exercise-name").value.trim(),
@@ -4806,6 +7089,12 @@
     }
 
     async function saveWorkout() {
+      const liveSessionVisible = !$("sessionView")?.classList.contains("hidden");
+      const liveStats = getSessionSetStats();
+      if (liveSessionVisible && liveStats.total > 0 && liveStats.completed < liveStats.total) {
+        const ok = confirm(`Finish workout with ${liveStats.completed}/${liveStats.total} sets completed?`);
+        if (!ok) return;
+      }
       if (!$('endTime').value && $('startTime').value) $('endTime').value = timeNow();
       const workout = collectWorkout();
       if (!workout.exercises.length) { toast("Add at least one exercise first."); return; }
@@ -5507,6 +7796,11 @@
       document.addEventListener("focusin", (event) => {
         if (event.target.matches("input, textarea")) scrollInputIntoView(event.target);
       });
+      document.addEventListener("pointermove", moveExerciseDrag);
+      document.addEventListener("pointerup", endExerciseDrag);
+      document.addEventListener("pointercancel", endExerciseDrag);
+      document.addEventListener("mousemove", moveExerciseDrag);
+      document.addEventListener("mouseup", endExerciseDrag);
       all(".tab").forEach((tab) => tab.addEventListener("click", () => switchScreen(tab.dataset.screen)));
       $("todayStartWorkout")?.addEventListener("click", startTodayWorkout);
       $("todayResumeWorkout").addEventListener("click", resumeWorkoutFromToday);
@@ -5520,6 +7814,13 @@
       $("settingsHaptics").addEventListener("change", () => haptic(20));
       $("sessionBack").addEventListener("click", showTodayView);
       $("sessionSaveTop").addEventListener("click", saveWorkout);
+      $("exerciseDetailBack")?.addEventListener("click", closeExerciseDetail);
+      all("[data-detail-tab]").forEach((button) => button.addEventListener("click", () => setExerciseDetailTab(button.dataset.detailTab)));
+      $("exerciseDetailCompleteSet")?.addEventListener("click", () => {
+        if (!activeExerciseDetailEl) return;
+        completeCurrentSet(activeExerciseDetailEl);
+        renderExerciseDetailView();
+      });
       $("completionDone").addEventListener("click", finishCompletionPopup);
       $("completionCustomNoteButton").addEventListener("click", () => {
         const note = $("completionCustomNote");
@@ -5542,7 +7843,8 @@
         openExercise(exercise, true);
         saveDraftSilently();
       });
-      $("saveWorkout").addEventListener("click", saveWorkout);
+      $("saveWorkout").addEventListener("click", handleSessionPrimaryAction);
+      $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);
       $("saveWeight").addEventListener("click", saveWeight);
       $("historyFilter").addEventListener("change", renderHistory);
       $("exerciseSearch").addEventListener("input", renderHistory);
