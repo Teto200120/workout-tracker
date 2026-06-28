@@ -2727,6 +2727,399 @@
       animation: ctaSettleCompact 300ms cubic-bezier(.2, .9, .24, 1) !important;
     }
 
+    /* === Polish pass: Today state, preview/review, guidance, and motion === */
+    .today-workout-card {
+      cursor: pointer;
+    }
+
+    .today-workout-card.is-active-workout {
+      border-color: rgba(255, 104, 69, 0.42) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.045),
+        0 18px 34px rgba(1, 8, 18, 0.22),
+        0 0 0 1px rgba(255, 104, 69, 0.08) !important;
+    }
+
+    .today-workout-card.is-completed {
+      border-color: rgba(34, 197, 94, 0.32) !important;
+    }
+
+    .today-status-pill.active {
+      color: #ffd7cc;
+      background: rgba(255, 104, 69, 0.15);
+      border-color: rgba(255, 104, 69, 0.28);
+    }
+
+    .today-status-pill.active::before {
+      background: var(--ref-coral);
+      box-shadow: 0 0 14px rgba(255, 104, 69, 0.48);
+    }
+
+    .today-workout-card.is-active-workout .today-duration-chip {
+      display: inline-flex !important;
+    }
+
+    .today-card-secondary-action {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 12px;
+      border-radius: 16px;
+      color: #f1f7ff;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(166, 190, 220, 0.18);
+      font-weight: 900;
+    }
+
+    .today-card-secondary-action.hidden {
+      display: none !important;
+    }
+
+    .today-review-view {
+      position: fixed;
+      inset: 0;
+      left: 50%;
+      z-index: 95;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      width: min(100vw, 520px);
+      min-height: 100vh;
+      color: #edf6ff;
+      background:
+        linear-gradient(180deg, rgba(27, 48, 76, 0.99) 0, rgba(16, 36, 62, 1) 42%, rgba(7, 27, 49, 1) 100%);
+      transform: translateX(-50%);
+      animation: detailViewIn 220ms cubic-bezier(.2,.86,.2,1) both;
+    }
+
+    .today-review-view.hidden {
+      display: none !important;
+    }
+
+    body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
+      display: none !important;
+    }
+
+    .today-review-header {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: calc(18px + env(safe-area-inset-top)) 18px 18px;
+      border-bottom: 1px solid rgba(153, 177, 205, 0.18);
+      background: rgba(26, 48, 77, 0.98);
+      box-shadow: 0 14px 30px rgba(2, 10, 22, 0.18);
+    }
+
+    .today-review-back {
+      display: inline-grid;
+      place-items: center;
+      width: 52px;
+      min-width: 52px;
+      height: 52px;
+      min-height: 52px;
+      padding: 0;
+      border-radius: 999px;
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.22);
+      border: 1px solid rgba(170, 194, 222, 0.18);
+      line-height: 0;
+    }
+
+    .today-review-back svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2.25;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transform: translateX(-1px);
+    }
+
+    .today-review-title {
+      margin: 0;
+      overflow: hidden;
+      color: #f4f9ff;
+      font-size: 1.35rem;
+      line-height: 1.08;
+      letter-spacing: 0;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .today-review-subtitle {
+      display: block;
+      margin-top: 5px;
+      color: #9eb6d2;
+      font-size: 0.95rem;
+      font-weight: 760;
+    }
+
+    .today-review-scroll {
+      overflow: auto;
+      padding: 20px 18px calc(26px + env(safe-area-inset-bottom));
+    }
+
+    .today-review-card {
+      display: grid;
+      gap: 18px;
+      padding: 20px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 104, 69, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(38, 59, 87, 0.9), rgba(27, 45, 70, 0.94));
+      border: 1px solid rgba(153, 177, 205, 0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 18px 34px rgba(1, 8, 18, 0.22);
+    }
+
+    .today-review-card.success {
+      border-color: rgba(34, 197, 94, 0.28);
+      background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.1), transparent 34%),
+        linear-gradient(180deg, rgba(34, 57, 76, 0.92), rgba(20, 42, 63, 0.96));
+    }
+
+    .today-review-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .today-review-stat {
+      min-height: 74px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(8, 24, 42, 0.44);
+      border: 1px solid rgba(153, 177, 205, 0.14);
+    }
+
+    .today-review-stat strong {
+      display: block;
+      color: #f7fbff;
+      font-size: 1.16rem;
+      line-height: 1.1;
+    }
+
+    .today-review-stat span {
+      display: block;
+      margin-top: 5px;
+      color: #9eb6d2;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .today-review-exercise-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .today-review-exercise {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: center;
+      min-height: 48px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(8, 24, 42, 0.44);
+      border: 1px solid rgba(153, 177, 205, 0.14);
+      color: #f1f7ff;
+      font-weight: 900;
+    }
+
+    .today-review-exercise span {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      color: var(--ref-coral);
+      background: rgba(255, 104, 69, 0.15);
+      font-size: 0.78rem;
+      font-weight: 950;
+    }
+
+    .today-review-primary {
+      width: 100%;
+      min-height: 64px;
+      border-radius: 20px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--ref-coral), var(--ref-coral-2));
+      box-shadow: 0 15px 28px rgba(255, 107, 69, 0.22);
+      font-size: 1rem;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .today-review-secondary {
+      width: 100%;
+      min-height: 48px;
+      border-radius: 18px;
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.18);
+      border: 1px solid rgba(170, 194, 222, 0.16);
+      font-weight: 900;
+    }
+
+    .exercise-detail-view:not(.hidden) {
+      animation: detailViewIn 220ms cubic-bezier(.2,.86,.2,1) both;
+    }
+
+    @keyframes detailViewIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.992); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    }
+
+    .exercise-detail-guidance {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 16px;
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 104, 69, 0.07), transparent 36%),
+        linear-gradient(180deg, rgba(38, 59, 87, 0.88), rgba(28, 47, 73, 0.92));
+      border: 1px solid rgba(153, 177, 205, 0.2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+    }
+
+    .exercise-detail-guidance .detail-stat-grid {
+      margin-bottom: 0;
+    }
+
+    .exercise-detail-guidance .guidance-reason {
+      margin-top: 0;
+    }
+
+    .detail-set-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: -4px;
+    }
+
+    .detail-set-actions button {
+      min-height: 48px;
+      border-radius: 16px;
+      font-weight: 900;
+    }
+
+    .detail-set-actions .detail-add-set {
+      color: #dceeff;
+      background: rgba(96, 122, 156, 0.2);
+      border: 1px solid rgba(170, 194, 222, 0.18);
+    }
+
+    .detail-set-actions .detail-remove-set {
+      color: #ffd2c5;
+      background: rgba(255, 104, 69, 0.12);
+      border: 1px solid rgba(255, 104, 69, 0.22);
+    }
+
+    .completion-overlay {
+      place-items: center;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(34, 197, 94, 0.14), transparent 34%),
+        rgba(2, 8, 20, 0.76);
+      backdrop-filter: blur(16px);
+    }
+
+    .completion-card {
+      width: min(520px, 100%);
+      max-height: min(86vh, 760px);
+      padding: 22px;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.13), transparent 34%),
+        linear-gradient(180deg, rgba(35, 55, 82, 0.96), rgba(14, 31, 54, 0.98));
+      border: 1px solid rgba(34, 197, 94, 0.26);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 26px 70px rgba(0, 0, 0, 0.55);
+    }
+
+    .completion-kicker {
+      min-height: 34px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      font-size: 0.8rem;
+      font-weight: 950;
+    }
+
+    .completion-stats {
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .completion-stat {
+      min-height: 78px;
+      padding: 13px;
+      border-radius: 16px;
+      background: rgba(8, 24, 42, 0.48);
+      border: 1px solid rgba(153, 177, 205, 0.14);
+    }
+
+    .completion-stat strong {
+      color: #f7fbff;
+      font-size: 1.28rem;
+      line-height: 1.1;
+    }
+
+    .completion-highlight {
+      padding: 14px;
+      border-radius: 16px;
+      color: #f1f7ff;
+      background: rgba(10, 36, 58, 0.66);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+    }
+
+    .completion-highlight strong {
+      color: #f7fbff;
+      font-size: 1rem;
+    }
+
+    .completion-actions .success,
+    #completionDone {
+      min-height: 56px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #052e16;
+      font-weight: 950;
+    }
+
+    #sessionView .exercise,
+    #sessionView .exercise-body {
+      transition-timing-function: cubic-bezier(.2,.86,.2,1);
+    }
+
+    #sessionView .exercise-body {
+      transition-duration: 280ms;
+    }
+
+    #sessionUndoSet .undo-icon {
+      width: 26px;
+      height: 26px;
+      display: block;
+      stroke-width: 2.45;
+      transform: none;
+    }
+
+    @media (max-width: 390px) {
+      .today-review-stat-grid,
+      .detail-set-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .exercise-detail-guidance {
+        padding: 14px;
+      }
+    }
+
     /* === Active Workout Redesign: scoped live-session surface === */
     body:has(#sessionView:not(.hidden)) {
       padding: 0;
@@ -3489,12 +3882,17 @@
     }
 
     #sessionUndoSet {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       width: 56px;
       min-width: 56px;
       height: 64px;
       min-height: 64px;
       padding: 0;
       border-radius: 22px;
+      color: #a9bdd6;
+      line-height: 0;
     }
 
     #sessionUndoSet:disabled {
@@ -4088,6 +4486,7 @@
             </details>
 
             <button class="today-inline-resume hidden" id="todayResumeWorkout" type="button">↻ Resume current workout</button>
+            <button class="today-card-secondary-action hidden" id="todayCardAction" type="button">Start Another Workout</button>
           </div>
 
           <div class="card" id="todayProgressGlanceCard">
@@ -4214,7 +4613,7 @@
 
         <div class="save-dock">
           <button class="live-icon-button" id="sessionUndoSet" type="button" aria-label="Undo last completed set">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a8 8 0 0 0-13.66-5.66L3 15"/></svg>
+            <svg class="undo-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 5 11l4 4"/><path d="M5 11h10a4 4 0 0 1 0 8h-2"/></svg>
           </button>
           <button class="success" id="saveWorkout" type="button">Complete Set 1</button>
         </div>
@@ -4569,6 +4968,18 @@
     </div>
   </div>
 
+  <div class="today-review-view hidden" id="todayReviewView" aria-hidden="true">
+    <div class="today-review-header">
+      <button class="today-review-back" id="todayReviewBack" type="button" aria-label="Back to Today">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+      </button>
+      <div>
+        <h2 class="today-review-title" id="todayReviewTitle">Workout Preview</h2>
+        <span class="today-review-subtitle" id="todayReviewSubtitle">Review the plan</span>
+      </div>
+    </div>
+    <div class="today-review-scroll" id="todayReviewContent"></div>
+  </div>
 
   <div class="today-floating-cta hidden" id="todayFloatingCta">
     <button class="today-primary-cta" id="todayStartWorkout" type="button">
@@ -4640,10 +5051,13 @@
     let timerInterval = null;
     let timerEnd = 0;
     let sessionElapsedInterval = null;
+    let todayActiveElapsedInterval = null;
+    let todayCtaMode = "start";
     let exerciseDragState = null;
     let activeExerciseDetailEl = null;
     let exerciseDetailTab = "log";
     let exerciseDetailRenderToken = 0;
+    let exerciseFocusScrollToken = 0;
     let templateDraftExercises = [];
     let editingTemplateId = null;
     let editingWorkoutId = null;
@@ -4705,7 +5119,8 @@
     function shouldShowTodayFloatingCta() {
       const logVisible = $("log")?.classList.contains("active");
       const todayVisible = $("todayView") && !$("todayView").classList.contains("hidden");
-      return Boolean(logVisible && todayVisible);
+      const reviewOpen = $("todayReviewView") && !$("todayReviewView").classList.contains("hidden");
+      return Boolean(logVisible && todayVisible && !reviewOpen && todayCtaMode !== "hidden");
     }
 
     function setTodayCtaLabel(text) {
@@ -5099,6 +5514,7 @@
 
     function clearDraftStorage(showMessage = true) {
       localStorage.removeItem("hector_workout_draft_v1");
+      stopTodayActiveElapsedTimer();
       if (showMessage) toast("Draft cleared.");
     }
 
@@ -5125,6 +5541,8 @@
     }
 
     function showSessionView() {
+      closeTodayReview();
+      stopTodayActiveElapsedTimer();
       $("todayView")?.classList.add("hidden");
       $("sessionView")?.classList.remove("hidden");
       syncTodayFloatingCta();
@@ -5269,8 +5687,10 @@
       const todaysWorkouts = workouts
         .filter((workout) => workout.date === today())
         .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-      const completed = todaysWorkouts.length > 0;
       const draft = getDraft();
+      const hasActiveDraft = Boolean(draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime);
+      const completed = todaysWorkouts.length > 0 && !hasActiveDraft;
+      const lastToday = todaysWorkouts[0] || null;
 
       updateTodayGreeting(workouts);
       await renderTodayWeekProgress(workouts);
@@ -5291,26 +5711,44 @@
       const exerciseCount = selectedTemplate?.exercises?.length || 0;
       const tags = getWorkoutTags(selectedWorkout, selectedTemplate);
       const estimatedDuration = estimateWorkoutDuration(selectedTemplate);
-
-      const pill = $("todayStatusPill");
-      if (pill) {
-        pill.className = `today-status-pill ${completed ? "complete" : plan.kind === "rest" ? "rest" : ""}`;
-        pill.textContent = completed ? "Workout Completed" : plan.kind === "gym" ? "Today’s Workout" : plan.kind === "soccer" ? "Soccer Day" : "Rest Day";
-      }
-
-      $("todayTitle").textContent = completed ? "Completed" : selectedWorkout;
-      $("todaySubtitle").textContent = completed
-        ? "Today’s workout is saved. You can review progress or start another workout if plans changed."
-        : plan.kind === "gym"
-          ? `${exerciseCount || "Your"} exercises ready from your schedule.`
-          : plan.note;
-
-      const lastToday = todaysWorkouts[0];
+      const activeWorkoutName = draft?.type || selectedWorkout;
       const totalVolume = lastToday ? Math.round(workoutVolume(lastToday)).toLocaleString() : "-";
       const totalWorkSets = lastToday ? totalSets(lastToday) : "-";
       const duration = lastToday ? durationLabel(workoutDurationMinutes(lastToday)) : "-";
+      const draftTotalSets = hasActiveDraft ? totalSets(draft) : 0;
+      const draftDoneSets = hasActiveDraft ? completedSets(draft) : 0;
+      const draftExerciseCount = hasActiveDraft ? draft.exercises.length : 0;
 
-      $("todayMeta").innerHTML = completed
+      const card = $("todayWorkoutCard");
+      if (card) {
+        card.classList.toggle("is-active-workout", hasActiveDraft);
+        card.classList.toggle("is-completed", completed);
+      }
+
+      const pill = $("todayStatusPill");
+      if (pill) {
+        pill.className = `today-status-pill ${hasActiveDraft ? "active" : completed ? "complete" : plan.kind === "rest" ? "rest" : ""}`;
+        pill.textContent = completed ? "Workout Completed" : plan.kind === "gym" ? "Today’s Workout" : plan.kind === "soccer" ? "Soccer Day" : "Rest Day";
+      }
+
+      if (pill && hasActiveDraft) pill.textContent = "Workout Active";
+
+      $("todayTitle").textContent = hasActiveDraft ? activeWorkoutName : completed ? "Completed" : selectedWorkout;
+      $("todaySubtitle").textContent = completed
+        ? "Today’s workout is saved. You can review progress or start another workout if plans changed."
+        : hasActiveDraft
+          ? "Session in progress. Resume when you are ready for the next set."
+          : plan.kind === "gym"
+            ? `${exerciseCount || "Your"} exercises ready from your schedule.`
+            : plan.note;
+
+      $("todayMeta").innerHTML = hasActiveDraft
+        ? `
+          <div class="today-mini-stat"><strong id="todayActiveTimer">${formatElapsedClock(getDraftElapsedSeconds(draft))}</strong><span>active</span></div>
+          <div class="today-mini-stat"><strong>${draftDoneSets}/${draftTotalSets || 0}</strong><span>sets</span></div>
+          <div class="today-mini-stat"><strong>${draftExerciseCount || "-"}</strong><span>exercises</span></div>
+        `
+        : completed
         ? `
           <div class="today-mini-stat"><strong>${cleanText(lastToday.type)}</strong><span>Saved</span></div>
           <div class="today-mini-stat"><strong>${totalWorkSets}</strong><span>sets</span></div>
@@ -5330,23 +5768,153 @@
       }
 
       const durationChip = $("todayDurationChip");
-      if (durationChip) durationChip.textContent = completed ? duration : estimatedDuration;
+      if (durationChip) durationChip.textContent = hasActiveDraft ? formatElapsedClock(getDraftElapsedSeconds(draft)) : completed ? duration : estimatedDuration;
 
       const previewHint = $("todayPreviewHint");
-      if (previewHint) previewHint.textContent = completed ? `${totalVolume} lb volume saved` : "Tap to preview";
+      if (previewHint) previewHint.textContent = hasActiveDraft ? `${draftDoneSets}/${draftTotalSets || 0} sets logged` : completed ? `${totalVolume} lb volume saved` : "Tap to preview";
 
-      setTodayCtaLabel(completed ? "Start Another Workout" : "Start Workout");
-      $("todayResumeWorkout").classList.toggle("hidden", !draft || !Array.isArray(draft.exercises) || !draft.exercises.length);
+      todayCtaMode = hasActiveDraft ? "resume" : completed ? "hidden" : "start";
+      setTodayCtaLabel(hasActiveDraft ? "Resume Workout" : "Start Workout");
+      $("todayResumeWorkout").classList.add("hidden");
+      const cardAction = $("todayCardAction");
+      if (cardAction) {
+        cardAction.textContent = completed ? "Start Another Workout" : "";
+        cardAction.classList.toggle("hidden", !completed);
+      }
       $("todayPlanNote").innerHTML = completed
         ? `Saved today: <strong>${cleanText(lastToday?.type || "Workout")}</strong> · ${totalWorkSets} work sets · ${totalVolume} volume.`
         : `Suggested by schedule: <strong>${cleanText(plan.title)}</strong>. Current choice: <strong>${cleanText(selectedWorkout)}</strong>.`;
 
+      if (hasActiveDraft) {
+        $("todayPlanNote").innerHTML = `Active session: <strong>${cleanText(activeWorkoutName)}</strong> - ${draftDoneSets}/${draftTotalSets || 0} sets logged.`;
+      }
+
       renderTodayProgressGlance(workouts.sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || "")), buildExerciseStats(workouts));
       await renderBackupStatus();
+      if (hasActiveDraft) startTodayActiveElapsedTimer(draft);
+      else stopTodayActiveElapsedTimer();
       syncTodayFloatingCta();
     }
 
-    async function startTodayWorkout() {
+    function closeTodayReview() {
+      const view = $("todayReviewView");
+      if (!view) return;
+      view.classList.add("hidden");
+      view.setAttribute("aria-hidden", "true");
+      syncTodayFloatingCta();
+    }
+
+    function showTodayReview(title, subtitle, html) {
+      const view = $("todayReviewView");
+      if (!view) return;
+      $("todayReviewTitle").textContent = title;
+      $("todayReviewSubtitle").textContent = subtitle;
+      $("todayReviewContent").innerHTML = html;
+      view.classList.remove("hidden");
+      view.setAttribute("aria-hidden", "false");
+      syncTodayFloatingCta();
+      haptic(12);
+    }
+
+    function todayReviewExerciseList(exercises = []) {
+      if (!exercises.length) {
+        return `<div class="today-review-exercise"><span>0</span><strong>No exercises planned</strong></div>`;
+      }
+      return exercises.map((exercise, index) => `
+        <div class="today-review-exercise">
+          <span>${index + 1}</span>
+          <strong>${cleanText(typeof exercise === "string" ? exercise : exercise.name || "Exercise")}</strong>
+        </div>
+      `).join("");
+    }
+
+    async function openTodayWorkoutReview() {
+      const draft = getDraft();
+      const hasActiveDraft = Boolean(draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime);
+      if (hasActiveDraft) {
+        await resumeWorkoutFromToday();
+        return;
+      }
+
+      const templates = await getTemplates();
+      const workouts = await getItems("workouts");
+      const todaysWorkouts = workouts
+        .filter((workout) => workout.date === today())
+        .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+      const completedWorkout = todaysWorkouts[0] || null;
+
+      if (completedWorkout) {
+        const previousWorkouts = workouts.filter((workout) => workout.id !== completedWorkout.id);
+        const previousSameWorkout = previousWorkouts
+          .filter((workout) => workout.type === completedWorkout.type)
+          .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""))[0] || null;
+        const summary = buildCompletionSummary(completedWorkout, previousSameWorkout, previousWorkouts);
+        showTodayReview("Workout Review", `${completedWorkout.type} saved`, `
+          <div class="today-review-card success">
+            <div class="today-review-stat-grid">
+              <div class="today-review-stat"><strong>${summary.sets}</strong><span>Work sets</span></div>
+              <div class="today-review-stat"><strong>${summary.volume.toLocaleString()}</strong><span>Volume</span></div>
+              <div class="today-review-stat"><strong>${durationLabel(summary.duration)}</strong><span>Time</span></div>
+            </div>
+            <div class="completion-highlights">${summary.highlights.map((item) => `
+              <div class="completion-highlight"><strong>${cleanText(item.title)}</strong><p class="muted small" style="margin:4px 0 0;">${cleanText(item.text)}</p></div>
+            `).join("")}</div>
+            <div class="today-review-exercise-list">${todayReviewExerciseList(completedWorkout.exercises || [])}</div>
+            <button class="today-review-secondary" id="todayReviewStartAnother" type="button">Start Another Workout</button>
+          </div>
+        `);
+        $("todayReviewStartAnother")?.addEventListener("click", () => startTodayWorkout({ forceNew: true }));
+        return;
+      }
+
+      const selected = $("todayWorkoutSelect")?.value || getTodayPlan(today()).routine || "Custom";
+      const template = templates.find((item) => item.name === selected);
+      const exercises = template?.exercises || [];
+      const tags = getWorkoutTags(selected, template);
+      showTodayReview("Routine Preview", selected, `
+        <div class="today-review-card">
+          <div class="today-review-stat-grid">
+            <div class="today-review-stat"><strong>${exercises.length || "-"}</strong><span>Exercises</span></div>
+            <div class="today-review-stat"><strong>${tags.length || "-"}</strong><span>Groups</span></div>
+            <div class="today-review-stat"><strong>${estimateWorkoutDuration(template)}</strong><span>Estimate</span></div>
+          </div>
+          <div class="today-review-exercise-list">${todayReviewExerciseList(exercises)}</div>
+          <button class="today-review-primary" id="todayReviewStartWorkout" type="button">Start Workout</button>
+        </div>
+      `);
+      $("todayReviewStartWorkout")?.addEventListener("click", () => startTodayWorkout());
+    }
+
+    async function handleTodayPrimaryCta() {
+      if (todayCtaMode === "resume") {
+        await resumeWorkoutFromToday();
+        return;
+      }
+      if (todayCtaMode === "hidden") return;
+      await startTodayWorkout();
+    }
+
+    async function handleTodayCardAction() {
+      haptic(14);
+      await startTodayWorkout({ forceNew: true });
+    }
+
+    async function handleTodayWorkoutCardClick(event) {
+      if (event?.target?.closest("button, select, option, details, summary, label, input, textarea, a")) return;
+      await openTodayWorkoutReview();
+    }
+
+    async function startTodayWorkout(options = {}) {
+      const forceNew = Boolean(options.forceNew);
+      const draft = getDraft();
+      if (!forceNew && draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime) {
+        await resumeWorkoutFromToday();
+        return;
+      }
+
+      closeTodayReview();
+      stopTodayActiveElapsedTimer();
+      haptic(18);
       const selected = $("todayWorkoutSelect")?.value || getTodayPlan(today()).routine || "Custom";
       editingWorkoutId = null;
       $("workoutDate").value = today();
@@ -5363,14 +5931,13 @@
 
     async function resumeWorkoutFromToday() {
       await restoreDraftFromStorage();
-      showSessionView();
     }
 
     async function restoreDraftFromStorage() {
       const draft = getDraft();
       if (!draft || !Array.isArray(draft.exercises)) {
         toast("No workout draft found.");
-        return;
+        return false;
       }
 
       editingWorkoutId = draft.editingWorkoutId || null;
@@ -5390,6 +5957,7 @@
       switchScreen("log");
       showSessionView();
       toast("Draft restored.");
+      return true;
     }
 
     function saveGoalsToStorage() {
@@ -5542,14 +6110,22 @@
       return hour * 60 + minute;
     }
 
-    function getSessionElapsedSeconds() {
-      const startMinutes = timeToMinutes($("startTime")?.value || "");
+    function elapsedSecondsFromClock(startTime, endTime = "") {
+      const startMinutes = timeToMinutes(startTime || "");
       if (startMinutes === null) return 0;
-      const endMinutes = timeToMinutes($("endTime")?.value || "");
+      const endMinutes = timeToMinutes(endTime || "");
       const now = new Date();
       let currentMinutes = endMinutes === null ? now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60 : endMinutes;
       if (currentMinutes < startMinutes) currentMinutes += 24 * 60;
       return Math.round((currentMinutes - startMinutes) * 60);
+    }
+
+    function getSessionElapsedSeconds() {
+      return elapsedSecondsFromClock($("startTime")?.value || "", $("endTime")?.value || "");
+    }
+
+    function getDraftElapsedSeconds(draft) {
+      return elapsedSecondsFromClock(draft?.startTime || "", draft?.endTime || "");
     }
 
     function updateSessionElapsedTimer() {
@@ -5566,6 +6142,28 @@
     function stopSessionElapsedTimer() {
       if (sessionElapsedInterval) clearInterval(sessionElapsedInterval);
       sessionElapsedInterval = null;
+    }
+
+    function updateTodayActiveElapsedTimer(draft = getDraft()) {
+      const target = $("todayActiveTimer");
+      const chip = $("todayDurationChip");
+      if (!draft || !target) return;
+      const label = formatElapsedClock(getDraftElapsedSeconds(draft));
+      target.textContent = label;
+      if (chip) chip.textContent = label;
+    }
+
+    function startTodayActiveElapsedTimer(draft) {
+      if (todayActiveElapsedInterval) clearInterval(todayActiveElapsedInterval);
+      todayActiveElapsedInterval = null;
+      if (!draft?.startTime) return;
+      updateTodayActiveElapsedTimer(draft);
+      todayActiveElapsedInterval = setInterval(() => updateTodayActiveElapsedTimer(draft), 1000);
+    }
+
+    function stopTodayActiveElapsedTimer() {
+      if (todayActiveElapsedInterval) clearInterval(todayActiveElapsedInterval);
+      todayActiveElapsedInterval = null;
     }
 
     function getWorkSetRows(exerciseEl) {
@@ -5757,6 +6355,7 @@
       input.value = field === "rpe" && !Number.isInteger(next) ? next.toFixed(1) : String(next);
       updateExerciseSummary(exerciseEl);
       saveDraftSilently();
+      haptic(8);
     }
 
     function completedSetChips(exerciseEl) {
@@ -5903,7 +6502,7 @@
       `;
     }
 
-    async function openExerciseDetail(exerciseEl, tab = "guide") {
+    async function openExerciseDetail(exerciseEl, tab = "log") {
       if (!exerciseEl) return;
       activeExerciseDetailEl = exerciseEl;
       exerciseDetailTab = tab;
@@ -5927,6 +6526,7 @@
 
     function setExerciseDetailTab(tab) {
       exerciseDetailTab = tab === "guide" ? "guide" : "log";
+      haptic(10);
       renderExerciseDetailView();
     }
 
@@ -6177,21 +6777,41 @@
       const lastWeight = lastWorkSets.length ? formatPrimaryWeight(lastWorkSets) : values.weight;
       const pr = await getExercisePr(name);
       const lastLabel = lastWeight && lastWeight !== "-" ? `${lastWeight} lb` : "-";
+      const lastReps = lastWorkSets.length ? formatRepsList(lastWorkSets) : "No previous work sets";
+      const targetPlan = last ? buildTargetFromLastSets(name, last.sets) : {
+        weight: "-",
+        repsText: `${profile.min}-${profile.max} reps`,
+        reason: `${profile.min}-${profile.max} range - build a baseline first`,
+        targetSets: []
+      };
+      const targetWeightLabel = targetPlan.weight || "-";
+      const targetRepsLabel = targetRepsBySetText(targetPlan);
       const prLabel = pr ? `${pr.weight} x ${pr.reps}` : "-";
+      const prSub = pr ? `est ${pr.estimated1rm.toFixed(1)} lb - ${dateLabel(pr.date)}` : "Not set yet";
+      const reasoningLine = last
+        ? `${targetPlan.reason} - Last logged ${dateLabel(last.workoutDate)}.`
+        : `${profile.min}-${profile.max} range - build a baseline first.`;
 
       return `
-        <div class="detail-stat-grid">
-          <div class="detail-stat-card"><span class="detail-stat-icon">Last</span><strong>${cleanText(lastLabel)}</strong><span>Last Weight</span></div>
-          <div class="detail-stat-card"><span class="detail-stat-icon">Target</span><strong>${profile.min}-${profile.max}</strong><span>Target Reps</span></div>
-          <div class="detail-stat-card"><span class="detail-stat-icon">Sets</span><strong>${total}</strong><span>Total Sets</span></div>
+        <div class="exercise-detail-guidance">
+          <div class="detail-stat-grid">
+            <div class="detail-stat-card"><span class="detail-stat-icon">Last</span><strong>${cleanText(lastLabel)}</strong><span>${cleanText(lastReps)}</span></div>
+            <div class="detail-stat-card"><span class="detail-stat-icon">Target</span><strong>${cleanText(targetWeightLabel)}</strong><span>${cleanText(targetRepsLabel)}</span></div>
+            <div class="detail-stat-card"><span class="detail-stat-icon">PR</span><strong>${cleanText(prLabel)}</strong><span>${cleanText(prSub)}</span></div>
+          </div>
+          <div class="guidance-reason">${cleanText(reasoningLine)}</div>
         </div>
         <div class="exercise-detail-card">
           <span class="current-set-label">Current Set<strong>${row ? `Set ${index + 1}` : "Complete"}</strong></span>
           ${controlInputHtml("weight", values.weight === "-" ? "" : values.weight, "Weight (lbs)")}
           ${controlInputHtml("reps", values.reps === "-" ? "" : values.reps, "Reps")}
           ${controlInputHtml("rpe", values.rpe, "RPE")}
+          <div class="detail-set-actions">
+            <button class="detail-add-set" type="button" data-detail-action="add-set">+ Add Set</button>
+            <button class="detail-remove-set" type="button" data-detail-action="remove-last-set">Remove Last Set</button>
+          </div>
         </div>
-        <div class="exercise-guide-card" style="margin-top:20px;">
+        <div class="hidden" aria-hidden="true">
           <strong>PR</strong>
           <p class="muted small" style="margin:6px 0 0;">${cleanText(prLabel)}${pr ? ` · est ${pr.estimated1rm.toFixed(1)} lb` : ""}</p>
         </div>
@@ -6225,9 +6845,48 @@
       button.textContent = `Complete Set ${index + 1}`;
     }
 
+    function addSetToExercise(exerciseEl) {
+      const setsEl = exerciseEl?.querySelector(".sets");
+      if (!setsEl) return false;
+      setsEl.appendChild(makeSetRow());
+      setRows(exerciseEl);
+      updateExerciseSummary(exerciseEl);
+      saveDraftSilently();
+      haptic(14);
+      if (isExerciseDetailOpen()) renderExerciseDetailView();
+      return true;
+    }
+
+    function removeLastSetFromExercise(exerciseEl) {
+      const workSets = getWorkSetRows(exerciseEl);
+      if (!workSets.length) {
+        toast("No work sets to remove.");
+        return false;
+      }
+
+      const row = [...workSets].reverse().find((item) => !item.querySelector(".set-done")?.checked) || workSets[workSets.length - 1];
+      const isCompleted = row.querySelector(".set-done")?.checked;
+      if (isCompleted && !confirm("Remove the last completed set?")) return false;
+
+      row.remove();
+      setRows(exerciseEl);
+      updateExerciseSummary(exerciseEl);
+      saveDraftSilently();
+      haptic(isCompleted ? [20, 30] : 14);
+      if (isExerciseDetailOpen()) renderExerciseDetailView();
+      return true;
+    }
+
     function bindExerciseDetailControls() {
       const view = $("exerciseDetailView");
       if (!view) return;
+      view.querySelectorAll("[data-detail-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (!activeExerciseDetailEl) return;
+          if (button.dataset.detailAction === "add-set") addSetToExercise(activeExerciseDetailEl);
+          if (button.dataset.detailAction === "remove-last-set") removeLastSetFromExercise(activeExerciseDetailEl);
+        });
+      });
       view.querySelectorAll(".control-stepper").forEach((button) => {
         button.addEventListener("click", () => {
           if (!activeExerciseDetailEl) return;
@@ -6261,7 +6920,7 @@
     }
 
     function toggleExerciseGuide(exerciseEl) {
-      openExerciseDetail(exerciseEl, "guide");
+      openExerciseDetail(exerciseEl, "log");
     }
 
     function getDragAfterElement(container, y) {
@@ -6371,7 +7030,8 @@
       const muscleChip = exerciseEl.querySelector(".exercise-muscle-chip");
       const completedChips = exerciseEl.querySelector(".completed-set-chips");
       const profile = getExerciseProfile(name);
-      const targetText = `${profile.min}-${profile.max} reps`;
+      const broadTargetText = `${profile.min}-${profile.max} reps`;
+      const targetText = exerciseEl.dataset.todayTargetSummary || broadTargetText;
       const muscle = inferMuscleTag(name) || "General";
 
       if (title) title.textContent = name;
@@ -6433,18 +7093,68 @@
       collapseAllButIndex(0);
     }
 
+    function getSessionFocusBand() {
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const header = document.querySelector("#sessionView.live-session > .session-toolbar");
+      const dock = document.querySelector("#sessionView .save-dock");
+      const headerHeight = header ? header.getBoundingClientRect().height : 0;
+      const dockHeight = dock ? dock.getBoundingClientRect().height : 0;
+      let top = headerHeight + 16;
+      let bottom = viewportHeight - dockHeight - 18;
+
+      if (bottom - top < 180) {
+        top = Math.max(12, Math.min(top, viewportHeight - 192));
+        bottom = Math.min(viewportHeight - 12, top + 180);
+      }
+
+      return { top, bottom };
+    }
+
+    function focusExerciseInSessionView(exerciseEl) {
+      if (!exerciseEl || !$("sessionView") || $("sessionView").classList.contains("hidden")) return;
+      const scroller = document.scrollingElement || document.documentElement;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const rect = exerciseEl.getBoundingClientRect();
+      if (!rect.height || !viewportHeight) return;
+
+      const { top, bottom } = getSessionFocusBand();
+      const safeHeight = Math.max(160, bottom - top);
+      const desiredTop = rect.height <= safeHeight
+        ? top + (safeHeight - rect.height) * 0.44
+        : top;
+      const maxScroll = Math.max(0, scroller.scrollHeight - viewportHeight);
+      const targetTop = clamp(scroller.scrollTop + rect.top - desiredTop, 0, maxScroll);
+
+      if (Math.abs(targetTop - scroller.scrollTop) < 2) return;
+      window.scrollTo({ top: Math.round(targetTop), behavior: motionBehavior() });
+    }
+
+    function scheduleExerciseFocus(exerciseEl) {
+      const token = ++exerciseFocusScrollToken;
+      const focus = () => {
+        if (token !== exerciseFocusScrollToken) return;
+        focusExerciseInSessionView(exerciseEl);
+      };
+      requestAnimationFrame(() => requestAnimationFrame(focus));
+      setTimeout(focus, motionBehavior() === "smooth" ? 320 : 50);
+    }
+
     function openExercise(exerciseEl, scroll = true) {
       const exercises = all(".exercise");
       const index = exercises.indexOf(exerciseEl);
       if (index < 0) return;
       collapseAllButIndex(index);
-      if (scroll) setTimeout(() => exerciseEl.scrollIntoView({ behavior: motionBehavior(), block: "start" }), 80);
+      if (scroll) scheduleExerciseFocus(exerciseEl);
+      haptic(10);
       saveDraftSilently();
     }
 
     function toggleExerciseCollapse(exerciseEl) {
       if (exerciseEl.classList.contains("collapsed")) openExercise(exerciseEl, true);
-      else setExerciseCollapsed(exerciseEl, true);
+      else {
+        setExerciseCollapsed(exerciseEl, true);
+        haptic(10);
+      }
     }
 
     function goToExerciseOffset(exerciseEl, offset) {
@@ -6561,7 +7271,7 @@
           </div>
           <button class="guide-row" type="button">
             <span class="guide-info-icon">${iconInfo()}</span>
-            <span>View Exercise Guide</span>
+            <span>Exercise Details</span>
           </button>
           <div class="last-performance muted small"></div>
           <div class="current-set-panel">
@@ -6610,10 +7320,7 @@
       setRows(exercise);
 
       exercise.querySelector(".add-set").addEventListener("click", () => {
-        setsEl.appendChild(makeSetRow());
-        setRows(exercise);
-        updateExerciseSummary(exercise);
-        saveDraftSilently();
+        addSetToExercise(exercise);
       });
       exercise.querySelector(".use-last-sets").addEventListener("click", async () => {
         await useLastSets(exercise);
@@ -6785,6 +7492,26 @@
       };
     }
 
+    function compactTargetReps(targetPlan) {
+      const reps = (targetPlan?.targetSets || [])
+        .map((set) => set.reps || "")
+        .filter(Boolean);
+      if (reps.length) return reps.join("/");
+      return String(targetPlan?.repsText || "").replace(/\s*reps?\s*$/i, "").replace(/\s*\/\s*/g, "/").trim();
+    }
+
+    function compactTargetSummary(targetPlan) {
+      const weight = String(targetPlan?.weight || "").trim();
+      const reps = compactTargetReps(targetPlan);
+      if (!weight || weight === "-" || !reps || /log clean|hold form/i.test(reps)) return "";
+      return `${weight} x ${reps}`;
+    }
+
+    function targetRepsBySetText(targetPlan) {
+      const reps = compactTargetReps(targetPlan);
+      return reps ? `${reps.replaceAll("/", " / ")} reps` : "Build a baseline";
+    }
+
     async function getExercisePr(exerciseName) {
       const name = exerciseName.trim().toLowerCase();
       if (!name) return null;
@@ -6809,13 +7536,18 @@
       if (!target) return;
 
       const trimmed = name.trim();
-      if (!trimmed) { target.innerHTML = ""; return; }
+      if (!trimmed) {
+        exerciseEl.dataset.todayTargetSummary = "";
+        target.innerHTML = "";
+        return;
+      }
 
       const last = await getLastExercisePerformance(trimmed);
       const pr = await getExercisePr(trimmed);
       const profile = getExerciseProfile(trimmed);
 
       if (!last) {
+        exerciseEl.dataset.todayTargetSummary = "";
         const prText = pr ? `${pr.weight} × ${pr.reps}` : "-";
         target.innerHTML = `<div class="detail guidance-card">
           <div class="guidance-grid">
@@ -6825,6 +7557,7 @@
           </div>
           <div class="guidance-reason">Suggested internally as ${profile.type} · ${profile.min}-${profile.max} rep range.</div>
         </div>`;
+        updateExerciseSummary(exerciseEl);
         return;
       }
 
@@ -6832,6 +7565,7 @@
       const lastWeight = formatPrimaryWeight(sets);
       const lastReps = formatRepsList(sets);
       const targetPlan = buildTargetFromLastSets(trimmed, last.sets);
+      exerciseEl.dataset.todayTargetSummary = compactTargetSummary(targetPlan);
       const prText = pr ? `${pr.weight} × ${pr.reps}` : "-";
       const prSub = pr ? `est ${pr.estimated1rm.toFixed(1)} lb · ${dateLabel(pr.date)}` : "Not set yet";
 
@@ -6843,6 +7577,7 @@
         </div>
         <div class="guidance-reason">${cleanText(targetPlan.reason)} · Last logged ${dateLabel(last.workoutDate)}.</div>
       </div>`;
+      updateExerciseSummary(exerciseEl);
     }
 
     async function updateAllExerciseHints() {
@@ -7030,7 +7765,7 @@
       $("completionCustomNote").value = "";
       renderCompletionTags();
       modal.classList.remove("hidden");
-      if (navigator.vibrate) navigator.vibrate(45);
+      haptic(45);
     }
 
     async function finishCompletionPopup() {
@@ -7704,7 +8439,7 @@
         clearInterval(timerInterval);
         timerInterval = null;
         $("timerText").textContent = "Rest done. Start the next set.";
-        if (navigator.vibrate) navigator.vibrate([140, 70, 140]);
+        haptic([140, 70, 140]);
         toast("Rest done.");
       }
     }
@@ -7802,7 +8537,10 @@
       document.addEventListener("mousemove", moveExerciseDrag);
       document.addEventListener("mouseup", endExerciseDrag);
       all(".tab").forEach((tab) => tab.addEventListener("click", () => switchScreen(tab.dataset.screen)));
-      $("todayStartWorkout")?.addEventListener("click", startTodayWorkout);
+      $("todayStartWorkout")?.addEventListener("click", handleTodayPrimaryCta);
+      $("todayWorkoutCard")?.addEventListener("click", handleTodayWorkoutCardClick);
+      $("todayCardAction")?.addEventListener("click", handleTodayCardAction);
+      $("todayReviewBack")?.addEventListener("click", closeTodayReview);
       $("todayResumeWorkout").addEventListener("click", resumeWorkoutFromToday);
       $("todayExportBackup")?.addEventListener("click", exportData);
       $("todayWorkoutSelect").addEventListener("change", renderTodayView);
