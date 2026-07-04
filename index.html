@@ -244,19 +244,30 @@
         </div>
       </section>
 
-      <section id="dashboard" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
+      <section id="dashboard" class="screen stats-screen stats-dashboard">
+        <div class="card hero-card stats-hero-card">
+          <div class="screen-title-row stats-hero-row">
             <div>
-              <div class="screen-eyebrow">Progress</div>
-              <h2 style="margin-bottom:4px;">Training Dashboard</h2>
-              <p class="muted small" style="margin:0;">Track consistency, body weight, strength progress, and personal records in one place.</p>
+              <h2 style="margin-bottom:4px;">Your Stats</h2>
+              <p class="muted small" style="margin:0;">Training consistency, session history, strength progress, goals, and body weight in one dashboard.</p>
             </div>
+            <a class="stats-view-all" href="#history">View all</a>
           </div>
-          <div class="grid-3 progress-summary" id="dashboardStats"></div>
+          <div class="stats-top-grid progress-summary" id="dashboardStats"></div>
         </div>
 
-        <div class="card">
+        <div class="card stats-panel stats-week-card">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Weekly Activity</h2>
+              <p class="muted small" style="margin:4px 0 0;">This week's training rhythm, using your current workout schedule.</p>
+            </div>
+            <span class="stats-section-badge" id="weeklyActivityCount">0/0</span>
+          </div>
+          <div id="weeklyActivity" class="stats-week-strip"></div>
+        </div>
+
+        <div class="card stats-panel stats-strength-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Strength Snapshot</h2>
@@ -266,7 +277,7 @@
           <div id="strengthSnapshot" class="insight-list"></div>
         </div>
 
-        <div class="card">
+        <div class="card stats-panel stats-goals-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Goals</h2>
@@ -287,7 +298,7 @@
           <div id="goalsProgress" class="detail"></div>
         </div>
 
-        <div class="card">
+        <div class="card stats-panel stats-weight-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Body Weight</h2>
@@ -310,13 +321,13 @@
           </div>
           <button class="success" id="saveWeight" style="width:100%; margin-top:10px;">Save Weight</button>
           <div id="weightStats" class="grid-3" style="margin-top:12px; margin-bottom:12px;"></div>
-          <details class="detail">
+          <details class="detail" open>
             <summary><strong>Weight History</strong></summary>
             <div id="weightList" style="margin-top:10px;"></div>
           </details>
         </div>
 
-        <div class="card">
+        <div class="card stats-panel stats-progress-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Strength Progress</h2>
@@ -340,7 +351,7 @@
           <div id="exerciseProgress"></div>
         </div>
 
-        <div class="card">
+        <div class="card stats-panel stats-pr-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Personal Records</h2>
@@ -351,14 +362,25 @@
         </div>
       </section>
 
-      <section id="history" class="screen">
-        <div class="card">
-          <h2>Progress Summary</h2>
-          <div class="grid-3" id="workoutStats"></div>
+      <section id="history" class="screen stats-screen stats-history">
+        <div class="card stats-panel stats-lifetime-card">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Workout Stats</h2>
+              <p class="muted small" style="margin:4px 0 0;">Lifetime volume, sets, session count, and average duration.</p>
+            </div>
+          </div>
+          <div class="stats-top-grid" id="workoutStats"></div>
         </div>
 
-        <div class="card">
-          <div class="grid-2" style="margin-bottom:12px;">
+        <div class="card stats-panel stats-history-card">
+          <div class="section-heading stats-history-heading">
+            <div>
+              <h2 style="margin:0;">Recent Sessions</h2>
+              <p class="muted small" style="margin:4px 0 0;">Filter by routine, search exercises, expand details, or edit a logged workout.</p>
+            </div>
+          </div>
+          <div class="grid-2 stats-filter-grid">
             <div>
               <label for="historyFilter">Filter</label>
               <select id="historyFilter"></select>

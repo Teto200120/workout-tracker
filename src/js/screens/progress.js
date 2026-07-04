@@ -192,7 +192,7 @@ function renderInsightList(targetId, insights, emptyText) {
   const target = $(targetId);
   if (!target) return;
   if (!insights.length) {
-    target.innerHTML = `<div class="insight-item"><strong>Keep logging sessions</strong><p class="muted small" style="margin:0;">${cleanText(emptyText)}</p></div>`;
+    target.innerHTML = `<div class="insight-item stats-empty-state"><strong>Keep logging sessions</strong><p class="muted small" style="margin:0;">${cleanText(emptyText)}</p></div>`;
     return;
   }
 
@@ -214,6 +214,56 @@ function renderTodayProgressGlance(workouts, exerciseStats) {
   renderInsightList("todayProgressGlance", insights, "Your strength highlights will show here after more logged workouts.");
 }
 
+function fallbackWeekDates(baseDate = new Date()) {
+  const date = new Date(baseDate);
+  date.setHours(0, 0, 0, 0);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  return Array.from({ length: 7 }, (_, index) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + index);
+    return d;
+  });
+}
+
+function renderWeeklyActivity(workouts) {
+  const target = $("weeklyActivity");
+  const count = $("weeklyActivityCount");
+  if (!target || !count) return;
+
+  const dates = typeof mondayFirstWeekDates === "function" ? mondayFirstWeekDates(new Date()) : fallbackWeekDates(new Date());
+  const keyFromDate = typeof dateKeyFromDate === "function" ? dateKeyFromDate : (date) => date.toISOString().slice(0, 10);
+  const workoutDates = new Set(workouts.map((workout) => workout.date));
+  const todayKey = today();
+  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+  let gymDays = 0;
+  let completedGymDays = 0;
+
+  target.innerHTML = dates.map((date, index) => {
+    const key = keyFromDate(date);
+    const plan = typeof getTodayPlan === "function" ? getTodayPlan(key) : { kind: "gym", title: "Workout" };
+    const complete = workoutDates.has(key);
+    const isGymDay = plan.kind === "gym";
+    if (isGymDay) {
+      gymDays += 1;
+      if (complete) completedGymDays += 1;
+    }
+    const classes = ["stats-week-day", complete ? "complete" : "", key === todayKey ? "today" : "", plan.kind === "rest" ? "rest" : "", plan.kind === "soccer" ? "soccer" : ""].filter(Boolean).join(" ");
+    const status = complete ? "Logged" : plan.kind === "rest" ? "Rest" : plan.kind === "soccer" ? "Soccer" : "Open";
+    return `
+      <div class="${classes}" title="${cleanText(plan.title)}">
+        <span class="stats-week-label">${dayLabels[index]}</span>
+        <span class="stats-week-marker" aria-hidden="true"></span>
+        <span class="stats-week-status">${cleanText(status)}</span>
+      </div>
+    `;
+  }).join("");
+
+  count.textContent = `${completedGymDays}/${gymDays || 0}`;
+}
+
 async function renderDashboard() {
   const workouts = (await getItems("workouts")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   const weights = (await getItems("weights")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
@@ -227,11 +277,12 @@ async function renderDashboard() {
   const streak = getWorkoutStreak(workouts);
 
   $("dashboardStats").innerHTML = `
-    <div class="stat"><strong>${workoutsThisWeek}</strong><span class="muted small">Workouts Last 7 Days</span></div>
-    <div class="stat"><strong>${lastWorkout ? dateLabel(lastWorkout.date) : "-"}</strong><span class="muted small">Last Workout</span></div>
-    <div class="stat"><strong>${lastWeight ? `${lastWeight.weight.toFixed(1)} lb` : "-"}</strong><span class="muted small">Latest Weight</span></div>
-    <div class="stat"><strong>${streak}</strong><span class="muted small">Workout Streak Days</span></div>
+    <div class="stat stats-stat-card stats-stat-accent"><strong>${workoutsThisWeek}</strong><span class="muted small">Last 7 Days</span></div>
+    <div class="stat stats-stat-card"><strong>${lastWorkout ? dateLabel(lastWorkout.date) : "-"}</strong><span class="muted small">Last Workout</span></div>
+    <div class="stat stats-stat-card"><strong>${lastWeight ? `${lastWeight.weight.toFixed(1)} lb` : "-"}</strong><span class="muted small">Latest Weight</span></div>
+    <div class="stat stats-stat-card"><strong>${streak}</strong><span class="muted small">Streak Days</span></div>
   `;
+  renderWeeklyActivity(workouts);
   renderStrengthSnapshot(workouts, exerciseStats);
   renderGoals(workouts, weights);
   renderPersonalRecords(exerciseStats);
@@ -282,12 +333,12 @@ function renderGoals(workouts, weights) {
   }
 
   $("goalsProgress").innerHTML = `
-    <div class="record-card">
+    <div class="record-card stats-goal-row">
       <strong>Weekly workouts</strong>
       <p class="muted small" style="margin:4px 0 0;">${workoutsThisWeek} / ${weeklyGoal} workouts in the last 7 days</p>
       <div class="progress-bar"><div class="progress-fill" style="width:${weeklyPercent}%"></div></div>
     </div>
-    <div class="record-card">
+    <div class="record-card stats-goal-row">
       <strong>Body weight goal</strong>
       <p class="muted small" style="margin:4px 0 0;">${weightText}</p>
       <div class="progress-bar"><div class="progress-fill" style="width:${weightPercent}%"></div></div>
@@ -297,7 +348,7 @@ function renderGoals(workouts, weights) {
 
 function renderPersonalRecords(exerciseStats) {
   const records = exerciseStats.filter((exercise) => exercise.bestEstimated1rm > 0).sort((a, b) => b.bestEstimated1rm - a.bestEstimated1rm).slice(0, 8);
-  if (!records.length) { $("personalRecords").innerHTML = `<p class="muted">No personal records yet. Log sets with weight and reps first.</p>`; return; }
+  if (!records.length) { $("personalRecords").innerHTML = `<div class="stats-empty-state"><strong>No personal records yet</strong><p class="muted small" style="margin:4px 0 0;">Log sets with weight and reps first.</p></div>`; return; }
   $("personalRecords").innerHTML = records.map((record) => `
     <div class="record-card"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(record.name)}</h3><p class="muted small" style="margin-bottom:0;">Best estimated 1RM: ${record.bestEstimated1rm.toFixed(1)} lb${record.bestDate ? ` · ${dateLabel(record.bestDate)}` : ""}</p></div><strong>${record.sessions}x</strong></div></div>
   `).join("");
@@ -315,7 +366,7 @@ function renderExerciseProgress(exerciseStats) {
   const selected = $("progressExercise").value;
   const metric = $("progressMetric").value;
   const exercise = exerciseStats.find((item) => item.name === selected);
-  if (!exercise || !exercise.history.length) { $("exerciseProgress").innerHTML = `<p class="muted">Log an exercise with weight and reps to see progress.</p>`; return; }
+  if (!exercise || !exercise.history.length) { $("exerciseProgress").innerHTML = `<div class="stats-empty-state"><strong>No exercise trend yet</strong><p class="muted small" style="margin:4px 0 0;">Log an exercise with weight and reps to see progress.</p></div>`; return; }
 
   const sorted = getSortedExerciseHistory(exercise);
   const recent = sorted.slice(-7);
@@ -352,4 +403,4 @@ function renderExerciseProgress(exerciseStats) {
   `;
 }
 
-Object.assign(globalThis, { workoutVolume, totalSets, completedSets, workoutDurationMinutes, durationLabel, getBestSet, buildExerciseStats, metricLabel, metricUnit, formatSignedNumber, getSortedExerciseHistory, getExerciseTrendInsight, getRecentPrInsights, getVolumeInsight, buildProgressInsights, renderInsightList, renderStrengthSnapshot, renderTodayProgressGlance, renderDashboard, getWorkoutStreak, renderGoals, renderPersonalRecords, renderExerciseSelectors, renderExerciseProgress });
+Object.assign(globalThis, { workoutVolume, totalSets, completedSets, workoutDurationMinutes, durationLabel, getBestSet, buildExerciseStats, metricLabel, metricUnit, formatSignedNumber, getSortedExerciseHistory, getExerciseTrendInsight, getRecentPrInsights, getVolumeInsight, buildProgressInsights, renderInsightList, renderStrengthSnapshot, renderTodayProgressGlance, fallbackWeekDates, renderWeeklyActivity, renderDashboard, getWorkoutStreak, renderGoals, renderPersonalRecords, renderExerciseSelectors, renderExerciseProgress });
