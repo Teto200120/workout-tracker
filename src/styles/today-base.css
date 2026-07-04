@@ -1,0 +1,75 @@
+.today-home {
+  display: grid;
+  gap: 13px;
+}
+
+.today-hero {
+  padding: 18px;
+}
+
+.today-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: #bae6fd;
+  font-size: 0.78rem;
+  font-weight: 950;
+  margin-bottom: 10px;
+}
+
+.today-status-pill.complete {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.32);
+  color: #bbf7d0;
+}
+
+.today-status-pill.rest {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.22);
+  color: #cbd5e1;
+}
+
+.today-title {
+  margin-bottom: 4px;
+  font-size: clamp(1.45rem, 6vw, 2rem);
+  letter-spacing: -0.045em;
+}
+
+.today-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.today-mini-stat {
+  padding: 10px;
+  border-radius: 15px;
+  background: rgba(2, 6, 23, 0.28);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.today-mini-stat strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.today-actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.today-secondary-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 10px;
+}
