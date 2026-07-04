@@ -495,99 +495,125 @@
         </div>
       </section>
 
-      <section id="templates" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
-            <div>
-              <div class="screen-eyebrow">Routines</div>
-              <h2 style="margin-bottom:4px;">Routine Builder</h2>
-              <p class="muted small" style="margin:0;">Create reusable workout plans, then load them from the Log screen when you train.</p>
-            </div>
-            <button class="ghost profile-subpage-back" type="button" data-profile-back>Back</button>
+      <section id="templates" class="screen profile-subpage-screen routines-screen">
+        <div class="profile-subpage-header">
+          <button class="profile-subpage-back" type="button" data-profile-back aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Profile</span>
+          </button>
+          <div class="profile-subpage-title">
+            <span>Routine Library</span>
+            <h2>Routines</h2>
+            <p>Create reusable workout plans, then start one when it is time to train.</p>
           </div>
+          <span class="profile-subpage-spacer" aria-hidden="true"></span>
         </div>
 
-        <details class="card" open>
-          <summary><strong>Create / Edit Routine</strong> <span class="muted small">— build once, reuse anytime</span></summary>
-          <div style="margin-top:12px;">
-            <div class="grid-2">
+        <details class="card routine-builder-panel" open>
+          <summary>
+            <span>
+              <strong>Create / Edit Routine</strong>
+              <small>Build once, reuse anytime.</small>
+            </span>
+            <span class="routine-builder-chip">Builder</span>
+          </summary>
+          <div class="routine-builder-body">
+            <div class="routine-builder-grid">
               <div>
                 <label for="templateName">Routine Name</label>
                 <input id="templateName" type="text" placeholder="Example: Chest / Triceps" />
               </div>
               <div>
                 <label for="templateExerciseInput">Exercise Name</label>
-                <div class="row">
+                <div class="routine-add-row">
                   <input id="templateExerciseInput" type="text" placeholder="Example: Flat Bench Press" />
                   <button class="primary" id="addTemplateExercise" type="button">Add</button>
                 </div>
               </div>
             </div>
-            <div id="templateDraftList" class="detail"></div>
-            <div class="grid-2" style="margin-top:10px;">
+            <div class="routine-draft-panel">
+              <div class="routine-panel-heading">
+                <h3>Draft Exercises</h3>
+                <p class="muted small">Compact list for the routine you are building.</p>
+              </div>
+              <div id="templateDraftList" class="routine-draft-list"></div>
+            </div>
+            <div class="routine-builder-actions">
               <button class="success" id="saveTemplate" type="button">Save Routine</button>
               <button class="ghost" id="clearTemplateDraft" type="button">Clear Draft</button>
             </div>
           </div>
         </details>
 
-        <div class="card">
+        <div class="card routine-library-panel">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Saved Routines</h2>
               <p class="muted small" style="margin:4px 0 0;">Tap Edit to modify a routine. Existing workout history stays unchanged.</p>
             </div>
-            <button class="warning" id="resetTemplates" type="button">Reset</button>
+            <button class="warning routine-reset-action" id="resetTemplates" type="button">Reset</button>
           </div>
-          <div id="savedTemplates"></div>
+          <div id="savedTemplates" class="routine-library-grid"></div>
         </div>
       </section>
 
-      <section id="backup" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
-            <div>
-              <div class="screen-eyebrow">Profile</div>
-              <h2 style="margin-bottom:4px;">App Tools</h2>
-              <p class="muted small" style="margin:0;">Back up your progress, restore saved files, and manage local device storage.</p>
-            </div>
-            <button class="ghost profile-subpage-back" type="button" data-profile-back>Back</button>
+      <section id="backup" class="screen profile-subpage-screen backup-screen">
+        <div class="profile-subpage-header">
+          <button class="profile-subpage-back" type="button" data-profile-back aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Profile</span>
+          </button>
+          <div class="profile-subpage-title">
+            <span>App Utility</span>
+            <h2>Backup / Tools</h2>
+            <p>Back up progress, restore saved files, and manage local device storage.</p>
           </div>
+          <span class="profile-subpage-spacer" aria-hidden="true"></span>
         </div>
 
-        <div class="card">
-          <div class="tool-card" id="backupRestoreTool">
-            <h3>Backup / Restore</h3>
-            <p class="muted small" style="margin-bottom:0;">Export regularly so you do not lose progress if browser data gets cleared or you switch phones.</p>
-            <div id="backupStatusMore" class="detail small muted" style="margin-top:10px; margin-bottom:10px;">Checking backup status...</div>
-            <div class="tool-actions">
-              <button class="primary" id="exportData">Export Backup</button>
-              <button class="ghost" id="importData">Import Backup</button>
+        <div class="card backup-status-card" id="backupRestoreTool">
+          <div class="backup-status-top">
+            <span class="backup-status-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            </span>
+            <div class="backup-status-copy">
+              <span>Backup / Restore</span>
+              <h3>Protect your local progress</h3>
+              <p id="backupStatusMore" class="muted small">Checking backup status...</p>
             </div>
-            <input id="importFile" class="hidden" type="file" accept="application/json" />
+            <span class="backup-page-status-pill" id="backupStatusPill">Checking</span>
           </div>
+          <div class="tool-actions backup-primary-actions">
+            <button class="primary" id="exportData" type="button">Export Backup</button>
+            <button class="ghost" id="importData" type="button">Import Backup</button>
+          </div>
+          <input id="importFile" class="hidden" type="file" accept="application/json" />
+        </div>
 
-          <div class="tool-card">
-            <h3>Settings</h3>
-            <p class="muted small" style="margin-bottom:10px;">Adjust schedule, progression defaults, haptics, and app feel.</p>
-            <button class="primary settings-cog-button" id="openSettings" type="button" data-open-settings style="width:100%;">
+        <div class="backup-tool-grid">
+          <div class="card backup-tool-card">
+            <span class="backup-tool-label">Settings</span>
+            <h3>Training defaults</h3>
+            <p class="muted small">Adjust schedule, progression defaults, haptics, and app feel.</p>
+            <button class="ghost settings-cog-button backup-neutral-action" id="openSettings" type="button" data-open-settings>
               <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 19.1 2.1-2.1"/><path d="m17 7 2.1-2.1"/></svg>
-              <span>Settings</span>
+              <span>Open Settings</span>
             </button>
           </div>
 
-          <div class="tool-card" id="dataManagementTool">
-            <h3>Data</h3>
-            <p class="muted small" style="margin-bottom:10px;">This only affects data stored in this browser on this device.</p>
-            <button class="danger" id="clearData" style="width:100%;">Clear All Local Data</button>
+          <div class="card backup-tool-card data-management-card" id="dataManagementTool">
+            <span class="backup-tool-label">Data Management</span>
+            <h3>Local device data</h3>
+            <p class="muted small">This only affects workout data stored in this browser on this device.</p>
+            <button class="danger" id="clearData" type="button">Clear All Local Data</button>
           </div>
+        </div>
 
-          <div class="tool-card" id="appInfoTool">
-            <h3>App Info</h3>
-            <div class="detail">
-              <p class="small" style="margin-bottom:8px;"><strong>Storage:</strong> IndexedDB for workouts, weight logs, and routines. LocalStorage for goals and workout drafts.</p>
-              <p class="small" style="margin:0;"><strong>Reminder:</strong> Export backups before clearing browser data or moving to another phone.</p>
-            </div>
+        <div class="card backup-info-card" id="appInfoTool">
+          <span class="backup-tool-label">App Info</span>
+          <div class="backup-info-list">
+            <p class="small"><strong>Storage:</strong> IndexedDB stores workouts, weight logs, and routines. LocalStorage stores goals and workout drafts.</p>
+            <p class="small"><strong>Reminder:</strong> Export backups before clearing browser data or moving to another phone.</p>
           </div>
         </div>
       </section>

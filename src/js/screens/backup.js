@@ -78,7 +78,19 @@ async function renderBackupStatus() {
 
   const more = $("backupStatusMore");
   if (more) {
-    more.innerHTML = `<strong>${cleanText(pill)}</strong><br>${cleanText(text)}`;
+    more.textContent = text;
+  }
+
+  const backupCard = $("backupRestoreTool");
+  if (backupCard) {
+    backupCard.classList.remove("backup-status-good", "backup-status-warn", "backup-status-urgent");
+    backupCard.classList.add(`backup-status-${level}`);
+  }
+
+  const backupPill = $("backupStatusPill");
+  if (backupPill) {
+    backupPill.textContent = pill;
+    backupPill.className = `backup-page-status-pill ${level}`;
   }
 }
 

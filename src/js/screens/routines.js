@@ -2,8 +2,22 @@ import "../core/globals.js";
 
 function renderTemplateDraft() {
   const list = $("templateDraftList");
-  if (!templateDraftExercises.length) { list.innerHTML = `<p class="muted small" style="margin:0;">No exercises added yet.</p>`; return; }
-  list.innerHTML = templateDraftExercises.map((exercise, index) => `<div class="row" style="margin-bottom:8px;"><span>${index + 1}. ${cleanText(exercise)}</span><button class="danger" type="button" onclick="removeTemplateDraftExercise(${index})">Remove</button></div>`).join("");
+  if (!templateDraftExercises.length) {
+    list.innerHTML = `
+      <div class="routine-empty-state routine-draft-empty">
+        <strong>No draft exercises yet</strong>
+        <p class="muted small">Add exercises above to build this routine.</p>
+      </div>
+    `;
+    return;
+  }
+  list.innerHTML = templateDraftExercises.map((exercise, index) => `
+    <div class="routine-draft-row">
+      <span class="routine-draft-index">${index + 1}</span>
+      <span class="routine-draft-name">${cleanText(exercise)}</span>
+      <button class="danger routine-remove-action" type="button" onclick="removeTemplateDraftExercise(${index})">Remove</button>
+    </div>
+  `).join("");
 }
 
 function addTemplateExercise() {
@@ -91,8 +105,39 @@ async function renderTemplates() {
   renderTemplateDraft();
   const templates = await getTemplates();
   const container = $("savedTemplates");
-  if (!templates.length) { container.innerHTML = `<p class="muted">No templates saved.</p>`; return; }
-  container.innerHTML = templates.map((template) => `<article class="routine-card"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(template.name)}</h3><p class="muted small routine-meta">${template.exercises.length} exercises</p><div>${template.exercises.slice(0, 6).map((exercise) => `<span class="pill">${cleanText(exercise)}</span>`).join("") || `<span class="muted small">Empty routine</span>`}${template.exercises.length > 6 ? `<span class="pill">+${template.exercises.length - 6} more</span>` : ""}</div></div><div class="routine-actions"><button class="primary" type="button" onclick="startRoutine('${template.id}')">Start</button><button class="ghost" type="button" onclick="editTemplate('${template.id}')">Edit</button><button class="danger" type="button" onclick="deleteTemplate('${template.id}')">Delete</button></div></div></article>`).join("");
+  if (!templates.length) {
+    container.innerHTML = `
+      <div class="routine-empty-state routine-library-empty">
+        <strong>No saved routines yet</strong>
+        <p class="muted small">Create a reusable plan with the builder above.</p>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = templates.map((template) => {
+    const exercises = template.exercises || [];
+    const exerciseChips = exercises.slice(0, 6).map((exercise) => `<span class="routine-chip">${cleanText(exercise)}</span>`).join("");
+    const moreChip = exercises.length > 6 ? `<span class="routine-chip routine-chip-more">+${exercises.length - 6} more</span>` : "";
+    const emptyState = exercises.length ? "" : `<span class="routine-chip routine-chip-empty">Empty routine</span>`;
+    return `
+      <article class="routine-card">
+        <div class="routine-card-copy">
+          <div class="routine-card-heading">
+            <h3>${cleanText(template.name)}</h3>
+            <span>${exercises.length} exercises</span>
+          </div>
+          <div class="routine-chip-row">
+            ${exerciseChips}${moreChip}${emptyState}
+          </div>
+        </div>
+        <div class="routine-actions">
+          <button class="primary routine-start-action" type="button" onclick="startRoutine('${template.id}')">Start</button>
+          <button class="ghost routine-edit-action" type="button" onclick="editTemplate('${template.id}')">Edit</button>
+          <button class="danger routine-delete-action" type="button" onclick="deleteTemplate('${template.id}')">Delete</button>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 Object.assign(globalThis, { renderTemplateDraft, addTemplateExercise, removeTemplateDraftExercise, clearTemplateDraft, saveTemplate, editTemplate, deleteTemplate, startRoutine, resetTemplates, renderTemplates });
