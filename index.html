@@ -394,6 +394,107 @@
         </div>
       </section>
 
+      <section id="profile" class="screen profile-screen">
+        <div class="card profile-hero-card">
+          <div class="profile-hero-top">
+            <div class="profile-identity">
+              <div class="profile-avatar" aria-hidden="true">H</div>
+              <div>
+                <h2>Hector</h2>
+                <p class="muted small">Local-first training profile</p>
+              </div>
+            </div>
+            <button class="profile-settings-button" type="button" data-open-settings title="Settings" aria-label="Open Settings">
+              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 19.1 2.1-2.1"/><path d="m17 7 2.1-2.1"/></svg>
+            </button>
+          </div>
+
+          <div class="profile-summary-grid">
+            <div class="profile-summary-card profile-summary-card-primary">
+              <span>Current Weight</span>
+              <strong id="profileCurrentWeight">-</strong>
+              <small id="profileWeightSummary">Log body weight to track the trend.</small>
+            </div>
+            <div class="profile-summary-card">
+              <span>Training Goal</span>
+              <strong id="profileWeeklyGoal">-</strong>
+              <small id="profileGoalSummary">Set a weekly goal in Stats.</small>
+            </div>
+          </div>
+
+          <div class="profile-goal-meter" aria-live="polite">
+            <div class="profile-goal-meter-row">
+              <span id="profileGoalMeterLabel">Weekly goal progress</span>
+              <strong id="profileGoalMeterCount">0/0</strong>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="profileGoalMeterFill"></div></div>
+          </div>
+        </div>
+
+        <div class="profile-section-heading">
+          <div>
+            <h2>Profile Hub</h2>
+            <p class="muted small">Local tools, routines, data, and app details.</p>
+          </div>
+        </div>
+
+        <div class="profile-shortcut-grid">
+          <button class="profile-shortcut-card" type="button" data-profile-target="templates">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 4h10"/><path d="M7 8h10"/><path d="M5 12h14"/><path d="M5 16h10"/><path d="M5 20h8"/></svg>
+            </span>
+            <span>
+              <strong>Routines</strong>
+              <small id="profileRoutineSummary">Templates and reusable workouts</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="backupRestoreTool">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            </span>
+            <span>
+              <strong>Backup / Restore</strong>
+              <small id="profileBackupSummary">Export or import local data</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="dataManagementTool">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 14h10l1-14"/><path d="M9 7V4h6v3"/></svg>
+            </span>
+            <span>
+              <strong>Data Management</strong>
+              <small id="profileDataSummary">Local device storage only</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="appInfoTool">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </span>
+            <span>
+              <strong>App Info</strong>
+              <small>Storage, backup reminders, and local-first notes</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <article class="profile-shortcut-card profile-shortcut-card-muted">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M5 6H3v1a4 4 0 0 0 4 4"/><path d="M19 6h2v1a4 4 0 0 1-4 4"/></svg>
+            </span>
+            <span>
+              <strong>Achievements</strong>
+              <small>Future local milestones from your workout history</small>
+            </span>
+          </article>
+        </div>
+      </section>
+
       <section id="templates" class="screen">
         <div class="card hero-card">
           <div class="screen-title-row">
@@ -402,9 +503,7 @@
               <h2 style="margin-bottom:4px;">Routine Builder</h2>
               <p class="muted small" style="margin:0;">Create reusable workout plans, then load them from the Log screen when you train.</p>
             </div>
-            <button class="ghost settings-shortcut" type="button" data-open-settings title="Settings" aria-label="Open Settings">
-              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 19.1 2.1-2.1"/><path d="m17 7 2.1-2.1"/></svg>
-            </button>
+            <button class="ghost profile-subpage-back" type="button" data-profile-back>Back</button>
           </div>
         </div>
 
@@ -452,11 +551,12 @@
               <h2 style="margin-bottom:4px;">App Tools</h2>
               <p class="muted small" style="margin:0;">Back up your progress, restore saved files, and manage local device storage.</p>
             </div>
+            <button class="ghost profile-subpage-back" type="button" data-profile-back>Back</button>
           </div>
         </div>
 
         <div class="card">
-          <div class="tool-card">
+          <div class="tool-card" id="backupRestoreTool">
             <h3>Backup / Restore</h3>
             <p class="muted small" style="margin-bottom:0;">Export regularly so you do not lose progress if browser data gets cleared or you switch phones.</p>
             <div id="backupStatusMore" class="detail small muted" style="margin-top:10px; margin-bottom:10px;">Checking backup status...</div>
@@ -476,13 +576,13 @@
             </button>
           </div>
 
-          <div class="tool-card">
+          <div class="tool-card" id="dataManagementTool">
             <h3>Data</h3>
             <p class="muted small" style="margin-bottom:10px;">This only affects data stored in this browser on this device.</p>
             <button class="danger" id="clearData" style="width:100%;">Clear All Local Data</button>
           </div>
 
-          <div class="tool-card">
+          <div class="tool-card" id="appInfoTool">
             <h3>App Info</h3>
             <div class="detail">
               <p class="small" style="margin-bottom:8px;"><strong>Storage:</strong> IndexedDB for workouts, weight logs, and routines. LocalStorage for goals and workout drafts.</p>

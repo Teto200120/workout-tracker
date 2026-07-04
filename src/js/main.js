@@ -10,6 +10,7 @@ import "./screens/active-workout.js";
 import "./screens/history.js";
 import "./screens/routines.js";
 import "./screens/backup.js";
+import "./screens/profile.js";
 import "./screens/timers.js";
 import "./router.js";
 

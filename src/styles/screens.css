@@ -201,6 +201,405 @@
   align-items: center;
 }
 
+body:has(#profile.active),
+body:has(#templates.active),
+body:has(#backup.active),
+body:has(#settings.active) {
+  padding: 0;
+  background:
+    radial-gradient(circle at 50% -14%, rgba(255, 107, 69, 0.18), transparent 34%),
+    radial-gradient(circle at 100% 8%, rgba(78, 117, 160, 0.24), transparent 34%),
+    linear-gradient(180deg, #172d48 0%, #0b1c31 62%, #071423 100%);
+}
+
+body:has(#profile.active) .app,
+body:has(#templates.active) .app,
+body:has(#backup.active) .app,
+body:has(#settings.active) .app {
+  width: min(100vw, 760px) !important;
+  max-width: 760px !important;
+  min-height: 100vh;
+  padding: 24px 18px 118px !important;
+}
+
+body:has(#profile.active) .app > header,
+body:has(#templates.active) .app > header,
+body:has(#backup.active) .app > header,
+body:has(#settings.active) .app > header,
+body:has(#profile.active) .today-floating-cta,
+body:has(#templates.active) .today-floating-cta,
+body:has(#backup.active) .today-floating-cta,
+body:has(#settings.active) .today-floating-cta {
+  display: none !important;
+}
+
+body:has(#profile.active) .tabs,
+body:has(#templates.active) .tabs,
+body:has(#backup.active) .tabs,
+body:has(#settings.active) .tabs {
+  width: min(520px, 100vw) !important;
+  bottom: 0 !important;
+  border-radius: 0 !important;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  padding: 10px 22px max(10px, env(safe-area-inset-bottom)) !important;
+  background: rgba(27, 44, 66, 0.97) !important;
+  border-color: rgba(166, 190, 220, 0.14) !important;
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.22) !important;
+  backdrop-filter: blur(18px);
+}
+
+body:has(#profile.active) .tabs .tab,
+body:has(#templates.active) .tabs .tab,
+body:has(#backup.active) .tabs .tab,
+body:has(#settings.active) .tabs .tab {
+  min-height: 42px;
+  border-radius: 999px;
+  color: #78a0ca;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+body:has(#profile.active) .tabs .tab.active,
+body:has(#templates.active) .tabs .tab.active,
+body:has(#backup.active) .tabs .tab.active,
+body:has(#settings.active) .tabs .tab.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  border: 0;
+  box-shadow: 0 9px 20px rgba(255, 104, 69, 0.25);
+}
+
+.profile-screen.active {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-hero-card,
+body:has(#templates.active) #templates .hero-card,
+body:has(#backup.active) #backup .hero-card,
+body:has(#settings.active) #settings .hero-card {
+  margin-bottom: 0;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 107, 69, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(43, 67, 99, 0.98), rgba(30, 50, 78, 0.98));
+  border: 1px solid rgba(166, 190, 220, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(1, 8, 18, 0.2);
+}
+
+.profile-hero-card {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.profile-hero-top,
+.profile-identity,
+.profile-goal-meter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-hero-top,
+.profile-goal-meter-row {
+  justify-content: space-between;
+}
+
+.profile-identity {
+  min-width: 0;
+}
+
+.profile-identity h2 {
+  margin: 0 0 4px;
+  color: #f7fbff;
+  font-size: 1.62rem;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.profile-identity p,
+.profile-section-heading .muted,
+.profile-summary-card small,
+.profile-shortcut-card small,
+body:has(#templates.active) #templates .muted,
+body:has(#backup.active) #backup .muted,
+body:has(#settings.active) #settings .muted {
+  color: #9eb6d2;
+}
+
+.profile-avatar {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 20px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.22), transparent 34%),
+    linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  box-shadow: 0 14px 24px rgba(255, 107, 69, 0.22);
+  font-size: 1.42rem;
+  font-weight: 950;
+}
+
+.profile-settings-button {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  min-height: 46px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.14);
+  border: 1px solid rgba(255, 107, 69, 0.3);
+}
+
+.profile-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.profile-summary-card {
+  min-width: 0;
+  min-height: 112px;
+  display: grid;
+  align-content: space-between;
+  gap: 7px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(13, 34, 59, 0.72);
+  border: 1px solid rgba(166, 190, 220, 0.16);
+}
+
+.profile-summary-card-primary {
+  border-color: rgba(255, 107, 69, 0.3);
+  background:
+    radial-gradient(circle at top right, rgba(255, 107, 69, 0.16), transparent 45%),
+    rgba(13, 34, 59, 0.76);
+}
+
+.profile-summary-card span,
+.profile-goal-meter-row span {
+  color: #9eb6d2;
+  font-size: 0.74rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.profile-summary-card strong {
+  color: #f7fbff;
+  font-size: 1.12rem;
+  line-height: 1.14;
+  overflow-wrap: anywhere;
+}
+
+.profile-summary-card small,
+.profile-shortcut-card small {
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.profile-goal-meter {
+  padding: 13px;
+  border-radius: 18px;
+  background: rgba(7, 20, 35, 0.48);
+  border: 1px solid rgba(166, 190, 220, 0.16);
+}
+
+.profile-goal-meter-row {
+  margin-bottom: 8px;
+}
+
+.profile-goal-meter-row strong {
+  color: #ffb29f;
+  font-size: 0.86rem;
+}
+
+#profile .progress-fill {
+  background: linear-gradient(90deg, var(--coral, #ff6b45), #ff9a62);
+  box-shadow: 0 0 14px rgba(255, 107, 69, 0.24);
+}
+
+.profile-section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.profile-section-heading h2 {
+  margin: 0 0 3px;
+  color: #f7fbff;
+  font-size: 1.2rem;
+  letter-spacing: 0;
+}
+
+.profile-shortcut-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-shortcut-card {
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  text-align: left;
+  border-radius: 20px;
+  color: #f7fbff;
+  background:
+    radial-gradient(circle at top right, rgba(255, 107, 69, 0.08), transparent 38%),
+    rgba(32, 52, 79, 0.96);
+  border: 1px solid rgba(166, 190, 220, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 14px 28px rgba(1, 8, 18, 0.16);
+}
+
+.profile-shortcut-card strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #f7fbff;
+  font-size: 0.98rem;
+  line-height: 1.18;
+}
+
+.profile-shortcut-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.13);
+  border: 1px solid rgba(255, 107, 69, 0.22);
+}
+
+.profile-shortcut-icon svg,
+.profile-shortcut-chevron {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.profile-shortcut-icon path,
+.profile-shortcut-icon circle,
+.profile-shortcut-chevron path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.profile-shortcut-chevron {
+  color: #78a0ca;
+}
+
+.profile-shortcut-card-muted {
+  cursor: default;
+  color: #9eb6d2;
+  background: rgba(32, 52, 79, 0.56);
+}
+
+.profile-shortcut-card-muted .profile-shortcut-icon {
+  color: #9eb6d2;
+  background: rgba(120, 160, 202, 0.1);
+  border-color: rgba(166, 190, 220, 0.16);
+}
+
+.profile-subpage-back {
+  flex: 0 0 auto;
+  min-width: 74px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.12);
+  border-color: rgba(255, 107, 69, 0.28);
+}
+
+body:has(#templates.active) #templates > .card:not(.hero-card),
+body:has(#backup.active) #backup > .card:not(.hero-card),
+body:has(#settings.active) #settings > .card:not(.hero-card) {
+  margin-bottom: 14px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(40, 61, 90, 0.96), rgba(32, 52, 79, 0.96));
+  border: 1px solid rgba(166, 190, 220, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 18px 34px rgba(1, 8, 18, 0.18);
+}
+
+body:has(#templates.active) #templates label,
+body:has(#backup.active) #backup label,
+body:has(#settings.active) #settings label {
+  color: #9eb6d2;
+}
+
+body:has(#templates.active) #templates input,
+body:has(#templates.active) #templates select,
+body:has(#templates.active) #templates textarea,
+body:has(#backup.active) #backup input,
+body:has(#backup.active) #backup select,
+body:has(#backup.active) #backup textarea,
+body:has(#settings.active) #settings input,
+body:has(#settings.active) #settings select,
+body:has(#settings.active) #settings textarea {
+  min-height: 46px;
+  border-color: rgba(166, 190, 220, 0.2);
+  background: rgba(7, 20, 35, 0.56);
+}
+
+body:has(#templates.active) #templates input:focus,
+body:has(#templates.active) #templates select:focus,
+body:has(#templates.active) #templates textarea:focus,
+body:has(#backup.active) #backup input:focus,
+body:has(#backup.active) #backup select:focus,
+body:has(#backup.active) #backup textarea:focus,
+body:has(#settings.active) #settings input:focus,
+body:has(#settings.active) #settings select:focus,
+body:has(#settings.active) #settings textarea:focus {
+  border-color: rgba(255, 107, 69, 0.58);
+  box-shadow: 0 0 0 3px rgba(255, 107, 69, 0.14);
+}
+
+body:has(#templates.active) #templates .primary,
+body:has(#templates.active) #templates .success,
+body:has(#backup.active) #backup .primary,
+body:has(#backup.active) #backup .success,
+body:has(#settings.active) #settings .primary,
+body:has(#settings.active) #settings .success {
+  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  box-shadow: 0 12px 22px rgba(255, 107, 69, 0.2);
+}
+
+body:has(#templates.active) #templates .detail,
+body:has(#backup.active) #backup .detail,
+body:has(#settings.active) #settings .detail,
+body:has(#templates.active) #templates .settings-day-row,
+body:has(#backup.active) #backup .settings-day-row,
+body:has(#settings.active) #settings .settings-day-row {
+  border-color: rgba(166, 190, 220, 0.18);
+  background: rgba(7, 20, 35, 0.48);
+}
+
 body:has(#dashboard.active) {
   padding: 0;
   background:
@@ -666,6 +1065,14 @@ body:has(#dashboard.active) .tabs .tab.active {
   .stats-top-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .profile-shortcut-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-shortcut-card-muted {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 540px) {
@@ -677,6 +1084,7 @@ body:has(#dashboard.active) .tabs .tab.active {
   .stats-session-heading,
   #dashboard .section-heading,
   #history .section-heading,
+  .profile-section-heading,
   .trend-row {
     grid-template-columns: 1fr;
     flex-direction: column;
@@ -688,7 +1096,8 @@ body:has(#dashboard.active) .tabs .tab.active {
 
   .stats-filter-grid,
   #dashboard .progress-form,
-  .stats-progress-card .grid-2 {
+  .stats-progress-card .grid-2,
+  .profile-summary-grid {
     grid-template-columns: 1fr;
   }
 
@@ -709,8 +1118,20 @@ body:has(#dashboard.active) .tabs .tab.active {
     padding-right: 16px;
   }
 
+  body:has(#profile.active) .app,
+  body:has(#templates.active) .app,
+  body:has(#backup.active) .app,
+  body:has(#settings.active) .app {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
   .stats-hero-card,
-  .stats-panel {
+  .stats-panel,
+  .profile-hero-card,
+  body:has(#templates.active) #templates > .card:not(.hero-card),
+  body:has(#backup.active) #backup > .card:not(.hero-card),
+  body:has(#settings.active) #settings > .card:not(.hero-card) {
     border-radius: 18px;
     padding: 14px;
   }

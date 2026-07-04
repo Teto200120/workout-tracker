@@ -3,16 +3,16 @@ import "./core/globals.js";
 const SCREEN_GROUPS = {
   stats: ["dashboard", "history"],
   home: ["log"],
-  profile: ["templates", "backup"],
+  profile: ["profile"],
+  templates: ["templates"],
+  backup: ["backup"],
   settings: ["settings"]
 };
 
 const SCREEN_ALIASES = {
   dashboard: "stats",
   history: "stats",
-  log: "home",
-  templates: "profile",
-  backup: "profile"
+  log: "home"
 };
 
 function getScreenDestination(name) {
@@ -21,7 +21,18 @@ function getScreenDestination(name) {
 }
 
 function getActiveNavDestination(destination) {
-  return destination === "settings" ? "profile" : destination;
+  return ["templates", "backup", "settings"].includes(destination) ? "profile" : destination;
+}
+
+function openProfileSubpage(destination, focusId = "") {
+  switchScreen(destination);
+  if (!focusId) return;
+
+  setTimeout(() => {
+    const target = $(focusId);
+    if (!target) return;
+    target.scrollIntoView({ behavior: motionBehavior(), block: "start" });
+  }, 80);
 }
 
 function switchScreen(name) {
@@ -61,6 +72,10 @@ function bindEvents() {
   $("todayExportBackup")?.addEventListener("click", exportData);
   $("todayWorkoutSelect").addEventListener("change", renderTodayView);
   all("[data-open-settings]").forEach((button) => button.addEventListener("click", () => switchScreen("settings")));
+  all("[data-profile-back]").forEach((button) => button.addEventListener("click", () => switchScreen("profile")));
+  all("[data-profile-target]").forEach((button) => {
+    button.addEventListener("click", () => openProfileSubpage(button.dataset.profileTarget, button.dataset.profileFocus));
+  });
   $("settingsBack").addEventListener("click", () => switchScreen("profile"));
   $("saveSettings").addEventListener("click", saveSettingsFromForm);
   $("resetSettings").addEventListener("click", resetAppSettings);
@@ -131,6 +146,7 @@ async function renderAll() {
   await renderHistory();
   await renderWeights();
   await renderTemplates();
+  await renderProfile();
   await renderTodayView();
   await renderSettings();
   await renderBackupStatus();
@@ -155,4 +171,4 @@ async function init() {
   }
 }
 
-Object.assign(globalThis, { switchScreen, bindEvents, renderAll, init });
+Object.assign(globalThis, { switchScreen, openProfileSubpage, bindEvents, renderAll, init });
