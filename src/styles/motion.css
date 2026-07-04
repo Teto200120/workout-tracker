@@ -1,0 +1,166 @@
+/* Phase 2 motion polish: quick, purposeful, reduced-clutter feedback */
+html { scroll-behavior: smooth; }
+
+button,
+.tab,
+.card,
+.exercise,
+.toggle-pill,
+.tag-chip,
+.today-mini-stat,
+input,
+select,
+textarea {
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    opacity 150ms ease,
+    background-color 170ms ease,
+    border-color 170ms ease,
+    box-shadow 170ms ease;
+}
+
+button:active,
+.tag-chip:active,
+.toggle-pill:active {
+  transform: scale(0.975);
+}
+
+.screen.active,
+#todayView:not(.hidden),
+#sessionView:not(.hidden) {
+  animation: viewIn 190ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.today-hero,
+.session-toolbar,
+.exercise,
+.completion-card {
+  transform-origin: center top;
+}
+
+.exercise {
+  will-change: transform, opacity;
+}
+
+.exercise-body {
+  display: grid;
+  gap: 10px;
+  overflow: hidden;
+  max-height: 2400px;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    max-height 230ms cubic-bezier(.2,.8,.2,1),
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(.2,.8,.2,1),
+    margin-top 180ms ease;
+}
+
+.exercise.collapsed .exercise-body {
+  display: grid;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+
+.exercise.is-active {
+  border-color: rgba(56, 189, 248, 0.34);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(56, 189, 248, 0.08);
+}
+
+.exercise.settle-in {
+  animation: cardSettle 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.set-row {
+  transition:
+    transform 160ms cubic-bezier(.2,.8,.2,1),
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.set-row.set-just-done {
+  animation: setDonePulse 420ms cubic-bezier(.2,.8,.2,1) both;
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.set-row:focus-within {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+  transform: translateY(-1px);
+}
+
+.completion-overlay:not(.hidden) {
+  animation: overlayIn 170ms ease both;
+}
+
+.completion-overlay:not(.hidden) .completion-card {
+  animation: modalUp 230ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.toast.show {
+  animation: toastPop 180ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardSettle {
+  from { transform: translateY(8px) scale(0.99); opacity: 0.86; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes setDonePulse {
+  0% { transform: scale(1); background-color: rgba(2, 6, 23, 0.3); }
+  45% { transform: scale(1.012); background-color: rgba(34, 197, 94, 0.16); }
+  100% { transform: scale(1); background-color: rgba(2, 6, 23, 0.3); }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalUp {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastPop {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+
+:root {
+  --coral: #ff6b45;
+  --coral-2: #ff7a59;
+  --coral-dark: #e94f2f;
+  --today-card: #22354f;
+  --today-card-2: #1c2d45;
+  --today-muted: #9eb6d2;
+}
+
+body:has(#todayView:not(.hidden)) .app > header {
+  display: none;
+}
+
+#todayView.today-home {
+  min-height: calc(100vh - 106px);
+  gap: 20px;
+  padding: 12px 8px 108px;
+}
