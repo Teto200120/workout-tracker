@@ -1,10 +1,43 @@
 import "./core/globals.js";
 
+const SCREEN_GROUPS = {
+  stats: ["dashboard", "history"],
+  home: ["log"],
+  profile: ["templates", "backup"],
+  settings: ["settings"]
+};
+
+const SCREEN_ALIASES = {
+  dashboard: "stats",
+  history: "stats",
+  log: "home",
+  templates: "profile",
+  backup: "profile"
+};
+
+function getScreenDestination(name) {
+  const destination = SCREEN_ALIASES[name] || name || "home";
+  return SCREEN_GROUPS[destination] ? destination : "home";
+}
+
+function getActiveNavDestination(destination) {
+  return destination === "settings" ? "profile" : destination;
+}
+
 function switchScreen(name) {
-  all(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.screen === name));
-  all(".screen").forEach((screen) => screen.classList.toggle("active", screen.id === name));
+  const destination = getScreenDestination(name);
+  const activeScreens = SCREEN_GROUPS[destination];
+  const activeNav = getActiveNavDestination(destination);
+
+  all(".tab").forEach((tab) => {
+    const isActive = tab.dataset.screen === activeNav;
+    tab.classList.toggle("active", isActive);
+    if (isActive) tab.setAttribute("aria-current", "page");
+    else tab.removeAttribute("aria-current");
+  });
+  all(".screen").forEach((screen) => screen.classList.toggle("active", activeScreens.includes(screen.id)));
   updateTodayCtaCompact();
-  replayAnimation($(name), "settle-in", 260);
+  replayAnimation($(activeScreens[0]), "settle-in", 260);
   renderAll();
 }
 
@@ -27,8 +60,8 @@ function bindEvents() {
   $("todayResumeWorkout").addEventListener("click", resumeWorkoutFromToday);
   $("todayExportBackup")?.addEventListener("click", exportData);
   $("todayWorkoutSelect").addEventListener("change", renderTodayView);
-  $("openSettings").addEventListener("click", () => switchScreen("settings"));
-  $("settingsBack").addEventListener("click", () => switchScreen("backup"));
+  all("[data-open-settings]").forEach((button) => button.addEventListener("click", () => switchScreen("settings")));
+  $("settingsBack").addEventListener("click", () => switchScreen("profile"));
   $("saveSettings").addEventListener("click", saveSettingsFromForm);
   $("resetSettings").addEventListener("click", resetAppSettings);
   $("settingsAnimations").addEventListener("change", applyAppSettings);
