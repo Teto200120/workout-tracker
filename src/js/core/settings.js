@@ -36,18 +36,26 @@ async function renderSettings() {
   $("settingsSchedule").innerHTML = DAY_LABELS.map((day, index) => {
     const item = settings.schedule[index] || DEFAULT_APP_SETTINGS.schedule[index];
     return `<div class="settings-day-row" data-settings-day="${index}">
-      <div class="settings-day-label">${day}</div>
-      <div>
-        <label>Type</label>
-        <select class="settings-day-kind">
-          <option value="gym" ${item.kind === "gym" ? "selected" : ""}>Gym</option>
-          <option value="rest" ${item.kind === "rest" ? "selected" : ""}>Rest</option>
-          <option value="soccer" ${item.kind === "soccer" ? "selected" : ""}>Soccer</option>
-        </select>
+      <div class="settings-day-main">
+        <span class="settings-row-icon settings-day-icon" aria-hidden="true">${day.slice(0, 2)}</span>
+        <div>
+          <div class="settings-day-label">${day}</div>
+          <p class="settings-row-note">Today suggestion</p>
+        </div>
       </div>
-      <div>
-        <label>Routine</label>
-        <select class="settings-day-routine">${routineOptions}</select>
+      <div class="settings-schedule-controls">
+        <div class="settings-field">
+          <label>Type</label>
+          <select class="settings-day-kind">
+            <option value="gym" ${item.kind === "gym" ? "selected" : ""}>Gym</option>
+            <option value="rest" ${item.kind === "rest" ? "selected" : ""}>Rest</option>
+            <option value="soccer" ${item.kind === "soccer" ? "selected" : ""}>Soccer</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label>Routine</label>
+          <select class="settings-day-routine">${routineOptions}</select>
+        </div>
       </div>
     </div>`;
   }).join("");

@@ -592,81 +592,163 @@
         </div>
       </section>
 
-      <section id="settings" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
-            <div>
-              <div class="screen-eyebrow">Settings</div>
-              <h2 style="margin-bottom:4px;">App Settings</h2>
-              <p class="muted small" style="margin:0;">Tune the schedule, progression defaults, haptics, and motion without crowding the workout screen.</p>
+      <section id="settings" class="screen settings-screen">
+        <div class="settings-page-header">
+          <button class="settings-back-button" id="settingsBack" type="button" aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+          </button>
+          <div class="settings-header-copy">
+            <span>Profile</span>
+            <h2>Settings</h2>
+          </div>
+          <span class="settings-header-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-label">Training Profile</div>
+          <div class="settings-group">
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 12h12"/><path d="M9 8v8"/><path d="M15 8v8"/><path d="M4 10v4"/><path d="M20 10v4"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Default Weight Jump</strong>
+                <p>Used when the next target moves up.</p>
+              </div>
+              <div class="settings-row-control">
+                <label class="sr-only" for="settingsWeightJump">Default Weight Jump</label>
+                <input id="settingsWeightJump" type="number" min="0.5" step="0.5" />
+              </div>
             </div>
-            <button class="ghost" id="settingsBack" type="button">Back</button>
+
+            <label class="settings-list-row settings-toggle-row" for="settingsRpeAware">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 8v4l3 2"/></svg>
+              </span>
+              <span class="settings-row-copy">
+                <strong>RPE-aware Targets</strong>
+                <span>Adjust target suggestions using effort.</span>
+              </span>
+              <span class="settings-switch-control">
+                <input id="settingsRpeAware" type="checkbox" />
+                <span class="settings-switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
           </div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Workout Schedule</h2>
-              <p class="muted small" style="margin:4px 0 0;">Controls what the Today screen auto-suggests.</p>
+        <div class="settings-section">
+          <div class="settings-section-label">Rep Ranges</div>
+          <div class="settings-group">
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 20V8"/><path d="M12 20V4"/><path d="M17 20v-9"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Compound</strong>
+                <p>Squat, press, deadlift, and other main lifts.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsCompoundMin">Compound minimum reps</label>
+                <input id="settingsCompoundMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsCompoundMax">Compound maximum reps</label>
+                <input id="settingsCompoundMax" type="number" min="1" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 6h12"/><path d="M8 6v6a4 4 0 0 0 8 0V6"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Pull</strong>
+                <p>Rows, pull-ups, pulldowns, and biceps work.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsPullMin">Pull minimum reps</label>
+                <input id="settingsPullMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsPullMax">Pull maximum reps</label>
+                <input id="settingsPullMax" type="number" min="1" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M8 9v6"/><path d="M16 9v6"/><path d="M3 10v4"/><path d="M21 10v4"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Isolation</strong>
+                <p>Single-joint accessories and focused pump work.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsIsolationMin">Isolation minimum reps</label>
+                <input id="settingsIsolationMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsIsolationMax">Isolation maximum reps</label>
+                <input id="settingsIsolationMax" type="number" min="1" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 7h12"/><path d="M6 12h12"/><path d="M6 17h12"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>General</strong>
+                <p>Fallback range for anything not classified.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsGeneralMin">General minimum reps</label>
+                <input id="settingsGeneralMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsGeneralMax">General maximum reps</label>
+                <input id="settingsGeneralMax" type="number" min="1" step="1" />
+              </div>
             </div>
           </div>
-          <div class="settings-grid" id="settingsSchedule"></div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Progression</h2>
-              <p class="muted small" style="margin:4px 0 0;">Defaults stay mostly internal and feed the Target recommendation.</p>
-            </div>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label for="settingsWeightJump">Default Weight Jump</label>
-              <input id="settingsWeightJump" type="number" min="0.5" step="0.5" />
-            </div>
-            <label class="toggle-pill" style="margin-top:22px;"><input id="settingsRpeAware" type="checkbox" /> RPE-aware targets</label>
-          </div>
-
-          <div class="grid-2" style="margin-top:10px;">
-            <div>
-              <label>Compound Rep Range</label>
-              <div class="row"><input id="settingsCompoundMin" type="number" min="1" step="1" /><input id="settingsCompoundMax" type="number" min="1" step="1" /></div>
-            </div>
-            <div>
-              <label>Pull Rep Range</label>
-              <div class="row"><input id="settingsPullMin" type="number" min="1" step="1" /><input id="settingsPullMax" type="number" min="1" step="1" /></div>
-            </div>
-            <div>
-              <label>Isolation Rep Range</label>
-              <div class="row"><input id="settingsIsolationMin" type="number" min="1" step="1" /><input id="settingsIsolationMax" type="number" min="1" step="1" /></div>
-            </div>
-            <div>
-              <label>General Rep Range</label>
-              <div class="row"><input id="settingsGeneralMin" type="number" min="1" step="1" /><input id="settingsGeneralMax" type="number" min="1" step="1" /></div>
-            </div>
+        <div class="settings-section">
+          <div class="settings-section-label">Schedule</div>
+          <div class="settings-group settings-schedule-group">
+            <div class="settings-grid" id="settingsSchedule"></div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">App Feel</h2>
-              <p class="muted small" style="margin:4px 0 0;">Keep the app responsive without making the workout flow slower.</p>
-            </div>
-          </div>
-          <div class="settings-toggle-row">
-            <label class="toggle-pill"><input id="settingsHaptics" type="checkbox" /> Haptics</label>
-            <label class="toggle-pill"><input id="settingsAnimations" type="checkbox" /> Animations</label>
+        <div class="settings-section">
+          <div class="settings-section-label">App Feel</div>
+          <div class="settings-group">
+            <label class="settings-list-row settings-toggle-row" for="settingsHaptics">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 8a5 5 0 0 1 8 0"/><path d="M6 12a8 8 0 0 1 12 0"/><path d="M10 16a2 2 0 0 1 4 0"/></svg>
+              </span>
+              <span class="settings-row-copy">
+                <strong>Haptics</strong>
+                <span>Allow vibration cues where supported.</span>
+              </span>
+              <span class="settings-switch-control">
+                <input id="settingsHaptics" type="checkbox" />
+                <span class="settings-switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <label class="settings-list-row settings-toggle-row" for="settingsAnimations">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 16c4-8 12-8 16 0"/><path d="M6 19h12"/><path d="M12 5v4"/></svg>
+              </span>
+              <span class="settings-row-copy">
+                <strong>Animations</strong>
+                <span>Use motion for page and control transitions.</span>
+              </span>
+              <span class="settings-switch-control">
+                <input id="settingsAnimations" type="checkbox" />
+                <span class="settings-switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
           </div>
         </div>
 
-        <div class="save-dock">
-          <div class="settings-footer-actions">
-            <button class="success" id="saveSettings" type="button">Save Settings</button>
-            <button class="ghost" id="resetSettings" type="button">Reset</button>
-          </div>
+        <div class="settings-action-bar">
+          <button class="settings-primary-action" id="saveSettings" type="button">Save Settings</button>
+          <button class="settings-secondary-action" id="resetSettings" type="button">Reset Settings</button>
         </div>
       </section>
     </main>
