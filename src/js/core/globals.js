@@ -12,11 +12,11 @@ globalThis.defaultTemplates = {
 };
 
 globalThis.DEFAULT_SCHEDULE = {
-  0: { kind: "rest", title: "Rest Day", routine: "Custom", note: "No gym workout scheduled. Optional recovery, bodyweight logging, or custom workout." },
+  0: { kind: "rest", title: "Rest Day", routine: "Custom", note: "No gym workout scheduled. Optional recovery, mobility, or custom workout." },
   1: { kind: "gym", title: "Push Day", routine: "Chest / Triceps", note: "Suggested from your Monday schedule." },
   2: { kind: "gym", title: "Pull Day", routine: "Back / Biceps", note: "Suggested from your Tuesday schedule." },
   3: { kind: "soccer", title: "Soccer Day", routine: "Custom", note: "Soccer is treated separately, since you do not track it as a gym workout here." },
-  4: { kind: "rest", title: "Rest Day", routine: "Custom", note: "No gym workout scheduled. Optional recovery, bodyweight logging, or custom workout." },
+  4: { kind: "rest", title: "Rest Day", routine: "Custom", note: "No gym workout scheduled. Optional recovery, mobility, or custom workout." },
   5: { kind: "gym", title: "Leg Day", routine: "Legs", note: "Suggested from your Friday schedule." },
   6: { kind: "gym", title: "Upper / Full Body", routine: "Shoulders / Traps", note: "Suggested from your Saturday schedule." }
 };

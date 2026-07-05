@@ -1778,8 +1778,7 @@ body:has(#dashboard.active) .tabs .tab.active {
   margin-bottom: 14px;
 }
 
-.stats-session-card,
-.stats-weight-entry {
+.stats-session-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
@@ -1793,8 +1792,7 @@ body:has(#dashboard.active) .tabs .tab.active {
   border: 1px solid rgba(166, 190, 220, 0.18);
 }
 
-.stats-session-card:first-child,
-.stats-weight-entry:first-child {
+.stats-session-card:first-child {
   margin-top: 0;
   padding-top: 14px;
 }
@@ -2072,8 +2070,7 @@ body:has(#dashboard.active) .tabs .tab.active {
     grid-template-columns: 1fr;
   }
 
-  .stats-session-card,
-  .stats-weight-entry {
+  .stats-session-card {
     grid-template-columns: 1fr;
   }
 
@@ -2298,24 +2295,6 @@ body:has(#sessionView:not(.hidden)) .toast.show {
   min-width: 460px;
 }
 
-#weightList .stats-weight-entry {
-  display: block;
-}
-
-#weightList .stats-weight-entry > .row {
-  align-items: flex-start;
-  gap: 12px;
-}
-
-#weightList .stats-weight-entry > .row > div {
-  min-width: 0;
-}
-
-#weightList .stats-weight-entry button {
-  flex: 0 0 auto;
-  min-width: 86px;
-}
-
 @media (max-width: 540px) {
   body:has(#history.active) .app {
     padding: 24px 18px var(--nav-clearance);
@@ -2350,8 +2329,4 @@ body:has(#sessionView:not(.hidden)) .toast.show {
     width: 100%;
   }
 
-  #weightList .stats-weight-entry > .row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
 }

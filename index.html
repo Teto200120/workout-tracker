@@ -17,7 +17,7 @@
   <div class="app">
     <header>
       <h1>Hector's Workout Tracker</h1>
-      <p class="subtitle">Local workout log, templates, rest timer, body-weight tracking, and backup export.</p>
+      <p class="subtitle">Local workout log, templates, rest timer, progress stats, and backup export.</p>
     </header>
 
     <nav class="tabs" aria-label="Primary navigation">
@@ -249,7 +249,7 @@
           <div class="screen-title-row stats-hero-row">
             <div>
               <h2 style="margin-bottom:4px;">Your Stats</h2>
-              <p class="muted small" style="margin:0;">Training consistency, session history, strength progress, goals, and body weight in one dashboard.</p>
+              <p class="muted small" style="margin:0;">Training consistency, session history, strength progress, goals, and volume in one dashboard.</p>
             </div>
             <a class="stats-view-all" href="#history">View all</a>
           </div>
@@ -281,50 +281,17 @@
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Goals</h2>
-              <p class="muted small" style="margin:4px 0 0;">Set simple targets for weekly training and body-weight progress.</p>
+              <p class="muted small" style="margin:4px 0 0;">Set a simple target for weekly training consistency.</p>
             </div>
           </div>
-          <div class="grid-2 progress-form">
+          <div class="progress-form">
             <div>
               <label for="weeklyGoal">Weekly Workout Goal</label>
               <input id="weeklyGoal" type="number" min="1" step="1" placeholder="Example: 4" />
             </div>
-            <div>
-              <label for="targetWeight">Target Weight</label>
-              <input id="targetWeight" type="number" min="1" step="0.1" placeholder="Example: 175" />
-            </div>
           </div>
           <button class="success" id="saveGoals" type="button" style="width:100%; margin-top:10px;">Save Goals</button>
           <div id="goalsProgress" class="detail"></div>
-        </div>
-
-        <div class="card stats-panel stats-weight-card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Body Weight</h2>
-              <p class="muted small" style="margin:4px 0 0;">Log weigh-ins and compare them against your target.</p>
-            </div>
-          </div>
-          <div class="grid-2 progress-form">
-            <div>
-              <label for="weightDate">Date</label>
-              <input id="weightDate" type="date" />
-            </div>
-            <div>
-              <label for="weightValue">Weight</label>
-              <input id="weightValue" type="number" step="0.1" placeholder="Example: 165.4" />
-            </div>
-          </div>
-          <div style="margin-top:10px;">
-            <label for="weightNotes">Notes</label>
-            <textarea id="weightNotes" placeholder="Morning weight, after eating, hydration, bulk progress, etc."></textarea>
-          </div>
-          <button class="success" id="saveWeight" style="width:100%; margin-top:10px;">Save Weight</button>
-          <div id="weightStats" class="grid-3" style="margin-top:12px; margin-bottom:12px;"></div>
-          <details class="detail" open>
-            <summary><strong>Weight History</strong></summary>
-            <div id="weightList" style="margin-top:10px;"></div>
-          </details>
         </div>
 
         <div class="card stats-panel stats-progress-card">
@@ -342,7 +309,7 @@
             <div>
               <label for="progressMetric">Metric</label>
               <select id="progressMetric">
-                <option value="bestWeight">Best Weight</option>
+                <option value="bestWeight">Best Load</option>
                 <option value="estimated1rm">Estimated 1RM</option>
                 <option value="bestVolume">Best Set Volume</option>
               </select>
@@ -411,14 +378,14 @@
 
           <div class="profile-summary-grid">
             <div class="profile-summary-card profile-summary-card-primary">
-              <span>Current Weight</span>
-              <strong id="profileCurrentWeight">-</strong>
-              <small id="profileWeightSummary">Log body weight to track the trend.</small>
-            </div>
-            <div class="profile-summary-card">
               <span>Training Goal</span>
               <strong id="profileWeeklyGoal">-</strong>
               <small id="profileGoalSummary">Set a weekly goal in Stats.</small>
+            </div>
+            <div class="profile-summary-card">
+              <span>Logged Sessions</span>
+              <strong id="profileSessionCount">-</strong>
+              <small id="profileSessionSummary">Workout history on this device.</small>
             </div>
           </div>
 
@@ -612,7 +579,7 @@
         <div class="card backup-info-card" id="appInfoTool">
           <span class="backup-tool-label">App Info</span>
           <div class="backup-info-list">
-            <p class="small"><strong>Storage:</strong> IndexedDB stores workouts, weight logs, and routines. LocalStorage stores goals and workout drafts.</p>
+            <p class="small"><strong>Storage:</strong> IndexedDB stores workout history and routines. LocalStorage stores training goals, settings, backup metadata, and workout drafts.</p>
             <p class="small"><strong>Reminder:</strong> Export backups before clearing browser data or moving to another phone.</p>
           </div>
         </div>
@@ -638,11 +605,11 @@
                 <svg viewBox="0 0 24 24"><path d="M6 12h12"/><path d="M9 8v8"/><path d="M15 8v8"/><path d="M4 10v4"/><path d="M20 10v4"/></svg>
               </span>
               <div class="settings-row-copy">
-                <strong>Default Weight Jump</strong>
-                <p>Used when the next target moves up.</p>
+                <strong>Default Load Jump</strong>
+                <p>Used when exercise targets move up.</p>
               </div>
               <div class="settings-row-control">
-                <label class="sr-only" for="settingsWeightJump">Default Weight Jump</label>
+                <label class="sr-only" for="settingsWeightJump">Default Load Jump</label>
                 <input id="settingsWeightJump" type="number" min="0.5" step="0.5" />
               </div>
             </div>

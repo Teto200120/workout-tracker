@@ -114,7 +114,6 @@ function bindEvents() {
   });
   $("saveWorkout").addEventListener("click", handleSessionPrimaryAction);
   $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);
-  $("saveWeight").addEventListener("click", saveWeight);
   $("historyFilter").addEventListener("change", renderHistory);
   $("exerciseSearch").addEventListener("input", renderHistory);
   $("progressExercise").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getItems("workouts"))));
@@ -144,7 +143,6 @@ function bindEvents() {
 async function renderAll() {
   await renderDashboard();
   await renderHistory();
-  await renderWeights();
   await renderTemplates();
   await renderProfile();
   await renderTodayView();
@@ -155,7 +153,6 @@ async function renderAll() {
 async function init() {
   applyAppSettings();
   $("workoutDate").value = today();
-  $("weightDate").value = today();
   $("startTime").value = "";
   $("endTime").value = "";
   await openDatabase();

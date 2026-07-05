@@ -73,7 +73,7 @@ function buildExerciseStats(workouts) {
 }
 
 function metricLabel(metric) {
-  return { estimated1rm: "Estimated 1RM", bestWeight: "Best Weight", bestVolume: "Best Set Volume" }[metric] || "Metric";
+  return { estimated1rm: "Estimated 1RM", bestWeight: "Best Load", bestVolume: "Best Set Volume" }[metric] || "Metric";
 }
 
 function metricUnit(metric) {
@@ -266,25 +266,24 @@ function renderWeeklyActivity(workouts) {
 
 async function renderDashboard() {
   const workouts = (await getItems("workouts")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  const weights = (await getItems("weights")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   const exerciseStats = buildExerciseStats(workouts);
   const lastWorkout = workouts[0];
-  const lastWeight = weights[0];
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const sevenDayKey = sevenDaysAgo.toISOString().slice(0, 10);
   const workoutsThisWeek = workouts.filter((workout) => workout.date >= sevenDayKey).length;
   const streak = getWorkoutStreak(workouts);
+  const totalVolume = workouts.reduce((sum, workout) => sum + workoutVolume(workout), 0);
 
   $("dashboardStats").innerHTML = `
     <div class="stat stats-stat-card stats-stat-accent"><strong>${workoutsThisWeek}</strong><span class="muted small">Last 7 Days</span></div>
     <div class="stat stats-stat-card"><strong>${lastWorkout ? dateLabel(lastWorkout.date) : "-"}</strong><span class="muted small">Last Workout</span></div>
-    <div class="stat stats-stat-card"><strong>${lastWeight ? `${lastWeight.weight.toFixed(1)} lb` : "-"}</strong><span class="muted small">Latest Weight</span></div>
+    <div class="stat stats-stat-card"><strong>${Math.round(totalVolume).toLocaleString()}</strong><span class="muted small">Total Volume</span></div>
     <div class="stat stats-stat-card"><strong>${streak}</strong><span class="muted small">Streak Days</span></div>
   `;
   renderWeeklyActivity(workouts);
   renderStrengthSnapshot(workouts, exerciseStats);
-  renderGoals(workouts, weights);
+  renderGoals(workouts);
   renderPersonalRecords(exerciseStats);
   renderExerciseSelectors(exerciseStats);
   renderExerciseProgress(exerciseStats);
@@ -306,31 +305,16 @@ function getWorkoutStreak(workouts) {
   return streak;
 }
 
-function renderGoals(workouts, weights) {
+function renderGoals(workouts) {
   const goals = getGoals();
   $("weeklyGoal").value = goals.weeklyGoal || 4;
-  $("targetWeight").value = goals.targetWeight || "";
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const sevenDayKey = sevenDaysAgo.toISOString().slice(0, 10);
   const workoutsThisWeek = workouts.filter((workout) => workout.date >= sevenDayKey).length;
-  const weeklyGoal = Number(goals.weeklyGoal || 4);
+  const weeklyGoal = Math.max(1, Number(goals.weeklyGoal || 4));
   const weeklyPercent = Math.min(100, Math.round((workoutsThisWeek / weeklyGoal) * 100));
-
-  const latestWeight = weights[0]?.weight;
-  const targetWeight = Number(goals.targetWeight || 0);
-  let weightText = "Set a target weight to track bulk progress.";
-  let weightPercent = 0;
-
-  if (latestWeight && targetWeight) {
-    const oldestWeight = weights[weights.length - 1]?.weight || latestWeight;
-    const totalNeeded = targetWeight - oldestWeight;
-    const currentChange = latestWeight - oldestWeight;
-    weightPercent = totalNeeded === 0 ? 100 : Math.max(0, Math.min(100, Math.round((currentChange / totalNeeded) * 100)));
-    const remaining = targetWeight - latestWeight;
-    weightText = `${remaining >= 0 ? remaining.toFixed(1) + " lb left" : Math.abs(remaining).toFixed(1) + " lb over target"} · Target: ${targetWeight.toFixed(1)} lb`;
-  }
 
   $("goalsProgress").innerHTML = `
     <div class="record-card stats-goal-row">
@@ -338,17 +322,12 @@ function renderGoals(workouts, weights) {
       <p class="muted small" style="margin:4px 0 0;">${workoutsThisWeek} / ${weeklyGoal} workouts in the last 7 days</p>
       <div class="progress-bar"><div class="progress-fill" style="width:${weeklyPercent}%"></div></div>
     </div>
-    <div class="record-card stats-goal-row">
-      <strong>Body weight goal</strong>
-      <p class="muted small" style="margin:4px 0 0;">${weightText}</p>
-      <div class="progress-bar"><div class="progress-fill" style="width:${weightPercent}%"></div></div>
-    </div>
   `;
 }
 
 function renderPersonalRecords(exerciseStats) {
   const records = exerciseStats.filter((exercise) => exercise.bestEstimated1rm > 0).sort((a, b) => b.bestEstimated1rm - a.bestEstimated1rm).slice(0, 8);
-  if (!records.length) { $("personalRecords").innerHTML = `<div class="stats-empty-state"><strong>No personal records yet</strong><p class="muted small" style="margin:4px 0 0;">Log sets with weight and reps first.</p></div>`; return; }
+  if (!records.length) { $("personalRecords").innerHTML = `<div class="stats-empty-state"><strong>No personal records yet</strong><p class="muted small" style="margin:4px 0 0;">Log loaded sets and reps first.</p></div>`; return; }
   $("personalRecords").innerHTML = records.map((record) => `
     <div class="record-card"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(record.name)}</h3><p class="muted small" style="margin-bottom:0;">Best estimated 1RM: ${record.bestEstimated1rm.toFixed(1)} lb${record.bestDate ? ` · ${dateLabel(record.bestDate)}` : ""}</p></div><strong>${record.sessions}x</strong></div></div>
   `).join("");
@@ -366,7 +345,7 @@ function renderExerciseProgress(exerciseStats) {
   const selected = $("progressExercise").value;
   const metric = $("progressMetric").value;
   const exercise = exerciseStats.find((item) => item.name === selected);
-  if (!exercise || !exercise.history.length) { $("exerciseProgress").innerHTML = `<div class="stats-empty-state"><strong>No exercise trend yet</strong><p class="muted small" style="margin:4px 0 0;">Log an exercise with weight and reps to see progress.</p></div>`; return; }
+  if (!exercise || !exercise.history.length) { $("exerciseProgress").innerHTML = `<div class="stats-empty-state"><strong>No exercise trend yet</strong><p class="muted small" style="margin:4px 0 0;">Log loaded sets and reps to see progress.</p></div>`; return; }
 
   const sorted = getSortedExerciseHistory(exercise);
   const recent = sorted.slice(-7);

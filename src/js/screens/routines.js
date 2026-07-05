@@ -92,7 +92,7 @@ async function startRoutine(templateId) {
 }
 
 async function resetTemplates() {
-  if (!confirm("Reset routines to defaults? Workout and weight history will stay.")) return;
+  if (!confirm("Reset routines to defaults? Workout history will stay.")) return;
   await clearStore("templates");
   await seedDefaultTemplates();
   await refreshTemplateDropdowns();

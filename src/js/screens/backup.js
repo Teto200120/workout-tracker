@@ -30,20 +30,21 @@ function backupAgeText(age) {
 async function renderBackupStatus() {
   if (!db) return;
 
-  const [workouts, weights] = await Promise.all([getItems("workouts"), getItems("weights")]);
-  const hasUserData = workouts.length > 0 || weights.length > 0;
+  const [workouts, legacyWeights] = await Promise.all([getItems("workouts"), getItems("weights")]);
+  // Legacy weight records still count for backup reminders so old data can be exported.
+  const hasUserData = workouts.length > 0 || legacyWeights.length > 0;
   const meta = getBackupMeta();
   const age = daysSinceBackup(meta.lastExportedAt);
 
   let level = "good";
   let pill = "Current";
-  let text = "No workout or body-weight data yet.";
+  let text = "No workout data yet.";
   let showToday = false;
 
   if (!hasUserData) {
     level = "good";
     pill = "No data";
-    text = "No workout or body-weight data yet. Backup reminders will appear once there is progress to protect.";
+    text = "No workout data yet. Backup reminders will appear once there is progress to protect.";
   } else if (age === null) {
     level = "warn";
     pill = "Backup";
@@ -149,7 +150,7 @@ async function importData(file) {
 }
 
 async function clearAllData() {
-  if (!confirm("Clear all workout, weight, and template data from this browser?")) return;
+  if (!confirm("Clear all local app data from this browser?")) return;
   for (const name of STORES) await clearStore(name);
   localStorage.removeItem(BACKUP_META_KEY);
   await seedDefaultTemplates();

@@ -2,9 +2,9 @@ import "../core/globals.js";
 
 function getGoals() {
   try {
-    return JSON.parse(localStorage.getItem("hector_workout_goals_v1")) || { weeklyGoal: 4, targetWeight: "" };
+    return JSON.parse(localStorage.getItem("hector_workout_goals_v1")) || { weeklyGoal: 4 };
   } catch {
-    return { weeklyGoal: 4, targetWeight: "" };
+    return { weeklyGoal: 4 };
   }
 }
 
@@ -33,8 +33,7 @@ function clearDraftStorage(showMessage = true) {
 
 function saveGoalsToStorage() {
   const weeklyGoal = Number($("weeklyGoal").value || 4);
-  const targetWeight = $("targetWeight").value ? Number($("targetWeight").value) : "";
-  localStorage.setItem("hector_workout_goals_v1", JSON.stringify({ weeklyGoal, targetWeight }));
+  localStorage.setItem("hector_workout_goals_v1", JSON.stringify({ ...getGoals(), weeklyGoal }));
   toast("Goals saved.");
   renderAll();
 }

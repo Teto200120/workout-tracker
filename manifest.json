@@ -1,7 +1,7 @@
 {
   "name": "Hector's Workout Tracker",
   "short_name": "Workout Tracker",
-  "description": "Local-first workout tracker for workouts, routines, progress, body weight, and backups.",
+  "description": "Local-first workout tracker for workouts, routines, progress, and backups.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

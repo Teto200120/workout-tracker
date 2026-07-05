@@ -111,37 +111,4 @@ async function deleteWorkout(workoutId) {
   toast("Workout deleted.");
 }
 
-async function saveWeight() {
-  const value = Number($("weightValue").value);
-  if (!value) { toast("Enter your weight first."); return; }
-  await saveItem("weights", { id: id(), date: $("weightDate").value || today(), weight: value, notes: $("weightNotes").value.trim(), createdAt: new Date().toISOString() });
-  $("weightValue").value = "";
-  $("weightNotes").value = "";
-  await renderAll();
-  toast("Weight saved.");
-}
-
-async function renderWeights() {
-  const weights = (await getItems("weights")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  const stats = $("weightStats");
-  const list = $("weightList");
-  if (!weights.length) {
-    stats.innerHTML = `<div class="stat stats-stat-card"><strong>-</strong><span class="muted small">Latest</span></div><div class="stat stats-stat-card"><strong>-</strong><span class="muted small">Change</span></div><div class="stat stats-stat-card"><strong>0</strong><span class="muted small">Entries</span></div>`;
-    list.innerHTML = `<div class="stats-empty-state"><strong>No weight entries yet</strong><p class="muted small" style="margin:4px 0 0;">Save a body weight entry to start the history.</p></div>`;
-    return;
-  }
-  const latest = weights[0];
-  const oldest = weights[weights.length - 1];
-  const change = latest.weight - oldest.weight;
-  stats.innerHTML = `<div class="stat stats-stat-card"><strong>${latest.weight.toFixed(1)}</strong><span class="muted small">Latest lb</span></div><div class="stat stats-stat-card"><strong>${change >= 0 ? "+" : ""}${change.toFixed(1)}</strong><span class="muted small">Total Change</span></div><div class="stat stats-stat-card"><strong>${weights.length}</strong><span class="muted small">Entries</span></div>`;
-  list.innerHTML = weights.map((entry) => `<article class="list-item stats-weight-entry"><div class="row" style="align-items:flex-start;"><div><h3>${entry.weight.toFixed(1)} lb</h3><p class="muted small" style="margin-bottom:6px;">${dateLabel(entry.date)}</p>${entry.notes ? `<p class="small">${cleanText(entry.notes)}</p>` : ""}</div><button class="danger" onclick="deleteWeight('${entry.id}')">Delete</button></div></article>`).join("");
-}
-
-async function deleteWeight(weightId) {
-  if (!confirm("Delete this weight entry?")) return;
-  await deleteItem("weights", weightId);
-  await renderAll();
-  toast("Weight deleted.");
-}
-
-Object.assign(globalThis, { renderHistory, renderWorkoutTags, renderWorkoutExerciseChips, renderWorkoutCard, renderWorkout, renderExerciseDetails, editWorkout, deleteWorkout, saveWeight, renderWeights, deleteWeight });
+Object.assign(globalThis, { renderHistory, renderWorkoutTags, renderWorkoutExerciseChips, renderWorkoutCard, renderWorkout, renderExerciseDetails, editWorkout, deleteWorkout });
