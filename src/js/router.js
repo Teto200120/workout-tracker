@@ -1,7 +1,13 @@
 import "./core/globals.js";
 
 const SCREEN_GROUPS = {
-  stats: ["dashboard", "history"],
+  stats: ["dashboard"],
+  history: ["history"],
+  statsWeekly: ["statsWeekly"],
+  statsStrength: ["statsStrength"],
+  statsRecords: ["statsRecords"],
+  statsWorkoutStats: ["statsWorkoutStats"],
+  statsGoals: ["statsGoals"],
   home: ["log"],
   profile: ["profile"],
   templates: ["templates"],
@@ -11,9 +17,17 @@ const SCREEN_GROUPS = {
 
 const SCREEN_ALIASES = {
   dashboard: "stats",
-  history: "stats",
   log: "home"
 };
+
+const STATS_DETAIL_DESTINATIONS = new Set([
+  "history",
+  "statsWeekly",
+  "statsStrength",
+  "statsRecords",
+  "statsWorkoutStats",
+  "statsGoals"
+]);
 
 function getScreenDestination(name) {
   const destination = SCREEN_ALIASES[name] || name || "home";
@@ -21,7 +35,13 @@ function getScreenDestination(name) {
 }
 
 function getActiveNavDestination(destination) {
+  if (STATS_DETAIL_DESTINATIONS.has(destination)) return "stats";
   return ["templates", "backup", "settings"].includes(destination) ? "profile" : destination;
+}
+
+function openStatsDetail(destination) {
+  switchScreen(destination);
+  setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
 }
 
 function openProfileSubpage(destination, focusId = "") {
@@ -64,6 +84,20 @@ function bindEvents() {
   document.addEventListener("mousemove", moveExerciseDrag);
   document.addEventListener("mouseup", endExerciseDrag);
   all(".tab").forEach((tab) => tab.addEventListener("click", () => switchScreen(tab.dataset.screen)));
+  all("[data-stats-detail]").forEach((button) => {
+    button.addEventListener("click", () => openStatsDetail(button.dataset.statsDetail));
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openStatsDetail(button.dataset.statsDetail);
+    });
+  });
+  all("[data-stats-back]").forEach((button) => {
+    button.addEventListener("click", () => {
+      switchScreen("stats");
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
+    });
+  });
   $("todayStartWorkout")?.addEventListener("click", handleTodayPrimaryCta);
   $("todayWorkoutCard")?.addEventListener("click", handleTodayWorkoutCardClick);
   $("todayCardAction")?.addEventListener("click", handleTodayCardAction);
@@ -168,4 +202,4 @@ async function init() {
   }
 }
 
-Object.assign(globalThis, { switchScreen, openProfileSubpage, bindEvents, renderAll, init });
+Object.assign(globalThis, { switchScreen, openStatsDetail, openProfileSubpage, bindEvents, renderAll, init });

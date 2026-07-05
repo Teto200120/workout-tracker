@@ -249,11 +249,93 @@
           <div class="screen-title-row stats-hero-row">
             <div>
               <h2 style="margin-bottom:4px;">Your Stats</h2>
-              <p class="muted small" style="margin:0;">Training consistency, session history, strength progress, goals, and volume in one dashboard.</p>
+              <p class="muted small" style="margin:0;">Quick training signals. Tap a card for the full detail view.</p>
             </div>
-            <a class="stats-view-all" href="#history">View all</a>
           </div>
           <div class="stats-top-grid progress-summary" id="dashboardStats"></div>
+        </div>
+
+        <div class="stats-overview-grid">
+          <article class="card stats-panel stats-overview-card stats-week-card" role="button" tabindex="0" data-stats-detail="statsWeekly">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Weekly Activity</h2>
+              <p class="muted small" style="margin:4px 0 0;">This week's rhythm.</p>
+            </div>
+            <span class="stats-section-badge" id="weeklyActivityPreviewCount">0/0</span>
+          </div>
+          <div id="weeklyActivityPreview" class="stats-week-strip"></div>
+          <span class="stats-card-action">Open weekly detail</span>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-strength-card" role="button" tabindex="0" data-stats-detail="statsStrength">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Strength Snapshot</h2>
+              <p class="muted small" style="margin:4px 0 0;">Recent PRs and trends.</p>
+            </div>
+            <span class="stats-card-chevron" aria-hidden="true">View</span>
+          </div>
+          <div id="strengthSnapshot" class="insight-list stats-preview-list"></div>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-history-card" role="button" tabindex="0" data-stats-detail="history">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Recent Sessions</h2>
+              <p class="muted small" style="margin:4px 0 0;">Latest workouts only.</p>
+            </div>
+            <span class="stats-card-chevron" aria-hidden="true">View</span>
+          </div>
+          <div id="recentSessionsPreview" class="stats-preview-list"></div>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-lifetime-card" role="button" tabindex="0" data-stats-detail="statsWorkoutStats">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Workout Stats</h2>
+              <p class="muted small" style="margin:4px 0 0;">Lifetime volume and sets.</p>
+            </div>
+            <span class="stats-card-chevron" aria-hidden="true">View</span>
+          </div>
+          <div class="stats-top-grid stats-mini-grid" id="workoutStatsPreview"></div>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-pr-card" role="button" tabindex="0" data-stats-detail="statsRecords">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Personal Records</h2>
+              <p class="muted small" style="margin:4px 0 0;">Estimated 1RM uses weight × (1 + reps / 30), so use it as a rough progress signal.</p>
+            </div>
+          </div>
+          <div id="personalRecordsPreview" class="stats-preview-list"></div>
+          <span class="stats-card-action">Open records</span>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-goals-card" role="button" tabindex="0" data-stats-detail="statsGoals">
+            <div class="section-heading">
+              <div>
+                <h2 style="margin:0;">Weekly Goal</h2>
+                <p class="muted small" style="margin:4px 0 0;">Consistency target.</p>
+              </div>
+              <span class="stats-card-chevron" aria-hidden="true">Edit</span>
+            </div>
+            <div id="goalsPreview" class="stats-goal-preview"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="statsWeekly" class="screen stats-screen stats-detail-screen stats-week-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Weekly Activity</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
         </div>
 
         <div class="card stats-panel stats-week-card">
@@ -262,9 +344,24 @@
               <h2 style="margin:0;">Weekly Activity</h2>
               <p class="muted small" style="margin:4px 0 0;">This week's training rhythm, using your current workout schedule.</p>
             </div>
-            <span class="stats-section-badge" id="weeklyActivityCount">0/0</span>
+            <span class="stats-section-badge" id="weeklyActivityDetailCount">0/0</span>
           </div>
-          <div id="weeklyActivity" class="stats-week-strip"></div>
+          <div id="weeklyActivityDetail" class="stats-week-strip stats-week-strip-detail"></div>
+          <div id="weeklyActivityDetailList" class="stats-week-list"></div>
+        </div>
+      </section>
+
+      <section id="statsStrength" class="screen stats-screen stats-detail-screen stats-strength-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Strength Snapshot</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
         </div>
 
         <div class="card stats-panel stats-strength-card">
@@ -274,24 +371,7 @@
               <p class="muted small" style="margin:4px 0 0;">Recent PRs, strength trends, and volume changes at a glance.</p>
             </div>
           </div>
-          <div id="strengthSnapshot" class="insight-list"></div>
-        </div>
-
-        <div class="card stats-panel stats-goals-card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Goals</h2>
-              <p class="muted small" style="margin:4px 0 0;">Set a simple target for weekly training consistency.</p>
-            </div>
-          </div>
-          <div class="progress-form">
-            <div>
-              <label for="weeklyGoal">Weekly Workout Goal</label>
-              <input id="weeklyGoal" type="number" min="1" step="1" placeholder="Example: 4" />
-            </div>
-          </div>
-          <button class="success" id="saveGoals" type="button" style="width:100%; margin-top:10px;">Save Goals</button>
-          <div id="goalsProgress" class="detail"></div>
+          <div id="strengthSnapshotDetail" class="insight-list"></div>
         </div>
 
         <div class="card stats-panel stats-progress-card">
@@ -317,19 +397,45 @@
           </div>
           <div id="exerciseProgress"></div>
         </div>
+      </section>
+
+      <section id="statsRecords" class="screen stats-screen stats-detail-screen stats-records-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Personal Records</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
 
         <div class="card stats-panel stats-pr-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Personal Records</h2>
-              <p class="muted small" style="margin:4px 0 0;">Estimated 1RM uses weight × (1 + reps / 30), so use it as a rough progress signal.</p>
+              <p class="muted small" style="margin:4px 0 0;">Estimated 1RM uses weight x (1 + reps / 30), so use it as a rough progress signal.</p>
             </div>
           </div>
           <div id="personalRecords"></div>
         </div>
       </section>
 
-      <section id="history" class="screen stats-screen stats-history">
+      <section id="statsWorkoutStats" class="screen stats-screen stats-detail-screen stats-workout-stats-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Workout Stats</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
         <div class="card stats-panel stats-lifetime-card">
           <div class="section-heading">
             <div>
@@ -338,6 +444,51 @@
             </div>
           </div>
           <div class="stats-top-grid" id="workoutStats"></div>
+        </div>
+      </section>
+
+      <section id="statsGoals" class="screen stats-screen stats-detail-screen stats-goals-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Weekly Goal</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card stats-panel stats-goals-card">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Goals</h2>
+              <p class="muted small" style="margin:4px 0 0;">Set a simple target for weekly training consistency.</p>
+            </div>
+          </div>
+          <div class="progress-form">
+            <div>
+              <label for="weeklyGoal">Weekly Workout Goal</label>
+              <input id="weeklyGoal" type="number" min="1" step="1" placeholder="Example: 4" />
+            </div>
+          </div>
+          <button class="success" id="saveGoals" type="button" style="width:100%; margin-top:10px;">Save Goals</button>
+          <div id="goalsProgress" class="detail"></div>
+        </div>
+      </section>
+
+      <section id="history" class="screen stats-screen stats-detail-screen stats-history">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Session History</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
         </div>
 
         <div class="card stats-panel stats-history-card">

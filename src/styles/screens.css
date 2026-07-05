@@ -2330,3 +2330,302 @@ body:has(#sessionView:not(.hidden)) .toast.show {
   }
 
 }
+
+/* === Stats overview/detail hub === */
+body:has(.stats-screen.active) {
+  padding: 0;
+  background:
+    radial-gradient(circle at 50% -14%, rgba(78, 117, 160, 0.28), transparent 38%),
+    linear-gradient(180deg, #172d48 0%, #0b1c31 62%, #071423 100%);
+}
+
+body:has(.stats-screen.active) .app {
+  width: min(100vw, 760px) !important;
+  max-width: 760px !important;
+  min-height: 100vh;
+  padding: 24px 18px var(--nav-clearance) !important;
+}
+
+body:has(.stats-screen.active) .app > header,
+body:has(.stats-screen.active) .today-floating-cta {
+  display: none !important;
+}
+
+body:has(.stats-screen.active) .tabs {
+  width: min(454px, 100vw) !important;
+  bottom: 0 !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  border-radius: 0 !important;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  padding: 10px 22px max(10px, env(safe-area-inset-bottom)) !important;
+  background: rgba(27, 44, 66, 0.97) !important;
+  border-color: rgba(166, 190, 220, 0.14) !important;
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.22) !important;
+  backdrop-filter: blur(18px);
+}
+
+body:has(.stats-screen.active) .tabs .tab {
+  min-height: 42px;
+  border-radius: 999px;
+  color: #78a0ca;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+body:has(.stats-screen.active) .tabs .tab.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  border: 0;
+  box-shadow: 0 9px 20px rgba(255, 104, 69, 0.25);
+}
+
+body:has(.stats-screen.active) .toast.show {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+.stats-overview-grid,
+.stats-preview-list,
+.stats-week-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stats-overview-card {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  color: #f7fbff;
+  cursor: pointer;
+}
+
+.stats-overview-card {
+  padding: 15px;
+  border: 1px solid rgba(166, 190, 220, 0.22);
+}
+
+.stats-overview-card:focus-visible {
+  outline: 2px solid rgba(255, 122, 89, 0.72);
+  outline-offset: 3px;
+}
+
+.stats-overview-card .section-heading {
+  margin-bottom: 0;
+}
+
+#dashboard .stats-pr-card .section-heading p {
+  display: none;
+}
+
+.stats-card-chevron,
+.stats-card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.13);
+  border: 1px solid rgba(255, 107, 69, 0.23);
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.stats-card-action {
+  justify-self: start;
+}
+
+.stats-preview-row,
+.stats-week-list-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(7, 20, 35, 0.42);
+  border: 1px solid rgba(166, 190, 220, 0.16);
+}
+
+.stats-preview-row strong,
+.stats-week-list-row strong {
+  display: block;
+  color: #f7fbff;
+  line-height: 1.16;
+}
+
+.stats-preview-row > span {
+  color: #ffb29f;
+  font-size: 0.82rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.stats-mini-grid .stat {
+  min-height: 78px;
+}
+
+.stats-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 22;
+  display: grid;
+  grid-template-columns: minmax(88px, auto) minmax(0, 1fr) minmax(88px, auto);
+  gap: 10px;
+  align-items: center;
+  margin: -4px -2px 16px;
+  padding: 12px 2px 10px;
+  background: linear-gradient(180deg, rgba(23, 45, 72, 0.98), rgba(23, 45, 72, 0.84) 72%, rgba(23, 45, 72, 0));
+  backdrop-filter: blur(12px);
+}
+
+.stats-detail-back,
+.stats-detail-spacer {
+  min-height: 46px;
+}
+
+.stats-detail-back {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.13);
+  border: 1px solid rgba(255, 107, 69, 0.28);
+  font-size: 0.82rem;
+  font-weight: 950;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.stats-detail-back svg {
+  width: 1.08rem;
+  height: 1.08rem;
+  flex: 0 0 auto;
+}
+
+.stats-detail-back path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.stats-detail-title {
+  min-width: 0;
+  text-align: center;
+}
+
+.stats-detail-title span {
+  display: block;
+  color: #ff9a7e;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.07em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.stats-detail-title h2 {
+  margin: 3px 0 0;
+  color: #f7fbff;
+  font-size: 1.26rem;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.stats-week-strip-detail {
+  margin-bottom: 10px;
+}
+
+.stats-week-list-row.complete {
+  border-color: rgba(255, 107, 69, 0.28);
+  background: rgba(255, 107, 69, 0.11);
+}
+
+.stats-goal-preview-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stats-goal-preview-line strong {
+  color: #f7fbff;
+  font-size: 1.12rem;
+}
+
+.stats-screen input,
+.stats-screen select,
+.stats-screen textarea {
+  min-height: 46px;
+  border-color: rgba(166, 190, 220, 0.2);
+  background: rgba(7, 20, 35, 0.56);
+}
+
+.stats-screen input:focus,
+.stats-screen select:focus,
+.stats-screen textarea:focus {
+  border-color: rgba(255, 107, 69, 0.58);
+  box-shadow: 0 0 0 3px rgba(255, 107, 69, 0.14);
+}
+
+.stats-screen label {
+  color: #9eb6d2;
+}
+
+@media (max-width: 540px) {
+  .stats-detail-header {
+    grid-template-columns: 46px minmax(0, 1fr) 46px;
+  }
+
+  .stats-detail-back {
+    width: 46px;
+    min-width: 46px;
+    padding: 0;
+  }
+
+  .stats-detail-back span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .stats-overview-card .section-heading,
+  .stats-preview-row,
+  .stats-week-list-row,
+  .stats-goal-preview-line {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 390px) {
+  body:has(.stats-screen.active) .app {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .stats-overview-card {
+    padding: 14px;
+  }
+}
