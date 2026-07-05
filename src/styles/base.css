@@ -12,6 +12,7 @@
   --yellow: #f59e0b;
   --radius: 18px;
   --shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+  --nav-clearance: calc(118px + env(safe-area-inset-bottom));
 }
 
 * { box-sizing: border-box; }
@@ -28,7 +29,7 @@ body {
   padding: 14px;
 }
 
-.app { max-width: 900px; margin: 0 auto; padding-bottom: 112px; }
+.app { max-width: 900px; margin: 0 auto; padding-bottom: var(--nav-clearance); }
 header { padding: 10px 2px 16px; }
 h1, h2, h3, p { margin-top: 0; }
 
@@ -88,7 +89,7 @@ h3 { font-size: 1rem; margin-bottom: 5px; }
 .tabs {
   position: fixed;
   left: 50%;
-  bottom: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: min(520px, calc(100vw - 20px));
   display: grid;

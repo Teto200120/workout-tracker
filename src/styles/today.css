@@ -469,21 +469,6 @@
 
 
 @media (max-width: 700px) {
-  .tabs {
-    bottom: 8px;
-    width: calc(100vw - 16px);
-    grid-template-columns: repeat(5, 1fr);
-  }
-
-  .tabs .tab {
-    min-height: 48px;
-    font-size: 0.7rem;
-    padding: 6px 3px;
-  }
-
-  .nav-icon { font-size: 1rem; }
-  .nav-label { font-size: 0.66rem; }
-
   .grid-2, .grid-3, .timer-layout, .today-meta, .today-actions, .today-secondary-actions, .completion-stats, .backup-reminder-actions { grid-template-columns: 1fr; }
   .timer-chip-row { grid-template-columns: repeat(4, 1fr); }
   .section-heading { align-items: flex-start; }
@@ -539,6 +524,7 @@ body:has(#todayView:not(.hidden)) .app > header {
 body:has(#todayView:not(.hidden)) .tabs {
   width: min(454px, 100vw);
   bottom: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-radius: 0;
   border-left: 0;
   border-right: 0;
@@ -564,15 +550,6 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
   background: linear-gradient(135deg, var(--ref-coral), var(--ref-coral-2));
   border: 0;
   box-shadow: 0 9px 20px rgba(255, 104, 69, 0.25);
-}
-
-body:has(#todayView:not(.hidden)) .nav-icon {
-  font-size: 1rem;
-}
-
-body:has(#todayView:not(.hidden)) .nav-label {
-  font-size: 0.72rem;
-  font-weight: 850;
 }
 
 #todayView.today-home {

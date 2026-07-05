@@ -533,8 +533,9 @@ body:has(#profile.active) .tabs,
 body:has(#templates.active) .tabs,
 body:has(#backup.active) .tabs,
 body:has(#settings.active) .tabs {
-  width: min(520px, 100vw) !important;
+  width: min(454px, 100vw) !important;
   bottom: 0 !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   border-radius: 0 !important;
   border-left: 0;
   border-right: 0;
@@ -1483,8 +1484,9 @@ body:has(#dashboard.active) .today-floating-cta {
 }
 
 body:has(#dashboard.active) .tabs {
-  width: min(520px, 100vw);
+  width: min(454px, 100vw);
   bottom: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-radius: 0;
   border-left: 0;
   border-right: 0;
@@ -2175,3 +2177,181 @@ th { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-
 
 .toast.show { opacity: 1; bottom: 26px; }
 .hidden { display: none !important; }
+
+/* === Pass 6 final polish: shared 3-tab surfaces === */
+body:has(#dashboard.active) .app,
+body:has(#history.active) .app,
+body:has(#profile.active) .app,
+body:has(#templates.active) .app,
+body:has(#backup.active) .app,
+body:has(#settings.active) .app {
+  padding-bottom: var(--nav-clearance) !important;
+}
+
+body:has(#history.active) {
+  padding: 0;
+  background:
+    radial-gradient(circle at 50% -14%, rgba(78, 117, 160, 0.28), transparent 38%),
+    linear-gradient(180deg, #172d48 0%, #0b1c31 62%, #071423 100%);
+}
+
+body:has(#history.active) .app {
+  width: min(100vw, 760px);
+  max-width: 760px;
+  min-height: 100vh;
+  padding: 24px 18px var(--nav-clearance);
+}
+
+body:has(#history.active) .app > header,
+body:has(#history.active) .today-floating-cta {
+  display: none !important;
+}
+
+body:has(#history.active) .tabs {
+  width: min(454px, 100vw);
+  bottom: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  padding: 10px 22px max(10px, env(safe-area-inset-bottom));
+  background: rgba(27, 44, 66, 0.97);
+  border-color: rgba(166, 190, 220, 0.14);
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(18px);
+}
+
+body:has(#history.active) .tabs .tab {
+  min-height: 42px;
+  border-radius: 999px;
+  color: #78a0ca;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+body:has(#history.active) .tabs .tab.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  border: 0;
+  box-shadow: 0 9px 20px rgba(255, 104, 69, 0.25);
+}
+
+body:has(#dashboard.active) .toast.show,
+body:has(#history.active) .toast.show,
+body:has(#profile.active) .toast.show,
+body:has(#templates.active) .toast.show,
+body:has(#backup.active) .toast.show,
+body:has(#settings.active) .toast.show {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+body:has(#sessionView:not(.hidden)) .toast.show {
+  bottom: calc(118px + env(safe-area-inset-bottom));
+}
+
+#dashboard button,
+#history button,
+#profile button,
+#templates button,
+#backup button,
+#settings button {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#dashboard .card,
+#history .card,
+#profile .card,
+#templates .card,
+#backup .card,
+#settings .settings-group,
+#settings .settings-action-bar {
+  min-width: 0;
+}
+
+#dashboard .detail,
+#history .detail,
+#templates .detail,
+#backup .detail,
+#settings .detail,
+.stats-empty-state,
+.routine-empty-state,
+.backup-info-list,
+.routine-draft-list,
+.routine-library-grid {
+  overflow-wrap: anywhere;
+}
+
+.stats-empty-state,
+.routine-empty-state {
+  line-height: 1.35;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+#history .stats-session-detail {
+  max-width: 100%;
+}
+
+#history .stats-session-detail table {
+  min-width: 460px;
+}
+
+#weightList .stats-weight-entry {
+  display: block;
+}
+
+#weightList .stats-weight-entry > .row {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+#weightList .stats-weight-entry > .row > div {
+  min-width: 0;
+}
+
+#weightList .stats-weight-entry button {
+  flex: 0 0 auto;
+  min-width: 86px;
+}
+
+@media (max-width: 540px) {
+  body:has(#history.active) .app {
+    padding: 24px 18px var(--nav-clearance);
+  }
+}
+
+@media (max-width: 430px) {
+  .routine-builder-actions,
+  .backup-primary-actions,
+  .backup-reminder-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-reminder-actions button,
+  .routine-builder-actions button,
+  .backup-primary-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  body:has(#history.active) .app {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .stats-week-status {
+    display: none;
+  }
+
+  #templates .routine-actions {
+    width: 100%;
+  }
+
+  #weightList .stats-weight-entry > .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
