@@ -100,7 +100,6 @@ function getExerciseTrendInsight(exercise, metric = "bestWeight") {
   const e1rmDelta = Number(last.estimated1rm || 0) - Number(first.estimated1rm || 0);
   if (delta <= 0 && e1rmDelta < 2) return null;
 
-  const mainDelta = metric === "bestWeight" ? delta : e1rmDelta;
   return {
     type: "trend",
     score: Math.max(delta, e1rmDelta),
