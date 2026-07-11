@@ -689,6 +689,8 @@ async function renderExerciseLogContent(exerciseEl) {
   const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
   const profile = getExerciseProfile(name);
   const { row, index, total } = getCurrentSetMeta(exerciseEl);
+  const warmupRows = Array.from(exerciseEl.querySelectorAll(".set-row"))
+    .filter((setRow) => setRow.querySelector(".set-warmup")?.checked);
   const values = getCurrentSetDisplayValues(exerciseEl);
   const last = await getLastExercisePerformance(name);
   const lastWorkSets = workSetsOnly(last?.sets || []);
@@ -724,10 +726,19 @@ async function renderExerciseLogContent(exerciseEl) {
       ${controlInputHtml("weight", values.weight === "-" ? "" : values.weight, "Weight (lbs)")}
       ${controlInputHtml("reps", values.reps === "-" ? "" : values.reps, "Reps")}
       ${controlInputHtml("rpe", values.rpe, "RPE")}
+      <label class="detail-warmup-toggle">
+        <input type="checkbox" data-detail-warmup ${row?.querySelector(".set-warmup")?.checked ? "checked" : ""} ${row ? "" : "disabled"} />
+        <span>Warm-up set</span>
+      </label>
       <div class="detail-set-actions">
         <button class="detail-add-set" type="button" data-detail-action="add-set">+ Add Set</button>
         <button class="detail-remove-set" type="button" data-detail-action="remove-last-set">Remove Last Set</button>
+        ${warmupRows.length ? `<button class="detail-remove-set" type="button" data-detail-action="restore-last-warmup">Undo Last Warm-up</button>` : ""}
       </div>
+    </div>
+    <div class="exercise-detail-card">
+      <label for="exerciseDetailNotes">Exercise Notes</label>
+      <textarea id="exerciseDetailNotes" data-detail-notes placeholder="Grip, form cue, pain, rest, machine setting, etc.">${cleanText(exerciseEl.querySelector(".exercise-notes")?.value || "")}</textarea>
     </div>
     <div class="hidden" aria-hidden="true">
       <strong>PR</strong>
@@ -803,6 +814,17 @@ function bindExerciseDetailControls() {
       if (!activeExerciseDetailEl) return;
       if (button.dataset.detailAction === "add-set") addSetToExercise(activeExerciseDetailEl);
       if (button.dataset.detailAction === "remove-last-set") removeLastSetFromExercise(activeExerciseDetailEl);
+      if (button.dataset.detailAction === "restore-last-warmup") {
+        const warmupRows = Array.from(activeExerciseDetailEl.querySelectorAll(".set-row"))
+          .filter((row) => row.querySelector(".set-warmup")?.checked);
+        const warmup = warmupRows.at(-1)?.querySelector(".set-warmup");
+        if (!warmup) return;
+        warmup.checked = false;
+        setRows(activeExerciseDetailEl);
+        updateExerciseSummary(activeExerciseDetailEl);
+        saveDraftSilently();
+        renderExerciseDetailView();
+      }
     });
   });
   view.querySelectorAll(".control-stepper").forEach((button) => {
@@ -814,6 +836,23 @@ function bindExerciseDetailControls() {
   });
   view.querySelectorAll(".control-value-input").forEach((input) => {
     bindControlValueInput(input, () => activeExerciseDetailEl);
+  });
+  view.querySelector("[data-detail-warmup]")?.addEventListener("change", (event) => {
+    if (!activeExerciseDetailEl) return;
+    const row = getCurrentSetRow(activeExerciseDetailEl);
+    const warmup = row?.querySelector(".set-warmup");
+    if (!warmup) return;
+    warmup.checked = event.target.checked;
+    setRows(activeExerciseDetailEl);
+    updateExerciseSummary(activeExerciseDetailEl);
+    saveDraftSilently();
+    renderExerciseDetailView();
+  });
+  view.querySelector("[data-detail-notes]")?.addEventListener("input", (event) => {
+    const notes = activeExerciseDetailEl?.querySelector(".exercise-notes");
+    if (!notes) return;
+    notes.value = event.target.value;
+    saveDraftSilently();
   });
 }
 

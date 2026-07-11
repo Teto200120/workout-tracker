@@ -170,7 +170,7 @@ function bindEvents() {
   $("restoreDraft").addEventListener("click", restoreDraftFromStorage);
   $("clearDraft").addEventListener("click", () => clearDraftStorage(true));
 
-  $("log").addEventListener("input", () => saveDraftSilently());
+  $("sessionView").addEventListener("input", () => saveDraftSilently());
   $("saveGoals").addEventListener("click", saveGoalsToStorage);
 }
 

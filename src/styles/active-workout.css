@@ -229,6 +229,38 @@ body:has(#sessionView:not(.hidden)) #log {
     0 14px 26px rgba(1, 11, 24, 0.18) !important;
 }
 
+#sessionView.live-session > .card.exercise-section-card,
+#sessionView.live-session > .card:has(#workoutNotes) {
+  position: relative !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 16px 14px 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+  white-space: normal !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#sessionView.live-session > .card:has(#workoutNotes) {
+  margin-bottom: 96px !important;
+  padding: 16px !important;
+  border: 1px solid rgba(153, 177, 205, 0.16) !important;
+  border-radius: 18px !important;
+  background: rgba(35, 55, 82, 0.64) !important;
+}
+
+#sessionView.live-session .exercise-section-card .section-heading {
+  justify-content: flex-end;
+}
+
+#sessionView.live-session .exercise-section-card .section-heading > div {
+  display: none;
+}
+
 #sessionView.live-session .timer-layout {
   grid-template-columns: 1fr;
 }
@@ -557,9 +589,33 @@ body:has(#sessionView:not(.hidden)) #log {
 .live-hidden-editor,
 #sessionView .sets,
 #sessionView .set-row,
-#sessionView .exercise-actions,
 #sessionView .exercise-flow-actions {
   display: none !important;
+}
+
+#sessionView .exercise-actions {
+  display: flex !important;
+  justify-content: flex-end;
+}
+
+#sessionView .exercise-actions .use-last-sets,
+#sessionView .exercise-actions .add-set {
+  display: none !important;
+}
+
+.detail-warmup-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--live-muted);
+  font-weight: 800;
+}
+
+.detail-warmup-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--live-green);
 }
 
 .guide-row {
