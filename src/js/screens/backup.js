@@ -126,11 +126,26 @@ async function exportData() {
 async function importData(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (!Array.isArray(data.workouts) || !Array.isArray(data.weights)) throw new Error("Invalid backup file.");
+    const legacyWeights = data.weights ?? [];
+    const templates = data.templates ?? [];
+    const hasValidIds = (items) => Array.isArray(items) && items.every((item) =>
+      item && typeof item === "object" && Object.prototype.hasOwnProperty.call(item, "id")
+    );
+    if (!hasValidIds(data.workouts) || !hasValidIds(legacyWeights) || !hasValidIds(templates)) {
+      throw new Error("Invalid backup file.");
+    }
     if (!confirm("Import this backup? Existing entries stay. Matching IDs will be overwritten.")) return;
-    for (const workout of data.workouts) await saveItem("workouts", workout);
-    for (const weight of data.weights) await saveItem("weights", weight);
-    if (Array.isArray(data.templates)) for (const template of data.templates) await saveItem("templates", template);
+
+    await new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORES, "readwrite");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error || new Error("Backup import was aborted."));
+      data.workouts.forEach((workout) => transaction.objectStore("workouts").put(workout));
+      legacyWeights.forEach((weight) => transaction.objectStore("weights").put(weight));
+      templates.forEach((template) => transaction.objectStore("templates").put(template));
+    });
+
     if (data.goals) localStorage.setItem("hector_workout_goals_v1", JSON.stringify(data.goals));
     if (data.settings) {
       setAppSettings({
@@ -153,6 +168,12 @@ async function clearAllData() {
   if (!confirm("Clear all local app data from this browser?")) return;
   for (const name of STORES) await clearStore(name);
   localStorage.removeItem(BACKUP_META_KEY);
+  localStorage.removeItem("hector_workout_goals_v1");
+  localStorage.removeItem("hector_workout_draft_v1");
+  localStorage.removeItem(SETTINGS_KEY);
+  stopSessionElapsedTimer();
+  stopTodayActiveElapsedTimer();
+  applyAppSettings();
   await seedDefaultTemplates();
   await refreshTemplateDropdowns();
   await loadWorkoutTemplate();
