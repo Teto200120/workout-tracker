@@ -36,9 +36,9 @@ async function renderBackupStatus() {
   const meta = getBackupMeta();
   const age = daysSinceBackup(meta.lastExportedAt);
 
-  let level = "good";
-  let pill = "Current";
-  let text = "No workout data yet.";
+  let level;
+  let pill;
+  let text;
   let showToday = false;
 
   if (!hasUserData) {
@@ -141,9 +141,14 @@ async function importData(file) {
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () => reject(transaction.error || new Error("Backup import was aborted."));
-      data.workouts.forEach((workout) => transaction.objectStore("workouts").put(workout));
-      legacyWeights.forEach((weight) => transaction.objectStore("weights").put(weight));
-      templates.forEach((template) => transaction.objectStore("templates").put(template));
+      try {
+        data.workouts.forEach((workout) => transaction.objectStore("workouts").put(workout));
+        legacyWeights.forEach((weight) => transaction.objectStore("weights").put(weight));
+        templates.forEach((template) => transaction.objectStore("templates").put(template));
+      } catch (error) {
+        transaction.abort();
+        reject(error);
+      }
     });
 
     if (data.goals) localStorage.setItem("hector_workout_goals_v1", JSON.stringify(data.goals));
@@ -159,7 +164,7 @@ async function importData(file) {
     await refreshTemplateDropdowns();
     await renderAll();
     toast("Backup imported.");
-  } catch (error) {
+  } catch {
     toast("Could not import backup.");
   }
 }

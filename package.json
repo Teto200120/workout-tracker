@@ -1,0 +1,24 @@
+{
+  "name": "hector-workout-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "http-server . -a 127.0.0.1 -p 4175 -c-1",
+    "serve:lan": "http-server . -a 0.0.0.0 -p 4175",
+    "lint": "eslint .",
+    "format:check": "prettier --check package.json eslint.config.js playwright.config.js tests .github README.md docs/TESTING.md",
+    "test": "playwright test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "check": "npm run lint && npm run format:check && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@eslint/js": "~10.0.1",
+    "@playwright/test": "~1.61.1",
+    "eslint": "~10.6.0",
+    "globals": "~17.7.0",
+    "http-server": "~14.1.1",
+    "prettier": "~3.9.4"
+  }
+}

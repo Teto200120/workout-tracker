@@ -1,0 +1,11 @@
+node_modules/
+playwright-report/
+test-results/
+coverage/
+legacy/
+index.html
+service-worker.js
+src/
+docs/QA_CHECKLIST.md
+README.txt
+

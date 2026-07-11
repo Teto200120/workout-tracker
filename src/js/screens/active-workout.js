@@ -688,7 +688,7 @@ function renderExerciseGuideContent(exerciseEl) {
 async function renderExerciseLogContent(exerciseEl) {
   const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
   const profile = getExerciseProfile(name);
-  const { row, index, total } = getCurrentSetMeta(exerciseEl);
+  const { row, index } = getCurrentSetMeta(exerciseEl);
   const warmupRows = Array.from(exerciseEl.querySelectorAll(".set-row"))
     .filter((setRow) => setRow.querySelector(".set-warmup")?.checked);
   const values = getCurrentSetDisplayValues(exerciseEl);
