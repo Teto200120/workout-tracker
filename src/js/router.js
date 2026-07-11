@@ -1,10 +1,74 @@
 import "./core/globals.js";
 
+const SCREEN_GROUPS = {
+  stats: ["dashboard"],
+  history: ["history"],
+  statsWeekly: ["statsWeekly"],
+  statsStrength: ["statsStrength"],
+  statsRecords: ["statsRecords"],
+  statsWorkoutStats: ["statsWorkoutStats"],
+  statsGoals: ["statsGoals"],
+  home: ["log"],
+  profile: ["profile"],
+  templates: ["templates"],
+  backup: ["backup"],
+  settings: ["settings"]
+};
+
+const SCREEN_ALIASES = {
+  dashboard: "stats",
+  log: "home"
+};
+
+const STATS_DETAIL_DESTINATIONS = new Set([
+  "history",
+  "statsWeekly",
+  "statsStrength",
+  "statsRecords",
+  "statsWorkoutStats",
+  "statsGoals"
+]);
+
+function getScreenDestination(name) {
+  const destination = SCREEN_ALIASES[name] || name || "home";
+  return SCREEN_GROUPS[destination] ? destination : "home";
+}
+
+function getActiveNavDestination(destination) {
+  if (STATS_DETAIL_DESTINATIONS.has(destination)) return "stats";
+  return ["templates", "backup", "settings"].includes(destination) ? "profile" : destination;
+}
+
+function openStatsDetail(destination) {
+  switchScreen(destination);
+  setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
+}
+
+function openProfileSubpage(destination, focusId = "") {
+  switchScreen(destination);
+  if (!focusId) return;
+
+  setTimeout(() => {
+    const target = $(focusId);
+    if (!target) return;
+    target.scrollIntoView({ behavior: motionBehavior(), block: "start" });
+  }, 80);
+}
+
 function switchScreen(name) {
-  all(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.screen === name));
-  all(".screen").forEach((screen) => screen.classList.toggle("active", screen.id === name));
+  const destination = getScreenDestination(name);
+  const activeScreens = SCREEN_GROUPS[destination];
+  const activeNav = getActiveNavDestination(destination);
+
+  all(".tab").forEach((tab) => {
+    const isActive = tab.dataset.screen === activeNav;
+    tab.classList.toggle("active", isActive);
+    if (isActive) tab.setAttribute("aria-current", "page");
+    else tab.removeAttribute("aria-current");
+  });
+  all(".screen").forEach((screen) => screen.classList.toggle("active", activeScreens.includes(screen.id)));
   updateTodayCtaCompact();
-  replayAnimation($(name), "settle-in", 260);
+  replayAnimation($(activeScreens[0]), "settle-in", 260);
   renderAll();
 }
 
@@ -20,6 +84,20 @@ function bindEvents() {
   document.addEventListener("mousemove", moveExerciseDrag);
   document.addEventListener("mouseup", endExerciseDrag);
   all(".tab").forEach((tab) => tab.addEventListener("click", () => switchScreen(tab.dataset.screen)));
+  all("[data-stats-detail]").forEach((button) => {
+    button.addEventListener("click", () => openStatsDetail(button.dataset.statsDetail));
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openStatsDetail(button.dataset.statsDetail);
+    });
+  });
+  all("[data-stats-back]").forEach((button) => {
+    button.addEventListener("click", () => {
+      switchScreen("stats");
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
+    });
+  });
   $("todayStartWorkout")?.addEventListener("click", handleTodayPrimaryCta);
   $("todayWorkoutCard")?.addEventListener("click", handleTodayWorkoutCardClick);
   $("todayCardAction")?.addEventListener("click", handleTodayCardAction);
@@ -27,8 +105,12 @@ function bindEvents() {
   $("todayResumeWorkout").addEventListener("click", resumeWorkoutFromToday);
   $("todayExportBackup")?.addEventListener("click", exportData);
   $("todayWorkoutSelect").addEventListener("change", renderTodayView);
-  $("openSettings").addEventListener("click", () => switchScreen("settings"));
-  $("settingsBack").addEventListener("click", () => switchScreen("backup"));
+  all("[data-open-settings]").forEach((button) => button.addEventListener("click", () => switchScreen("settings")));
+  all("[data-profile-back]").forEach((button) => button.addEventListener("click", () => switchScreen("profile")));
+  all("[data-profile-target]").forEach((button) => {
+    button.addEventListener("click", () => openProfileSubpage(button.dataset.profileTarget, button.dataset.profileFocus));
+  });
+  $("settingsBack").addEventListener("click", () => switchScreen("profile"));
   $("saveSettings").addEventListener("click", saveSettingsFromForm);
   $("resetSettings").addEventListener("click", resetAppSettings);
   $("settingsAnimations").addEventListener("change", applyAppSettings);
@@ -66,7 +148,6 @@ function bindEvents() {
   });
   $("saveWorkout").addEventListener("click", handleSessionPrimaryAction);
   $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);
-  $("saveWeight").addEventListener("click", saveWeight);
   $("historyFilter").addEventListener("change", renderHistory);
   $("exerciseSearch").addEventListener("input", renderHistory);
   $("progressExercise").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getItems("workouts"))));
@@ -96,8 +177,8 @@ function bindEvents() {
 async function renderAll() {
   await renderDashboard();
   await renderHistory();
-  await renderWeights();
   await renderTemplates();
+  await renderProfile();
   await renderTodayView();
   await renderSettings();
   await renderBackupStatus();
@@ -106,7 +187,6 @@ async function renderAll() {
 async function init() {
   applyAppSettings();
   $("workoutDate").value = today();
-  $("weightDate").value = today();
   $("startTime").value = "";
   $("endTime").value = "";
   await openDatabase();
@@ -122,4 +202,4 @@ async function init() {
   }
 }
 
-Object.assign(globalThis, { switchScreen, bindEvents, renderAll, init });
+Object.assign(globalThis, { switchScreen, openStatsDetail, openProfileSubpage, bindEvents, renderAll, init });

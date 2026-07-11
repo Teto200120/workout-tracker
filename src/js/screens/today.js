@@ -144,7 +144,7 @@ function getTodayPlan(date = today()) {
     ? `Suggested from your ${DAY_LABELS[day]} schedule.`
     : kind === "soccer"
       ? "Soccer is treated separately, since you do not track it as a gym workout here."
-      : "No gym workout scheduled. Optional recovery, bodyweight logging, or custom workout.";
+        : "No gym workout scheduled. Optional recovery, mobility, or custom workout.";
   return { kind, title, routine, note };
 }
 

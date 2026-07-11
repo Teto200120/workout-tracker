@@ -17,15 +17,22 @@
   <div class="app">
     <header>
       <h1>Hector's Workout Tracker</h1>
-      <p class="subtitle">Local workout log, templates, rest timer, body-weight tracking, and backup export.</p>
+      <p class="subtitle">Local workout log, templates, rest timer, progress stats, and backup export.</p>
     </header>
 
     <nav class="tabs" aria-label="Primary navigation">
-      <button class="tab active" data-screen="log"><span class="nav-icon">＋</span><span class="nav-label">Log</span></button>
-      <button class="tab" data-screen="dashboard"><span class="nav-icon">↗</span><span class="nav-label">Progress</span></button>
-      <button class="tab" data-screen="history"><span class="nav-icon">☰</span><span class="nav-label">History</span></button>
-      <button class="tab" data-screen="templates"><span class="nav-icon">▦</span><span class="nav-label">Routines</span></button>
-      <button class="tab" data-screen="backup"><span class="nav-icon">⋯</span><span class="nav-label">More</span></button>
+      <button class="tab" data-screen="stats" type="button">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10"/><path d="M12 20V4"/><path d="M19 20v-7"/></svg>
+        <span class="nav-label">Stats</span>
+      </button>
+      <button class="tab active" data-screen="home" type="button" aria-current="page">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7"/><path d="M7 10v10h10V10"/></svg>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="tab" data-screen="profile" type="button">
+        <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <span class="nav-label">Profile</span>
+      </button>
     </nav>
 
     <main>
@@ -237,79 +244,137 @@
         </div>
       </section>
 
-      <section id="dashboard" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
+      <section id="dashboard" class="screen stats-screen stats-dashboard">
+        <div class="card hero-card stats-hero-card">
+          <div class="screen-title-row stats-hero-row">
             <div>
-              <div class="screen-eyebrow">Progress</div>
-              <h2 style="margin-bottom:4px;">Training Dashboard</h2>
-              <p class="muted small" style="margin:0;">Track consistency, body weight, strength progress, and personal records in one place.</p>
+              <h2 style="margin-bottom:4px;">Your Stats</h2>
+              <p class="muted small" style="margin:0;">Quick training signals. Tap a card for the full detail view.</p>
             </div>
           </div>
-          <div class="grid-3 progress-summary" id="dashboardStats"></div>
+          <div class="stats-top-grid progress-summary" id="dashboardStats"></div>
         </div>
 
-        <div class="card">
+        <div class="stats-overview-grid">
+          <article class="card stats-panel stats-overview-card stats-week-card" role="button" tabindex="0" data-stats-detail="statsWeekly">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Weekly Activity</h2>
+              <p class="muted small" style="margin:4px 0 0;">This week's rhythm.</p>
+            </div>
+            <span class="stats-section-badge" id="weeklyActivityPreviewCount">0/0</span>
+          </div>
+          <div id="weeklyActivityPreview" class="stats-week-strip"></div>
+          <span class="stats-card-action">Open weekly detail</span>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-strength-card" role="button" tabindex="0" data-stats-detail="statsStrength">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Strength Snapshot</h2>
+              <p class="muted small" style="margin:4px 0 0;">Recent PRs and trends.</p>
+            </div>
+            <span class="stats-card-chevron" aria-hidden="true">View</span>
+          </div>
+          <div id="strengthSnapshot" class="insight-list stats-preview-list"></div>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-history-card" role="button" tabindex="0" data-stats-detail="history">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Recent Sessions</h2>
+              <p class="muted small" style="margin:4px 0 0;">Latest workouts only.</p>
+            </div>
+            <span class="stats-card-chevron" aria-hidden="true">View</span>
+          </div>
+          <div id="recentSessionsPreview" class="stats-preview-list"></div>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-lifetime-card" role="button" tabindex="0" data-stats-detail="statsWorkoutStats">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Workout Stats</h2>
+              <p class="muted small" style="margin:4px 0 0;">Lifetime volume and sets.</p>
+            </div>
+            <span class="stats-card-chevron" aria-hidden="true">View</span>
+          </div>
+          <div class="stats-top-grid stats-mini-grid" id="workoutStatsPreview"></div>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-pr-card" role="button" tabindex="0" data-stats-detail="statsRecords">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Personal Records</h2>
+              <p class="muted small" style="margin:4px 0 0;">Estimated 1RM uses weight × (1 + reps / 30), so use it as a rough progress signal.</p>
+            </div>
+          </div>
+          <div id="personalRecordsPreview" class="stats-preview-list"></div>
+          <span class="stats-card-action">Open records</span>
+          </article>
+
+          <article class="card stats-panel stats-overview-card stats-goals-card" role="button" tabindex="0" data-stats-detail="statsGoals">
+            <div class="section-heading">
+              <div>
+                <h2 style="margin:0;">Weekly Goal</h2>
+                <p class="muted small" style="margin:4px 0 0;">Consistency target.</p>
+              </div>
+              <span class="stats-card-chevron" aria-hidden="true">Edit</span>
+            </div>
+            <div id="goalsPreview" class="stats-goal-preview"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="statsWeekly" class="screen stats-screen stats-detail-screen stats-week-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Weekly Activity</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card stats-panel stats-week-card">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Weekly Activity</h2>
+              <p class="muted small" style="margin:4px 0 0;">This week's training rhythm, using your current workout schedule.</p>
+            </div>
+            <span class="stats-section-badge" id="weeklyActivityDetailCount">0/0</span>
+          </div>
+          <div id="weeklyActivityDetail" class="stats-week-strip stats-week-strip-detail"></div>
+          <div id="weeklyActivityDetailList" class="stats-week-list"></div>
+        </div>
+      </section>
+
+      <section id="statsStrength" class="screen stats-screen stats-detail-screen stats-strength-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Strength Snapshot</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card stats-panel stats-strength-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Strength Snapshot</h2>
               <p class="muted small" style="margin:4px 0 0;">Recent PRs, strength trends, and volume changes at a glance.</p>
             </div>
           </div>
-          <div id="strengthSnapshot" class="insight-list"></div>
+          <div id="strengthSnapshotDetail" class="insight-list"></div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Goals</h2>
-              <p class="muted small" style="margin:4px 0 0;">Set simple targets for weekly training and body-weight progress.</p>
-            </div>
-          </div>
-          <div class="grid-2 progress-form">
-            <div>
-              <label for="weeklyGoal">Weekly Workout Goal</label>
-              <input id="weeklyGoal" type="number" min="1" step="1" placeholder="Example: 4" />
-            </div>
-            <div>
-              <label for="targetWeight">Target Weight</label>
-              <input id="targetWeight" type="number" min="1" step="0.1" placeholder="Example: 175" />
-            </div>
-          </div>
-          <button class="success" id="saveGoals" type="button" style="width:100%; margin-top:10px;">Save Goals</button>
-          <div id="goalsProgress" class="detail"></div>
-        </div>
-
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Body Weight</h2>
-              <p class="muted small" style="margin:4px 0 0;">Log weigh-ins and compare them against your target.</p>
-            </div>
-          </div>
-          <div class="grid-2 progress-form">
-            <div>
-              <label for="weightDate">Date</label>
-              <input id="weightDate" type="date" />
-            </div>
-            <div>
-              <label for="weightValue">Weight</label>
-              <input id="weightValue" type="number" step="0.1" placeholder="Example: 165.4" />
-            </div>
-          </div>
-          <div style="margin-top:10px;">
-            <label for="weightNotes">Notes</label>
-            <textarea id="weightNotes" placeholder="Morning weight, after eating, hydration, bulk progress, etc."></textarea>
-          </div>
-          <button class="success" id="saveWeight" style="width:100%; margin-top:10px;">Save Weight</button>
-          <div id="weightStats" class="grid-3" style="margin-top:12px; margin-bottom:12px;"></div>
-          <details class="detail">
-            <summary><strong>Weight History</strong></summary>
-            <div id="weightList" style="margin-top:10px;"></div>
-          </details>
-        </div>
-
-        <div class="card">
+        <div class="card stats-panel stats-progress-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Strength Progress</h2>
@@ -324,7 +389,7 @@
             <div>
               <label for="progressMetric">Metric</label>
               <select id="progressMetric">
-                <option value="bestWeight">Best Weight</option>
+                <option value="bestWeight">Best Load</option>
                 <option value="estimated1rm">Estimated 1RM</option>
                 <option value="bestVolume">Best Set Volume</option>
               </select>
@@ -332,26 +397,108 @@
           </div>
           <div id="exerciseProgress"></div>
         </div>
+      </section>
 
-        <div class="card">
+      <section id="statsRecords" class="screen stats-screen stats-detail-screen stats-records-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Personal Records</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card stats-panel stats-pr-card">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Personal Records</h2>
-              <p class="muted small" style="margin:4px 0 0;">Estimated 1RM uses weight × (1 + reps / 30), so use it as a rough progress signal.</p>
+              <p class="muted small" style="margin:4px 0 0;">Estimated 1RM uses weight x (1 + reps / 30), so use it as a rough progress signal.</p>
             </div>
           </div>
           <div id="personalRecords"></div>
         </div>
       </section>
 
-      <section id="history" class="screen">
-        <div class="card">
-          <h2>Progress Summary</h2>
-          <div class="grid-3" id="workoutStats"></div>
+      <section id="statsWorkoutStats" class="screen stats-screen stats-detail-screen stats-workout-stats-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Workout Stats</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
         </div>
 
-        <div class="card">
-          <div class="grid-2" style="margin-bottom:12px;">
+        <div class="card stats-panel stats-lifetime-card">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Workout Stats</h2>
+              <p class="muted small" style="margin:4px 0 0;">Lifetime volume, sets, session count, and average duration.</p>
+            </div>
+          </div>
+          <div class="stats-top-grid" id="workoutStats"></div>
+        </div>
+      </section>
+
+      <section id="statsGoals" class="screen stats-screen stats-detail-screen stats-goals-detail">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Weekly Goal</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card stats-panel stats-goals-card">
+          <div class="section-heading">
+            <div>
+              <h2 style="margin:0;">Goals</h2>
+              <p class="muted small" style="margin:4px 0 0;">Set a simple target for weekly training consistency.</p>
+            </div>
+          </div>
+          <div class="progress-form">
+            <div>
+              <label for="weeklyGoal">Weekly Workout Goal</label>
+              <input id="weeklyGoal" type="number" min="1" step="1" placeholder="Example: 4" />
+            </div>
+          </div>
+          <button class="success" id="saveGoals" type="button" style="width:100%; margin-top:10px;">Save Goals</button>
+          <div id="goalsProgress" class="detail"></div>
+        </div>
+      </section>
+
+      <section id="history" class="screen stats-screen stats-detail-screen stats-history">
+        <div class="stats-detail-header">
+          <button class="stats-detail-back" type="button" data-stats-back aria-label="Back to Stats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Stats</span>
+          </button>
+          <div class="stats-detail-title">
+            <span>Stats Detail</span>
+            <h2>Session History</h2>
+          </div>
+          <span class="stats-detail-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card stats-panel stats-history-card">
+          <div class="section-heading stats-history-heading">
+            <div>
+              <h2 style="margin:0;">Recent Sessions</h2>
+              <p class="muted small" style="margin:4px 0 0;">Filter by routine, search exercises, expand details, or edit a logged workout.</p>
+            </div>
+          </div>
+          <div class="grid-2 stats-filter-grid">
             <div>
               <label for="historyFilter">Filter</label>
               <select id="historyFilter"></select>
@@ -365,173 +512,387 @@
         </div>
       </section>
 
-      <section id="templates" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
-            <div>
-              <div class="screen-eyebrow">Routines</div>
-              <h2 style="margin-bottom:4px;">Routine Builder</h2>
-              <p class="muted small" style="margin:0;">Create reusable workout plans, then load them from the Log screen when you train.</p>
+      <section id="profile" class="screen profile-screen">
+        <div class="card profile-hero-card">
+          <div class="profile-hero-top">
+            <div class="profile-identity">
+              <div class="profile-avatar" aria-hidden="true">H</div>
+              <div>
+                <h2>Hector</h2>
+                <p class="muted small">Local-first training profile</p>
+              </div>
             </div>
+            <button class="profile-settings-button" type="button" data-open-settings title="Settings" aria-label="Open Settings">
+              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 19.1 2.1-2.1"/><path d="m17 7 2.1-2.1"/></svg>
+            </button>
+          </div>
+
+          <div class="profile-summary-grid">
+            <div class="profile-summary-card profile-summary-card-primary">
+              <span>Training Goal</span>
+              <strong id="profileWeeklyGoal">-</strong>
+              <small id="profileGoalSummary">Set a weekly goal in Stats.</small>
+            </div>
+            <div class="profile-summary-card">
+              <span>Logged Sessions</span>
+              <strong id="profileSessionCount">-</strong>
+              <small id="profileSessionSummary">Workout history on this device.</small>
+            </div>
+          </div>
+
+          <div class="profile-goal-meter" aria-live="polite">
+            <div class="profile-goal-meter-row">
+              <span id="profileGoalMeterLabel">Weekly goal progress</span>
+              <strong id="profileGoalMeterCount">0/0</strong>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="profileGoalMeterFill"></div></div>
           </div>
         </div>
 
-        <details class="card" open>
-          <summary><strong>Create / Edit Routine</strong> <span class="muted small">— build once, reuse anytime</span></summary>
-          <div style="margin-top:12px;">
-            <div class="grid-2">
+        <div class="profile-section-heading">
+          <div>
+            <h2>Profile Hub</h2>
+            <p class="muted small">Local tools, routines, data, and app details.</p>
+          </div>
+        </div>
+
+        <div class="profile-shortcut-grid">
+          <button class="profile-shortcut-card" type="button" data-profile-target="templates">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 4h10"/><path d="M7 8h10"/><path d="M5 12h14"/><path d="M5 16h10"/><path d="M5 20h8"/></svg>
+            </span>
+            <span>
+              <strong>Routines</strong>
+              <small id="profileRoutineSummary">Templates and reusable workouts</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="backupRestoreTool">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            </span>
+            <span>
+              <strong>Backup / Restore</strong>
+              <small id="profileBackupSummary">Export or import local data</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="dataManagementTool">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 14h10l1-14"/><path d="M9 7V4h6v3"/></svg>
+            </span>
+            <span>
+              <strong>Data Management</strong>
+              <small id="profileDataSummary">Local device storage only</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="appInfoTool">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </span>
+            <span>
+              <strong>App Info</strong>
+              <small>Storage, backup reminders, and local-first notes</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <article class="profile-shortcut-card profile-shortcut-card-muted">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M5 6H3v1a4 4 0 0 0 4 4"/><path d="M19 6h2v1a4 4 0 0 1-4 4"/></svg>
+            </span>
+            <span>
+              <strong>Achievements</strong>
+              <small>Future local milestones from your workout history</small>
+            </span>
+          </article>
+        </div>
+      </section>
+
+      <section id="templates" class="screen profile-subpage-screen routines-screen">
+        <div class="profile-subpage-header">
+          <button class="profile-subpage-back" type="button" data-profile-back aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Profile</span>
+          </button>
+          <div class="profile-subpage-title">
+            <span>Routine Library</span>
+            <h2>Routines</h2>
+            <p>Create reusable workout plans, then start one when it is time to train.</p>
+          </div>
+          <span class="profile-subpage-spacer" aria-hidden="true"></span>
+        </div>
+
+        <details class="card routine-builder-panel" open>
+          <summary>
+            <span>
+              <strong>Create / Edit Routine</strong>
+              <small>Build once, reuse anytime.</small>
+            </span>
+            <span class="routine-builder-chip">Builder</span>
+          </summary>
+          <div class="routine-builder-body">
+            <div class="routine-builder-grid">
               <div>
                 <label for="templateName">Routine Name</label>
                 <input id="templateName" type="text" placeholder="Example: Chest / Triceps" />
               </div>
               <div>
                 <label for="templateExerciseInput">Exercise Name</label>
-                <div class="row">
+                <div class="routine-add-row">
                   <input id="templateExerciseInput" type="text" placeholder="Example: Flat Bench Press" />
                   <button class="primary" id="addTemplateExercise" type="button">Add</button>
                 </div>
               </div>
             </div>
-            <div id="templateDraftList" class="detail"></div>
-            <div class="grid-2" style="margin-top:10px;">
+            <div class="routine-draft-panel">
+              <div class="routine-panel-heading">
+                <h3>Draft Exercises</h3>
+                <p class="muted small">Compact list for the routine you are building.</p>
+              </div>
+              <div id="templateDraftList" class="routine-draft-list"></div>
+            </div>
+            <div class="routine-builder-actions">
               <button class="success" id="saveTemplate" type="button">Save Routine</button>
               <button class="ghost" id="clearTemplateDraft" type="button">Clear Draft</button>
             </div>
           </div>
         </details>
 
-        <div class="card">
+        <div class="card routine-library-panel">
           <div class="section-heading">
             <div>
               <h2 style="margin:0;">Saved Routines</h2>
               <p class="muted small" style="margin:4px 0 0;">Tap Edit to modify a routine. Existing workout history stays unchanged.</p>
             </div>
-            <button class="warning" id="resetTemplates" type="button">Reset</button>
+            <button class="warning routine-reset-action" id="resetTemplates" type="button">Reset</button>
           </div>
-          <div id="savedTemplates"></div>
+          <div id="savedTemplates" class="routine-library-grid"></div>
         </div>
       </section>
 
-      <section id="backup" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
-            <div>
-              <div class="screen-eyebrow">More</div>
-              <h2 style="margin-bottom:4px;">App Tools</h2>
-              <p class="muted small" style="margin:0;">Back up your progress, restore saved files, and manage local device storage.</p>
+      <section id="backup" class="screen profile-subpage-screen backup-screen">
+        <div class="profile-subpage-header">
+          <button class="profile-subpage-back" type="button" data-profile-back aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Profile</span>
+          </button>
+          <div class="profile-subpage-title">
+            <span>App Utility</span>
+            <h2>Backup / Tools</h2>
+            <p>Back up progress, restore saved files, and manage local device storage.</p>
+          </div>
+          <span class="profile-subpage-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="card backup-status-card" id="backupRestoreTool">
+          <div class="backup-status-top">
+            <span class="backup-status-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            </span>
+            <div class="backup-status-copy">
+              <span>Backup / Restore</span>
+              <h3>Protect your local progress</h3>
+              <p id="backupStatusMore" class="muted small">Checking backup status...</p>
             </div>
+            <span class="backup-page-status-pill" id="backupStatusPill">Checking</span>
+          </div>
+          <div class="tool-actions backup-primary-actions">
+            <button class="primary" id="exportData" type="button">Export Backup</button>
+            <button class="ghost" id="importData" type="button">Import Backup</button>
+          </div>
+          <input id="importFile" class="hidden" type="file" accept="application/json" />
+        </div>
+
+        <div class="backup-tool-grid">
+          <div class="card backup-tool-card">
+            <span class="backup-tool-label">Settings</span>
+            <h3>Training defaults</h3>
+            <p class="muted small">Adjust schedule, progression defaults, haptics, and app feel.</p>
+            <button class="ghost settings-cog-button backup-neutral-action" id="openSettings" type="button" data-open-settings>
+              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="m4.9 4.9 2.1 2.1"/><path d="m17 17 2.1 2.1"/><path d="M2 12h3"/><path d="M19 12h3"/><path d="m4.9 19.1 2.1-2.1"/><path d="m17 7 2.1-2.1"/></svg>
+              <span>Open Settings</span>
+            </button>
+          </div>
+
+          <div class="card backup-tool-card data-management-card" id="dataManagementTool">
+            <span class="backup-tool-label">Data Management</span>
+            <h3>Local device data</h3>
+            <p class="muted small">This only affects workout data stored in this browser on this device.</p>
+            <button class="danger" id="clearData" type="button">Clear All Local Data</button>
           </div>
         </div>
 
-        <div class="card">
-          <div class="tool-card">
-            <h3>Backup / Restore</h3>
-            <p class="muted small" style="margin-bottom:0;">Export regularly so you do not lose progress if browser data gets cleared or you switch phones.</p>
-            <div id="backupStatusMore" class="detail small muted" style="margin-top:10px; margin-bottom:10px;">Checking backup status...</div>
-            <div class="tool-actions">
-              <button class="primary" id="exportData">Export Backup</button>
-              <button class="ghost" id="importData">Import Backup</button>
-            </div>
-            <input id="importFile" class="hidden" type="file" accept="application/json" />
-          </div>
-
-          <div class="tool-card">
-            <h3>Settings</h3>
-            <p class="muted small" style="margin-bottom:10px;">Adjust schedule, progression defaults, haptics, and app feel.</p>
-            <button class="primary" id="openSettings" type="button" style="width:100%;">Open Settings</button>
-          </div>
-
-          <div class="tool-card">
-            <h3>Data</h3>
-            <p class="muted small" style="margin-bottom:10px;">This only affects data stored in this browser on this device.</p>
-            <button class="danger" id="clearData" style="width:100%;">Clear All Local Data</button>
-          </div>
-
-          <div class="tool-card">
-            <h3>App Info</h3>
-            <div class="detail">
-              <p class="small" style="margin-bottom:8px;"><strong>Storage:</strong> IndexedDB for workouts, weight logs, and routines. LocalStorage for goals and workout drafts.</p>
-              <p class="small" style="margin:0;"><strong>Reminder:</strong> Export backups before clearing browser data or moving to another phone.</p>
-            </div>
+        <div class="card backup-info-card" id="appInfoTool">
+          <span class="backup-tool-label">App Info</span>
+          <div class="backup-info-list">
+            <p class="small"><strong>Storage:</strong> IndexedDB stores workout history and routines. LocalStorage stores training goals, settings, backup metadata, and workout drafts.</p>
+            <p class="small"><strong>Reminder:</strong> Export backups before clearing browser data or moving to another phone.</p>
           </div>
         </div>
       </section>
 
-      <section id="settings" class="screen">
-        <div class="card hero-card">
-          <div class="screen-title-row">
-            <div>
-              <div class="screen-eyebrow">Settings</div>
-              <h2 style="margin-bottom:4px;">App Settings</h2>
-              <p class="muted small" style="margin:0;">Tune the schedule, progression defaults, haptics, and motion without crowding the workout screen.</p>
+      <section id="settings" class="screen settings-screen">
+        <div class="settings-page-header">
+          <button class="settings-back-button" id="settingsBack" type="button" aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+          </button>
+          <div class="settings-header-copy">
+            <span>Profile</span>
+            <h2>Settings</h2>
+          </div>
+          <span class="settings-header-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-label">Training Profile</div>
+          <div class="settings-group">
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 12h12"/><path d="M9 8v8"/><path d="M15 8v8"/><path d="M4 10v4"/><path d="M20 10v4"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Default Load Jump</strong>
+                <p>Used when exercise targets move up.</p>
+              </div>
+              <div class="settings-row-control">
+                <label class="sr-only" for="settingsWeightJump">Default Load Jump</label>
+                <input id="settingsWeightJump" type="number" min="0.5" step="0.5" />
+              </div>
             </div>
-            <button class="ghost" id="settingsBack" type="button">Back</button>
+
+            <label class="settings-list-row settings-toggle-row" for="settingsRpeAware">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 8v4l3 2"/></svg>
+              </span>
+              <span class="settings-row-copy">
+                <strong>RPE-aware Targets</strong>
+                <span>Adjust target suggestions using effort.</span>
+              </span>
+              <span class="settings-switch-control">
+                <input id="settingsRpeAware" type="checkbox" />
+                <span class="settings-switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
           </div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Workout Schedule</h2>
-              <p class="muted small" style="margin:4px 0 0;">Controls what the Today screen auto-suggests.</p>
+        <div class="settings-section">
+          <div class="settings-section-label">Rep Ranges</div>
+          <div class="settings-group">
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 20V8"/><path d="M12 20V4"/><path d="M17 20v-9"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Compound</strong>
+                <p>Squat, press, deadlift, and other main lifts.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsCompoundMin">Compound minimum reps</label>
+                <input id="settingsCompoundMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsCompoundMax">Compound maximum reps</label>
+                <input id="settingsCompoundMax" type="number" min="1" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 6h12"/><path d="M8 6v6a4 4 0 0 0 8 0V6"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Pull</strong>
+                <p>Rows, pull-ups, pulldowns, and biceps work.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsPullMin">Pull minimum reps</label>
+                <input id="settingsPullMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsPullMax">Pull maximum reps</label>
+                <input id="settingsPullMax" type="number" min="1" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M8 9v6"/><path d="M16 9v6"/><path d="M3 10v4"/><path d="M21 10v4"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>Isolation</strong>
+                <p>Single-joint accessories and focused pump work.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsIsolationMin">Isolation minimum reps</label>
+                <input id="settingsIsolationMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsIsolationMax">Isolation maximum reps</label>
+                <input id="settingsIsolationMax" type="number" min="1" step="1" />
+              </div>
+            </div>
+
+            <div class="settings-list-row">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 7h12"/><path d="M6 12h12"/><path d="M6 17h12"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong>General</strong>
+                <p>Fallback range for anything not classified.</p>
+              </div>
+              <div class="settings-row-control settings-range-pair">
+                <label class="sr-only" for="settingsGeneralMin">General minimum reps</label>
+                <input id="settingsGeneralMin" type="number" min="1" step="1" />
+                <label class="sr-only" for="settingsGeneralMax">General maximum reps</label>
+                <input id="settingsGeneralMax" type="number" min="1" step="1" />
+              </div>
             </div>
           </div>
-          <div class="settings-grid" id="settingsSchedule"></div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">Progression</h2>
-              <p class="muted small" style="margin:4px 0 0;">Defaults stay mostly internal and feed the Target recommendation.</p>
-            </div>
-          </div>
-          <div class="grid-2">
-            <div>
-              <label for="settingsWeightJump">Default Weight Jump</label>
-              <input id="settingsWeightJump" type="number" min="0.5" step="0.5" />
-            </div>
-            <label class="toggle-pill" style="margin-top:22px;"><input id="settingsRpeAware" type="checkbox" /> RPE-aware targets</label>
-          </div>
-
-          <div class="grid-2" style="margin-top:10px;">
-            <div>
-              <label>Compound Rep Range</label>
-              <div class="row"><input id="settingsCompoundMin" type="number" min="1" step="1" /><input id="settingsCompoundMax" type="number" min="1" step="1" /></div>
-            </div>
-            <div>
-              <label>Pull Rep Range</label>
-              <div class="row"><input id="settingsPullMin" type="number" min="1" step="1" /><input id="settingsPullMax" type="number" min="1" step="1" /></div>
-            </div>
-            <div>
-              <label>Isolation Rep Range</label>
-              <div class="row"><input id="settingsIsolationMin" type="number" min="1" step="1" /><input id="settingsIsolationMax" type="number" min="1" step="1" /></div>
-            </div>
-            <div>
-              <label>General Rep Range</label>
-              <div class="row"><input id="settingsGeneralMin" type="number" min="1" step="1" /><input id="settingsGeneralMax" type="number" min="1" step="1" /></div>
-            </div>
+        <div class="settings-section">
+          <div class="settings-section-label">Schedule</div>
+          <div class="settings-group settings-schedule-group">
+            <div class="settings-grid" id="settingsSchedule"></div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="section-heading">
-            <div>
-              <h2 style="margin:0;">App Feel</h2>
-              <p class="muted small" style="margin:4px 0 0;">Keep the app responsive without making the workout flow slower.</p>
-            </div>
-          </div>
-          <div class="settings-toggle-row">
-            <label class="toggle-pill"><input id="settingsHaptics" type="checkbox" /> Haptics</label>
-            <label class="toggle-pill"><input id="settingsAnimations" type="checkbox" /> Animations</label>
+        <div class="settings-section">
+          <div class="settings-section-label">App Feel</div>
+          <div class="settings-group">
+            <label class="settings-list-row settings-toggle-row" for="settingsHaptics">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 8a5 5 0 0 1 8 0"/><path d="M6 12a8 8 0 0 1 12 0"/><path d="M10 16a2 2 0 0 1 4 0"/></svg>
+              </span>
+              <span class="settings-row-copy">
+                <strong>Haptics</strong>
+                <span>Allow vibration cues where supported.</span>
+              </span>
+              <span class="settings-switch-control">
+                <input id="settingsHaptics" type="checkbox" />
+                <span class="settings-switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
+
+            <label class="settings-list-row settings-toggle-row" for="settingsAnimations">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 16c4-8 12-8 16 0"/><path d="M6 19h12"/><path d="M12 5v4"/></svg>
+              </span>
+              <span class="settings-row-copy">
+                <strong>Animations</strong>
+                <span>Use motion for page and control transitions.</span>
+              </span>
+              <span class="settings-switch-control">
+                <input id="settingsAnimations" type="checkbox" />
+                <span class="settings-switch-track" aria-hidden="true"></span>
+              </span>
+            </label>
           </div>
         </div>
 
-        <div class="save-dock">
-          <div class="settings-footer-actions">
-            <button class="success" id="saveSettings" type="button">Save Settings</button>
-            <button class="ghost" id="resetSettings" type="button">Reset</button>
-          </div>
+        <div class="settings-action-bar">
+          <button class="settings-primary-action" id="saveSettings" type="button">Save Settings</button>
+          <button class="settings-secondary-action" id="resetSettings" type="button">Reset Settings</button>
         </div>
       </section>
     </main>
