@@ -1,4 +1,5 @@
 import "./core/globals.js";
+import { bindExercisePicker } from "./components/exercise-picker.js";
 import { refreshTemplateDropdowns } from "./components/routine-selectors.js";
 import {
   applyAppSettings,
@@ -13,21 +14,20 @@ import {
   clearDraftStorage,
   closeExerciseDetail,
   completeActiveExerciseDetailSet,
+  addExerciseToWorkout,
   endExerciseDrag,
   finishCompletionPopup,
   getEditingWorkoutId,
   handleSessionPrimaryAction,
   loadLastSameWorkout,
   loadWorkoutTemplate,
-  makeExercise,
   moveExerciseDrag,
-  openExercise,
   saveDraftSilently,
   saveWorkout,
   setExerciseDetailTab,
   undoLastCompletedSet,
   updateAllExerciseHints,
-  updateExerciseHint,
+  getCurrentWorkoutExerciseNames,
   updateSessionTitle
 } from "./screens/active-workout.js";
 import { clearAllData, exportData, importData, renderBackupStatus } from "./screens/backup.js";
@@ -42,7 +42,6 @@ import {
   resetTemplates,
   saveTemplate
 } from "./screens/routines.js";
-import { startTimer, stopTimer } from "./screens/timers.js";
 import {
   closeTodayReview,
   handleTodayCardAction,
@@ -192,20 +191,16 @@ function bindEvents() {
     if (!note.classList.contains("hidden")) note.focus();
   });
   $("workoutType").addEventListener("change", updateSessionTitle);
-  all("[data-timer]").forEach((button) => button.addEventListener("click", () => startTimer(Number(button.dataset.timer))));
-  $("stopTimer").addEventListener("click", stopTimer);
   $("loadTemplate").addEventListener("click", async () => {
     if (getEditingWorkoutId() && !confirm("You are editing a saved workout. Loading a template will replace the visible exercises. Continue?")) return;
     await loadWorkoutTemplate();
     saveDraftSilently();
   });
   $("loadLastWorkout").addEventListener("click", async () => { await loadLastSameWorkout(); saveDraftSilently(); });
-  $("addExercise").addEventListener("click", async () => {
-    const exercise = makeExercise();
-    $("exerciseList").appendChild(exercise);
-    await updateExerciseHint(exercise);
-    openExercise(exercise, true);
-    saveDraftSilently();
+  bindExercisePicker({
+    trigger: $("addExercise"),
+    getCurrentExerciseNames: getCurrentWorkoutExerciseNames,
+    onSelect: addExerciseToWorkout
   });
   $("saveWorkout").addEventListener("click", handleSessionPrimaryAction);
   $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);

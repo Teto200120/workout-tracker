@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-v13";
+const CACHE_NAME = "hector-workout-tracker-pwa-v14";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -24,7 +24,9 @@ const APP_SHELL = [
   "./src/js/storage/local.js",
   "./src/js/storage/indexed-db.js",
   "./src/js/components/icons.js",
+  "./src/js/components/exercise-picker.js",
   "./src/js/components/routine-selectors.js",
+  "./src/js/domain/exercise-options.js",
   "./src/js/domain/schedule.js",
   "./src/js/domain/training-rules.js",
   "./src/js/domain/workout-metrics.js",
@@ -34,8 +36,7 @@ const APP_SHELL = [
   "./src/js/screens/history.js",
   "./src/js/screens/routines.js",
   "./src/js/screens/backup.js",
-  "./src/js/screens/profile.js",
-  "./src/js/screens/timers.js"
+  "./src/js/screens/profile.js"
 ];
 
 self.addEventListener("install", (event) => {

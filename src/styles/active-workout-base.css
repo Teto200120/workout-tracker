@@ -136,31 +136,6 @@
   margin-top: 12px;
 }
 
-.timer-layout {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items: center;
-}
-
-#log .timer-layout h2 {
-  margin-bottom: 4px;
-}
-
-.timer-display {
-  font-size: 2.05rem;
-  line-height: 1;
-  letter-spacing: -0.05em;
-  font-weight: 950;
-}
-
-.timer-chip-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .save-dock {
   position: sticky;
   bottom: 88px;
