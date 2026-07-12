@@ -1,4 +1,8 @@
 import "../core/globals.js";
+import { backupAgeText, daysSinceBackup } from "../application/backup.js";
+import { countRecentWorkouts as calculateRecentWorkouts } from "../domain/schedule.js";
+import { getRoutines, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
+import { getBackupMeta, getGoals } from "../storage/local.js";
 
 function setProfileText(id, value) {
   const target = $(id);
@@ -13,10 +17,7 @@ function sortByDateDesc(items) {
 }
 
 function countRecentWorkouts(workouts) {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDayKey = sevenDaysAgo.toISOString().slice(0, 10);
-  return workouts.filter((workout) => workout.date >= sevenDayKey).length;
+  return calculateRecentWorkouts(workouts, new Date());
 }
 
 function getProfileBackupSummary() {
@@ -28,12 +29,12 @@ function getProfileBackupSummary() {
   return backupAgeText(age);
 }
 
-async function renderProfile() {
-  if (!$("profile") || !db) return;
+export async function renderProfile() {
+  if (!$("profile") || !isDatabaseOpen()) return;
 
   const [workoutsRaw, templates] = await Promise.all([
-    getItems("workouts"),
-    getTemplates()
+    getWorkouts(),
+    getRoutines()
   ]);
   const workouts = sortByDateDesc(workoutsRaw);
   const goals = getGoals();
@@ -58,4 +59,3 @@ async function renderProfile() {
   if (fill) fill.style.width = `${weeklyPercent}%`;
 }
 
-Object.assign(globalThis, { renderProfile });

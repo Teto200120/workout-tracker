@@ -1,36 +1,23 @@
 import "../core/globals.js";
+import {
+  backupAgeText,
+  buildBackup,
+  clearApplicationData,
+  daysSinceBackup,
+  restoreBackup,
+  validateBackupStructure
+} from "../application/backup.js";
+import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
+import { applyAppSettings } from "../core/settings.js";
+import { today, toast } from "../core/utils.js";
+import { getLegacyWeights, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
+import { getBackupMeta, setBackupMeta } from "../storage/local.js";
+import { loadWorkoutTemplate, stopSessionElapsedTimer } from "./active-workout.js";
 
-function getBackupMeta() {
-  try {
-    return JSON.parse(localStorage.getItem(BACKUP_META_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
+export async function renderBackupStatus() {
+  if (!isDatabaseOpen()) return;
 
-function setBackupMeta(meta) {
-  localStorage.setItem(BACKUP_META_KEY, JSON.stringify(meta || {}));
-}
-
-function daysSinceBackup(lastExportedAt) {
-  if (!lastExportedAt) return null;
-  const then = new Date(lastExportedAt);
-  if (Number.isNaN(then.getTime())) return null;
-  const now = new Date();
-  return Math.max(0, Math.floor((now - then) / 86400000));
-}
-
-function backupAgeText(age) {
-  if (age === null) return "No backup exported yet";
-  if (age === 0) return "Last backup: today";
-  if (age === 1) return "Last backup: yesterday";
-  return `Last backup: ${age} days ago`;
-}
-
-async function renderBackupStatus() {
-  if (!db) return;
-
-  const [workouts, legacyWeights] = await Promise.all([getItems("workouts"), getItems("weights")]);
+  const [workouts, legacyWeights] = await Promise.all([getWorkouts(), getLegacyWeights()]);
   // Legacy weight records still count for backup reminders so old data can be exported.
   const hasUserData = workouts.length > 0 || legacyWeights.length > 0;
   const meta = getBackupMeta();
@@ -95,20 +82,9 @@ async function renderBackupStatus() {
   }
 }
 
-async function exportData() {
+export async function exportData() {
   const exportedAt = new Date().toISOString();
-  const data = {
-    app: "Hector's Workout Tracker",
-    version: 2,
-    database: DB_NAME,
-    exportedAt,
-    workouts: await getItems("workouts"),
-    weights: await getItems("weights"),
-    templates: await getItems("templates"),
-    goals: getGoals(),
-    settings: getAppSettings(),
-    backupMeta: { ...getBackupMeta(), lastExportedAt: exportedAt }
-  };
+  const data = await buildBackup(exportedAt);
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -123,44 +99,13 @@ async function exportData() {
   toast("Backup exported.");
 }
 
-async function importData(file) {
+export async function importData(file) {
   try {
     const data = JSON.parse(await file.text());
-    const legacyWeights = data.weights ?? [];
-    const templates = data.templates ?? [];
-    const hasValidIds = (items) => Array.isArray(items) && items.every((item) =>
-      item && typeof item === "object" && Object.prototype.hasOwnProperty.call(item, "id")
-    );
-    if (!hasValidIds(data.workouts) || !hasValidIds(legacyWeights) || !hasValidIds(templates)) {
-      throw new Error("Invalid backup file.");
-    }
+    validateBackupStructure(data);
     if (!confirm("Import this backup? Existing entries stay. Matching IDs will be overwritten.")) return;
-
-    await new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES, "readwrite");
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-      transaction.onabort = () => reject(transaction.error || new Error("Backup import was aborted."));
-      try {
-        data.workouts.forEach((workout) => transaction.objectStore("workouts").put(workout));
-        legacyWeights.forEach((weight) => transaction.objectStore("weights").put(weight));
-        templates.forEach((template) => transaction.objectStore("templates").put(template));
-      } catch (error) {
-        transaction.abort();
-        reject(error);
-      }
-    });
-
-    if (data.goals) localStorage.setItem("hector_workout_goals_v1", JSON.stringify(data.goals));
-    if (data.settings) {
-      setAppSettings({
-        ...cloneDefaultSettings(),
-        ...data.settings,
-        schedule: { ...cloneDefaultSettings().schedule, ...(data.settings.schedule || {}) }
-      });
-    }
-    if (data.backupMeta) setBackupMeta(data.backupMeta);
-    await seedDefaultTemplates();
+    await restoreBackup(data);
+    applyAppSettings();
     await refreshTemplateDropdowns();
     await renderAll();
     toast("Backup imported.");
@@ -169,21 +114,15 @@ async function importData(file) {
   }
 }
 
-async function clearAllData() {
+export async function clearAllData() {
   if (!confirm("Clear all local app data from this browser?")) return;
-  for (const name of STORES) await clearStore(name);
-  localStorage.removeItem(BACKUP_META_KEY);
-  localStorage.removeItem("hector_workout_goals_v1");
-  localStorage.removeItem("hector_workout_draft_v1");
-  localStorage.removeItem(SETTINGS_KEY);
+  await clearApplicationData();
   stopSessionElapsedTimer();
   stopTodayActiveElapsedTimer();
   applyAppSettings();
-  await seedDefaultTemplates();
   await refreshTemplateDropdowns();
   await loadWorkoutTemplate();
   await renderAll();
   toast("All local data cleared.");
 }
 
-Object.assign(globalThis, { getBackupMeta, setBackupMeta, daysSinceBackup, backupAgeText, renderBackupStatus, exportData, importData, clearAllData });

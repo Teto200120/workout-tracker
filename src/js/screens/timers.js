@@ -1,6 +1,10 @@
 import "../core/globals.js";
+import { haptic, toast } from "../core/utils.js";
 
-function startTimer(seconds) {
+let timerInterval = null;
+let timerEnd = 0;
+
+export function startTimer(seconds) {
   timerEnd = Date.now() + seconds * 1000;
   if (timerInterval) clearInterval(timerInterval);
   updateTimer();
@@ -22,7 +26,7 @@ function updateTimer() {
   }
 }
 
-function stopTimer() {
+export function stopTimer() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = null;
   timerEnd = 0;
@@ -30,4 +34,3 @@ function stopTimer() {
   $("timerText").textContent = "Timer stopped.";
 }
 
-Object.assign(globalThis, { startTimer, updateTimer, stopTimer });

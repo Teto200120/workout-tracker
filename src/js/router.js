@@ -1,4 +1,59 @@
 import "./core/globals.js";
+import { refreshTemplateDropdowns } from "./components/routine-selectors.js";
+import {
+  applyAppSettings,
+  renderSettings,
+  resetAppSettings,
+  saveSettingsFromForm
+} from "./core/settings.js";
+import { haptic, motionBehavior, replayAnimation, scrollInputIntoView, today, toast } from "./core/utils.js";
+import { getWorkouts, openDatabase, seedDefaultTemplates } from "./storage/indexed-db.js";
+import { getDraft } from "./storage/local.js";
+import {
+  clearDraftStorage,
+  closeExerciseDetail,
+  completeActiveExerciseDetailSet,
+  endExerciseDrag,
+  finishCompletionPopup,
+  getEditingWorkoutId,
+  handleSessionPrimaryAction,
+  loadLastSameWorkout,
+  loadWorkoutTemplate,
+  makeExercise,
+  moveExerciseDrag,
+  openExercise,
+  saveDraftSilently,
+  saveWorkout,
+  setExerciseDetailTab,
+  undoLastCompletedSet,
+  updateAllExerciseHints,
+  updateExerciseHint,
+  updateSessionTitle
+} from "./screens/active-workout.js";
+import { clearAllData, exportData, importData, renderBackupStatus } from "./screens/backup.js";
+import { bindHistoryActions, renderHistory } from "./screens/history.js";
+import { renderProfile } from "./screens/profile.js";
+import { buildExerciseStats, renderDashboard, renderExerciseProgress, saveGoalsToStorage } from "./screens/progress.js";
+import {
+  addTemplateExercise,
+  bindRoutineActions,
+  clearTemplateDraft,
+  renderTemplates,
+  resetTemplates,
+  saveTemplate
+} from "./screens/routines.js";
+import { startTimer, stopTimer } from "./screens/timers.js";
+import {
+  closeTodayReview,
+  handleTodayCardAction,
+  handleTodayPrimaryCta,
+  handleTodayWorkoutCardClick,
+  renderTodayView,
+  restoreDraftFromStorage,
+  resumeWorkoutFromToday,
+  showTodayView,
+  updateTodayCtaCompact
+} from "./screens/today.js";
 
 const SCREEN_GROUPS = {
   stats: ["dashboard"],
@@ -55,7 +110,7 @@ function openProfileSubpage(destination, focusId = "") {
   }, 80);
 }
 
-function switchScreen(name) {
+export function switchScreen(name) {
   const destination = getScreenDestination(name);
   const activeScreens = SCREEN_GROUPS[destination];
   const activeNav = getActiveNavDestination(destination);
@@ -111,8 +166,16 @@ function bindEvents() {
     button.addEventListener("click", () => openProfileSubpage(button.dataset.profileTarget, button.dataset.profileFocus));
   });
   $("settingsBack").addEventListener("click", () => switchScreen("profile"));
-  $("saveSettings").addEventListener("click", saveSettingsFromForm);
-  $("resetSettings").addEventListener("click", resetAppSettings);
+  $("saveSettings").addEventListener("click", async () => {
+    await saveSettingsFromForm();
+    await renderTodayView();
+    await updateAllExerciseHints();
+  });
+  $("resetSettings").addEventListener("click", async () => {
+    await resetAppSettings();
+    await renderTodayView();
+    await updateAllExerciseHints();
+  });
   $("settingsAnimations").addEventListener("change", applyAppSettings);
   $("settingsHaptics").addEventListener("change", () => haptic(20));
   $("sessionBack").addEventListener("click", showTodayView);
@@ -120,9 +183,7 @@ function bindEvents() {
   $("exerciseDetailBack")?.addEventListener("click", closeExerciseDetail);
   all("[data-detail-tab]").forEach((button) => button.addEventListener("click", () => setExerciseDetailTab(button.dataset.detailTab)));
   $("exerciseDetailCompleteSet")?.addEventListener("click", () => {
-    if (!activeExerciseDetailEl) return;
-    completeCurrentSet(activeExerciseDetailEl);
-    renderExerciseDetailView();
+    completeActiveExerciseDetailSet();
   });
   $("completionDone").addEventListener("click", finishCompletionPopup);
   $("completionCustomNoteButton").addEventListener("click", () => {
@@ -134,7 +195,7 @@ function bindEvents() {
   all("[data-timer]").forEach((button) => button.addEventListener("click", () => startTimer(Number(button.dataset.timer))));
   $("stopTimer").addEventListener("click", stopTimer);
   $("loadTemplate").addEventListener("click", async () => {
-    if (editingWorkoutId && !confirm("You are editing a saved workout. Loading a template will replace the visible exercises. Continue?")) return;
+    if (getEditingWorkoutId() && !confirm("You are editing a saved workout. Loading a template will replace the visible exercises. Continue?")) return;
     await loadWorkoutTemplate();
     saveDraftSilently();
   });
@@ -150,8 +211,8 @@ function bindEvents() {
   $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);
   $("historyFilter").addEventListener("change", renderHistory);
   $("exerciseSearch").addEventListener("input", renderHistory);
-  $("progressExercise").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getItems("workouts"))));
-  $("progressMetric").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getItems("workouts"))));
+  $("progressExercise").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getWorkouts())));
+  $("progressMetric").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getWorkouts())));
   $("exportData").addEventListener("click", exportData);
   $("importData").addEventListener("click", () => $("importFile").click());
   $("importFile").addEventListener("change", (event) => {
@@ -172,9 +233,11 @@ function bindEvents() {
 
   $("sessionView").addEventListener("input", () => saveDraftSilently());
   $("saveGoals").addEventListener("click", saveGoalsToStorage);
+  bindHistoryActions();
+  bindRoutineActions();
 }
 
-async function renderAll() {
+export async function renderAll() {
   await renderDashboard();
   await renderHistory();
   await renderTemplates();
@@ -184,7 +247,7 @@ async function renderAll() {
   await renderBackupStatus();
 }
 
-async function init() {
+export async function init() {
   applyAppSettings();
   $("workoutDate").value = today();
   $("startTime").value = "";
@@ -202,4 +265,4 @@ async function init() {
   }
 }
 
-Object.assign(globalThis, { switchScreen, openStatsDetail, openProfileSubpage, bindEvents, renderAll, init });
+Object.assign(globalThis, { renderAll, switchScreen });

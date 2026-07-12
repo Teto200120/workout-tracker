@@ -1,76 +1,16 @@
 import "../core/globals.js";
-
-function workoutVolume(workout) {
-  return workout.exercises.reduce((total, exercise) => {
-    return total + exercise.sets.reduce((sum, set) => {
-      if (set.warmup) return sum;
-      return sum + Number(set.weight || 0) * Number(set.reps || 0);
-    }, 0);
-  }, 0);
-}
-
-function totalSets(workout) { return workout.exercises.reduce((sum, exercise) => sum + exercise.sets.filter((set) => !set.warmup).length, 0); }
-
-function completedSets(workout) { return workout.exercises.reduce((sum, exercise) => sum + exercise.sets.filter((set) => set.done).length, 0); }
-
-function workoutDurationMinutes(workout) {
-  if (typeof workout.durationMinutes === "number") return workout.durationMinutes;
-  if (!workout.startTime || !workout.endTime) return 0;
-  const [startHour, startMinute] = workout.startTime.split(":").map(Number);
-  const [endHour, endMinute] = workout.endTime.split(":").map(Number);
-  let start = startHour * 60 + startMinute;
-  let end = endHour * 60 + endMinute;
-  if (end < start) end += 24 * 60;
-  return Math.max(0, end - start);
-}
-
-function durationLabel(minutes) {
-  if (!minutes) return "-";
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (!h) return `${m}m`;
-  if (!m) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
-function getBestSet(exercise) {
-  let best = null;
-  for (const set of exercise.sets || []) {
-    if (set.warmup) continue;
-    const weight = Number(set.weight || 0);
-    const reps = Number(set.reps || 0);
-    if (!weight || !reps) continue;
-    const estimated1rm = weight * (1 + reps / 30);
-    const volume = weight * reps;
-    const candidate = { weight, reps, estimated1rm, volume, rpe: set.rpe || "" };
-    if (!best || candidate.estimated1rm > best.estimated1rm) best = candidate;
-  }
-  return best;
-}
-
-function buildExerciseStats(workouts) {
-  const stats = new Map();
-  workouts.forEach((workout) => {
-    workout.exercises.forEach((exercise) => {
-      const name = exercise.name?.trim();
-      if (!name) return;
-      if (!stats.has(name)) {
-        stats.set(name, { name, sessions: 0, sets: 0, bestWeight: 0, bestVolume: 0, bestEstimated1rm: 0, bestDate: "", history: [] });
-      }
-      const item = stats.get(name);
-      item.sessions += 1;
-      item.sets += exercise.sets.length;
-      const bestSet = getBestSet(exercise);
-      if (bestSet) {
-        item.bestWeight = Math.max(item.bestWeight, bestSet.weight);
-        item.bestVolume = Math.max(item.bestVolume, bestSet.volume);
-        if (bestSet.estimated1rm > item.bestEstimated1rm) { item.bestEstimated1rm = bestSet.estimated1rm; item.bestDate = workout.date; }
-        item.history.push({ date: workout.date, type: workout.type, bestWeight: bestSet.weight, bestVolume: bestSet.volume, estimated1rm: bestSet.estimated1rm, reps: bestSet.reps });
-      }
-    });
-  });
-  return Array.from(stats.values()).sort((a, b) => a.name.localeCompare(b.name));
-}
+import { getWeeklyActivityData as buildWeeklyActivityData } from "../application/schedule.js";
+import { cleanText, dateLabel, toast } from "../core/utils.js";
+import { countRecentWorkouts, getWorkoutStreak as calculateWorkoutStreak } from "../domain/schedule.js";
+import {
+  buildExerciseStats,
+  durationLabel,
+  getWorkoutStatsSummary,
+  workoutDurationMinutes,
+  workoutVolume
+} from "../domain/workout-metrics.js";
+import { getWorkouts } from "../storage/indexed-db.js";
+import { getGoals, setGoals } from "../storage/local.js";
 
 function metricLabel(metric) {
   return { estimated1rm: "Estimated 1RM", bestWeight: "Best Load", bestVolume: "Best Set Volume" }[metric] || "Metric";
@@ -213,54 +153,6 @@ function renderTodayProgressGlance(workouts, exerciseStats) {
   renderInsightList("todayProgressGlance", insights, "Your strength highlights will show here after more logged workouts.");
 }
 
-function fallbackWeekDates(baseDate = new Date()) {
-  const date = new Date(baseDate);
-  date.setHours(0, 0, 0, 0);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(date);
-  monday.setDate(date.getDate() + diff);
-  return Array.from({ length: 7 }, (_, index) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + index);
-    return d;
-  });
-}
-
-function getWeeklyActivityData(workouts) {
-  const dates = typeof mondayFirstWeekDates === "function" ? mondayFirstWeekDates(new Date()) : fallbackWeekDates(new Date());
-  const keyFromDate = typeof dateKeyFromDate === "function" ? dateKeyFromDate : (date) => date.toISOString().slice(0, 10);
-  const workoutDates = new Set(workouts.map((workout) => workout.date));
-  const todayKey = today();
-  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-  let gymDays = 0;
-  let completedGymDays = 0;
-
-  const days = dates.map((date, index) => {
-    const key = keyFromDate(date);
-    const plan = typeof getTodayPlan === "function" ? getTodayPlan(key) : { kind: "gym", title: "Workout" };
-    const complete = workoutDates.has(key);
-    const isGymDay = plan.kind === "gym";
-    if (isGymDay) {
-      gymDays += 1;
-      if (complete) completedGymDays += 1;
-    }
-    const classes = ["stats-week-day", complete ? "complete" : "", key === todayKey ? "today" : "", plan.kind === "rest" ? "rest" : "", plan.kind === "soccer" ? "soccer" : ""].filter(Boolean).join(" ");
-    const status = complete ? "Logged" : plan.kind === "rest" ? "Rest" : plan.kind === "soccer" ? "Soccer" : "Open";
-    return {
-      key,
-      label: dayLabels[index],
-      title: plan.title,
-      kind: plan.kind,
-      complete,
-      status,
-      classes
-    };
-  });
-
-  return { days, gymDays, completedGymDays };
-}
-
 function renderWeeklyActivityStrip(targetId, countId, activity) {
   const target = $(targetId);
   const count = $(countId);
@@ -293,17 +185,17 @@ function renderWeeklyActivityDetailList(activity) {
 }
 
 function renderWeeklyActivity(workouts) {
-  const activity = getWeeklyActivityData(workouts);
+  const activity = buildWeeklyActivityData(workouts, new Date());
   renderWeeklyActivityStrip("weeklyActivityPreview", "weeklyActivityPreviewCount", activity);
   renderWeeklyActivityStrip("weeklyActivityDetail", "weeklyActivityDetailCount", activity);
   renderWeeklyActivityDetailList(activity);
 }
 
-async function renderDashboard() {
-  const workouts = (await getItems("workouts")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+export async function renderDashboard() {
+  const workouts = (await getWorkouts()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   const exerciseStats = buildExerciseStats(workouts);
   const summary = getWorkoutStatsSummary(workouts);
-  const streak = getWorkoutStreak(workouts);
+  const streak = calculateWorkoutStreak(workouts, new Date());
 
   $("dashboardStats").innerHTML = `
     <div class="stat stats-stat-card stats-stat-accent"><strong>${summary.workouts}</strong><span class="muted small">Workouts</span></div>
@@ -319,30 +211,6 @@ async function renderDashboard() {
   renderPersonalRecords(exerciseStats);
   renderExerciseSelectors(exerciseStats);
   renderExerciseProgress(exerciseStats);
-}
-
-function getWorkoutStreak(workouts) {
-  if (!workouts.length) return 0;
-  const workoutDates = new Set(workouts.map((workout) => workout.date));
-  let streak = 0;
-  const cursor = new Date();
-
-  while (true) {
-    const key = cursor.toISOString().slice(0, 10);
-    if (!workoutDates.has(key)) break;
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  return streak;
-}
-
-function getWorkoutStatsSummary(workouts) {
-  const volume = workouts.reduce((sum, workout) => sum + workoutVolume(workout), 0);
-  const sets = workouts.reduce((sum, workout) => sum + totalSets(workout), 0);
-  const durations = workouts.map(workoutDurationMinutes).filter(Boolean);
-  const avgDuration = durations.length ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length) : 0;
-  return { workouts: workouts.length, sets, volume, avgDuration };
 }
 
 function renderStatsGrid(targetId, stats) {
@@ -389,10 +257,7 @@ function renderGoals(workouts) {
   const weeklyGoalInput = $("weeklyGoal");
   if (weeklyGoalInput) weeklyGoalInput.value = goals.weeklyGoal || 4;
 
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDayKey = sevenDaysAgo.toISOString().slice(0, 10);
-  const workoutsThisWeek = workouts.filter((workout) => workout.date >= sevenDayKey).length;
+  const workoutsThisWeek = countRecentWorkouts(workouts, new Date());
   const weeklyGoal = Math.max(1, Number(goals.weeklyGoal || 4));
   const weeklyPercent = Math.min(100, Math.round((workoutsThisWeek / weeklyGoal) * 100));
 
@@ -477,7 +342,7 @@ function renderExerciseSelectors(exerciseStats) {
   if (current && Array.from(select.options).some((option) => option.value === current)) select.value = current;
 }
 
-function renderExerciseProgress(exerciseStats) {
+export function renderExerciseProgress(exerciseStats) {
   const progressExercise = $("progressExercise");
   const progressMetric = $("progressMetric");
   const target = $("exerciseProgress");
@@ -523,4 +388,11 @@ function renderExerciseProgress(exerciseStats) {
   `;
 }
 
-Object.assign(globalThis, { workoutVolume, totalSets, completedSets, workoutDurationMinutes, durationLabel, getBestSet, buildExerciseStats, metricLabel, metricUnit, formatSignedNumber, getSortedExerciseHistory, getExerciseTrendInsight, getRecentPrInsights, getVolumeInsight, buildProgressInsights, renderInsightList, renderStrengthSnapshot, renderTodayProgressGlance, fallbackWeekDates, getWeeklyActivityData, renderWeeklyActivityStrip, renderWeeklyActivityDetailList, renderWeeklyActivity, renderDashboard, getWorkoutStreak, getWorkoutStatsSummary, renderStatsGrid, renderWorkoutStats, renderRecentSessionsPreview, renderGoals, renderPersonalRecordCard, renderPersonalRecordsPreview, renderPersonalRecords, renderExerciseSelectors, renderExerciseProgress });
+export function saveGoalsToStorage() {
+  const weeklyGoal = Number($("weeklyGoal").value || 4);
+  setGoals({ ...getGoals(), weeklyGoal });
+  toast("Goals saved.");
+  renderAll();
+}
+
+export { buildExerciseStats, renderTodayProgressGlance };

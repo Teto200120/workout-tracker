@@ -31,10 +31,11 @@ Use these checks while working:
 ```text
 npm run lint
 npm run format:check
+npm run test:unit
 npm run test
 npm run test:e2e
 npm run test:e2e:ui
 npm run check
 ```
 
-`npm run check` runs the same core lint, formatting, and browser-test validation used by GitHub Actions. See [docs/TESTING.md](docs/TESTING.md) for test scope and debugging guidance.
+`npm run test` runs direct domain-unit tests followed by the Playwright browser suite. `npm run check` runs the same lint, formatting, unit-test, and browser-test validation used by GitHub Actions. See [docs/TESTING.md](docs/TESTING.md) for test scope and debugging guidance.

@@ -1,4 +1,11 @@
 import "../core/globals.js";
+import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
+import { cleanText, id, toast } from "../core/utils.js";
+import { clearRoutines, deleteRoutine, getRoutines, saveRoutine, seedDefaultTemplates } from "../storage/indexed-db.js";
+import { loadWorkoutTemplate, showSessionView } from "./active-workout.js";
+
+let templateDraftExercises = [];
+let editingTemplateId = null;
 
 function renderTemplateDraft() {
   const list = $("templateDraftList");
@@ -15,7 +22,7 @@ function renderTemplateDraft() {
     <div class="routine-draft-row">
       <span class="routine-draft-index">${index + 1}</span>
       <span class="routine-draft-name">${cleanText(exercise)}</span>
-      <button class="danger routine-remove-action" type="button" onclick="removeTemplateDraftExercise(${index})">Remove</button>
+      <button class="danger routine-remove-action" type="button" data-routine-action="remove-draft" data-exercise-index="${index}">Remove</button>
     </div>
   `).join("");
 }
@@ -46,7 +53,7 @@ function clearTemplateDraft() {
 async function saveTemplate() {
   const name = $("templateName").value.trim();
   if (!name) { toast("Enter a template name first."); return; }
-  const existing = (await getTemplates()).find((template) => template.name.toLowerCase() === name.toLowerCase());
+  const existing = (await getRoutines()).find((template) => template.name.toLowerCase() === name.toLowerCase());
   const template = {
     id: editingTemplateId || existing?.id || id(),
     name,
@@ -54,7 +61,7 @@ async function saveTemplate() {
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  await saveItem("templates", template);
+  await saveRoutine(template);
   clearTemplateDraft();
   await refreshTemplateDropdowns(name);
   await renderAll();
@@ -62,7 +69,7 @@ async function saveTemplate() {
 }
 
 async function editTemplate(templateId) {
-  const template = (await getTemplates()).find((item) => item.id === templateId);
+  const template = (await getRoutines()).find((item) => item.id === templateId);
   if (!template) return;
   editingTemplateId = template.id;
   $("templateName").value = template.name;
@@ -74,14 +81,14 @@ async function editTemplate(templateId) {
 
 async function deleteTemplate(templateId) {
   if (!confirm("Delete this routine? Workout history will not be deleted.")) return;
-  await deleteItem("templates", templateId);
+  await deleteRoutine(templateId);
   await refreshTemplateDropdowns();
   await renderAll();
   toast("Routine deleted.");
 }
 
 async function startRoutine(templateId) {
-  const template = (await getTemplates()).find((item) => item.id === templateId);
+  const template = (await getRoutines()).find((item) => item.id === templateId);
   if (!template) return;
   await refreshTemplateDropdowns(template.name);
   $("workoutType").value = template.name;
@@ -93,7 +100,7 @@ async function startRoutine(templateId) {
 
 async function resetTemplates() {
   if (!confirm("Reset routines to defaults? Workout history will stay.")) return;
-  await clearStore("templates");
+  await clearRoutines();
   await seedDefaultTemplates();
   await refreshTemplateDropdowns();
   clearTemplateDraft();
@@ -101,9 +108,9 @@ async function resetTemplates() {
   toast("Default routines restored.");
 }
 
-async function renderTemplates() {
+export async function renderTemplates() {
   renderTemplateDraft();
-  const templates = await getTemplates();
+  const templates = await getRoutines();
   const container = $("savedTemplates");
   if (!templates.length) {
     container.innerHTML = `
@@ -131,13 +138,27 @@ async function renderTemplates() {
           </div>
         </div>
         <div class="routine-actions">
-          <button class="primary routine-start-action" type="button" onclick="startRoutine('${template.id}')">Start</button>
-          <button class="ghost routine-edit-action" type="button" onclick="editTemplate('${template.id}')">Edit</button>
-          <button class="danger routine-delete-action" type="button" onclick="deleteTemplate('${template.id}')">Delete</button>
+          <button class="primary routine-start-action" type="button" data-routine-action="start" data-template-id="${cleanText(template.id)}">Start</button>
+          <button class="ghost routine-edit-action" type="button" data-routine-action="edit" data-template-id="${cleanText(template.id)}">Edit</button>
+          <button class="danger routine-delete-action" type="button" data-routine-action="delete" data-template-id="${cleanText(template.id)}">Delete</button>
         </div>
       </article>
     `;
   }).join("");
 }
 
-Object.assign(globalThis, { renderTemplateDraft, addTemplateExercise, removeTemplateDraftExercise, clearTemplateDraft, saveTemplate, editTemplate, deleteTemplate, startRoutine, resetTemplates, renderTemplates });
+export function bindRoutineActions() {
+  $("templateDraftList").addEventListener("click", (event) => {
+    const button = event.target.closest('[data-routine-action="remove-draft"]');
+    if (button) removeTemplateDraftExercise(Number(button.dataset.exerciseIndex));
+  });
+  $("savedTemplates").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-routine-action]");
+    if (!button) return;
+    if (button.dataset.routineAction === "start") startRoutine(button.dataset.templateId);
+    if (button.dataset.routineAction === "edit") editTemplate(button.dataset.templateId);
+    if (button.dataset.routineAction === "delete") deleteTemplate(button.dataset.templateId);
+  });
+}
+
+export { addTemplateExercise, clearTemplateDraft, resetTemplates, saveTemplate };
