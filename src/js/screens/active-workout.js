@@ -1167,6 +1167,23 @@ function openExercise(exerciseEl, scroll = true) {
   saveDraftSilently();
 }
 
+export function getCurrentWorkoutExerciseNames() {
+  return all(".exercise")
+    .map((exercise) => exercise.querySelector(".exercise-name")?.value || "")
+    .filter(Boolean);
+}
+
+export async function addExerciseToWorkout(name) {
+  const exerciseName = String(name || "").trim();
+  if (!exerciseName) return null;
+  const exercise = makeExercise({ name: exerciseName });
+  $("exerciseList").appendChild(exercise);
+  await updateExerciseHint(exercise);
+  openExercise(exercise, true);
+  saveDraftSilently();
+  return exercise;
+}
+
 function toggleExerciseCollapse(exerciseEl) {
   if (exerciseEl.classList.contains("collapsed")) openExercise(exerciseEl, true);
   else {

@@ -61,6 +61,8 @@ Warm-up behavior intentionally matches the pre-refactor application: warm-up set
 
 `domain/training-rules.js` owns exercise classification, routine tags, duration estimates, working-set filtering, exercise profiles, and progression-target rules. Settings are passed into these functions explicitly.
 
+`domain/exercise-options.js` owns exercise-name trimming, case-insensitive keys and deduplication, local option construction, substring search, and canonical-name resolution. It receives routine, workout-history, and current-workout data explicitly and has no DOM or storage access.
+
 To add a pure workout calculation:
 
 1. Add a named export to the most specific domain module.
@@ -102,14 +104,16 @@ Screen modules may query and update their DOM, bind generated controls, call dom
 Feature state now has a specific owner:
 
 - `active-workout.js`: editing workout ID, session timer handle, exercise-detail element/tab/render token, drag state, focus token, completion workout, and completion tags
+- `exercise-picker.js`: picker options and selection guard; the component reads routines and completed workouts through the existing storage interfaces and receives current-workout names and the add command from the router
 - `today.js`: CTA mode/morph state and Home active-workout timer handle
 - `routines.js`: routine draft exercises and editing routine ID
-- `timers.js`: rest-timer handle and end time
 - `indexed-db.js`: open database connection
 - Router and DOM: currently visible screen and rendered active exercise position
 - localStorage draft: serialized recovery state, including the editing workout ID and active exercise index
 
 Other modules use exported query or command functions such as `getEditingWorkoutId`, `setEditingWorkoutId`, and `completeActiveExerciseDetailSet`; they do not write those state variables directly.
+
+The manual rest timer has no runtime state or module. Workout elapsed-time ownership remains split between `active-workout.js` for the live session and `today.js` for the Home resume state; saved duration remains a workout-metrics and stored-workout concern.
 
 ## Remaining transitional globals
 
@@ -125,7 +129,7 @@ No mutable feature state, calculation, icon, settings accessor, or storage funct
 
 Pure domain functions and the backup-structure validator are imported directly by Node's built-in test runner from `tests/unit/`. These tests cover formulas, warm-up handling, aggregation, PR comparison, schedule boundaries, explicit-time rules, saveability, progression targets, and pre-write backup rejection without a browser.
 
-Playwright remains responsible for storage integration, DOM rendering, navigation, routine selection, draft recovery, workout save/update behavior, settings, backup compatibility and rollback, and representative larger histories.
+Playwright remains responsible for storage integration, DOM rendering, navigation, routine selection, the local exercise picker, Exercise Details scroll ownership, draft recovery, workout save/update behavior, settings, backup compatibility and rollback, and representative larger histories.
 
 Storage errors propagate to screens or application callers. Unit tests assert pure return values; Playwright asserts the user-visible result and checks page and console errors.
 
@@ -138,7 +142,7 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 3. Bump the cache name once for the completed change set.
 4. Verify an online load before testing cached/offline startup.
 
-The current cache is `hector-workout-tracker-pwa-v13`.
+The current cache is `hector-workout-tracker-pwa-v14`.
 
 ## Deliberately deferred schema work
 

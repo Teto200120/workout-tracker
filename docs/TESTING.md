@@ -14,6 +14,7 @@ The unit suite covers:
 - Empty workouts, empty sets, zero and missing values, invalid numeric input behavior, and workout saveability.
 - Monday-first schedule resolution, weekly activity, streaks, rolling weekly counts, and date boundaries with an explicit current date.
 - Exercise classification, routine tags, duration estimates, warm-up filtering, exercise profiles, RPE-aware targets, and progression recommendations.
+- Exercise-name trimming, case-insensitive deduplication, local-source option construction, substring search, and canonical-name matching.
 - Backup record-array validation, optional legacy `weights`, required IDs, and pre-transaction rejection.
 
 Domain tests should assert business rules and deterministic aggregation. They should not copy production formulas into test helpers, inspect private implementation details, or depend on the real current time.
@@ -27,6 +28,9 @@ The browser suite covers:
 - Startup, primary navigation, Stats details, Profile subpages, and `aria-current` state.
 - Immediate workout start after changing the selected Home routine.
 - Active-workout draft values, notes, and active-exercise recovery after reload.
+- Exercise Details single-scroll ownership, action-dock visibility, notes entry, content clearance, and back navigation at 412 x 915.
+- Add Exercise picker open/cancel behavior, local options, search, deduplication, existing selection, custom-name validation, focus return, and draft recovery.
+- Manual rest-timer absence alongside active-workout elapsed-time and saved-duration checks.
 - Saving a workout and finding one non-duplicated record in History.
 - Settings save, reload, and reset behavior.
 - Backup download, clear, restore without legacy `weights`, invalid import rejection, and failed-transaction rollback.
@@ -51,6 +55,6 @@ When a browser test fails, inspect `playwright-report/index.html` with `npx play
 
 The automated suites do not replace [QA_CHECKLIST.md](QA_CHECKLIST.md). Offline install/startup, installed-PWA behavior, device vibration, file handling outside Chromium, real keyboard behavior, and Android browser layout/performance remain manual. These checks depend on an installed PWA, physical hardware, or platform behavior that headless CI cannot represent reliably.
 
-On the Samsung Galaxy S24 Ultra, repeat the Home, Active Workout, draft reload, save/edit, backup clear/restore, offline reload, keyboard, haptic, and portrait-layout checks from the release checklist.
+On the Samsung Galaxy S24 Ultra, repeat the Home, Active Workout, Exercise Details scroll/action/keyboard checks, Add Exercise picker flows, draft reload, save/edit, backup clear/restore, offline reload, haptic, and portrait-layout checks from the release checklist.
 
 Formatting adoption remains scoped to tooling, tests, workflow, and documentation. Production HTML, CSS, and JavaScript are not reformatted as part of this behavior-preserving refactor.

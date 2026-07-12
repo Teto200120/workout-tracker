@@ -23,6 +23,21 @@ body:has(#completionModal:not(.hidden)) .today-floating-cta {
   display: none !important;
 }
 
+body:has(.exercise-detail-view:not(.hidden)) {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body:has(.exercise-detail-view:not(.hidden)) .app,
+body:has(.exercise-detail-view:not(.hidden)) #log,
+body:has(.exercise-detail-view:not(.hidden)) #sessionView {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 body:has(#sessionView:not(.hidden)) #log {
   min-height: 100vh;
   padding: 0;
@@ -208,27 +223,6 @@ body:has(#sessionView:not(.hidden)) #log {
   box-shadow: none !important;
 }
 
-#sessionView.live-session > .card:has(.timer-layout) {
-  position: relative !important;
-  z-index: 1;
-  width: auto !important;
-  height: auto !important;
-  margin: 14px 14px 0 !important;
-  padding: 14px !important;
-  overflow: visible !important;
-  clip: auto !important;
-  clip-path: none !important;
-  white-space: normal !important;
-  border: 1px solid rgba(153, 177, 205, 0.16) !important;
-  border-radius: 18px !important;
-  background:
-    radial-gradient(circle at top right, rgba(255, 107, 69, 0.1), transparent 36%),
-    rgba(35, 55, 82, 0.64) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    0 14px 26px rgba(1, 11, 24, 0.18) !important;
-}
-
 #sessionView.live-session > .card.exercise-section-card,
 #sessionView.live-session > .card:has(#workoutNotes) {
   position: relative !important;
@@ -259,20 +253,6 @@ body:has(#sessionView:not(.hidden)) #log {
 
 #sessionView.live-session .exercise-section-card .section-heading > div {
   display: none;
-}
-
-#sessionView.live-session .timer-layout {
-  grid-template-columns: 1fr;
-}
-
-#sessionView.live-session .timer-display {
-  color: #f4f9ff;
-  letter-spacing: 0;
-}
-
-#sessionView.live-session .timer-chip-row button {
-  min-width: 0;
-  border-radius: 14px;
 }
 
 #sessionView.live-session > .session-toolbar.card {
@@ -870,13 +850,17 @@ body:has(#sessionView:not(.hidden)) #log {
 
 .exercise-detail-view {
   position: fixed;
-  inset: 0;
+  inset: 0 auto auto 50%;
   left: 50%;
   z-index: 86;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(100vw, 520px);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100vh;
+  max-height: 100dvh;
   color: var(--live-text);
   background:
     linear-gradient(180deg, rgba(27, 48, 76, 0.99) 0, rgba(16, 36, 62, 1) 40%, rgba(7, 27, 49, 1) 100%);
@@ -888,6 +872,8 @@ body:has(#sessionView:not(.hidden)) #log {
 }
 
 .exercise-detail-header {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) auto;
   gap: 10px;
@@ -960,8 +946,18 @@ body:has(#sessionView:not(.hidden)) #log {
 }
 
 .exercise-detail-scroll {
-  overflow: auto;
-  padding: 20px 18px calc(116px + env(safe-area-inset-bottom));
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 18px 24px;
+  scroll-padding-block: 20px;
+  scrollbar-gutter: stable;
+}
+
+#exerciseDetailContent {
+  display: grid;
+  gap: 16px;
 }
 
 .exercise-detail-tabs {
@@ -1038,7 +1034,7 @@ body:has(#sessionView:not(.hidden)) #log {
 
 .exercise-detail-card {
   display: grid;
-  gap: 20px;
+  gap: 16px;
   padding: 24px 20px 22px;
 }
 
@@ -1240,16 +1236,13 @@ body:has(#sessionView:not(.hidden)) #log {
 }
 
 .exercise-detail-dock {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  z-index: 88;
-  width: min(100vw, 520px);
-  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid rgba(153, 177, 205, 0.16);
   background: rgba(7, 24, 43, 0.93);
   box-shadow: 0 -16px 34px rgba(1, 11, 24, 0.34);
-  transform: translateX(-50%);
   backdrop-filter: blur(18px);
 }
 
@@ -1271,6 +1264,253 @@ body:has(#sessionView:not(.hidden)) #log {
 .exercise-detail-dock button:disabled {
   opacity: 0.58;
   filter: saturate(0.7);
+}
+
+body:has(.exercise-picker[open]) {
+  overflow: hidden;
+}
+
+.exercise-picker {
+  width: min(calc(100% - 16px), 520px);
+  max-width: 520px;
+  max-height: min(88vh, 780px);
+  max-height: min(88dvh, 780px);
+  margin: auto auto 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--live-text, #edf6ff);
+  background:
+    radial-gradient(circle at 90% 0, rgba(255, 107, 69, 0.12), transparent 30%),
+    linear-gradient(180deg, #213954 0%, #102743 100%);
+  border: 1px solid rgba(170, 194, 222, 0.22);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -22px 70px rgba(0, 0, 0, 0.54);
+}
+
+.exercise-picker[open] {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+.exercise-picker::backdrop {
+  background: rgba(2, 8, 20, 0.76);
+  backdrop-filter: blur(10px);
+}
+
+.exercise-picker-handle {
+  justify-self: center;
+  width: 48px;
+  height: 5px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: rgba(190, 211, 235, 0.42);
+}
+
+.exercise-picker-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 20px 16px;
+  border-bottom: 1px solid rgba(153, 177, 205, 0.16);
+}
+
+.exercise-picker-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--live-coral, #ff6b45);
+  font-size: 0.75rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exercise-picker-header h2 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: 1.45rem;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.exercise-picker-header p {
+  margin: 7px 0 0;
+  color: var(--live-muted, #9eb6d2);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.exercise-picker-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  color: #dceeff;
+  background: rgba(96, 122, 156, 0.2);
+  border: 1px solid rgba(170, 194, 222, 0.16);
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.exercise-picker-panel {
+  min-height: 0;
+  padding: 16px 20px;
+}
+
+#exercisePickerBrowse {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(72px, 1fr) auto auto;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.exercise-picker-panel label {
+  margin: 0;
+  color: #dceeff;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.exercise-picker-panel input {
+  min-height: 52px;
+  margin: 0;
+  border-radius: 16px;
+  color: #f4f9ff;
+  background: rgba(7, 27, 49, 0.62);
+  border: 1px solid rgba(153, 177, 205, 0.2);
+}
+
+.exercise-picker-panel input:focus,
+.exercise-picker button:focus-visible {
+  outline: 3px solid rgba(255, 107, 69, 0.34);
+  outline-offset: 2px;
+}
+
+.exercise-picker-results-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  color: #f0f7ff;
+  font-size: 0.88rem;
+}
+
+.exercise-picker-results-heading span {
+  color: var(--live-muted, #9eb6d2);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.exercise-picker-options {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px;
+  scrollbar-gutter: stable;
+}
+
+.exercise-picker-option {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 15px;
+  border-radius: 15px;
+  color: #edf6ff;
+  background: rgba(96, 122, 156, 0.14);
+  border: 1px solid rgba(170, 194, 222, 0.14);
+  font-weight: 850;
+  text-align: left;
+}
+
+.exercise-picker-option:hover {
+  border-color: rgba(255, 107, 69, 0.34);
+  background: rgba(255, 107, 69, 0.12);
+}
+
+.exercise-picker-empty {
+  align-self: center;
+  margin: 0;
+  padding: 16px;
+  border-radius: 16px;
+  color: var(--live-muted, #9eb6d2);
+  background: rgba(7, 27, 49, 0.46);
+  border: 1px dashed rgba(153, 177, 205, 0.22);
+  line-height: 1.45;
+  text-align: center;
+}
+
+.exercise-picker-create-action,
+.exercise-picker-submit {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 17px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--live-coral, #ff6b45), #ff744c);
+  box-shadow: 0 12px 24px rgba(255, 107, 69, 0.18);
+  font-weight: 950;
+}
+
+.exercise-picker-create-action:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+#exercisePickerCreate {
+  overflow-y: auto;
+}
+
+.exercise-picker-back {
+  min-height: 44px;
+  padding: 0;
+  color: #dceeff;
+  background: transparent;
+  font-weight: 850;
+  text-align: left;
+}
+
+.exercise-picker-create-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.exercise-picker-error {
+  min-height: 20px;
+  margin: 0;
+  color: #ffb7a3;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.exercise-picker-footer {
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(153, 177, 205, 0.14);
+  background: rgba(7, 24, 43, 0.72);
+}
+
+.exercise-picker-cancel {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 16px;
+  color: #dceeff;
+  background: rgba(96, 122, 156, 0.18);
+  border: 1px solid rgba(170, 194, 222, 0.16);
+  font-weight: 900;
+}
+
+@media (min-width: 700px) {
+  .exercise-picker {
+    margin: auto;
+    border-radius: 28px;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.58);
+  }
 }
 
 @media (max-width: 420px) {

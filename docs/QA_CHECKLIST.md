@@ -17,11 +17,18 @@
 ## Active Workout
 
 - [ ] Load a multi-exercise routine; only the intended exercise is expanded.
-- [ ] Expand, collapse, add, remove, and reorder exercises where supported.
+- [ ] Expand, collapse, remove, and reorder exercises where supported.
+- [ ] Open Add Exercise; search local options, select an existing name, and confirm the new exercise opens.
+- [ ] Cancel and dismiss Add Exercise; confirm neither action changes the workout or draft.
+- [ ] Create a custom exercise; reject an empty name, trim a valid name, and reuse canonical capitalization for an existing name.
 - [ ] Add and remove sets; mark a warm-up set separately.
 - [ ] Enter weight, reps, RPE, and notes; confirm values persist.
-- [ ] Complete a set, undo it, and verify the rest timer starts and stops.
-- [ ] Open Exercise Details, switch tabs, and return without losing input.
+- [ ] Complete and undo a set; confirm the active-workout elapsed indicator remains visible and continues updating.
+- [ ] Confirm no manual rest-timer buttons, countdown, or panel appear.
+- [ ] Open Exercise Details, switch Log/Guide tabs, and return without losing input.
+- [ ] At approximately 412 x 915, scroll Exercise Details and confirm the document stays locked while the detail content is the only vertical scroller.
+- [ ] Confirm Exercise Notes and set controls clear the bottom action, and the Log/Complete Set action remains usable with the browser toolbar visible.
+- [ ] Focus and type into Exercise Notes with the mobile keyboard open; confirm the field can be scrolled into view.
 
 ## Draft Recovery
 
@@ -81,7 +88,7 @@
 - [ ] Check a narrow phone viewport and the target phone in portrait.
 - [ ] Confirm no horizontal scrolling, clipped titles, or covered controls.
 - [ ] Focus form inputs and confirm they remain visible above fixed UI and keyboard.
-- [ ] Check dialogs, completion overlay, long names, and bottom navigation.
+- [ ] Check the exercise picker, completion overlay, long names, and bottom navigation.
 
 ## Accessibility Basics
 

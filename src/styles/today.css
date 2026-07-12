@@ -469,8 +469,7 @@
 
 
 @media (max-width: 700px) {
-  .grid-2, .grid-3, .timer-layout, .today-meta, .today-actions, .today-secondary-actions, .completion-stats, .backup-reminder-actions { grid-template-columns: 1fr; }
-  .timer-chip-row { grid-template-columns: repeat(4, 1fr); }
+  .grid-2, .grid-3, .today-meta, .today-actions, .today-secondary-actions, .completion-stats, .backup-reminder-actions { grid-template-columns: 1fr; }
   .section-heading { align-items: flex-start; }
   .section-heading > button { max-width: 132px; }
   .routine-card .row { align-items: stretch; }
@@ -1755,7 +1754,7 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
 .exercise-detail-guidance {
   display: grid;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   padding: 16px;
   border-radius: 20px;
   background:
@@ -1777,7 +1776,7 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: -4px;
+  margin-top: 0;
 }
 
 .detail-set-actions button {

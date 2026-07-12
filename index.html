@@ -17,7 +17,7 @@
   <div class="app">
     <header>
       <h1>Hector's Workout Tracker</h1>
-      <p class="subtitle">Local workout log, templates, rest timer, progress stats, and backup export.</p>
+      <p class="subtitle">Local workout log, routines, progress stats, and backup export.</p>
     </header>
 
     <nav class="tabs" aria-label="Primary navigation">
@@ -175,22 +175,6 @@
             <button class="ghost" id="loadLastWorkout">Load Last</button>
             <button class="ghost" id="restoreDraft" type="button">Restore Draft</button>
             <button class="danger" id="clearDraft" type="button">Clear Draft</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="timer-layout">
-            <div>
-              <h2 style="margin-bottom: 5px;">Rest Timer</h2>
-              <div class="timer-display" id="timerDisplay">00:00</div>
-              <p class="muted small" id="timerText" style="margin: 6px 0 0;">Use after a set. Your phone may vibrate when done.</p>
-            </div>
-          </div>
-          <div class="timer-chip-row">
-            <button class="ghost" data-timer="60">60s</button>
-            <button class="ghost" data-timer="90">90s</button>
-            <button class="ghost" data-timer="120">2m</button>
-            <button class="warning" id="stopTimer">Stop</button>
           </div>
         </div>
 
@@ -897,6 +881,45 @@
       </section>
     </main>
   </div>
+
+
+  <dialog class="exercise-picker" id="exercisePicker" aria-labelledby="exercisePickerTitle" aria-describedby="exercisePickerDescription">
+    <div class="exercise-picker-handle" aria-hidden="true"></div>
+    <header class="exercise-picker-header">
+      <div>
+        <span class="exercise-picker-eyebrow">Active Workout</span>
+        <h2 id="exercisePickerTitle">Add Exercise</h2>
+        <p id="exercisePickerDescription">Choose from your routines and workout history, or create a custom exercise.</p>
+      </div>
+      <button class="exercise-picker-close" type="button" data-exercise-picker-close aria-label="Close Add Exercise">×</button>
+    </header>
+
+    <section class="exercise-picker-panel" id="exercisePickerBrowse">
+      <label for="exercisePickerSearch">Search exercises</label>
+      <input id="exercisePickerSearch" type="search" inputmode="search" autocomplete="off" placeholder="Search by exercise name" />
+      <div class="exercise-picker-results-heading">
+        <strong>Existing exercises</strong>
+        <span id="exercisePickerResultCount" aria-live="polite">Loading exercises…</span>
+      </div>
+      <div class="exercise-picker-options" id="exercisePickerOptions" aria-label="Existing exercise options"></div>
+      <p class="exercise-picker-empty hidden" id="exercisePickerEmpty" role="status"></p>
+      <button class="exercise-picker-create-action" id="exercisePickerCreateAction" type="button">+ Create New Exercise</button>
+    </section>
+
+    <section class="exercise-picker-panel hidden" id="exercisePickerCreate">
+      <button class="exercise-picker-back" id="exercisePickerCreateBack" type="button">← Back to exercises</button>
+      <form class="exercise-picker-create-form" id="exercisePickerCreateForm" novalidate>
+        <label for="exercisePickerCustomName">Custom exercise name</label>
+        <input id="exercisePickerCustomName" type="text" autocomplete="off" placeholder="Example: Landmine Press" aria-describedby="exercisePickerCustomError" />
+        <p class="exercise-picker-error" id="exercisePickerCustomError" role="alert"></p>
+        <button class="exercise-picker-submit" type="submit">Add Exercise</button>
+      </form>
+    </section>
+
+    <footer class="exercise-picker-footer">
+      <button class="exercise-picker-cancel" type="button" data-exercise-picker-close>Cancel</button>
+    </footer>
+  </dialog>
 
 
   <div class="completion-overlay hidden" id="completionModal" role="dialog" aria-modal="true" aria-labelledby="completionTitle">
