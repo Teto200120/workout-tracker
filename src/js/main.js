@@ -1,9 +1,10 @@
 import { toast } from "./core/utils.js";
 import { init } from "./router.js";
+import { startupFailureMessage } from "./schema/errors.js";
 
 init().catch((error) => {
-  console.error(error);
-  toast("Tracker could not start. Check browser storage permissions.");
+  console.error("Tracker startup failed:", error);
+  toast(startupFailureMessage(error));
 });
 
 if ("serviceWorker" in navigator) {

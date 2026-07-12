@@ -10,6 +10,7 @@ import {
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { applyAppSettings } from "../core/settings.js";
 import { today, toast } from "../core/utils.js";
+import { backupFailureMessage } from "../schema/errors.js";
 import { getLegacyWeights, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
 import { getBackupMeta, setBackupMeta } from "../storage/local.js";
 import { loadWorkoutTemplate, stopSessionElapsedTimer } from "./active-workout.js";
@@ -109,8 +110,8 @@ export async function importData(file) {
     await refreshTemplateDropdowns();
     await renderAll();
     toast("Backup imported.");
-  } catch {
-    toast("Could not import backup.");
+  } catch (error) {
+    toast(backupFailureMessage(error));
   }
 }
 

@@ -64,6 +64,67 @@ export async function seedStores(page, records) {
   }, records);
 }
 
+export async function seedRawApplicationData(page, data) {
+  await page.evaluate(async (seed) => {
+    const request = globalThis.indexedDB.open(
+      "hector_workout_tracker_fresh_v1",
+      2,
+    );
+    const database = await new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise((resolve, reject) => {
+      const transaction = database.transaction(
+        ["workouts", "weights", "templates"],
+        "readwrite",
+      );
+      transaction.oncomplete = () => resolve();
+      transaction.onabort = () =>
+        reject(transaction.error || new Error("Raw seed transaction aborted."));
+      transaction.onerror = () => reject(transaction.error);
+      const collections = [
+        ["workouts", seed.workouts || []],
+        ["weights", seed.weights || []],
+        ["templates", seed.templates || []],
+      ];
+      for (const [storeName, records] of collections) {
+        const store = transaction.objectStore(storeName);
+        store.clear();
+        records.forEach((record) => store.put(record));
+      }
+    });
+    database.close();
+
+    const localFields = {
+      settings: "hector_workout_settings_v1",
+      goals: "hector_workout_goals_v1",
+      draft: "hector_workout_draft_v1",
+      backupMeta: "hector_workout_backup_meta_v1",
+    };
+    for (const [field, key] of Object.entries(localFields)) {
+      if (!Object.prototype.hasOwnProperty.call(seed, field)) continue;
+      if (seed[field] === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, JSON.stringify(seed[field]));
+    }
+    if (Object.prototype.hasOwnProperty.call(seed, "rawLocalStorage")) {
+      for (const [key, rawValue] of Object.entries(seed.rawLocalStorage)) {
+        if (rawValue === null) localStorage.removeItem(key);
+        else localStorage.setItem(key, rawValue);
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(seed, "schemaVersion")) {
+      if (seed.schemaVersion === null)
+        localStorage.removeItem("hector_workout_data_schema_version");
+      else
+        localStorage.setItem(
+          "hector_workout_data_schema_version",
+          String(seed.schemaVersion),
+        );
+    }
+  }, data);
+}
+
 export async function readStore(page, storeName) {
   return page.evaluate(async (name) => {
     const { getLegacyWeights, getRoutines, getWorkouts } =

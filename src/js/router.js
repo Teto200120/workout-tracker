@@ -1,4 +1,5 @@
 import "./core/globals.js";
+import { ensureCurrentApplicationSchema } from "./application/data-schema.js";
 import { bindExercisePicker } from "./components/exercise-picker.js";
 import { refreshTemplateDropdowns } from "./components/routine-selectors.js";
 import {
@@ -243,11 +244,12 @@ export async function renderAll() {
 }
 
 export async function init() {
+  await openDatabase();
+  await ensureCurrentApplicationSchema();
   applyAppSettings();
   $("workoutDate").value = today();
   $("startTime").value = "";
   $("endTime").value = "";
-  await openDatabase();
   await seedDefaultTemplates();
   bindEvents();
   await refreshTemplateDropdowns();

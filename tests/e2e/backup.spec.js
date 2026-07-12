@@ -1,6 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import {
+  CURRENT_APPLICATION_SCHEMA_VERSION,
+  CURRENT_BACKUP_FILE_VERSION,
+} from "../../src/js/schema/versions.js";
+import {
   loadApp,
   monitorRuntime,
   openPrimary,
@@ -62,6 +66,11 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     /^workout-tracker-backup-.*\.json$/,
   );
   const exported = JSON.parse(await readFile(await download.path(), "utf8"));
+  expect(exported.backupFileVersion).toBe(CURRENT_BACKUP_FILE_VERSION);
+  expect(exported.applicationSchemaVersion).toBe(
+    CURRENT_APPLICATION_SCHEMA_VERSION,
+  );
+  expect(exported.version).toBeUndefined();
   expect(exported.workouts).toHaveLength(1);
   expect(exported.templates).toHaveLength(1);
 
@@ -74,12 +83,14 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     draft: localStorage.getItem("hector_workout_draft_v1"),
     settings: localStorage.getItem("hector_workout_settings_v1"),
     backup: localStorage.getItem("hector_workout_backup_meta_v1"),
+    schema: localStorage.getItem("hector_workout_data_schema_version"),
   }));
   expect(storageAfterClear).toEqual({
     goals: null,
     draft: null,
     settings: null,
     backup: null,
+    schema: null,
   });
 
   delete exported.weights;
@@ -96,6 +107,11 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
       ),
     )
     .toBe(true);
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("hector_workout_data_schema_version"),
+    ),
+  ).toBe(String(CURRENT_APPLICATION_SCHEMA_VERSION));
   await openPrimary(page, "home");
   await expect(page.locator("#todayWorkoutSelect")).toContainText(
     "Round Trip Routine",
@@ -125,5 +141,86 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     workoutsAfterFailure.some((item) => item.id === "must-roll-back"),
   ).toBe(false);
   expect(workoutsAfterFailure).toHaveLength(1);
+  assertNoRuntimeErrors();
+});
+
+test("legacy backups migrate and future backup versions are rejected", async ({
+  page,
+}, testInfo) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  await loadApp(page);
+  await openBackup(page);
+
+  const legacyWorkout = workoutFixture(70, {
+    id: "legacy-backup-workout",
+    exercises: [
+      {
+        name: "  Legacy Backup Press  ",
+        sets: [{ weight: 0, reps: "0", rpe: null, done: 1 }],
+        unknownExerciseField: "retained",
+      },
+    ],
+  });
+  delete legacyWorkout.notes;
+  delete legacyWorkout.tags;
+  delete legacyWorkout.createdAt;
+  delete legacyWorkout.durationMinutes;
+  const legacyPath = testInfo.outputPath("legacy-v2-backup.json");
+  await writeFile(
+    legacyPath,
+    JSON.stringify({
+      app: "Hector's Workout Tracker",
+      version: 2,
+      exportedAt: "2026-06-20T12:00:00.000Z",
+      workouts: [legacyWorkout],
+      templates: [
+        {
+          id: "legacy-backup-routine",
+          name: "  Legacy Backup Routine  ",
+          exercises: ["  Legacy Backup Press  "],
+        },
+      ],
+      goals: { weeklyGoal: "3", targetWeight: "170" },
+      settings: { animations: "false" },
+    }),
+  );
+  await importFile(page, legacyPath);
+  await expect
+    .poll(async () =>
+      (await readStore(page, "workouts")).some(
+        (item) => item.id === "legacy-backup-workout",
+      ),
+    )
+    .toBe(true);
+  const imported = (await readStore(page, "workouts")).find(
+    (item) => item.id === "legacy-backup-workout",
+  );
+  expect(imported).toMatchObject({ notes: "", tags: [], createdAt: "" });
+  expect(imported.exercises[0]).toMatchObject({
+    name: "Legacy Backup Press",
+    notes: "",
+    unknownExerciseField: "retained",
+  });
+  expect(imported.exercises[0].sets[0]).toMatchObject({
+    weight: "0",
+    reps: "0",
+    rpe: "",
+    done: true,
+    warmup: false,
+  });
+
+  const beforeFutureImport = await readStore(page, "workouts");
+  const futurePath = testInfo.outputPath("future-backup.json");
+  await writeFile(
+    futurePath,
+    JSON.stringify({
+      backupFileVersion: CURRENT_BACKUP_FILE_VERSION + 1,
+      applicationSchemaVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
+      workouts: [workoutFixture(71)],
+    }),
+  );
+  await page.locator("#importFile").setInputFiles(futurePath);
+  await expect(page.locator("#toast")).toContainText("newer app version");
+  expect(await readStore(page, "workouts")).toEqual(beforeFutureImport);
   assertNoRuntimeErrors();
 });

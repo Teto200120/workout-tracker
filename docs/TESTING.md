@@ -4,7 +4,7 @@
 
 ### Direct unit tests
 
-Node's built-in test runner imports production functions directly from `src/js/domain/` and the pure backup validator in `src/js/application/backup.js`. It needs no browser DOM, storage emulation, jsdom, or additional dependency.
+Node's built-in test runner imports production functions directly from `src/js/domain/`, `src/js/schema/`, the startup coordinator, and the backup validator. It needs no browser DOM, storage emulation, jsdom, or additional dependency.
 
 The unit suite covers:
 
@@ -16,6 +16,11 @@ The unit suite covers:
 - Exercise classification, routine tags, duration estimates, warm-up filtering, exercise profiles, RPE-aware targets, and progression recommendations.
 - Exercise-name trimming, case-insensitive deduplication, local-source option construction, substring search, and canonical-name matching.
 - Backup record-array validation, optional legacy `weights`, required IDs, and pre-transaction rejection.
+- Application and backup version detection, including invalid and future versions.
+- Canonical Set, Exercise, Workout, Routine, Settings, Goals, Draft, backup-metadata, and legacy-weight validation with structured nested paths.
+- Non-mutating normalization, zero preservation, ordering, existing defaults, and unknown-field retention.
+- The real schema 0-to-1 migration, deterministic/idempotent behavior, invalid input, and current-version validation.
+- Startup marker-last ordering, cross-storage rollback, retry, failure-before-effects, and current-version no-rewrite behavior.
 
 Domain tests should assert business rules and deterministic aggregation. They should not copy production formulas into test helpers, inspect private implementation details, or depend on the real current time.
 
@@ -34,6 +39,9 @@ The browser suite covers:
 - Saving a workout and finding one non-duplicated record in History.
 - Settings save, reload, and reset behavior.
 - Backup download, clear, restore without legacy `weights`, invalid import rejection, and failed-transaction rollback.
+- Legacy startup migration across IndexedDB and localStorage, current startup without rewrite or duplication, failed migration preservation/retry, and future application-version refusal.
+- Backup version declarations, old v2 migration, new v3 round trip, future-version refusal, clear-data marker removal, and retained `id: null` rollback.
+- Every service-worker app-shell path returning HTTP 200 and a controlled cached startup while offline.
 - Stats, History, and search behavior with about 200 fixture workouts.
 
 Tests block service workers to prevent an older local cache from mixing assets between runs. Vibration is replaced with a harmless browser stub. Downloads, uploads, and confirmation dialogs are handled through Playwright. Fixtures use the same explicit production storage interfaces as the app.
@@ -55,6 +63,6 @@ When a browser test fails, inspect `playwright-report/index.html` with `npx play
 
 The automated suites do not replace [QA_CHECKLIST.md](QA_CHECKLIST.md). Offline install/startup, installed-PWA behavior, device vibration, file handling outside Chromium, real keyboard behavior, and Android browser layout/performance remain manual. These checks depend on an installed PWA, physical hardware, or platform behavior that headless CI cannot represent reliably.
 
-On the Samsung Galaxy S24 Ultra, repeat the Home, Active Workout, Exercise Details scroll/action/keyboard checks, Add Exercise picker flows, draft reload, save/edit, backup clear/restore, offline reload, haptic, and portrait-layout checks from the release checklist.
+On the Samsung Galaxy S24 Ultra, repeat the Home, Active Workout, Exercise Details scroll/action/keyboard checks, Add Exercise picker flows, draft reload, save/edit, legacy startup migration, failed-migration recovery, backup clear/restore, offline reload, haptic, and portrait-layout checks from the release checklist.
 
 Formatting adoption remains scoped to tooling, tests, workflow, and documentation. Production HTML, CSS, and JavaScript are not reformatted as part of this behavior-preserving refactor.

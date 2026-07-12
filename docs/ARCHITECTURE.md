@@ -11,7 +11,7 @@ The deployed app remains directly served HTML, CSS, images, and browser-native E
 1. Import and start `init()` from `router.js`.
 2. Register `service-worker.js` after the window load event.
 
-`src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, and app-wide rendering. Startup applies settings, opens IndexedDB, seeds routines only when the routine store is empty, binds events, prepares routine selectors, renders all screens, and opens Home.
+`src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, and app-wide rendering. Startup opens IndexedDB, completes application-schema detection, validation, and migration before rendering, applies settings, seeds routines only when the routine store is empty, binds events, prepares routine selectors, renders all screens, and opens Home.
 
 ## Dependency direction
 
@@ -33,6 +33,7 @@ IndexedDB and localStorage browser APIs
 The important boundaries are:
 
 - `src/js/domain/` contains deterministic workout, schedule, and training rules. These modules do not read the DOM, browser storage, global app state, or the current clock.
+- `src/js/schema/` contains version constants, canonical contract metadata, structured validators, non-mutating normalizers, schema errors, and the pure ordered migration registry. It has no DOM or storage access.
 - `src/js/storage/` owns IndexedDB and localStorage access. Storage functions return values or reject/throw; they do not render, navigate, show toasts, trigger haptics, or open dialogs.
 - `src/js/application/` coordinates domain and storage operations that span more than one data source. It does not render screens.
 - `src/js/components/` contains reusable DOM-facing pieces such as icons and the routine selectors shared by multiple screens.
@@ -79,13 +80,15 @@ To add a pure workout calculation:
 - Routines: `getRoutines`, `saveRoutine`, `deleteRoutine`, `clearRoutines`
 - Legacy weights: `getLegacyWeights`, `saveLegacyWeight`
 - Lifecycle: `openDatabase`, `isDatabaseOpen`, `seedDefaultTemplates`
-- App-wide operations: `clearApplicationStores`, `importBackupRecords`
+- App-wide operations: `getAllApplicationRecords`, `clearApplicationStores`, `importBackupRecords`, `replaceApplicationRecords`
 
-The database name, version, store names, key paths, indexes, IDs, and stored record shapes are unchanged. `importBackupRecords` keeps one read-write transaction across all three stores, handles transaction errors and aborts, and explicitly aborts if synchronous record insertion throws.
+The database name, version, store names, key paths, and indexes are unchanged. Record-specific writes validate schema 1 before opening a write request. `importBackupRecords` keeps one read-write transaction across all three stores, handles request and transaction errors, and explicitly aborts if synchronous or asynchronous insertion fails. `replaceApplicationRecords` uses the same multi-store transaction for startup migration and compensating rollback.
 
-`storage/local.js` owns the existing settings, goals, draft, and backup-metadata keys. It provides typed-by-purpose read, write, remove, and application-cleanup functions. It preserves the current fallback behavior for malformed JSON.
+`storage/local.js` owns the existing settings, goals, draft, and backup-metadata keys plus `hector_workout_data_schema_version`. It provides typed-by-purpose reads and validated writes, raw snapshot/restore operations for cross-storage recovery, and application cleanup. Clear All Local Data removes the schema marker.
 
-`application/backup.js` builds backup payloads, validates compatible record arrays before confirmation or writes, coordinates the atomic IndexedDB import with localStorage restoration, and clears application-owned data. File selection, downloads, confirmations, rendering, and toast messages remain in `screens/backup.js`.
+`application/data-schema.js` coordinates startup reads, the pure migration pipeline, transactional IndexedDB replacement, localStorage persistence, marker-last completion, and compensating rollback. Current-version startup validates without rewriting records.
+
+`application/backup.js` builds canonical backup-file version 3 payloads, migrates supported legacy envelopes, validates before confirmation and writes, coordinates atomic IndexedDB import with localStorage restoration and compensating rollback, and clears application-owned data. File selection, downloads, confirmations, rendering, and toast messages remain in `screens/backup.js`.
 
 `application/schedule.js` combines stored settings and the pure schedule rules for Home and Stats.
 
@@ -142,8 +145,8 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 3. Bump the cache name once for the completed change set.
 4. Verify an online load before testing cached/offline startup.
 
-The current cache is `hector-workout-tracker-pwa-v14`.
+The current cache is `hector-workout-tracker-pwa-v15`.
 
-## Deliberately deferred schema work
+## Versioned data contracts
 
-This refactor does not add schema versions, migrations, record normalization that changes stored shapes, stricter legacy rejection, store removal, or a new backup format. The `weights` store and backups without a `weights` array remain supported. Those changes belong to the versioned-data-schema task, where compatibility and migration behavior can be designed and tested together.
+The full record contracts, application schema 0-to-1 migration, version boundaries, startup recovery sequence, backup compatibility rules, future-version behavior, and future-migration procedure are documented in [DATA_SCHEMA.md](DATA_SCHEMA.md). IndexedDB remains version 2, application data is schema 1, and new backup files are version 3. The legacy `weights` store and backups without a `weights` array remain supported.
