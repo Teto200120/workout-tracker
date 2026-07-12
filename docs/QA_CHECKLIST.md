@@ -6,6 +6,11 @@
 - [ ] Reload; default routines are not duplicated.
 - [ ] Confirm Home is active with and without an existing workout draft.
 - [ ] Test once with animations enabled and once disabled.
+- [ ] Seed unversioned workouts, routines, settings, goals, draft, backup metadata, and legacy weights; confirm migration writes schema marker `1` only after all data remains usable.
+- [ ] Reload canonical schema `1` data; confirm records and raw localStorage values are not rewritten or duplicated.
+- [ ] Seed malformed legacy data; confirm startup stops, the original records remain, the marker stays absent, and the recovery message is visible.
+- [ ] Correct the malformed data and reload; confirm migration retries successfully.
+- [ ] Seed a future application schema marker; confirm startup refuses to downgrade or overwrite it.
 
 ## Home
 
@@ -72,9 +77,15 @@
 ## Backup Export and Import
 
 - [ ] Export representative workouts, routines, goals, settings, and legacy data.
-- [ ] Inspect the JSON and filename; import it after Clear All Local Data.
+- [ ] Inspect the JSON and filename; confirm `backupFileVersion: 3` and `applicationSchemaVersion: 1`, then import it after Clear All Local Data.
 - [ ] Confirm all supported data returns and restored routines are usable.
 - [ ] Try malformed JSON and a structurally invalid backup; confirm neither is imported.
+- [ ] Import an unversioned, v1, and v2 legacy backup; confirm each migrates to schema `1` without losing unknown safe record fields.
+- [ ] Import a backup without `weights`; confirm it remains valid and the compatibility store stays intact.
+- [ ] Reimport a new v3 export; confirm meaningful data is equivalent and records are not duplicated beyond merge-by-ID behavior.
+- [ ] Try a future backup-file version and future application-schema version; confirm each is refused without writes.
+- [ ] Trigger the `id: null` key-path failure; confirm all records in the IndexedDB import transaction roll back and localStorage is unchanged.
+- [ ] Clear all local data; confirm `hector_workout_data_schema_version` is removed and the next reload follows fresh-install migration.
 
 ## Offline Startup
 
@@ -82,6 +93,7 @@
 - [ ] Enable DevTools Network > Offline and reload; Home still renders.
 - [ ] Open cached subpages and confirm no mixed-version module errors.
 - [ ] Re-enable networking and confirm the current cache replaces older caches.
+- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v15` and every schema module is present in the app shell.
 
 ## Mobile Layout
 
@@ -89,6 +101,14 @@
 - [ ] Confirm no horizontal scrolling, clipped titles, or covered controls.
 - [ ] Focus form inputs and confirm they remain visible above fixed UI and keyboard.
 - [ ] Check the exercise picker, completion overlay, long names, and bottom navigation.
+
+## Samsung Galaxy S24 Ultra data checks
+
+- [ ] In Chrome portrait, migrate representative unversioned local data and confirm Home, History, Stats, Routines, Settings, and draft resume remain usable.
+- [ ] Force a malformed legacy record in a disposable test profile; confirm the migration failure message is readable and original data can still be exported/inspected after correction.
+- [ ] Export a v3 backup, clear data, reimport it, and confirm the schema marker and all supported data return.
+- [ ] Enable airplane mode after an online controlled load; confirm cache v15 starts Home and opens cached subpages without mixed-version module errors.
+- [ ] Repeat keyboard, haptic, Exercise Details scrolling, Add Exercise, save/edit, and no-horizontal-overflow checks at the device's default display scaling.
 
 ## Accessibility Basics
 

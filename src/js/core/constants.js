@@ -25,6 +25,7 @@ export const SETTINGS_KEY = "hector_workout_settings_v1";
 export const GOALS_KEY = "hector_workout_goals_v1";
 export const DRAFT_KEY = "hector_workout_draft_v1";
 export const BACKUP_META_KEY = "hector_workout_backup_meta_v1";
+export const APPLICATION_SCHEMA_VERSION_KEY = "hector_workout_data_schema_version";
 export const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export const DEFAULT_APP_SETTINGS = {

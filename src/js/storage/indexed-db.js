@@ -1,5 +1,10 @@
 import { DB_NAME, DB_VERSION, DEFAULT_TEMPLATES, STORES } from "../core/constants.js";
 import { id } from "../core/utils.js";
+import {
+  assertValidLegacyWeight,
+  assertValidRoutine,
+  assertValidWorkout
+} from "../schema/validators.js";
 
 let database = null;
 
@@ -78,6 +83,7 @@ export function getWorkouts() {
 }
 
 export function saveWorkoutRecord(workout) {
+  assertValidWorkout(workout, { path: "workout", source: "application" });
   return putItem("workouts", workout);
 }
 
@@ -90,6 +96,7 @@ export function getRoutines() {
 }
 
 export function saveRoutine(routine) {
+  assertValidRoutine(routine, { path: "routine", source: "application" });
   return putItem("templates", routine);
 }
 
@@ -106,31 +113,91 @@ export function getLegacyWeights() {
 }
 
 export function saveLegacyWeight(weight) {
+  assertValidLegacyWeight(weight, { path: "legacyWeight", source: "application" });
   return putItem("weights", weight);
 }
 
 export async function clearApplicationStores() {
-  for (const name of STORES) await clearStoredItems(name);
+  await replaceApplicationRecords({ workouts: [], legacyWeights: [], routines: [] });
 }
 
-export function importBackupRecords({ workouts, legacyWeights, routines }) {
+export async function getAllApplicationRecords() {
+  const [workouts, legacyWeights, routines] = await Promise.all([
+    getAllItems("workouts"),
+    getAllItems("weights"),
+    getAllItems("templates")
+  ]);
+  return { workouts, legacyWeights, routines };
+}
+
+function assertRecordCollections({ workouts, legacyWeights, routines }, options = {}) {
+  workouts.forEach((workout, index) => assertValidWorkout(workout, {
+    path: `workouts[${index}]`,
+    source: options.source || "application",
+    deferIdConstraints: options.deferIdConstraints
+  }));
+  legacyWeights.forEach((weight, index) => assertValidLegacyWeight(weight, {
+    path: `legacyWeights[${index}]`,
+    source: options.source || "application",
+    deferIdConstraints: options.deferIdConstraints
+  }));
+  routines.forEach((routine, index) => assertValidRoutine(routine, {
+    path: `routines[${index}]`,
+    source: options.source || "application",
+    deferIdConstraints: options.deferIdConstraints
+  }));
+}
+
+function runApplicationRecordTransaction(records, options = {}) {
   return new Promise((resolve, reject) => {
     if (!database) {
       reject(new Error("Database is not open."));
       return;
     }
+    if (options.validate !== false) assertRecordCollections(records, options);
     const transaction = database.transaction(STORES, "readwrite");
+    let firstError = null;
+    const abort = (error) => {
+      firstError ||= error;
+      try {
+        transaction.abort();
+      } catch {
+        // The transaction may already be aborting after a request failure.
+      }
+    };
+    const guardRequest = (request) => {
+      request.onerror = (event) => {
+        event.preventDefault();
+        abort(request.error || new Error("IndexedDB record write failed."));
+      };
+    };
     transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error || new Error("Backup import was aborted."));
+    transaction.onerror = (event) => {
+      firstError ||= event.target?.error || transaction.error;
+    };
+    transaction.onabort = () => reject(firstError || transaction.error || new Error("IndexedDB application transaction was aborted."));
     try {
-      workouts.forEach((workout) => transaction.objectStore("workouts").put(workout));
-      legacyWeights.forEach((weight) => transaction.objectStore("weights").put(weight));
-      routines.forEach((routine) => transaction.objectStore("templates").put(routine));
+      if (options.replace) STORES.forEach((storeName) => guardRequest(transaction.objectStore(storeName).clear()));
+      records.workouts.forEach((workout) => guardRequest(transaction.objectStore("workouts").put(workout)));
+      records.legacyWeights.forEach((weight) => guardRequest(transaction.objectStore("weights").put(weight)));
+      records.routines.forEach((routine) => guardRequest(transaction.objectStore("templates").put(routine)));
     } catch (error) {
-      transaction.abort();
-      reject(error);
+      abort(error);
     }
+  });
+}
+
+export function importBackupRecords(records) {
+  return runApplicationRecordTransaction(records, {
+    source: "backup",
+    deferIdConstraints: true
+  });
+}
+
+export function replaceApplicationRecords(records, options = {}) {
+  return runApplicationRecordTransaction(records, {
+    ...options,
+    replace: true
   });
 }
 
