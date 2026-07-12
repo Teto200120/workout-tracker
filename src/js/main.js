@@ -1,18 +1,5 @@
-import "./core/globals.js";
-import "./core/utils.js";
-import "./core/settings.js";
-import "./storage/local.js";
-import "./storage/indexed-db.js";
-import "./components/icons.js";
-import "./screens/progress.js";
-import "./screens/today.js";
-import "./screens/active-workout.js";
-import "./screens/history.js";
-import "./screens/routines.js";
-import "./screens/backup.js";
-import "./screens/profile.js";
-import "./screens/timers.js";
-import "./router.js";
+import { toast } from "./core/utils.js";
+import { init } from "./router.js";
 
 init().catch((error) => {
   console.error(error);

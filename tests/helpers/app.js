@@ -31,24 +31,48 @@ export async function loadApp(page) {
   await expect(page).toHaveTitle("Hector's Workout Tracker");
   await expect(page.locator("#log")).toHaveClass(/active/);
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
-  await page.waitForFunction(() => globalThis.db && globalThis.getItems);
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const { isDatabaseOpen } =
+          await import("/src/js/storage/indexed-db.js");
+        return isDatabaseOpen();
+      }),
+    )
+    .toBe(true);
 }
 
 export async function seedStores(page, records) {
   await page.evaluate(async (data) => {
-    for (const storeName of globalThis.STORES)
-      await globalThis.clearStore(storeName);
-    for (const [storeName, items] of Object.entries(data)) {
-      for (const item of items) await globalThis.saveItem(storeName, item);
-    }
-    await globalThis.seedDefaultTemplates();
-    await globalThis.refreshTemplateDropdowns();
-    await globalThis.renderAll();
+    const {
+      clearApplicationStores,
+      saveLegacyWeight,
+      saveRoutine,
+      saveWorkoutRecord,
+      seedDefaultTemplates,
+    } = await import("/src/js/storage/indexed-db.js");
+    const { refreshTemplateDropdowns } =
+      await import("/src/js/components/routine-selectors.js");
+    const { renderAll } = await import("/src/js/router.js");
+    await clearApplicationStores();
+    for (const workout of data.workouts || []) await saveWorkoutRecord(workout);
+    for (const weight of data.weights || []) await saveLegacyWeight(weight);
+    for (const routine of data.templates || []) await saveRoutine(routine);
+    await seedDefaultTemplates();
+    await refreshTemplateDropdowns();
+    await renderAll();
   }, records);
 }
 
 export async function readStore(page, storeName) {
-  return page.evaluate((name) => globalThis.getItems(name), storeName);
+  return page.evaluate(async (name) => {
+    const { getLegacyWeights, getRoutines, getWorkouts } =
+      await import("/src/js/storage/indexed-db.js");
+    if (name === "workouts") return getWorkouts();
+    if (name === "weights") return getLegacyWeights();
+    if (name === "templates") return getRoutines();
+    throw new Error(`Unknown store: ${name}`);
+  }, storeName);
 }
 
 export async function startRoutine(page, routineName = "Back / Biceps") {

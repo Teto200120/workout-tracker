@@ -1,36 +1,30 @@
 import "./globals.js";
+import { DAY_LABELS, DEFAULT_APP_SETTINGS } from "./constants.js";
+import { cleanText, normalizeRange, toast } from "./utils.js";
+import { getRoutines } from "../storage/indexed-db.js";
+import {
+  cloneDefaultSettings,
+  getAppSettings,
+  removeAppSettings,
+  setAppSettings as persistAppSettings
+} from "../storage/local.js";
 
-function cloneDefaultSettings() {
-  return JSON.parse(JSON.stringify(DEFAULT_APP_SETTINGS));
-}
+export { cloneDefaultSettings, getAppSettings };
 
-function getAppSettings() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
-    return {
-      ...cloneDefaultSettings(),
-      ...stored,
-      schedule: { ...cloneDefaultSettings().schedule, ...(stored.schedule || {}) }
-    };
-  } catch {
-    return cloneDefaultSettings();
-  }
-}
-
-function setAppSettings(settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+export function setAppSettings(settings) {
+  persistAppSettings(settings);
   applyAppSettings();
 }
 
-function applyAppSettings() {
+export function applyAppSettings() {
   const settings = getAppSettings();
   document.body.classList.toggle("no-animations", !settings.animations);
 }
 
-async function renderSettings() {
+export async function renderSettings() {
   if (!$("settingsSchedule")) return;
   const settings = getAppSettings();
-  const templates = await getTemplates();
+  const templates = await getRoutines();
   const routineOptions = templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");
 
   $("settingsSchedule").innerHTML = DAY_LABELS.map((day, index) => {
@@ -81,7 +75,7 @@ async function renderSettings() {
   $("settingsAnimations").checked = !!settings.animations;
 }
 
-async function saveSettingsFromForm() {
+export async function saveSettingsFromForm() {
   const current = getAppSettings();
   const schedule = {};
   all(".settings-day-row").forEach((row) => {
@@ -113,19 +107,14 @@ async function saveSettingsFromForm() {
     animations: $("settingsAnimations").checked
   });
 
-  await renderTodayView();
-  await updateAllExerciseHints();
   toast("Settings saved.");
 }
 
-async function resetAppSettings() {
+export async function resetAppSettings() {
   if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return;
-  localStorage.removeItem(SETTINGS_KEY);
+  removeAppSettings();
   applyAppSettings();
   await renderSettings();
-  await renderTodayView();
-  await updateAllExerciseHints();
   toast("Settings reset.");
 }
 
-Object.assign(globalThis, { cloneDefaultSettings, getAppSettings, setAppSettings, applyAppSettings, renderSettings, saveSettingsFromForm, resetAppSettings });

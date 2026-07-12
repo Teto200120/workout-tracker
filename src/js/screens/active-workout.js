@@ -1,4 +1,65 @@
 import "../core/globals.js";
+import {
+  iconCheck,
+  iconChevron,
+  iconChevronRight,
+  iconGrip,
+  iconInfo,
+  iconMinus,
+  iconPlayOutline,
+  iconPlus
+} from "../components/icons.js";
+import {
+  cleanText,
+  clamp,
+  dateLabel,
+  haptic,
+  id,
+  motionBehavior,
+  replayAnimation,
+  scrollInputIntoView,
+  timeNow,
+  today,
+  toast
+} from "../core/utils.js";
+import {
+  buildTargetFromLastSets as calculateTargetFromLastSets,
+  getExerciseProfile as resolveExerciseProfile,
+  inferMuscleTag,
+  workSetsOnly
+} from "../domain/training-rules.js";
+import {
+  buildCompletionSummary,
+  durationLabel,
+  getBestSet,
+  hasSaveableWorkoutContent,
+  workoutDurationMinutes
+} from "../domain/workout-metrics.js";
+import {
+  getRoutines,
+  getWorkouts,
+  isDatabaseOpen,
+  saveWorkoutRecord
+} from "../storage/indexed-db.js";
+import { getAppSettings, removeDraft, setDraft } from "../storage/local.js";
+
+let sessionElapsedInterval = null;
+let exerciseDragState = null;
+let activeExerciseDetailEl = null;
+let exerciseDetailTab = "log";
+let exerciseDetailRenderToken = 0;
+let exerciseFocusScrollToken = 0;
+let editingWorkoutId = null;
+let completionWorkout = null;
+const completionSelectedTags = new Set();
+
+export function getEditingWorkoutId() {
+  return editingWorkoutId;
+}
+
+export function setEditingWorkoutId(workoutId) {
+  editingWorkoutId = workoutId || null;
+}
 
 const DEFAULT_WORKOUT_TAGS = [
   "Good session",
@@ -1323,7 +1384,7 @@ function makeExercise(data = {}) {
 
 async function loadWorkoutTemplate() {
   const type = $("workoutType").value;
-  const template = (await getTemplates()).find((item) => item.name === type);
+  const template = (await getRoutines()).find((item) => item.name === type);
   const names = template?.exercises || [];
   const list = $("exerciseList");
   list.innerHTML = "";
@@ -1339,7 +1400,7 @@ async function getLastExercisePerformance(exerciseName) {
   const name = exerciseName.trim().toLowerCase();
   if (!name) return null;
 
-  const workouts = (await getItems("workouts"))
+  const workouts = (await getWorkouts())
     .filter((workout) => workout.id !== editingWorkoutId)
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
 
@@ -1355,20 +1416,13 @@ async function getLastExercisePerformance(exerciseName) {
 }
 
 function getExerciseProfile(exerciseName) {
-  const name = exerciseName.toLowerCase();
-  const settings = getAppSettings();
-  const increment = Number(settings.defaultWeightJump || 5);
-  const profiles = [
-    { keys: ["lateral raise", "rear delt", "fly", "curl", "pushdown", "tricep", "extension", "calf", "shrug"], min: settings.isolationMin, max: settings.isolationMax, increment, type: "isolation" },
-    { keys: ["bench", "squat", "deadlift", "romanian", "rdl", "leg press", "shoulder press", "press"], min: settings.compoundMin, max: settings.compoundMax, increment, type: "compound" },
-    { keys: ["row", "pulldown", "pull up", "pull-up", "chin"], min: settings.pullMin, max: settings.pullMax, increment, type: "compound pull" }
-  ];
-  const match = profiles.find((profile) => profile.keys.some((key) => name.includes(key)));
-  return match || { min: settings.generalMin, max: settings.generalMax, increment, type: "general" };
+  return resolveExerciseProfile(exerciseName, getAppSettings());
 }
 
-function workSetsOnly(sets = []) {
-  return sets.filter((set) => !set.warmup && (set.weight || set.reps));
+export function completeActiveExerciseDetailSet() {
+  if (!activeExerciseDetailEl) return;
+  completeCurrentSet(activeExerciseDetailEl);
+  renderExerciseDetailView();
 }
 
 function formatRepsList(sets = []) {
@@ -1387,66 +1441,8 @@ function formatPrimaryWeight(sets = []) {
   return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0];
 }
 
-function averageRpe(sets = []) {
-  const values = sets.map((set) => Number(set.rpe || 0)).filter(Boolean);
-  if (!values.length) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function highestRpe(sets = []) {
-  return Math.max(0, ...sets.map((set) => Number(set.rpe || 0)).filter(Boolean));
-}
-
 function buildTargetFromLastSets(exerciseName, lastSets = []) {
-  const profile = getExerciseProfile(exerciseName);
-  const sets = workSetsOnly(lastSets);
-  if (!sets.length) return { weight: "-", repsText: "Log clean work sets", reason: `${profile.min}-${profile.max} rep range · build a baseline first`, targetSets: [] };
-
-  const settings = getAppSettings();
-  const maxRpe = settings.rpeAware ? highestRpe(sets) : 0;
-  const avg = settings.rpeAware ? averageRpe(sets) : 0;
-  const primaryWeight = Number(formatPrimaryWeight(sets));
-  const sameWeightSets = Number.isFinite(primaryWeight) ? sets.filter((set) => Number(set.weight) === primaryWeight) : sets;
-  const reps = sameWeightSets.map((set) => Number(set.reps || 0)).filter(Boolean);
-  const allAtTop = reps.length > 0 && reps.every((rep) => rep >= profile.max);
-  const veryHard = maxRpe >= 9.5;
-  const hard = maxRpe >= 9;
-  let targetWeight = primaryWeight || Number(sets[0].weight || 0);
-  let targetReps = reps.length ? [...reps] : sets.map((set) => Number(set.reps || profile.min));
-  let reason = `${profile.min}-${profile.max} range`;
-
-  if (veryHard) {
-    reason += ` · last RPE ${maxRpe.toFixed(1)}, repeat and clean it up`;
-  } else if (hard) {
-    const lowestIndex = targetReps.indexOf(Math.min(...targetReps));
-    targetReps[lowestIndex] = Math.min(profile.max, targetReps[lowestIndex] + 1);
-    reason += ` · last RPE ${maxRpe.toFixed(1)}, progress carefully`;
-  } else if (allAtTop) {
-    targetWeight = targetWeight + profile.increment;
-    targetReps = targetReps.map(() => profile.min);
-    reason += ` · top reached, add ${profile.increment} lb`;
-  } else {
-    const belowTop = targetReps
-      .map((rep, index) => ({ rep, index }))
-      .filter((item) => item.rep < profile.max)
-      .sort((a, b) => a.rep - b.rep)[0];
-    if (belowTop) targetReps[belowTop.index] = Math.min(profile.max, belowTop.rep + 1);
-    reason += avg ? ` · avg RPE ${avg.toFixed(1)}` : " · build reps first";
-  }
-
-  const targetSets = sameWeightSets.length ? sameWeightSets.map((set, index) => ({
-    ...set,
-    weight: targetWeight ? String(targetWeight) : set.weight,
-    reps: targetReps[index] ? String(targetReps[index]) : set.reps,
-    done: false
-  })) : [];
-
-  return {
-    weight: targetWeight ? `${targetWeight} lb` : "-",
-    repsText: targetReps.length ? `${targetReps.join(" / ")} reps` : "Hold form",
-    reason,
-    targetSets
-  };
+  return calculateTargetFromLastSets(exerciseName, lastSets, getAppSettings());
 }
 
 function compactTargetReps(targetPlan) {
@@ -1472,7 +1468,7 @@ function targetRepsBySetText(targetPlan) {
 async function getExercisePr(exerciseName) {
   const name = exerciseName.trim().toLowerCase();
   if (!name) return null;
-  const workouts = await getItems("workouts");
+  const workouts = await getWorkouts();
   let best = null;
   for (const workout of workouts) {
     if (workout.id === editingWorkoutId) continue;
@@ -1585,90 +1581,6 @@ async function autoLoadLastSetsForAllExercises() {
   if (loadedCount) toast(`Loaded last sets for ${loadedCount} exercise${loadedCount === 1 ? "" : "s"}.`);
 }
 
-function getProgressionRecommendation(bestSet, exerciseName = "") {
-  if (!bestSet || !bestSet.weight || !bestSet.reps) return "";
-  const settings = getAppSettings();
-  const profile = getExerciseProfile(exerciseName);
-  const weight = Number(bestSet.weight);
-  const reps = Number(bestSet.reps);
-  const rpe = Number(bestSet.rpe || 0);
-  if (settings.rpeAware && rpe >= 9.5) return `repeat ${weight} × ${reps}; last RPE was high`;
-  if (reps < profile.max) return `try ${weight} × ${reps + 1}`;
-  return `try ${weight + profile.increment} × ${profile.min}`;
-}
-
-function buildSetSummary(sets = []) {
-  const workSets = sets.filter((set) => !set.warmup && (set.weight || set.reps));
-  if (!workSets.length) return "No work sets logged";
-  const firstWeight = workSets.find((set) => set.weight)?.weight || "-";
-  const reps = workSets.map((set) => set.reps || "-").join(" / ");
-  return `${firstWeight} lb · ${reps} reps`;
-}
-
-function bestHistoricalSetForExercise(workouts, exerciseName) {
-  const name = exerciseName.trim().toLowerCase();
-  let best = null;
-  for (const workout of workouts) {
-    for (const exercise of workout.exercises || []) {
-      if ((exercise.name || "").trim().toLowerCase() !== name) continue;
-      const bestSet = getBestSet(exercise);
-      if (bestSet && (!best || bestSet.estimated1rm > best.estimated1rm)) best = bestSet;
-    }
-  }
-  return best;
-}
-
-function buildCompletionSummary(workout, previousSameWorkout, previousWorkouts) {
-  const volume = Math.round(workoutVolume(workout));
-  const sets = totalSets(workout);
-  const duration = workoutDurationMinutes(workout);
-  const highlights = [];
-
-  for (const exercise of workout.exercises || []) {
-    const bestSet = getBestSet(exercise);
-    if (!bestSet) continue;
-    const previousBest = bestHistoricalSetForExercise(previousWorkouts, exercise.name || "");
-    if (!previousBest || bestSet.estimated1rm > previousBest.estimated1rm) {
-      highlights.push({
-        type: "PR",
-        title: `New PR: ${exercise.name}`,
-        text: `${bestSet.weight} × ${bestSet.reps}${previousBest ? ` · beat ${previousBest.weight} × ${previousBest.reps}` : ""}`
-      });
-    }
-  }
-
-  if (previousSameWorkout) {
-    const previousVolume = Math.round(workoutVolume(previousSameWorkout));
-    const diff = volume - previousVolume;
-    if (diff > 0) {
-      highlights.push({
-        type: "Volume",
-        title: "Volume increased",
-        text: `+${diff.toLocaleString()} lb vs last ${workout.type}`
-      });
-    }
-
-    const previousSets = totalSets(previousSameWorkout);
-    if (sets > previousSets) {
-      highlights.push({
-        type: "Work",
-        title: "More work completed",
-        text: `${sets} work sets today vs ${previousSets} last time`
-      });
-    }
-  }
-
-  if (!highlights.length) {
-    highlights.push({
-      type: "Saved",
-      title: "Session logged",
-      text: "Workout completed and saved. Progress still counts even without a PR."
-    });
-  }
-
-  return { volume, sets, duration, highlights: highlights.slice(0, 4) };
-}
-
 function renderCompletionTags() {
   const grid = $("completionTagGrid");
   if (!grid) return;
@@ -1709,6 +1621,21 @@ function showCompletionPopup(workout, summary) {
   haptic(45);
 }
 
+export function saveDraftSilently() {
+  if (!isDatabaseOpen()) return;
+  const draft = collectWorkout({ includeEmptySets: true });
+  draft.editingWorkoutId = editingWorkoutId;
+  draft.activeExerciseIndex = getActiveExerciseIndex();
+  draft.savedAt = new Date().toISOString();
+  setDraft(draft);
+}
+
+export function clearDraftStorage(showMessage = true) {
+  removeDraft();
+  stopTodayActiveElapsedTimer();
+  if (showMessage) toast("Draft cleared.");
+}
+
 async function finishCompletionPopup() {
   if (!completionWorkout) {
     $("completionModal")?.classList.add("hidden");
@@ -1719,12 +1646,11 @@ async function finishCompletionPopup() {
   const tags = Array.from(completionSelectedTags);
   const updated = { ...completionWorkout, tags };
   if (customNote) updated.notes = updated.notes ? `${updated.notes}\n${customNote}` : customNote;
-  await saveItem("workouts", updated);
+  await saveWorkoutRecord(updated);
   completionWorkout = null;
   completionSelectedTags.clear();
   $("completionModal")?.classList.add("hidden");
   await renderAll();
-  await renderTodayView();
   toast(tags.length || customNote ? "Workout details updated." : "Workout saved.");
 }
 
@@ -1773,15 +1699,15 @@ async function saveWorkout() {
   }
   if (!$('endTime').value && $('startTime').value) $('endTime').value = timeNow();
   const workout = collectWorkout();
-  if (!workout.exercises.length) { toast("Add at least one exercise first."); return; }
+  if (!hasSaveableWorkoutContent(workout)) { toast("Add at least one exercise first."); return; }
 
-  const previousWorkouts = (await getItems("workouts")).filter((item) => item.id !== workout.id);
+  const previousWorkouts = (await getWorkouts()).filter((item) => item.id !== workout.id);
   const previousSameWorkout = previousWorkouts
     .filter((item) => item.type === workout.type)
     .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""))[0] || null;
   const summary = buildCompletionSummary(workout, previousSameWorkout, previousWorkouts);
 
-  await saveItem("workouts", workout);
+  await saveWorkoutRecord(workout);
   clearDraftStorage(false);
   editingWorkoutId = null;
   $("saveWorkout").textContent = "Save Workout";
@@ -1798,7 +1724,7 @@ async function saveWorkout() {
 
 async function loadLastSameWorkout() {
   const type = $("workoutType").value;
-  const workouts = (await getItems("workouts"))
+  const workouts = (await getWorkouts())
     .filter((workout) => workout.type === type)
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   if (!workouts.length) { toast("No previous workout found for this day."); return; }
@@ -1819,4 +1745,30 @@ async function loadLastSameWorkout() {
   toast("Previous workout loaded unchecked.");
 }
 
-Object.assign(globalThis, { updateSessionTitle, showSessionView, formatElapsedClock, timeToMinutes, elapsedSecondsFromClock, getSessionElapsedSeconds, getDraftElapsedSeconds, updateSessionElapsedTimer, startSessionElapsedTimer, stopSessionElapsedTimer, getWorkSetRows, getDoneWorkSetRows, isExerciseComplete, getActiveExercise, getCurrentSetRow, getSessionSetStats, updateSessionProgress, setControlText, sanitizeControlInputValue, formatCommittedControlValue, getSetFieldInput, writeCurrentSetValueFromControl, bindControlValueInput, getNumericInputValue, previousWeightForSet, ensureCurrentSetDefaults, updateCurrentSetPanel, adjustCurrentSetValue, completedSetChips, renumberExerciseCards, syncSessionUi, updateSessionPrimaryAction, completeCurrentSet, undoLastCompletedSet, handleSessionPrimaryAction, isExerciseDetailOpen, getExerciseSetProgress, getCurrentSetMeta, getCurrentSetDisplayValues, controlInputHtml, openExerciseDetail, closeExerciseDetail, setExerciseDetailTab, getExerciseEquipment, getExerciseGuideData, renderGuideList, renderExerciseGuideContent, renderExerciseLogContent, updateExerciseDetailHeader, updateExerciseDetailCompleteButton, addSetToExercise, removeLastSetFromExercise, bindExerciseDetailControls, renderExerciseDetailView, toggleExerciseGuide, getDragAfterElement, startExerciseDrag, moveExerciseDrag, endExerciseDrag, setRows, compactSetSummary, updateExerciseSummary, setExerciseCollapsed, getActiveExerciseIndex, collapseAllButIndex, collapseAllButFirstExercise, getSessionFocusBand, focusExerciseInSessionView, scheduleExerciseFocus, openExercise, toggleExerciseCollapse, goToExerciseOffset, finishAndNextExercise, updateExerciseFlowButtons, makeSetRow, makeExercise, loadWorkoutTemplate, getLastExercisePerformance, getExerciseProfile, workSetsOnly, formatRepsList, formatPrimaryWeight, averageRpe, highestRpe, buildTargetFromLastSets, compactTargetReps, compactTargetSummary, targetRepsBySetText, getExercisePr, updateExerciseHint, updateAllExerciseHints, useLastSets, exerciseHasUserInput, loadLastSetsIntoExercise, autoLoadLastSetsForAllExercises, getProgressionRecommendation, buildSetSummary, bestHistoricalSetForExercise, buildCompletionSummary, renderCompletionTags, showCompletionPopup, finishCompletionPopup, collectWorkout, saveWorkout, loadLastSameWorkout });
+export {
+  closeExerciseDetail,
+  collapseAllButFirstExercise,
+  collapseAllButIndex,
+  completeCurrentSet,
+  endExerciseDrag,
+  finishCompletionPopup,
+  formatElapsedClock,
+  getActiveExerciseIndex,
+  getDraftElapsedSeconds,
+  handleSessionPrimaryAction,
+  isExerciseDetailOpen,
+  loadLastSameWorkout,
+  loadWorkoutTemplate,
+  makeExercise,
+  moveExerciseDrag,
+  openExercise,
+  renderExerciseDetailView,
+  saveWorkout,
+  setExerciseDetailTab,
+  showSessionView,
+  stopSessionElapsedTimer,
+  undoLastCompletedSet,
+  updateAllExerciseHints,
+  updateExerciseHint,
+  updateSessionTitle
+};

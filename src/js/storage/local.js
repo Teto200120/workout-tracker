@@ -1,41 +1,79 @@
-import "../core/globals.js";
+import {
+  BACKUP_META_KEY,
+  DEFAULT_APP_SETTINGS,
+  DRAFT_KEY,
+  GOALS_KEY,
+  SETTINGS_KEY
+} from "../core/constants.js";
 
-function getGoals() {
+export function cloneDefaultSettings() {
+  return JSON.parse(JSON.stringify(DEFAULT_APP_SETTINGS));
+}
+
+export function getAppSettings() {
   try {
-    return JSON.parse(localStorage.getItem("hector_workout_goals_v1")) || { weeklyGoal: 4 };
+    const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+    return {
+      ...cloneDefaultSettings(),
+      ...stored,
+      schedule: { ...cloneDefaultSettings().schedule, ...(stored.schedule || {}) }
+    };
+  } catch {
+    return cloneDefaultSettings();
+  }
+}
+
+export function setAppSettings(settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+export function removeAppSettings() {
+  localStorage.removeItem(SETTINGS_KEY);
+}
+
+export function getGoals() {
+  try {
+    return JSON.parse(localStorage.getItem(GOALS_KEY)) || { weeklyGoal: 4 };
   } catch {
     return { weeklyGoal: 4 };
   }
 }
 
-function getDraft() {
+export function setGoals(goals) {
+  localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+}
+
+export function getDraft() {
   try {
-    return JSON.parse(localStorage.getItem("hector_workout_draft_v1"));
+    return JSON.parse(localStorage.getItem(DRAFT_KEY));
   } catch {
     return null;
   }
 }
 
-function saveDraftSilently() {
-  if (!db) return;
-  const draft = collectWorkout({ includeEmptySets: true });
-  draft.editingWorkoutId = editingWorkoutId;
-  draft.activeExerciseIndex = getActiveExerciseIndex();
-  draft.savedAt = new Date().toISOString();
-  localStorage.setItem("hector_workout_draft_v1", JSON.stringify(draft));
+export function setDraft(draft) {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
 }
 
-function clearDraftStorage(showMessage = true) {
-  localStorage.removeItem("hector_workout_draft_v1");
-  stopTodayActiveElapsedTimer();
-  if (showMessage) toast("Draft cleared.");
+export function removeDraft() {
+  localStorage.removeItem(DRAFT_KEY);
 }
 
-function saveGoalsToStorage() {
-  const weeklyGoal = Number($("weeklyGoal").value || 4);
-  localStorage.setItem("hector_workout_goals_v1", JSON.stringify({ ...getGoals(), weeklyGoal }));
-  toast("Goals saved.");
-  renderAll();
+export function getBackupMeta() {
+  try {
+    return JSON.parse(localStorage.getItem(BACKUP_META_KEY)) || {};
+  } catch {
+    return {};
+  }
 }
 
-Object.assign(globalThis, { getGoals, getDraft, saveDraftSilently, clearDraftStorage, saveGoalsToStorage });
+export function setBackupMeta(meta) {
+  localStorage.setItem(BACKUP_META_KEY, JSON.stringify(meta || {}));
+}
+
+export function clearApplicationLocalStorage() {
+  localStorage.removeItem(BACKUP_META_KEY);
+  localStorage.removeItem(GOALS_KEY);
+  localStorage.removeItem(DRAFT_KEY);
+  localStorage.removeItem(SETTINGS_KEY);
+}

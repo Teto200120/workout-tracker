@@ -1,7 +1,19 @@
 import "../core/globals.js";
+import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
+import { cleanText, dateLabel, toast } from "../core/utils.js";
+import { inferMuscleTag } from "../domain/training-rules.js";
+import { completedSets, durationLabel, totalSets, workoutDurationMinutes, workoutVolume } from "../domain/workout-metrics.js";
+import { deleteWorkoutRecord, getWorkouts } from "../storage/indexed-db.js";
+import {
+  collapseAllButFirstExercise,
+  makeExercise,
+  setEditingWorkoutId,
+  showSessionView,
+  updateAllExerciseHints
+} from "./active-workout.js";
 
-async function renderHistory() {
-  const workouts = (await getItems("workouts")).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+export async function renderHistory() {
+  const workouts = (await getWorkouts()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   const filter = $("historyFilter").value;
   const search = $("exerciseSearch").value.trim().toLowerCase();
   const visible = workouts.filter((workout) => {
@@ -29,7 +41,7 @@ function renderWorkoutExerciseChips(workout) {
   if (!workout.exercises.length) return "";
   return `<div class="history-chip-row history-exercise-row">${workout.exercises.map((exercise) => {
     const name = exercise.name || "Unnamed";
-    const muscle = typeof inferMuscleTag === "function" ? inferMuscleTag(name) : "Exercise";
+    const muscle = inferMuscleTag(name) || "Exercise";
     const setLabel = `${exercise.sets.length} ${exercise.sets.length === 1 ? "set" : "sets"}`;
     return `<span class="pill stats-chip stats-exercise-chip"><span>${cleanText(name)}</span><small>${cleanText(muscle)} - ${setLabel}</small></span>`;
   }).join("")}</div>`;
@@ -66,15 +78,15 @@ function renderWorkoutCard(workout) {
         </details>
       </div>
       <div class="stack stats-session-actions">
-        <button class="ghost" onclick="editWorkout('${workout.id}')">Edit</button>
-        <button class="danger" onclick="deleteWorkout('${workout.id}')">Delete</button>
+        <button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}">Edit</button>
+        <button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}">Delete</button>
       </div>
     </article>
   `;
 }
 
-function renderWorkout(workout) {
-  return `<article class="list-item"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(workout.type)}</h3><p class="muted small" style="margin-bottom:8px;">${dateLabel(workout.date)} · ${workout.exercises.length} exercises · ${completedSets(workout)} done / ${totalSets(workout)} work sets · ${Math.round(workoutVolume(workout)).toLocaleString()} volume · ${durationLabel(workoutDurationMinutes(workout))}</p>${workout.notes ? `<p class="small">${cleanText(workout.notes)}</p>` : ""}${renderWorkoutTags(workout)}<div>${workout.exercises.map((exercise) => `<span class="pill">${cleanText(exercise.name || "Unnamed")} · ${exercise.sets.length}</span>`).join("")}</div><details class="detail"><summary><strong>Full workout</strong></summary>${workout.exercises.map(renderExerciseDetails).join("")}</details></div><div class="stack" style="max-width:130px;"><button class="ghost" onclick="editWorkout('${workout.id}')">Edit</button><button class="danger" onclick="deleteWorkout('${workout.id}')">Delete</button></div></div></article>`;
+export function renderWorkout(workout) {
+  return `<article class="list-item"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(workout.type)}</h3><p class="muted small" style="margin-bottom:8px;">${dateLabel(workout.date)} · ${workout.exercises.length} exercises · ${completedSets(workout)} done / ${totalSets(workout)} work sets · ${Math.round(workoutVolume(workout)).toLocaleString()} volume · ${durationLabel(workoutDurationMinutes(workout))}</p>${workout.notes ? `<p class="small">${cleanText(workout.notes)}</p>` : ""}${renderWorkoutTags(workout)}<div>${workout.exercises.map((exercise) => `<span class="pill">${cleanText(exercise.name || "Unnamed")} · ${exercise.sets.length}</span>`).join("")}</div><details class="detail"><summary><strong>Full workout</strong></summary>${workout.exercises.map(renderExerciseDetails).join("")}</details></div><div class="stack" style="max-width:130px;"><button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}">Edit</button><button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}">Delete</button></div></div></article>`;
 }
 
 function renderExerciseDetails(exercise) {
@@ -82,10 +94,10 @@ function renderExerciseDetails(exercise) {
 }
 
 async function editWorkout(workoutId) {
-  const workout = (await getItems("workouts")).find((item) => item.id === workoutId);
+  const workout = (await getWorkouts()).find((item) => item.id === workoutId);
   if (!workout) return;
 
-  editingWorkoutId = workout.id;
+  setEditingWorkoutId(workout.id);
   $("workoutDate").value = workout.date;
   $("startTime").value = workout.startTime || "";
   $("endTime").value = workout.endTime || "";
@@ -106,9 +118,16 @@ async function editWorkout(workoutId) {
 
 async function deleteWorkout(workoutId) {
   if (!confirm("Delete this workout?")) return;
-  await deleteItem("workouts", workoutId);
+  await deleteWorkoutRecord(workoutId);
   await renderAll();
   toast("Workout deleted.");
 }
 
-Object.assign(globalThis, { renderHistory, renderWorkoutTags, renderWorkoutExerciseChips, renderWorkoutCard, renderWorkout, renderExerciseDetails, editWorkout, deleteWorkout });
+export function bindHistoryActions() {
+  $("historyList").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-history-action]");
+    if (!button) return;
+    if (button.dataset.historyAction === "edit") editWorkout(button.dataset.workoutId);
+    if (button.dataset.historyAction === "delete") deleteWorkout(button.dataset.workoutId);
+  });
+}

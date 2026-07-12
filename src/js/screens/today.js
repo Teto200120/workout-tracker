@@ -1,4 +1,52 @@
 import "../core/globals.js";
+import { getTodayPlan } from "../application/schedule.js";
+import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
+import {
+  clamp,
+  cleanText,
+  easeInOut,
+  haptic,
+  lerp,
+  motionBehavior,
+  replayAnimation,
+  timeNow,
+  today,
+  toast
+} from "../core/utils.js";
+import { dateKeyFromDate, getWorkoutStreak, mondayFirstWeekDates } from "../domain/schedule.js";
+import { estimateWorkoutDuration, getWorkoutTags } from "../domain/training-rules.js";
+import {
+  buildCompletionSummary,
+  completedSets,
+  durationLabel,
+  totalSets,
+  workoutDurationMinutes,
+  workoutVolume
+} from "../domain/workout-metrics.js";
+import { getRoutines, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
+import { getDraft } from "../storage/local.js";
+import { buildExerciseStats, renderTodayProgressGlance } from "./progress.js";
+import {
+  closeExerciseDetail,
+  collapseAllButIndex,
+  formatElapsedClock,
+  getDraftElapsedSeconds,
+  isExerciseDetailOpen,
+  loadWorkoutTemplate,
+  makeExercise,
+  saveDraftSilently,
+  setEditingWorkoutId,
+  showSessionView,
+  stopSessionElapsedTimer,
+  updateAllExerciseHints
+} from "./active-workout.js";
+import { renderBackupStatus } from "./backup.js";
+
+let todayActiveElapsedInterval = null;
+let todayCtaMode = "start";
+let ctaMorphFrame = null;
+let ctaLastSettledState = null;
+let ctaBounceTimeout = null;
 
 function shouldShowTodayFloatingCta() {
   const logVisible = $("log")?.classList.contains("active");
@@ -52,7 +100,7 @@ function syncTodayFloatingCta() {
   updateTodayCtaCompact();
 }
 
-function updateTodayCtaCompact() {
+export function updateTodayCtaCompact() {
   if (ctaMorphFrame) return;
   ctaMorphFrame = requestAnimationFrame(() => {
     ctaMorphFrame = null;
@@ -132,23 +180,7 @@ function applyTodayCtaMorph() {
   }
 }
 
-function getTodayPlan(date = today()) {
-  const day = new Date(`${date}T00:00:00`).getDay();
-  const defaults = DEFAULT_SCHEDULE[day] || DEFAULT_SCHEDULE[0];
-  const settings = getAppSettings();
-  const saved = settings.schedule?.[day] || settings.schedule?.[String(day)] || DEFAULT_APP_SETTINGS.schedule[day] || {};
-  const kind = saved.kind || defaults.kind;
-  const routine = saved.routine || defaults.routine || "Custom";
-  const title = kind === "gym" ? routine : kind === "soccer" ? "Soccer Day" : "Rest Day";
-  const note = kind === "gym"
-    ? `Suggested from your ${DAY_LABELS[day]} schedule.`
-    : kind === "soccer"
-      ? "Soccer is treated separately, since you do not track it as a gym workout here."
-        : "No gym workout scheduled. Optional recovery, mobility, or custom workout.";
-  return { kind, title, routine, note };
-}
-
-async function showTodayView() {
+export async function showTodayView() {
   if (isExerciseDetailOpen()) closeExerciseDetail();
   $("sessionView")?.classList.add("hidden");
   $("todayView")?.classList.remove("hidden");
@@ -172,24 +204,6 @@ function prettyTodayDate() {
     month: "long",
     day: "numeric"
   });
-}
-
-function mondayFirstWeekDates(baseDate = new Date()) {
-  const date = new Date(baseDate);
-  date.setHours(0, 0, 0, 0);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(date);
-  monday.setDate(date.getDate() + diff);
-  return Array.from({ length: 7 }, (_, index) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + index);
-    return d;
-  });
-}
-
-function dateKeyFromDate(date) {
-  return date.toISOString().slice(0, 10);
 }
 
 async function renderTodayWeekProgress(workouts) {
@@ -216,69 +230,21 @@ async function renderTodayWeekProgress(workouts) {
   }).join("");
 }
 
-function inferMuscleTag(exerciseName) {
-  const name = String(exerciseName || "").toLowerCase();
-
-  if (/soccer|sprint|agility|conditioning|cooldown|warm.?up/.test(name)) return "Conditioning";
-  if (/rear delt|face pull|reverse fly/.test(name)) return "Rear Delts";
-  if (/bench|chest|fly|pec|incline/.test(name)) return "Chest";
-  if (/tricep|pushdown|skull|dip/.test(name)) return "Triceps";
-  if (/shoulder|overhead|lateral|front raise|press/.test(name)) return "Shoulders";
-  if (/lat|pulldown|row|back|pull.?up|chin.?up/.test(name)) return "Back";
-  if (/bicep|curl|hammer/.test(name)) return "Biceps";
-  if (/shrug|trap/.test(name)) return "Traps";
-  if (/squat|leg press|quad|lunge|extension/.test(name)) return "Quads";
-  if (/romanian|rdl|deadlift|hamstring|leg curl/.test(name)) return "Hamstrings";
-  if (/calf/.test(name)) return "Calves";
-
-  return "";
-}
-
-function getWorkoutTags(templateName, template) {
-  const exercises = template?.exercises || [];
-  const tags = [];
-
-  exercises.forEach((exercise) => {
-    const tag = inferMuscleTag(exercise);
-    if (tag && !tags.includes(tag)) tags.push(tag);
-  });
-
-  if (!tags.length) {
-    const name = String(templateName || "").toLowerCase();
-    if (/chest|push/.test(name)) tags.push("Chest");
-    if (/back|pull/.test(name)) tags.push("Back");
-    if (/shoulder/.test(name)) tags.push("Shoulders");
-    if (/tricep/.test(name)) tags.push("Triceps");
-    if (/bicep/.test(name)) tags.push("Biceps");
-    if (/leg/.test(name)) tags.push("Legs");
-    if (/soccer|conditioning/.test(name)) tags.push("Conditioning");
-  }
-
-  return tags.slice(0, 4);
-}
-
-function estimateWorkoutDuration(template) {
-  const count = template?.exercises?.length || 0;
-  if (!count) return "~30 min";
-  const minutes = Math.round(Math.min(100, Math.max(30, 12 + count * 8)) / 5) * 5;
-  return `~${minutes} min`;
-}
-
 function updateTodayGreeting(workouts) {
   const greeting = $("todayGreeting");
   const dateLine = $("todayDateLine");
   const streakBadge = $("todayStreakBadge");
   if (greeting) greeting.innerHTML = `${getGreetingText()}, <span class="accent">Hector</span>!`;
   if (dateLine) dateLine.textContent = prettyTodayDate();
-  if (streakBadge) streakBadge.textContent = `🔥 ${getWorkoutStreak(workouts)}`;
+  if (streakBadge) streakBadge.textContent = `🔥 ${getWorkoutStreak(workouts, new Date())}`;
 }
 
-async function renderTodayView() {
-  if (!db || !$("todayView")) return;
+export async function renderTodayView() {
+  if (!isDatabaseOpen() || !$("todayView")) return;
 
   const plan = getTodayPlan(today());
-  const templates = await getTemplates();
-  const workouts = await getItems("workouts");
+  const templates = await getRoutines();
+  const workouts = await getWorkouts();
   const todaysWorkouts = workouts
     .filter((workout) => workout.date === today())
     .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
@@ -391,7 +357,7 @@ async function renderTodayView() {
   syncTodayFloatingCta();
 }
 
-function closeTodayReview() {
+export function closeTodayReview() {
   const view = $("todayReviewView");
   if (!view) return;
   view.classList.add("hidden");
@@ -431,8 +397,8 @@ async function openTodayWorkoutReview() {
     return;
   }
 
-  const templates = await getTemplates();
-  const workouts = await getItems("workouts");
+  const templates = await getRoutines();
+  const workouts = await getWorkouts();
   const todaysWorkouts = workouts
     .filter((workout) => workout.date === today())
     .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
@@ -480,7 +446,7 @@ async function openTodayWorkoutReview() {
   $("todayReviewStartWorkout")?.addEventListener("click", () => startTodayWorkout());
 }
 
-async function handleTodayPrimaryCta() {
+export async function handleTodayPrimaryCta() {
   if (todayCtaMode === "resume") {
     await resumeWorkoutFromToday();
     return;
@@ -489,12 +455,12 @@ async function handleTodayPrimaryCta() {
   await startTodayWorkout();
 }
 
-async function handleTodayCardAction() {
+export async function handleTodayCardAction() {
   haptic(14);
   await startTodayWorkout({ forceNew: true });
 }
 
-async function handleTodayWorkoutCardClick(event) {
+export async function handleTodayWorkoutCardClick(event) {
   if (event?.target?.closest("button, select, option, details, summary, label, input, textarea, a")) return;
   await openTodayWorkoutReview();
 }
@@ -511,7 +477,7 @@ async function startTodayWorkout(options = {}) {
   stopTodayActiveElapsedTimer();
   haptic(18);
   const selected = $("todayWorkoutSelect")?.value || getTodayPlan(today()).routine || "Custom";
-  editingWorkoutId = null;
+  setEditingWorkoutId(null);
   $("workoutDate").value = today();
   await refreshTemplateDropdowns(selected);
   $("workoutType").value = selected;
@@ -524,25 +490,25 @@ async function startTodayWorkout(options = {}) {
   saveDraftSilently();
 }
 
-async function resumeWorkoutFromToday() {
+export async function resumeWorkoutFromToday() {
   await restoreDraftFromStorage();
 }
 
-async function restoreDraftFromStorage() {
+export async function restoreDraftFromStorage() {
   const draft = getDraft();
   if (!draft || !Array.isArray(draft.exercises)) {
     toast("No workout draft found.");
     return false;
   }
 
-  editingWorkoutId = draft.editingWorkoutId || null;
+  setEditingWorkoutId(draft.editingWorkoutId || null);
   $("workoutDate").value = draft.date || today();
   await refreshTemplateDropdowns(draft.type);
   $("workoutType").value = draft.type || $("workoutType").value;
   $("startTime").value = draft.startTime || "";
   $("endTime").value = draft.endTime || "";
   $("workoutNotes").value = draft.notes || "";
-  $("saveWorkout").textContent = editingWorkoutId ? "Update Workout" : "Save Workout";
+  $("saveWorkout").textContent = draft.editingWorkoutId ? "Update Workout" : "Save Workout";
 
   const list = $("exerciseList");
   list.innerHTML = "";
@@ -572,9 +538,9 @@ function startTodayActiveElapsedTimer(draft) {
   todayActiveElapsedInterval = setInterval(() => updateTodayActiveElapsedTimer(draft), 1000);
 }
 
-function stopTodayActiveElapsedTimer() {
+export function stopTodayActiveElapsedTimer() {
   if (todayActiveElapsedInterval) clearInterval(todayActiveElapsedInterval);
   todayActiveElapsedInterval = null;
 }
 
-Object.assign(globalThis, { shouldShowTodayFloatingCta, setTodayCtaLabel, getTodayCtaTargetProgress, triggerTodayCtaSettleBounce, syncTodayFloatingCta, updateTodayCtaCompact, applyTodayCtaMorph, getTodayPlan, showTodayView, getGreetingText, prettyTodayDate, mondayFirstWeekDates, dateKeyFromDate, renderTodayWeekProgress, inferMuscleTag, getWorkoutTags, estimateWorkoutDuration, updateTodayGreeting, renderTodayView, closeTodayReview, showTodayReview, todayReviewExerciseList, openTodayWorkoutReview, handleTodayPrimaryCta, handleTodayCardAction, handleTodayWorkoutCardClick, startTodayWorkout, resumeWorkoutFromToday, restoreDraftFromStorage, updateTodayActiveElapsedTimer, startTodayActiveElapsedTimer, stopTodayActiveElapsedTimer });
+Object.assign(globalThis, { closeTodayReview, showTodayView, stopTodayActiveElapsedTimer, syncTodayFloatingCta });

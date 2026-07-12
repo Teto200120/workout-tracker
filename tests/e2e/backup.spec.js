@@ -41,13 +41,15 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     weights: [],
     templates: [routine],
   });
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     localStorage.setItem(
       "hector_workout_goals_v1",
       JSON.stringify({ weeklyGoal: 3 }),
     );
-    globalThis.setAppSettings({
-      ...globalThis.cloneDefaultSettings(),
+    const { cloneDefaultSettings, setAppSettings } =
+      await import("/src/js/core/settings.js");
+    setAppSettings({
+      ...cloneDefaultSettings(),
       animations: false,
     });
   });
