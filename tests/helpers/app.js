@@ -31,6 +31,10 @@ export async function loadApp(page) {
   await expect(page).toHaveTitle("Hector's Workout Tracker");
   await expect(page.locator("#log")).toHaveClass(/active/);
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
+  await waitForDatabaseOpen(page);
+}
+
+export async function waitForDatabaseOpen(page) {
   await expect
     .poll(() =>
       page.evaluate(async () => {

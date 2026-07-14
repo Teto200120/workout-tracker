@@ -6,7 +6,11 @@ import {
   GOALS_KEY,
   SETTINGS_KEY
 } from "../core/constants.js";
-import { DataSchemaError } from "../schema/errors.js";
+import {
+  validateSettingsInput,
+  validateWeeklyGoal
+} from "../domain/input-guardrails.js";
+import { DataSchemaError, createValidationError } from "../schema/errors.js";
 import {
   assertValidBackupMeta,
   assertValidDraft,
@@ -55,6 +59,13 @@ export function getAppSettings() {
 
 export function setAppSettings(settings) {
   assertValidSettings(settings, { path: "settings", source: "application" });
+  const guardrails = validateSettingsInput(settings);
+  if (!guardrails.valid) {
+    throw createValidationError(guardrails.errors, {
+      code: "input_guardrail_failed",
+      source: "application",
+    });
+  }
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
@@ -72,6 +83,16 @@ export function getGoals() {
 
 export function setGoals(goals) {
   assertValidGoals(goals, { path: "goals", source: "application" });
+  const guardrails = validateWeeklyGoal(goals.weeklyGoal);
+  if (!guardrails.valid) {
+    throw createValidationError(
+      guardrails.errors.map((error) => ({
+        ...error,
+        path: "goals.weeklyGoal",
+      })),
+      { code: "input_guardrail_failed", source: "application" },
+    );
+  }
   localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
 }
 

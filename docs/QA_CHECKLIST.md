@@ -24,16 +24,33 @@
 - [ ] Load a multi-exercise routine; only the intended exercise is expanded.
 - [ ] Expand, collapse, remove, and reorder exercises where supported.
 - [ ] Open Add Exercise; search local options, select an existing name, and confirm the new exercise opens.
+- [ ] Delay catalog loading; confirm local options and Create New Exercise remain usable immediately while a compact loading status is visible.
+- [ ] At approximately 412 x 915, confirm search is immediately visible, Filters is collapsed by default, three local rows plus Show All remain accessible, and the catalog section is reachable without excessive preliminary scrolling.
+- [ ] Open Filters with click and keyboard; confirm `aria-expanded`, the active-filter count, native labels, primary muscle/equipment/category filtering, Reset, close behavior, visible focus, and minimum 44 px controls.
+- [ ] Search a catalog exercise; confirm exact/prefix/substring ranking, compact primary-muscle/equipment metadata, immediate catalog access, and only one row for a local/catalog name collision.
+- [ ] Open catalog preview; confirm only a short instruction preview appears with a remaining-step count, full instructions are absent, source attribution is quiet, and Back/Add work without empty labels.
+- [ ] At approximately 412 x 915, confirm preview content is the single contained vertical scroller, mobile-safe actions remain visible, the document is locked, and neither picker state has horizontal overflow.
+- [ ] Add a catalog exercise, reload/resume, save/edit, and inspect the draft/workout; only existing `name`, `notes`, and `sets` fields are present.
+- [ ] Make the catalog unavailable and separately inject one malformed record; local/custom flows still work, and usable catalog records survive the single malformed entry.
 - [ ] Cancel and dismiss Add Exercise; confirm neither action changes the workout or draft.
 - [ ] Create a custom exercise; reject an empty name, trim a valid name, and reuse canonical capitalization for an existing name.
 - [ ] Add and remove sets; mark a warm-up set separately.
 - [ ] Enter weight, reps, RPE, and notes; confirm values persist.
 - [ ] Complete and undo a set; confirm the active-workout elapsed indicator remains visible and continues updating.
 - [ ] Confirm no manual rest-timer buttons, countdown, or panel appear.
+- [ ] Add a known catalog exercise, open Exercise Details > Guide, and confirm full provider steps use an ordered list with equipment/muscles/category/difficulty when present and attribution at the bottom.
+- [ ] Confirm Guide rendering leaves Exercise Notes empty/unchanged and the draft exercise still contains only `name`, `notes`, and `sets`.
+- [ ] Start a default routine containing an exact name, recover a draft containing a reviewed alias, and edit completed history; each receives the intended catalog Guide while its local saved name remains unchanged.
+- [ ] Create `My Saturday Row` and broad `Bench Press`; each keeps the generic Guide, shows no catalog attribution, and produces no console error or incorrect related-variant instructions.
 - [ ] Open Exercise Details, switch Log/Guide tabs, and return without losing input.
 - [ ] At approximately 412 x 915, scroll Exercise Details and confirm the document stays locked while the detail content is the only vertical scroller.
 - [ ] Confirm Exercise Notes and set controls clear the bottom action, and the Log/Complete Set action remains usable with the browser toolbar visible.
 - [ ] Focus and type into Exercise Notes with the mobile keyboard open; confirm the field can be scrolled into view.
+- [ ] Enter blank, zero, negative, `300000`, decimal, excessive-precision, scientific-notation, letters, decimal-comma, and leading-zero values in weight/reps/RPE; confirm invalid raw text remains visible, inline copy explains the boundary, and correction succeeds.
+- [ ] Confirm weight 10,000 and reps 10,000 save, one-above is blocked, RPE 10 is accepted, RPE 10.5 is blocked, and blank optional RPE remains accepted.
+- [ ] Confirm values above 2,000 weight or 500 reps warn once at save without clamping; cancel and verify the draft remains unchanged.
+- [ ] Rapidly click Add Set beyond 200 and Add Exercise beyond 100; confirm the boundary message appears and existing draft content remains usable.
+- [ ] Paste over-limit exercise/workout notes and a 121-character exercise name; confirm no truncation, then correct each and continue.
 
 ## Draft Recovery
 
@@ -47,6 +64,10 @@
 - [ ] Finish the completion popup with and without a custom note.
 - [ ] Edit a saved workout and confirm its ID is updated without a duplicate.
 - [ ] Confirm start time, end time, duration, notes, and tags remain valid.
+- [ ] Trigger top and bottom Save nearly simultaneously and double-tap completion Done; confirm exactly one workout ID exists.
+- [ ] Leave the date empty and enter malformed time text through a bypass test; confirm neither reaches IndexedDB.
+- [ ] Save a future date and an end time earlier than start; confirm each warning is explicit and overnight duration is correct after acceptance.
+- [ ] Inject an IndexedDB workout-write rejection; confirm no success, no record, preserved draft/inputs, re-enabled controls, and successful retry.
 
 ## History
 
@@ -67,12 +88,16 @@
 - [ ] Create, name, edit, and delete a routine; add exercises with button and Enter.
 - [ ] Clear an unsaved draft and reset routines to defaults.
 - [ ] Start a saved routine and reload to confirm routine changes persist.
+- [ ] Try blank/81-character routine names, 121-character exercise names, normalized duplicates, and more than 100 exercises; confirm clear correction paths.
+- [ ] Double-tap routine Save, Delete, Reset, and Start; confirm one logical action and no duplicate routines/sessions.
 
 ## Settings
 
 - [ ] Save schedule, weight jump, rep ranges, haptics, and animations.
 - [ ] Reload and confirm settings apply to Home and Stats.
 - [ ] Reset settings and confirm workout history and routines remain.
+- [ ] Try blank, negative, scientific, decimal-integer, 300000, minimum-above-maximum, and maximum-boundary settings/goal values; confirm invalid values never replace the current stored settings.
+- [ ] Trigger a localStorage write failure; confirm the entered form remains and no false success appears.
 
 ## Backup Export and Import
 
@@ -85,34 +110,42 @@
 - [ ] Reimport a new v3 export; confirm meaningful data is equivalent and records are not duplicated beyond merge-by-ID behavior.
 - [ ] Try a future backup-file version and future application-schema version; confirm each is refused without writes.
 - [ ] Trigger the `id: null` key-path failure; confirm all records in the IndexedDB import transaction roll back and localStorage is unchanged.
+- [ ] Try an empty file, non-JSON, array top level, more than 25 MiB, nesting beyond 20 levels, excessive text, weight/reps above 10,000, and duplicate non-null IDs; confirm rejection occurs before any record changes.
+- [ ] Start a workout draft, import twice rapidly, and confirm one explicit draft warning, one import transaction, preserved draft, and one success outcome.
+- [ ] Cancel the file picker and confirmation; confirm no data changes and Import remains usable.
 - [ ] Clear all local data; confirm `hector_workout_data_schema_version` is removed and the next reload follows fresh-install migration.
 
 ## Offline Startup
 
 - [ ] Load online until the service worker controls the page.
 - [ ] Enable DevTools Network > Offline and reload; Home still renders.
+- [ ] Resume a cached draft offline, open Add Exercise, and confirm catalog search still returns the cached snapshot.
+- [ ] Open an existing exact/alias exercise Guide offline; confirm provider steps and attribution render from cache with no provider request.
+- [ ] Make the catalog asset unavailable in a disposable profile; confirm existing/local/custom exercises receive the generic Guide without an error.
 - [ ] Open cached subpages and confirm no mixed-version module errors.
 - [ ] Re-enable networking and confirm the current cache replaces older caches.
-- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v15` and every schema module is present in the app shell.
+- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v16`, every schema/catalog module is present, and `src/data/exercise-catalog.json` is cached.
+- [ ] Save and reload a representative workout while offline; confirm one record, recovered/corrected draft behavior, and no missing `input-guardrails.js` or `action-coordinator.js` request.
 
 ## Mobile Layout
 
 - [ ] Check a narrow phone viewport and the target phone in portrait.
 - [ ] Confirm no horizontal scrolling, clipped titles, or covered controls.
 - [ ] Focus form inputs and confirm they remain visible above fixed UI and keyboard.
-- [ ] Check the exercise picker, completion overlay, long names, and bottom navigation.
+- [ ] Check the compact exercise picker, expanded filter panel, shortened preview, long catalog-backed Guide, completion overlay, long names, and bottom navigation.
 
 ## Samsung Galaxy S24 Ultra data checks
 
 - [ ] In Chrome portrait, migrate representative unversioned local data and confirm Home, History, Stats, Routines, Settings, and draft resume remain usable.
 - [ ] Force a malformed legacy record in a disposable test profile; confirm the migration failure message is readable and original data can still be exported/inspected after correction.
 - [ ] Export a v3 backup, clear data, reimport it, and confirm the schema marker and all supported data return.
-- [ ] Enable airplane mode after an online controlled load; confirm cache v15 starts Home and opens cached subpages without mixed-version module errors.
-- [ ] Repeat keyboard, haptic, Exercise Details scrolling, Add Exercise, save/edit, and no-horizontal-overflow checks at the device's default display scaling.
+- [ ] Enable airplane mode after an online controlled load; confirm cache v16 starts Home, opens cached subpages, searches the catalog, and renders an existing-name catalog Guide without mixed-version module errors.
+- [ ] Repeat keyboard, haptic, Exercise Details scrolling, compact filters/count/reset, local/Show All/catalog hierarchy, shortened preview/full Guide, save/edit, and no-horizontal-overflow checks at the device's default display scaling.
 
 ## Accessibility Basics
 
 - [ ] Confirm the active tab exposes `aria-current="page"`.
 - [ ] Check button names, input labels, focus indicators, and touch target size.
+- [ ] Confirm the filter disclosure announces expanded/collapsed and active-count state, Reset stays reachable, Guide sections use headings, instructions use an ordered list, and source is not conveyed by color alone.
 - [ ] Activate interactive Stats cards with Enter and Space.
 - [ ] Confirm reduced/disabled motion does not break navigation.

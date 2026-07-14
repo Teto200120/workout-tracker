@@ -185,6 +185,8 @@ test("Add Exercise opens a non-destructive searchable picker", async ({
   await expect(page.locator("#exercisePicker")).toBeVisible();
   await expect(page.locator("#exercisePickerSearch")).toBeFocused();
   await expect(exercises).toHaveCount(initialCount);
+  await expect(page.locator(".exercise-picker-option.is-local")).toHaveCount(3);
+  await page.locator("[data-show-all-local]").click();
   await expect(
     page.getByRole("button", { name: "Flat Bench Press", exact: true }),
   ).toHaveCount(1);

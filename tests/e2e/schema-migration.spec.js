@@ -11,6 +11,7 @@ import {
   monitorRuntime,
   readStore,
   seedRawApplicationData,
+  waitForDatabaseOpen,
 } from "../helpers/app.js";
 
 function legacySeed() {
@@ -74,6 +75,7 @@ test("legacy startup migrates IndexedDB and localStorage without duplication", a
   await loadApp(page);
   await seedRawApplicationData(page, legacySeed());
   await page.reload();
+  await waitForDatabaseOpen(page);
 
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
   expect(
@@ -172,6 +174,7 @@ test("current startup validates without rewriting or duplicating records", async
   }));
 
   await page.reload();
+  await waitForDatabaseOpen(page);
   expect(await readStore(page, "workouts")).toEqual([workout]);
   expect(await readStore(page, "templates")).toEqual([routine]);
   const after = await page.evaluate(() => ({
@@ -218,6 +221,7 @@ test("failed startup migration preserves source data and succeeds on retry", asy
 
   await seedRawApplicationData(page, legacySeed());
   await page.reload();
+  await waitForDatabaseOpen(page);
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
   expect(
     await page.evaluate(() =>

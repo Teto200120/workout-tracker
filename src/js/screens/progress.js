@@ -1,7 +1,12 @@
 import "../core/globals.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
 import { getWeeklyActivityData as buildWeeklyActivityData } from "../application/schedule.js";
 import { cleanText, dateLabel, toast } from "../core/utils.js";
 import { countRecentWorkouts, getWorkoutStreak as calculateWorkoutStreak } from "../domain/schedule.js";
+import {
+  firstValidationMessage,
+  validateWeeklyGoal
+} from "../domain/input-guardrails.js";
 import {
   buildExerciseStats,
   durationLabel,
@@ -11,6 +16,8 @@ import {
 } from "../domain/workout-metrics.js";
 import { getWorkouts } from "../storage/indexed-db.js";
 import { getGoals, setGoals } from "../storage/local.js";
+
+const goalsCoordinator = createActionCoordinator();
 
 function metricLabel(metric) {
   return { estimated1rm: "Estimated 1RM", bestWeight: "Best Load", bestVolume: "Best Set Volume" }[metric] || "Metric";
@@ -389,10 +396,46 @@ export function renderExerciseProgress(exerciseStats) {
 }
 
 export function saveGoalsToStorage() {
-  const weeklyGoal = Number($("weeklyGoal").value || 4);
-  setGoals({ ...getGoals(), weeklyGoal });
-  toast("Goals saved.");
-  renderAll();
+  return goalsCoordinator.run(async () => {
+    const input = $("weeklyGoal");
+    const feedback = $("weeklyGoalError");
+    const button = $("saveGoals");
+    if (button) button.disabled = true;
+    try {
+      const validation = validateWeeklyGoal(input.value);
+      if (validation.errors.length) input.setAttribute("aria-invalid", "true");
+      else input.removeAttribute("aria-invalid");
+      if (feedback) {
+        feedback.textContent = firstValidationMessage(validation);
+        feedback.classList.toggle(
+          "is-warning",
+          validation.valid && validation.warnings.length > 0,
+        );
+      }
+      if (!validation.valid) {
+        input.focus();
+        toast(firstValidationMessage(validation));
+        return false;
+      }
+      if (
+        validation.warnings.length &&
+        !confirm(`${validation.warnings[0].message}\n\nSave this goal anyway?`)
+      ) {
+        return false;
+      }
+      const weeklyGoal = Number(validation.normalized);
+      setGoals({ ...getGoals(), weeklyGoal });
+      toast("Goals saved.");
+      await renderAll();
+      return true;
+    } catch (error) {
+      console.info("Goal save failed.", error);
+      toast("Could not save the goal. Your entered value is still available.");
+      return false;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }).promise;
 }
 
 export { buildExerciseStats, renderTodayProgressGlance };

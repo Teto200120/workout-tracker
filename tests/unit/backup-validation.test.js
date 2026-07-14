@@ -59,6 +59,42 @@ test("structural validation leaves key-path failures to the atomic transaction",
   assert.equal(validated.workouts[0].id, null);
 });
 
+test("backup guardrails reject duplicate IDs, extreme numeric values, and oversized text", () => {
+  const duplicate = currentBackup();
+  duplicate.workouts.push(structuredClone(duplicate.workouts[0]));
+  assert.throws(
+    () => validateBackupStructure(duplicate),
+    (error) =>
+      error.code === "backup_guardrail_failed" &&
+      error.validationErrors[0].code === "duplicate_id",
+  );
+
+  const extreme = currentBackup();
+  extreme.workouts[0].exercises[0].sets[0].weight = "300000";
+  assert.throws(
+    () => validateBackupStructure(extreme),
+    (error) =>
+      error.code === "backup_guardrail_failed" &&
+      error.path === "workouts[0].exercises[0].sets[0].weight",
+  );
+
+  const longNote = currentBackup();
+  longNote.workouts[0].notes = "x".repeat(4_001);
+  assert.throws(
+    () => validateBackupStructure(longNote),
+    (error) =>
+      error.code === "backup_guardrail_failed" &&
+      error.path === "workouts[0].notes",
+  );
+});
+
+test("backup guardrail validation is non-mutating", () => {
+  const backup = currentBackup();
+  const before = structuredClone(backup);
+  validateBackupStructure(backup);
+  assert.deepEqual(backup, before);
+});
+
 test("old and current backups resolve their separate version concepts", () => {
   const oldPrepared = prepareBackupImport(legacyBackup());
   assert.equal(oldPrepared.backupFileVersion, 2);

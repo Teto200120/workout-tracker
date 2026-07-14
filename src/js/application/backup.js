@@ -1,5 +1,9 @@
 import { DB_NAME } from "../core/constants.js";
-import { DataSchemaError } from "../schema/errors.js";
+import {
+  validateBackupComplexity,
+  validateImportedApplicationData
+} from "../domain/input-guardrails.js";
+import { DataSchemaError, createValidationError } from "../schema/errors.js";
 import { prepareBackupImport } from "../schema/migrations.js";
 import { normalizeApplicationData } from "../schema/normalize.js";
 import {
@@ -30,8 +34,27 @@ import {
   setGoals
 } from "../storage/local.js";
 
-export function validateBackupStructure(data) {
+function prepareValidatedBackup(data) {
+  const complexity = validateBackupComplexity(data);
+  if (!complexity.valid) {
+    throw createValidationError(complexity.errors, {
+      code: "backup_guardrail_failed",
+      source: "backup"
+    });
+  }
   const prepared = prepareBackupImport(data);
+  const guardrails = validateImportedApplicationData(prepared.data);
+  if (!guardrails.valid) {
+    throw createValidationError(guardrails.errors, {
+      code: "backup_guardrail_failed",
+      source: "backup"
+    });
+  }
+  return prepared;
+}
+
+export function validateBackupStructure(data) {
+  const prepared = prepareValidatedBackup(data);
   return {
     workouts: prepared.data.workouts,
     legacyWeights: prepared.data.legacyWeights,
@@ -66,7 +89,7 @@ export async function buildBackup(exportedAt) {
 }
 
 export async function restoreBackup(data) {
-  const prepared = prepareBackupImport(data);
+  const prepared = prepareValidatedBackup(data);
   const originalRecords = await getAllApplicationRecords();
   const localSnapshot = captureApplicationLocalStorage();
   let indexedDbCommitted = false;

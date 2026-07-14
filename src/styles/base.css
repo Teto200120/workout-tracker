@@ -231,6 +231,42 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
 }
 
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--red);
+}
+
+.field-hint,
+.field-validation {
+  margin: 6px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.field-hint {
+  color: var(--muted);
+}
+
+.field-validation {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.field-validation.is-warning {
+  color: #fcd34d;
+}
+
+.field-validation:empty {
+  display: none;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
 textarea { min-height: 78px; resize: vertical; }
 
 .sr-only {
