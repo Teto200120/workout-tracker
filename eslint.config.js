@@ -43,7 +43,7 @@ export default [
     },
   },
   {
-    files: ["*.config.js", "tests/**/*.js"],
+    files: ["*.config.js", "scripts/**/*.mjs", "tests/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",

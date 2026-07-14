@@ -1,6 +1,11 @@
 import { DB_NAME, DB_VERSION, DEFAULT_TEMPLATES, STORES } from "../core/constants.js";
 import { id } from "../core/utils.js";
 import {
+  validateRoutineInput,
+  validateWorkoutInput
+} from "../domain/input-guardrails.js";
+import { createValidationError } from "../schema/errors.js";
+import {
   assertValidLegacyWeight,
   assertValidRoutine,
   assertValidWorkout
@@ -84,6 +89,15 @@ export function getWorkouts() {
 
 export function saveWorkoutRecord(workout) {
   assertValidWorkout(workout, { path: "workout", source: "application" });
+  const guardrails = validateWorkoutInput(workout, {
+    allowHistoricalRpeZero: true,
+  });
+  if (!guardrails.valid) {
+    throw createValidationError(guardrails.errors, {
+      code: "input_guardrail_failed",
+      source: "application",
+    });
+  }
   return putItem("workouts", workout);
 }
 
@@ -97,6 +111,13 @@ export function getRoutines() {
 
 export function saveRoutine(routine) {
   assertValidRoutine(routine, { path: "routine", source: "application" });
+  const guardrails = validateRoutineInput(routine);
+  if (!guardrails.valid) {
+    throw createValidationError(guardrails.errors, {
+      code: "input_guardrail_failed",
+      source: "application",
+    });
+  }
   return putItem("templates", routine);
 }
 

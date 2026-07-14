@@ -10,6 +10,12 @@ import {
   iconPlus
 } from "../components/icons.js";
 import {
+  loadCatalog,
+  resolveLoadedCatalogExercise
+} from "../catalog/catalog-loader.js";
+import { adaptCatalogExerciseToGuide } from "../catalog/exercise-guide-adapter.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
+import {
   cleanText,
   clamp,
   dateLabel,
@@ -22,6 +28,21 @@ import {
   today,
   toast
 } from "../core/utils.js";
+import {
+  INPUT_LIMITS,
+  WARNING_THRESHOLDS,
+  firstValidationMessage,
+  nameComparisonKey,
+  validateCompletionNote,
+  validateExerciseName,
+  validateExerciseNotes,
+  validateRepetitions,
+  validateRpe,
+  validateWeight,
+  validateWorkoutInput,
+  validateWorkoutNotes,
+  validateWorkoutTiming
+} from "../domain/input-guardrails.js";
 import {
   buildTargetFromLastSets as calculateTargetFromLastSets,
   getExerciseProfile as resolveExerciseProfile,
@@ -52,6 +73,11 @@ let exerciseFocusScrollToken = 0;
 let editingWorkoutId = null;
 let completionWorkout = null;
 const completionSelectedTags = new Set();
+const workoutSaveCoordinator = createActionCoordinator();
+const completionCoordinator = createActionCoordinator();
+let workoutSavePending = false;
+let draftStorageFailureShown = false;
+let completionPreviousFocus = null;
 
 export function getEditingWorkoutId() {
   return editingWorkoutId;
@@ -198,32 +224,205 @@ function setControlText(exerciseEl, selector, value) {
   });
 }
 
-function sanitizeControlInputValue(field, value) {
-  let next = String(value ?? "").replace(",", ".").trim();
-  if (field === "reps") return next.replace(/[^\d]/g, "").slice(0, 3);
-  next = next.replace(/[^\d.]/g, "");
-  const parts = next.split(".");
-  if (parts.length > 1) next = `${parts.shift()}.${parts.join("")}`;
-  const decimals = field === "rpe" ? 1 : 2;
-  if (next.includes(".")) {
-    const [whole, fraction = ""] = next.split(".");
-    next = `${whole}.${fraction.slice(0, decimals)}`;
-  }
-  return next;
+function validateSetField(field, value) {
+  if (field === "weight") return validateWeight(value);
+  if (field === "reps") return validateRepetitions(value);
+  return validateRpe(value);
 }
 
-function formatCommittedControlValue(field, value) {
-  const clean = sanitizeControlInputValue(field, value);
-  if (clean === "" || clean === ".") return "";
-  let number = Number(clean);
-  if (!Number.isFinite(number)) return "";
-  if (field === "reps") return String(Math.max(0, Math.round(number)));
-  if (field === "rpe") {
-    number = Math.min(10, Math.max(1, Math.round(number * 2) / 2));
-    return Number.isInteger(number) ? String(number) : number.toFixed(1);
+function setFieldFeedback(input, feedback, result, options = {}) {
+  if (!input || !feedback) return;
+  const issueToShow = result.errors[0]
+    || (options.showWarnings ? result.warnings[0] : null);
+  if (result.errors.length) input.setAttribute("aria-invalid", "true");
+  else input.removeAttribute("aria-invalid");
+  feedback.textContent = issueToShow?.message || "";
+  feedback.classList.toggle(
+    "is-warning",
+    !result.errors.length && Boolean(issueToShow),
+  );
+}
+
+function validateSessionControl(inputId, feedbackId, options = {}) {
+  const input = $(inputId);
+  const feedback = $(feedbackId);
+  if (!input || !feedback) return { valid: true, errors: [], warnings: [] };
+  let result;
+  if (inputId === "workoutNotes") result = validateWorkoutNotes(input.value);
+  else {
+    result = validateWorkoutTiming(
+      {
+        date: $("workoutDate").value,
+        startTime: $("startTime").value,
+        endTime: $("endTime").value,
+      },
+      { todayValue: today() },
+    );
+    const field = inputId === "workoutDate"
+      ? "date"
+      : inputId === "startTime"
+        ? "startTime"
+        : "endTime";
+    result = {
+      valid: !result.errors.some((entry) => entry.field === field),
+      errors: result.errors.filter((entry) => entry.field === field),
+      warnings: result.warnings.filter(
+        (entry) => !entry.field || entry.field === field,
+      ),
+    };
   }
-  number = Math.max(0, number);
-  return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2)));
+  setFieldFeedback(input, feedback, result, options);
+  return result;
+}
+
+function trapCompletionFocus(event) {
+  const modal = $("completionModal");
+  if (!modal || modal.classList.contains("hidden") || event.key !== "Tab") {
+    return;
+  }
+  const focusable = Array.from(
+    modal.querySelectorAll(
+      'button:not([disabled]), textarea:not([disabled]):not(.hidden)',
+    ),
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function setExerciseTextFeedback(exerciseEl, field, result, options = {}) {
+  const selector = field === "name" ? ".exercise-name" : ".exercise-notes";
+  const feedbackSelector = field === "name"
+    ? "[data-exercise-name-validation]"
+    : "[data-exercise-notes-validation]";
+  setFieldFeedback(
+    exerciseEl?.querySelector(selector),
+    exerciseEl?.querySelector(feedbackSelector),
+    result,
+    options,
+  );
+  if (field === "notes" && activeExerciseDetailEl === exerciseEl) {
+    setFieldFeedback(
+      $("exerciseDetailNotes"),
+      $("exerciseDetailNotesError"),
+      result,
+      options,
+    );
+  }
+}
+
+export function bindActiveWorkoutGuardrails() {
+  for (const [inputId, feedbackId] of [
+    ["workoutDate", "workoutDateError"],
+    ["startTime", "startTimeError"],
+    ["endTime", "endTimeError"],
+    ["workoutNotes", "workoutNotesError"],
+  ]) {
+    const input = $(inputId);
+    input?.addEventListener("input", () =>
+      validateSessionControl(inputId, feedbackId),
+    );
+    input?.addEventListener("blur", () =>
+      validateSessionControl(inputId, feedbackId, { showWarnings: true }),
+    );
+  }
+  $("completionCustomNote")?.addEventListener("input", (event) => {
+    const result = validateCompletionNote(event.target.value);
+    setFieldFeedback(
+      event.target,
+      $("completionCustomNoteError"),
+      result,
+    );
+  });
+  $("completionModal")?.addEventListener("keydown", trapCompletionFocus);
+}
+
+function setSetFieldFeedback(exerciseEl, field, result) {
+  const controls = Array.from(
+    exerciseEl?.querySelectorAll(`.control-value-input[data-field="${field}"]`) || [],
+  );
+  if (activeExerciseDetailEl === exerciseEl) {
+    controls.push(
+      ...Array.from(
+        $("exerciseDetailView")?.querySelectorAll(
+          `.control-value-input[data-field="${field}"]`,
+        ) || [],
+      ),
+    );
+  }
+  controls.forEach((control) => {
+    if (result.valid) control.removeAttribute("aria-invalid");
+    else control.setAttribute("aria-invalid", "true");
+  });
+
+  const feedback = [
+    exerciseEl?.querySelector("[data-set-validation]"),
+    activeExerciseDetailEl === exerciseEl
+      ? $("exerciseDetailView")?.querySelector("[data-set-validation]")
+      : null,
+  ].filter(Boolean);
+  const message = firstValidationMessage(result);
+  feedback.forEach((target) => {
+    target.textContent = message;
+    target.classList.toggle(
+      "is-warning",
+      result.valid && result.warnings.length > 0,
+    );
+  });
+}
+
+function setSetValidationSummary(exerciseEl, result) {
+  const feedback = [
+    exerciseEl?.querySelector("[data-set-validation]"),
+    activeExerciseDetailEl === exerciseEl
+      ? $("exerciseDetailView")?.querySelector("[data-set-validation]")
+      : null,
+  ].filter(Boolean);
+  const message = firstValidationMessage(result);
+  feedback.forEach((target) => {
+    target.textContent = message;
+    target.classList.toggle(
+      "is-warning",
+      result.valid && result.warnings.length > 0,
+    );
+  });
+}
+
+function validateSetRow(exerciseEl, row, options = {}) {
+  const results = ["weight", "reps", "rpe"].map((field) => ({
+    field,
+    result: validateSetField(field, getSetFieldInput(row, field)?.value || ""),
+  }));
+  results.forEach(({ field, result }) =>
+    setSetFieldFeedback(exerciseEl, field, result),
+  );
+  const errors = results.flatMap(({ field, result }) =>
+    result.errors.map((entry) => ({ ...entry, field })),
+  );
+  const warnings = results.flatMap(({ field, result }) =>
+    result.warnings.map((entry) => ({ ...entry, field })),
+  );
+  const combined = { valid: errors.length === 0, errors, warnings };
+  setSetValidationSummary(exerciseEl, combined);
+  if (options.focus && errors.length) {
+    const field = errors[0].field;
+    const target = activeExerciseDetailEl === exerciseEl
+      ? $("exerciseDetailView")?.querySelector(
+        `.control-value-input[data-field="${field}"]`,
+      )
+      : exerciseEl.querySelector(
+        `.control-value-input[data-field="${field}"]`,
+      );
+    target?.focus();
+  }
+  return combined;
 }
 
 function getSetFieldInput(row, field) {
@@ -232,19 +431,28 @@ function getSetFieldInput(row, field) {
 
 function writeCurrentSetValueFromControl(exerciseEl, field, rawValue, commit = false) {
   const row = getCurrentSetRow(exerciseEl);
-  if (!row) return "";
-  const value = commit ? formatCommittedControlValue(field, rawValue) : sanitizeControlInputValue(field, rawValue);
+  if (!row) return { value: "", result: validateSetField(field, "") };
+  const result = validateSetField(field, rawValue);
+  const value = commit && result.valid
+    ? result.normalized
+    : String(rawValue ?? "");
   const hiddenInput = getSetFieldInput(row, field);
   if (hiddenInput) hiddenInput.value = value;
-  return value;
+  setSetFieldFeedback(exerciseEl, field, result);
+  return { value, result };
 }
 
 function bindControlValueInput(input, getExerciseEl) {
   input.addEventListener("input", () => {
     const exerciseEl = getExerciseEl();
     if (!exerciseEl) return;
-    const value = writeCurrentSetValueFromControl(exerciseEl, input.dataset.field, input.value, false);
-    input.value = value;
+    const outcome = writeCurrentSetValueFromControl(
+      exerciseEl,
+      input.dataset.field,
+      input.value,
+      false,
+    );
+    input.value = outcome.value;
     updateExerciseSummary(exerciseEl);
     saveDraftSilently();
   });
@@ -252,8 +460,13 @@ function bindControlValueInput(input, getExerciseEl) {
   input.addEventListener("blur", () => {
     const exerciseEl = getExerciseEl();
     if (!exerciseEl) return;
-    const value = writeCurrentSetValueFromControl(exerciseEl, input.dataset.field, input.value, true);
-    input.value = value;
+    const outcome = writeCurrentSetValueFromControl(
+      exerciseEl,
+      input.dataset.field,
+      input.value,
+      true,
+    );
+    input.value = outcome.value;
     updateExerciseSummary(exerciseEl);
     saveDraftSilently();
     if (isExerciseDetailOpen()) setTimeout(renderExerciseDetailView, 80);
@@ -328,10 +541,23 @@ function adjustCurrentSetValue(exerciseEl, field, delta) {
   const settings = getAppSettings();
   const step = field === "weight" ? Number(settings.defaultWeightJump || 5) : field === "rpe" ? 0.5 : 1;
   const min = field === "rpe" ? 1 : 0;
-  const max = field === "rpe" ? 10 : 999;
-  const current = getNumericInputValue(input, field === "rpe" ? 8 : 0);
+  const max = field === "rpe"
+    ? INPUT_LIMITS.rpeMaximum
+    : field === "reps"
+      ? INPUT_LIMITS.repetitions
+      : INPUT_LIMITS.weight;
+  const currentResult = validateSetField(field, input.value);
+  if (!currentResult.valid) {
+    setSetFieldFeedback(exerciseEl, field, currentResult);
+    toast(firstValidationMessage(currentResult));
+    return;
+  }
+  const current = input.value.trim() === ""
+    ? field === "rpe" ? 8 : 0
+    : getNumericInputValue(input, field === "rpe" ? 8 : 0);
   const next = Math.min(max, Math.max(min, current + delta * step));
   input.value = field === "rpe" && !Number.isInteger(next) ? next.toFixed(1) : String(next);
+  setSetFieldFeedback(exerciseEl, field, validateSetField(field, input.value));
   updateExerciseSummary(exerciseEl);
   saveDraftSilently();
   haptic(8);
@@ -370,6 +596,14 @@ function syncSessionUi() {
 function updateSessionPrimaryAction() {
   const button = $("saveWorkout");
   const undo = $("sessionUndoSet");
+  if (workoutSavePending) {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Saving...";
+    }
+    if (undo) undo.disabled = true;
+    return;
+  }
   const active = getActiveExercise();
   const { completed, total } = getSessionSetStats();
   if (undo) undo.disabled = !all(".set-done").some((input) => input.checked);
@@ -398,6 +632,11 @@ function completeCurrentSet(exerciseEl) {
   const row = getCurrentSetRow(exerciseEl);
   if (!row) return false;
   ensureCurrentSetDefaults(exerciseEl, row);
+  const validation = validateSetRow(exerciseEl, row, { focus: true });
+  if (!validation.valid) {
+    toast(firstValidationMessage(validation));
+    return false;
+  }
   const done = row.querySelector(".set-done");
   if (done) done.checked = true;
   replayAnimation(row, "set-just-done", 460);
@@ -714,36 +953,237 @@ function getExerciseGuideData(exerciseName) {
   return guides.find((guide) => guide.match.test(lower))?.data || generic;
 }
 
-function renderGuideList(items, markerClass, numbered = false) {
-  return `<ul class="guide-list">${items.map((item, index) => `
-    <li><span class="${markerClass}">${numbered ? index + 1 : markerClass === "guide-list-x" ? "x" : "✓"}</span><span>${cleanText(item)}</span></li>
-  `).join("")}</ul>`;
+function appendGuideText(parent, tagName, text, className = "") {
+  const element = document.createElement(tagName);
+  if (className) element.className = className;
+  element.textContent = text;
+  parent.appendChild(element);
+  return element;
 }
 
-function renderExerciseGuideContent(exerciseEl) {
-  const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
+function displayGuideValue(value) {
+  return String(value || "")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
+function guideValueList(values) {
+  const items = Array.isArray(values) ? values : [values];
+  return items.filter(Boolean).map(displayGuideValue).join(", ");
+}
+
+function createGuideIcon(svg) {
+  const icon = document.createElement("span");
+  icon.className = "guide-heading-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = svg;
+  return icon;
+}
+
+function createGuideList(items, markerClass, numbered = false) {
+  const list = document.createElement(numbered ? "ol" : "ul");
+  list.className = "guide-list";
+  list.setAttribute("role", "list");
+  items.forEach((item, index) => {
+    const listItem = document.createElement("li");
+    const marker = appendGuideText(
+      listItem,
+      "span",
+      numbered ? String(index + 1) : markerClass === "guide-list-x" ? "x" : "✓",
+      markerClass,
+    );
+    marker.setAttribute("aria-hidden", "true");
+    appendGuideText(listItem, "span", item);
+    list.appendChild(listItem);
+  });
+  return list;
+}
+
+function createGuideInfoGrid(items) {
+  const available = items
+    .map(([label, values]) => [label, guideValueList(values)])
+    .filter(([, value]) => value);
+  if (!available.length) return null;
+  const grid = document.createElement("div");
+  grid.className = "guide-info-grid";
+  available.forEach(([label, value]) => {
+    const card = document.createElement("div");
+    card.className = "exercise-guide-card guide-info-card";
+    appendGuideText(card, "span", label);
+    appendGuideText(card, "strong", value);
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function createGuideAccordion({
+  className,
+  heading,
+  icon,
+  items,
+  markerClass,
+  numbered = false,
+}) {
+  const details = document.createElement("details");
+  details.className = `exercise-guide-card guide-accordion ${className}`;
+  const summary = document.createElement("summary");
+  summary.appendChild(createGuideIcon(icon));
+  appendGuideText(summary, "span", heading);
+  const disclosure = document.createElement("span");
+  disclosure.className = "guide-disclosure";
+  disclosure.setAttribute("aria-hidden", "true");
+  disclosure.innerHTML = iconChevronRight();
+  summary.appendChild(disclosure);
+  details.appendChild(summary);
+  details.appendChild(createGuideList(items, markerClass, numbered));
+  return details;
+}
+
+function createGuideSection({
+  className,
+  heading,
+  icon,
+  items,
+  markerClass,
+  numbered = false,
+}) {
+  const section = document.createElement("section");
+  section.className = `exercise-guide-card guide-section ${className}`;
+  const header = document.createElement("div");
+  header.className = "guide-section-heading";
+  header.appendChild(createGuideIcon(icon));
+  appendGuideText(header, "h3", heading);
+  section.appendChild(header);
+  section.appendChild(createGuideList(items, markerClass, numbered));
+  return section;
+}
+
+function createGenericGuideContent(name) {
   const guide = getExerciseGuideData(name);
-  return `
-    <div class="exercise-guide-content">
-      <div class="exercise-guide-card description">${cleanText(guide.description)}</div>
-      <div class="guide-info-grid">
-        <div class="exercise-guide-card guide-info-card"><span>Primary Muscles</span><strong>${cleanText(guide.primaryMuscles)}</strong></div>
-        <div class="exercise-guide-card guide-info-card"><span>Equipment</span><strong>${cleanText(guide.equipment)}</strong></div>
-      </div>
-      <details class="exercise-guide-card guide-accordion guide-step">
-        <summary><span class="guide-heading-icon">${iconPlayOutline()}</span><span>Step-by-Step Guide</span><span class="guide-disclosure">${iconChevronRight()}</span></summary>
-        ${renderGuideList(guide.steps, "guide-list-index", true)}
-      </details>
-      <details class="exercise-guide-card guide-accordion guide-tips">
-        <summary><span class="guide-heading-icon">${iconCheck()}</span><span>Pro Tips</span><span class="guide-disclosure">${iconChevronRight()}</span></summary>
-        ${renderGuideList(guide.tips, "guide-list-check")}
-      </details>
-      <details class="exercise-guide-card guide-accordion guide-mistakes">
-        <summary><span class="guide-heading-icon">${iconInfo()}</span><span>Common Mistakes</span><span class="guide-disclosure">${iconChevronRight()}</span></summary>
-        ${renderGuideList(guide.mistakes, "guide-list-x")}
-      </details>
-    </div>
-  `;
+  const content = document.createElement("div");
+  content.className = "exercise-guide-content";
+  content.dataset.guideSource = "generic";
+  appendGuideText(
+    content,
+    "div",
+    guide.description,
+    "exercise-guide-card description",
+  );
+  content.appendChild(
+    createGuideInfoGrid([
+      ["Primary Muscles", guide.primaryMuscles],
+      ["Equipment", guide.equipment],
+    ]),
+  );
+  content.appendChild(
+    createGuideAccordion({
+      className: "guide-step",
+      heading: "Step-by-Step Guide",
+      icon: iconPlayOutline(),
+      items: guide.steps,
+      markerClass: "guide-list-index",
+      numbered: true,
+    }),
+  );
+  content.appendChild(
+    createGuideAccordion({
+      className: "guide-tips",
+      heading: "Pro Tips",
+      icon: iconCheck(),
+      items: guide.tips,
+      markerClass: "guide-list-check",
+    }),
+  );
+  content.appendChild(
+    createGuideAccordion({
+      className: "guide-mistakes",
+      heading: "Common Mistakes",
+      icon: iconInfo(),
+      items: guide.mistakes,
+      markerClass: "guide-list-x",
+    }),
+  );
+  return content;
+}
+
+function createCatalogGuideContent(savedName, guide, resolution) {
+  const content = document.createElement("div");
+  content.className = "exercise-guide-content is-catalog-guide";
+  content.dataset.guideSource = "catalog";
+
+  const overview = document.createElement("section");
+  overview.className = "exercise-guide-card description exercise-guide-overview";
+  appendGuideText(overview, "span", "Catalog guide", "exercise-guide-source-label");
+  appendGuideText(overview, "h3", savedName);
+  if (resolution.status === "alias") {
+    appendGuideText(
+      overview,
+      "p",
+      `Instructions matched to ${guide.name}.`,
+      "exercise-guide-match-note",
+    );
+  }
+  content.appendChild(overview);
+
+  const infoGrid = createGuideInfoGrid([
+    ["Equipment", guide.equipment],
+    ["Primary Muscles", guide.primaryMuscles],
+    ["Secondary Muscles", guide.secondaryMuscles],
+    ["Category", guide.category],
+    ["Difficulty", guide.difficulty],
+  ]);
+  if (infoGrid) content.appendChild(infoGrid);
+
+  content.appendChild(
+    createGuideSection({
+      className: "guide-step",
+      heading: "How to perform it",
+      icon: iconPlayOutline(),
+      items: guide.steps,
+      markerClass: "guide-list-index",
+      numbered: true,
+    }),
+  );
+  content.appendChild(
+    createGuideSection({
+      className: "guide-reminders",
+      heading: "App reminders",
+      icon: iconCheck(),
+      items: guide.reminders,
+      markerClass: "guide-list-check",
+    }),
+  );
+
+  const attribution = document.createElement("p");
+  attribution.className = "exercise-guide-attribution";
+  if (/^https?:\/\//i.test(guide.attribution.url)) {
+    const link = document.createElement("a");
+    link.href = guide.attribution.url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = guide.attribution.label;
+    attribution.appendChild(link);
+  } else {
+    attribution.textContent = guide.attribution.label;
+  }
+  if (guide.attribution.license) {
+    attribution.append(` · ${guide.attribution.license} source data`);
+  }
+  content.appendChild(attribution);
+  return content;
+}
+
+async function renderExerciseGuideContent(exerciseEl) {
+  const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
+  const catalog = await loadCatalog();
+  if (catalog.status === "ready") {
+    const resolution = resolveLoadedCatalogExercise(name);
+    const guide = adaptCatalogExerciseToGuide(resolution.exercise);
+    if (guide) return createCatalogGuideContent(name, guide, resolution);
+  }
+  return createGenericGuideContent(name);
 }
 
 async function renderExerciseLogContent(exerciseEl) {
@@ -787,6 +1227,7 @@ async function renderExerciseLogContent(exerciseEl) {
       ${controlInputHtml("weight", values.weight === "-" ? "" : values.weight, "Weight (lbs)")}
       ${controlInputHtml("reps", values.reps === "-" ? "" : values.reps, "Reps")}
       ${controlInputHtml("rpe", values.rpe, "RPE")}
+      <p class="field-validation" data-set-validation role="alert" aria-live="polite"></p>
       <label class="detail-warmup-toggle">
         <input type="checkbox" data-detail-warmup ${row?.querySelector(".set-warmup")?.checked ? "checked" : ""} ${row ? "" : "disabled"} />
         <span>Warm-up set</span>
@@ -800,6 +1241,7 @@ async function renderExerciseLogContent(exerciseEl) {
     <div class="exercise-detail-card">
       <label for="exerciseDetailNotes">Exercise Notes</label>
       <textarea id="exerciseDetailNotes" data-detail-notes placeholder="Grip, form cue, pain, rest, machine setting, etc.">${cleanText(exerciseEl.querySelector(".exercise-notes")?.value || "")}</textarea>
+      <p class="field-validation" id="exerciseDetailNotesError" role="alert" aria-live="polite"></p>
     </div>
     <div class="hidden" aria-hidden="true">
       <strong>PR</strong>
@@ -838,11 +1280,19 @@ function updateExerciseDetailCompleteButton(exerciseEl) {
 function addSetToExercise(exerciseEl) {
   const setsEl = exerciseEl?.querySelector(".sets");
   if (!setsEl) return false;
+  const setCount = exerciseEl.querySelectorAll(".set-row").length;
+  if (setCount >= INPUT_LIMITS.setsPerExercise) {
+    toast(`An exercise is limited to ${INPUT_LIMITS.setsPerExercise} sets.`);
+    return false;
+  }
   setsEl.appendChild(makeSetRow());
   setRows(exerciseEl);
   updateExerciseSummary(exerciseEl);
   saveDraftSilently();
   haptic(14);
+  if (setCount + 1 === WARNING_THRESHOLDS.setsPerExercise + 1) {
+    toast("This exercise now has an unusually large number of sets.");
+  }
   if (isExerciseDetailOpen()) renderExerciseDetailView();
   return true;
 }
@@ -913,6 +1363,11 @@ function bindExerciseDetailControls() {
     const notes = activeExerciseDetailEl?.querySelector(".exercise-notes");
     if (!notes) return;
     notes.value = event.target.value;
+    setExerciseTextFeedback(
+      activeExerciseDetailEl,
+      "notes",
+      validateExerciseNotes(event.target.value),
+    );
     saveDraftSilently();
   });
 }
@@ -929,10 +1384,13 @@ async function renderExerciseDetailView() {
 
   const token = ++exerciseDetailRenderToken;
   updateExerciseDetailHeader(exerciseEl);
-  content.innerHTML = exerciseDetailTab === "guide"
-    ? renderExerciseGuideContent(exerciseEl)
+  const isGuide = exerciseDetailTab === "guide";
+  const renderedContent = isGuide
+    ? await renderExerciseGuideContent(exerciseEl)
     : await renderExerciseLogContent(exerciseEl);
   if (token !== exerciseDetailRenderToken) return;
+  if (isGuide) content.replaceChildren(renderedContent);
+  else content.innerHTML = renderedContent;
   updateExerciseDetailCompleteButton(exerciseEl);
   bindExerciseDetailControls();
 }
@@ -1174,13 +1632,33 @@ export function getCurrentWorkoutExerciseNames() {
 }
 
 export async function addExerciseToWorkout(name) {
-  const exerciseName = String(name || "").trim();
-  if (!exerciseName) return null;
+  const nameResult = validateExerciseName(name);
+  if (!nameResult.valid) {
+    toast(firstValidationMessage(nameResult));
+    return null;
+  }
+  const exerciseName = nameResult.normalized;
+  const currentExercises = all(".exercise");
+  if (currentExercises.length >= INPUT_LIMITS.exercisesPerWorkout) {
+    toast(`A workout is limited to ${INPUT_LIMITS.exercisesPerWorkout} exercises.`);
+    return null;
+  }
+  const duplicate = getCurrentWorkoutExerciseNames()
+    .some((currentName) => nameComparisonKey(currentName) === nameComparisonKey(exerciseName));
+  if (duplicate && !confirm(`${exerciseName} is already in this workout. Add it again?`)) {
+    return null;
+  }
   const exercise = makeExercise({ name: exerciseName });
   $("exerciseList").appendChild(exercise);
   await updateExerciseHint(exercise);
   openExercise(exercise, true);
   saveDraftSilently();
+  if (
+    currentExercises.length + 1 ===
+    WARNING_THRESHOLDS.exercisesPerWorkout + 1
+  ) {
+    toast("This workout now has an unusually large number of exercises.");
+  }
   return exercise;
 }
 
@@ -1229,9 +1707,9 @@ function makeSetRow(set = {}) {
   row.className = "set-row";
   row.innerHTML = `
     <div class="set-index">1</div>
-    <div><label>Weight</label><input class="set-weight" type="number" step="0.5" placeholder="lb" value="${cleanText(set.weight || "")}" /></div>
-    <div><label>Reps</label><input class="set-reps" type="number" step="1" placeholder="reps" value="${cleanText(set.reps || "")}" /></div>
-    <div class="rpe-field"><label>RPE</label><input class="set-rpe" type="number" min="1" max="10" step="0.5" placeholder="1-10" value="${cleanText(set.rpe || "")}" /></div>
+    <div><label>Weight</label><input class="set-weight" type="text" inputmode="decimal" autocomplete="off" placeholder="lb" value="${cleanText(set.weight || "")}" /></div>
+    <div><label>Reps</label><input class="set-reps" type="text" inputmode="numeric" autocomplete="off" placeholder="reps" value="${cleanText(set.reps || "")}" /></div>
+    <div class="rpe-field"><label>RPE</label><input class="set-rpe" type="text" inputmode="decimal" autocomplete="off" placeholder="1-10" value="${cleanText(set.rpe || "")}" /></div>
     <div class="set-actions">
       <label class="toggle-pill"><input class="set-done" type="checkbox" ${set.done ? "checked" : ""} /> Done</label>
       <label class="toggle-pill warmup"><input class="set-warmup" type="checkbox" ${set.warmup ? "checked" : ""} /> Warm-up</label>
@@ -1303,6 +1781,7 @@ function makeExercise(data = {}) {
       <div class="live-hidden-editor">
         <label>Exercise Name</label>
         <input class="exercise-name exercise-name-input" type="text" placeholder="Example: Flat Bench Press" value="${cleanText(data.name || "")}" />
+        <p class="field-validation" data-exercise-name-validation role="alert" aria-live="polite"></p>
       </div>
       <button class="guide-row" type="button">
         <span class="guide-info-icon">${iconInfo()}</span>
@@ -1329,6 +1808,7 @@ function makeExercise(data = {}) {
           <input class="control-value control-value-input rpe-value" data-field="rpe" inputmode="decimal" autocomplete="off" value="" placeholder="-" aria-label="RPE" />
           <button class="control-stepper" type="button" data-field="rpe" data-delta="1" aria-label="Increase RPE">${iconPlus()}</button>
         </div>
+        <p class="field-validation" data-set-validation role="alert" aria-live="polite"></p>
         <button class="complete-set-button" type="button">${iconCheck()} Complete Set 1</button>
       </div>
       <div class="completed-set-chips"></div>
@@ -1341,6 +1821,7 @@ function makeExercise(data = {}) {
       <div class="live-hidden-editor">
         <label>Exercise Notes</label>
         <textarea class="exercise-notes" placeholder="Grip, form cue, pain, rest, machine setting, etc.">${cleanText(data.notes || "")}</textarea>
+        <p class="field-validation" data-exercise-notes-validation role="alert" aria-live="polite"></p>
       </div>
       <div class="exercise-flow-actions">
         <button class="ghost prev-exercise" type="button" aria-label="Previous exercise">Previous</button>
@@ -1388,9 +1869,28 @@ function makeExercise(data = {}) {
   });
   exercise.querySelector(".prev-exercise").addEventListener("click", () => goToExerciseOffset(exercise, -1));
   exercise.querySelector(".next-exercise").addEventListener("click", () => finishAndNextExercise(exercise));
-  exercise.querySelector(".exercise-name").addEventListener("input", () => {
+  exercise.querySelector(".exercise-name").addEventListener("input", (event) => {
+    setExerciseTextFeedback(
+      exercise,
+      "name",
+      validateExerciseName(event.target.value),
+    );
     updateExerciseHint(exercise);
     updateExerciseSummary(exercise);
+  });
+  exercise.querySelector(".exercise-name").addEventListener("blur", (event) => {
+    const result = validateExerciseName(event.target.value);
+    if (result.valid) event.target.value = result.normalized;
+    setExerciseTextFeedback(exercise, "name", result, {
+      showWarnings: true,
+    });
+  });
+  exercise.querySelector(".exercise-notes").addEventListener("input", (event) => {
+    setExerciseTextFeedback(
+      exercise,
+      "notes",
+      validateExerciseNotes(event.target.value),
+    );
   });
   exercise.addEventListener("input", () => updateExerciseSummary(exercise));
   exercise.addEventListener("change", () => updateExerciseSummary(exercise));
@@ -1576,6 +2076,10 @@ async function loadLastSetsIntoExercise(exerciseEl, showMessage = false) {
   const name = exerciseEl.querySelector(".exercise-name").value;
   const last = await getLastExercisePerformance(name);
   if (!last || !last.sets?.length) return false;
+  if (last.sets.length > INPUT_LIMITS.setsPerExercise) {
+    toast("Previous sets exceed the current safety limit and were not loaded.");
+    return false;
+  }
 
   const setsEl = exerciseEl.querySelector(".sets");
   setsEl.innerHTML = "";
@@ -1633,8 +2137,14 @@ function showCompletionPopup(workout, summary) {
   `).join("");
   $("completionCustomNote").classList.add("hidden");
   $("completionCustomNote").value = "";
+  $("completionCustomNote").removeAttribute("aria-invalid");
+  if ($("completionCustomNoteError")) $("completionCustomNoteError").textContent = "";
   renderCompletionTags();
+  completionPreviousFocus = document.activeElement;
   modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  requestAnimationFrame(() => $("completionDone")?.focus());
   haptic(45);
 }
 
@@ -1644,31 +2154,103 @@ export function saveDraftSilently() {
   draft.editingWorkoutId = editingWorkoutId;
   draft.activeExerciseIndex = getActiveExerciseIndex();
   draft.savedAt = new Date().toISOString();
-  setDraft(draft);
+  const validation = validateWorkoutInput(draft, {
+    allowHistoricalRpeZero: true,
+    allowIncompleteExerciseNames: true,
+    todayValue: today(),
+  });
+  if (!validation.valid) return false;
+  try {
+    setDraft(draft);
+    draftStorageFailureShown = false;
+    return true;
+  } catch (error) {
+    if (!draftStorageFailureShown) {
+      console.info("Workout draft storage failed.", error);
+      toast("Draft could not be saved on this device. Keep this page open and try again.");
+      draftStorageFailureShown = true;
+    }
+    return false;
+  }
 }
 
 export function clearDraftStorage(showMessage = true) {
-  removeDraft();
-  stopTodayActiveElapsedTimer();
-  if (showMessage) toast("Draft cleared.");
+  try {
+    removeDraft();
+    stopTodayActiveElapsedTimer();
+    if (showMessage) toast("Draft cleared.");
+    return true;
+  } catch (error) {
+    console.info("Workout draft clear failed.", error);
+    toast("Could not clear the workout draft on this device.");
+    return false;
+  }
 }
 
 async function finishCompletionPopup() {
-  if (!completionWorkout) {
-    $("completionModal")?.classList.add("hidden");
-    return;
-  }
+  return completionCoordinator.run(async () => {
+    const modal = $("completionModal");
+    if (!completionWorkout) {
+      modal?.classList.add("hidden");
+      modal?.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+      return;
+    }
 
-  const customNote = $("completionCustomNote")?.value.trim() || "";
-  const tags = Array.from(completionSelectedTags);
-  const updated = { ...completionWorkout, tags };
-  if (customNote) updated.notes = updated.notes ? `${updated.notes}\n${customNote}` : customNote;
-  await saveWorkoutRecord(updated);
-  completionWorkout = null;
-  completionSelectedTags.clear();
-  $("completionModal")?.classList.add("hidden");
-  await renderAll();
-  toast(tags.length || customNote ? "Workout details updated." : "Workout saved.");
+    const doneButton = $("completionDone");
+    if (doneButton) doneButton.disabled = true;
+    try {
+      const customNoteValue = $("completionCustomNote")?.value || "";
+      const customNoteResult = validateCompletionNote(customNoteValue);
+      setFieldFeedback(
+        $("completionCustomNote"),
+        $("completionCustomNoteError"),
+        customNoteResult,
+      );
+      if (!customNoteResult.valid) {
+        $("completionCustomNote")?.classList.remove("hidden");
+        $("completionCustomNote")?.focus();
+        toast(firstValidationMessage(customNoteResult));
+        return;
+      }
+
+      const customNote = customNoteResult.normalized.trim();
+      const tags = Array.from(completionSelectedTags);
+      const updated = { ...completionWorkout, tags };
+      if (customNote) {
+        updated.notes = updated.notes
+          ? `${updated.notes}\n${customNote}`
+          : customNote;
+      }
+      const notesResult = validateWorkoutNotes(updated.notes || "");
+      if (!notesResult.valid) {
+        const feedback = $("completionCustomNoteError");
+        if (feedback) feedback.textContent = firstValidationMessage(notesResult);
+        $("completionCustomNote")?.classList.remove("hidden");
+        $("completionCustomNote")?.focus();
+        toast(firstValidationMessage(notesResult));
+        return;
+      }
+      await saveWorkoutRecord(updated);
+      completionWorkout = null;
+      completionSelectedTags.clear();
+      modal?.classList.add("hidden");
+      modal?.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+      await renderAll();
+      toast(tags.length || customNote ? "Workout details updated." : "Workout saved.");
+      const focusTarget = document.body.contains(completionPreviousFocus)
+        ? completionPreviousFocus
+        : $("todayStartWorkout");
+      focusTarget?.focus({ preventScroll: true });
+      completionPreviousFocus = null;
+    } catch (error) {
+      console.info("Workout completion update failed.", error);
+      toast("Could not update workout details. The saved workout is unchanged.");
+    } finally {
+      if (doneButton) doneButton.disabled = false;
+    }
+  }).promise;
 }
 
 function collectWorkout(options = {}) {
@@ -1690,12 +2272,12 @@ function collectWorkout(options = {}) {
   }).filter((exercise) => exercise.name || exercise.notes || exercise.sets.length);
 
   const startTime = $("startTime").value;
-  const endTime = $("endTime").value;
+  const endTime = options.endTimeOverride ?? $("endTime").value;
   const tempWorkout = { startTime, endTime };
 
   return {
     id: editingWorkoutId || id(),
-    date: $("workoutDate").value || today(),
+    date: $("workoutDate").value,
     type: $("workoutType").value,
     startTime,
     endTime,
@@ -1707,22 +2289,142 @@ function collectWorkout(options = {}) {
   };
 }
 
-async function saveWorkout() {
+function setWorkoutSaveState(pending) {
+  workoutSavePending = pending;
+  const topButton = $("sessionSaveTop");
+  if (topButton) {
+    topButton.disabled = pending;
+    topButton.textContent = pending ? "Saving..." : "Finish";
+  }
+  updateSessionPrimaryAction();
+}
+
+function clearWorkoutValidationFeedback() {
+  for (const [inputId, feedbackId] of [
+    ["workoutDate", "workoutDateError"],
+    ["startTime", "startTimeError"],
+    ["endTime", "endTimeError"],
+    ["workoutNotes", "workoutNotesError"],
+  ]) {
+    $(inputId)?.removeAttribute("aria-invalid");
+    if ($(feedbackId)) $(feedbackId).textContent = "";
+  }
+  all(".exercise [aria-invalid]").forEach((input) =>
+    input.removeAttribute("aria-invalid"),
+  );
+  all(".exercise .field-validation").forEach((feedback) => {
+    feedback.textContent = "";
+    feedback.classList.remove("is-warning");
+  });
+}
+
+function showWorkoutValidation(result) {
+  clearWorkoutValidationFeedback();
+  const error = result.errors[0];
+  if (!error) return;
+  const singleResult = { valid: false, errors: [error], warnings: [] };
+  const staticFields = [
+    [".date", "workoutDate", "workoutDateError"],
+    [".startTime", "startTime", "startTimeError"],
+    [".endTime", "endTime", "endTimeError"],
+  ];
+  for (const [suffix, inputId, feedbackId] of staticFields) {
+    if (!error.path?.endsWith(suffix)) continue;
+    setFieldFeedback($(inputId), $(feedbackId), singleResult);
+    $(inputId)?.focus();
+    toast(error.message);
+    return;
+  }
+  if (error.path === "workout.notes") {
+    setFieldFeedback(
+      $("workoutNotes"),
+      $("workoutNotesError"),
+      singleResult,
+    );
+    $("workoutNotes")?.focus();
+    toast(error.message);
+    return;
+  }
+
+  const exerciseMatch = error.path?.match(
+    /^workout\.exercises\[(\d+)\](?:\.sets\[(\d+)\]\.(weight|reps|rpe)|\.(name|notes))?/u,
+  );
+  if (exerciseMatch) {
+    const exercise = all(".exercise")[Number(exerciseMatch[1])];
+    if (exercise) {
+      openExercise(exercise, true);
+      const setField = exerciseMatch[3];
+      const textField = exerciseMatch[4];
+      if (setField) {
+        setSetFieldFeedback(exercise, setField, singleResult);
+        setSetValidationSummary(exercise, singleResult);
+        exercise
+          .querySelector(`.control-value-input[data-field="${setField}"]`)
+          ?.focus();
+      } else if (textField) {
+        setExerciseTextFeedback(exercise, textField, singleResult);
+        exercise
+          .querySelector(
+            textField === "name" ? ".exercise-name" : ".exercise-notes",
+          )
+          ?.focus();
+      }
+    }
+  }
+  toast(error.message);
+}
+
+function confirmWorkoutWarnings(warnings) {
+  const messages = [...new Set(warnings.map((entry) => entry.message))];
+  if (!messages.length) return true;
+  return confirm(`${messages.slice(0, 4).join("\n")}\n\nSave this workout anyway?`);
+}
+
+async function performWorkoutSave() {
+  const currentEndTime = $("endTime").value;
+  const endTime = !currentEndTime && $("startTime").value
+    ? timeNow()
+    : currentEndTime;
+  const workout = collectWorkout({ endTimeOverride: endTime });
+  if (!hasSaveableWorkoutContent(workout)) {
+    toast("Add at least one exercise first.");
+    return false;
+  }
+  const validation = validateWorkoutInput(workout, { todayValue: today() });
+  if (!validation.valid) {
+    showWorkoutValidation(validation);
+    return false;
+  }
+
   const liveSessionVisible = !$("sessionView")?.classList.contains("hidden");
   const liveStats = getSessionSetStats();
-  if (liveSessionVisible && liveStats.total > 0 && liveStats.completed < liveStats.total) {
-    const ok = confirm(`Finish workout with ${liveStats.completed}/${liveStats.total} sets completed?`);
-    if (!ok) return;
+  if (
+    liveSessionVisible &&
+    liveStats.total > 0 &&
+    liveStats.completed < liveStats.total
+  ) {
+    const ok = confirm(
+      `Finish workout with ${liveStats.completed}/${liveStats.total} sets completed?`,
+    );
+    if (!ok) return false;
   }
-  if (!$('endTime').value && $('startTime').value) $('endTime').value = timeNow();
-  const workout = collectWorkout();
-  if (!hasSaveableWorkoutContent(workout)) { toast("Add at least one exercise first."); return; }
+  if (!confirmWorkoutWarnings(validation.warnings)) return false;
 
-  const previousWorkouts = (await getWorkouts()).filter((item) => item.id !== workout.id);
+  const previousWorkouts = (await getWorkouts()).filter(
+    (item) => item.id !== workout.id,
+  );
   const previousSameWorkout = previousWorkouts
     .filter((item) => item.type === workout.type)
-    .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""))[0] || null;
-  const summary = buildCompletionSummary(workout, previousSameWorkout, previousWorkouts);
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        (b.createdAt || "").localeCompare(a.createdAt || ""),
+    )[0] || null;
+  const summary = buildCompletionSummary(
+    workout,
+    previousSameWorkout,
+    previousWorkouts,
+  );
 
   await saveWorkoutRecord(workout);
   clearDraftStorage(false);
@@ -1737,6 +2439,22 @@ async function saveWorkout() {
   await showTodayView();
   haptic([35, 35, 35]);
   showCompletionPopup(workout, summary);
+  return true;
+}
+
+async function saveWorkout() {
+  return workoutSaveCoordinator.run(async () => {
+    setWorkoutSaveState(true);
+    try {
+      return await performWorkoutSave();
+    } catch (error) {
+      console.info("Workout save failed.", error);
+      toast("Could not save workout. Your draft and visible entries are still available.");
+      return false;
+    } finally {
+      setWorkoutSaveState(false);
+    }
+  }).promise;
 }
 
 async function loadLastSameWorkout() {

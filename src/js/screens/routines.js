@@ -1,11 +1,36 @@
 import "../core/globals.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { cleanText, id, toast } from "../core/utils.js";
+import {
+  INPUT_LIMITS,
+  WARNING_THRESHOLDS,
+  firstValidationMessage,
+  nameComparisonKey,
+  validateExerciseName,
+  validateRoutineInput,
+  validateRoutineName
+} from "../domain/input-guardrails.js";
 import { clearRoutines, deleteRoutine, getRoutines, saveRoutine, seedDefaultTemplates } from "../storage/indexed-db.js";
 import { loadWorkoutTemplate, showSessionView } from "./active-workout.js";
 
 let templateDraftExercises = [];
 let editingTemplateId = null;
+const routineMutationCoordinator = createActionCoordinator();
+const routineStartCoordinator = createActionCoordinator();
+
+function setRoutineFieldFeedback(inputId, feedbackId, result) {
+  const input = $(inputId);
+  const feedback = $(feedbackId);
+  if (!input || !feedback) return;
+  if (result.valid) input.removeAttribute("aria-invalid");
+  else input.setAttribute("aria-invalid", "true");
+  feedback.textContent = firstValidationMessage(result);
+  feedback.classList.toggle(
+    "is-warning",
+    result.valid && result.warnings.length > 0,
+  );
+}
 
 function renderTemplateDraft() {
   const list = $("templateDraftList");
@@ -29,11 +54,40 @@ function renderTemplateDraft() {
 
 function addTemplateExercise() {
   const input = $("templateExerciseInput");
-  const value = input.value.trim();
-  if (!value) { toast("Enter an exercise name first."); return; }
+  const result = validateExerciseName(input.value);
+  setRoutineFieldFeedback(
+    "templateExerciseInput",
+    "templateExerciseError",
+    result,
+  );
+  if (!result.valid) {
+    input.focus();
+    toast(firstValidationMessage(result));
+    return;
+  }
+  if (templateDraftExercises.length >= INPUT_LIMITS.exercisesPerRoutine) {
+    const message = `A routine is limited to ${INPUT_LIMITS.exercisesPerRoutine} exercises.`;
+    $("templateExerciseError").textContent = message;
+    toast(message);
+    return;
+  }
+  const value = result.normalized;
+  const duplicate = templateDraftExercises.some(
+    (exercise) => nameComparisonKey(exercise) === nameComparisonKey(value),
+  );
+  if (duplicate && !confirm(`${value} is already in this routine. Add it again?`)) {
+    return;
+  }
   templateDraftExercises.push(value);
   input.value = "";
+  $("templateExerciseError").textContent = "";
   renderTemplateDraft();
+  if (
+    templateDraftExercises.length ===
+    WARNING_THRESHOLDS.exercisesPerRoutine + 1
+  ) {
+    toast("This routine now has an unusually large number of exercises.");
+  }
 }
 
 function removeTemplateDraftExercise(index) {
@@ -41,31 +95,93 @@ function removeTemplateDraftExercise(index) {
   renderTemplateDraft();
 }
 
-function clearTemplateDraft() {
+function clearTemplateDraft(showMessage = true) {
   editingTemplateId = null;
   templateDraftExercises = [];
   $("templateName").value = "";
   $("templateExerciseInput").value = "";
   renderTemplateDraft();
-  toast("Routine draft cleared.");
+  $("templateName")?.removeAttribute("aria-invalid");
+  $("templateExerciseInput")?.removeAttribute("aria-invalid");
+  if ($("templateNameError")) $("templateNameError").textContent = "";
+  if ($("templateExerciseError")) $("templateExerciseError").textContent = "";
+  if (showMessage) toast("Routine draft cleared.");
 }
 
 async function saveTemplate() {
-  const name = $("templateName").value.trim();
-  if (!name) { toast("Enter a template name first."); return; }
-  const existing = (await getRoutines()).find((template) => template.name.toLowerCase() === name.toLowerCase());
-  const template = {
-    id: editingTemplateId || existing?.id || id(),
-    name,
-    exercises: [...templateDraftExercises],
-    createdAt: existing?.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  await saveRoutine(template);
-  clearTemplateDraft();
-  await refreshTemplateDropdowns(name);
-  await renderAll();
-  toast("Routine saved.");
+  return routineMutationCoordinator.run(async () => {
+    const button = $("saveTemplate");
+    if (button) button.disabled = true;
+    try {
+      const nameResult = validateRoutineName($("templateName").value);
+      setRoutineFieldFeedback("templateName", "templateNameError", nameResult);
+      const name = nameResult.normalized;
+      const template = {
+        id: editingTemplateId || id(),
+        name,
+        exercises: [...templateDraftExercises],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      const validation = validateRoutineInput(template);
+      if (!validation.valid) {
+        const error = validation.errors[0];
+        if (error.path === "routine.name") {
+          setRoutineFieldFeedback(
+            "templateName",
+            "templateNameError",
+            { valid: false, errors: [error], warnings: [] },
+          );
+          $("templateName").focus();
+        } else {
+          $("templateExerciseError").textContent = error.message;
+        }
+        toast(error.message);
+        return false;
+      }
+      const routines = await getRoutines();
+      const existing = routines.find(
+        (item) => nameComparisonKey(item.name) === nameComparisonKey(name),
+      );
+      if (!editingTemplateId && !existing && routines.length >= INPUT_LIMITS.routines) {
+        toast(`The app is limited to ${INPUT_LIMITS.routines} saved routines.`);
+        return false;
+      }
+      if (editingTemplateId && existing && existing.id !== editingTemplateId) {
+        const message = "Another routine already uses this name.";
+        $("templateNameError").textContent = message;
+        $("templateName").focus();
+        toast(message);
+        return false;
+      }
+      if (!editingTemplateId && existing) {
+        if (!confirm(`Replace the existing ${existing.name} routine?`)) return false;
+        template.id = existing.id;
+        template.createdAt = existing.createdAt;
+      } else if (editingTemplateId) {
+        const edited = routines.find((item) => item.id === editingTemplateId);
+        template.createdAt = edited?.createdAt || template.createdAt;
+      }
+      if (
+        validation.warnings.length &&
+        !confirm(`${validation.warnings[0].message}\n\nSave this routine anyway?`)
+      ) {
+        return false;
+      }
+      await saveRoutine(template);
+      clearTemplateDraft(false);
+      await refreshTemplateDropdowns(name);
+      await renderAll();
+      toast("Routine saved.");
+      return true;
+    } catch (error) {
+      console.info("Routine save failed.", error);
+      toast("Could not save the routine. Your draft is still available.");
+      return false;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }).promise;
 }
 
 async function editTemplate(templateId) {
@@ -80,32 +196,63 @@ async function editTemplate(templateId) {
 }
 
 async function deleteTemplate(templateId) {
-  if (!confirm("Delete this routine? Workout history will not be deleted.")) return;
-  await deleteRoutine(templateId);
-  await refreshTemplateDropdowns();
-  await renderAll();
-  toast("Routine deleted.");
+  return routineMutationCoordinator.run(async () => {
+    try {
+      if (!confirm("Delete this routine? Workout history will not be deleted.")) return false;
+      await deleteRoutine(templateId);
+      await refreshTemplateDropdowns();
+      await renderAll();
+      toast("Routine deleted.");
+      return true;
+    } catch (error) {
+      console.info("Routine delete failed.", error);
+      toast("Could not delete the routine. Existing data is unchanged.");
+      return false;
+    }
+  }).promise;
 }
 
 async function startRoutine(templateId) {
-  const template = (await getRoutines()).find((item) => item.id === templateId);
-  if (!template) return;
-  await refreshTemplateDropdowns(template.name);
-  $("workoutType").value = template.name;
-  await loadWorkoutTemplate();
-  switchScreen("log");
-  showSessionView();
-  toast(`${template.name} loaded.`);
+  return routineStartCoordinator.run(async () => {
+    try {
+      const template = (await getRoutines()).find((item) => item.id === templateId);
+      if (!template) return false;
+      await refreshTemplateDropdowns(template.name);
+      $("workoutType").value = template.name;
+      await loadWorkoutTemplate();
+      switchScreen("log");
+      showSessionView();
+      toast(`${template.name} loaded.`);
+      return true;
+    } catch (error) {
+      console.info("Routine start failed.", error);
+      toast("Could not start this routine. Try again.");
+      return false;
+    }
+  }).promise;
 }
 
 async function resetTemplates() {
-  if (!confirm("Reset routines to defaults? Workout history will stay.")) return;
-  await clearRoutines();
-  await seedDefaultTemplates();
-  await refreshTemplateDropdowns();
-  clearTemplateDraft();
-  await renderAll();
-  toast("Default routines restored.");
+  return routineMutationCoordinator.run(async () => {
+    const button = $("resetTemplates");
+    if (button) button.disabled = true;
+    try {
+      if (!confirm("Reset routines to defaults? Workout history will stay.")) return false;
+      await clearRoutines();
+      await seedDefaultTemplates();
+      await refreshTemplateDropdowns();
+      clearTemplateDraft(false);
+      await renderAll();
+      toast("Default routines restored.");
+      return true;
+    } catch (error) {
+      console.info("Routine reset failed.", error);
+      toast("Could not reset routines. Existing routines were left in place where possible.");
+      return false;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }).promise;
 }
 
 export async function renderTemplates() {

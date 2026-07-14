@@ -37,6 +37,7 @@ The important boundaries are:
 - `src/js/storage/` owns IndexedDB and localStorage access. Storage functions return values or reject/throw; they do not render, navigate, show toasts, trigger haptics, or open dialogs.
 - `src/js/application/` coordinates domain and storage operations that span more than one data source. It does not render screens.
 - `src/js/components/` contains reusable DOM-facing pieces such as icons and the routine selectors shared by multiple screens.
+- `src/js/catalog/` contains the provider-neutral exercise-catalog contract, pure search/merge and name-resolution rules, reviewed aliases, Guide/preview adaptation, the Free Exercise DB adapter, and the static-asset loader. Provider fields stop at the adapter; catalog records and resolution results are disposable app-shell data rather than application storage.
 - `src/js/screens/` owns rendering, user interaction, feature-local DOM state, and user-facing feedback.
 - `router.js` coordinates startup, navigation, and app-wide rerendering.
 
@@ -62,7 +63,9 @@ Warm-up behavior intentionally matches the pre-refactor application: warm-up set
 
 `domain/training-rules.js` owns exercise classification, routine tags, duration estimates, working-set filtering, exercise profiles, and progression-target rules. Settings are passed into these functions explicitly.
 
-`domain/exercise-options.js` owns exercise-name trimming, case-insensitive keys and deduplication, local option construction, substring search, and canonical-name resolution. It receives routine, workout-history, and current-workout data explicitly and has no DOM or storage access.
+`domain/exercise-options.js` owns exercise-name trimming, case-insensitive keys and deduplication, local option construction, substring search, and canonical-name resolution. It receives routine, workout-history, and current-workout data explicitly and has no DOM or storage access. The catalog layer does not replace this source: local options remain independently constructed and win name collisions.
+
+`domain/input-guardrails.js` owns beta-specific hard limits, warning thresholds, strict numeric parsing, Unicode-aware text validation, collection boundaries, date/time rules, workout/routine/settings validation, and pre-import size/complexity/data validation. It is provider-independent and pure: callers receive structured normalized values, errors, and warnings without DOM access, storage access, mutation, or automatic clamping. Historical records are validated for safety but are never rewritten merely to match a current UI boundary.
 
 To add a pure workout calculation:
 
@@ -92,6 +95,10 @@ The database name, version, store names, key paths, and indexes are unchanged. R
 
 `application/schedule.js` combines stored settings and the pure schedule rules for Home and Stats.
 
+`application/action-coordinator.js` is the small single-flight primitive used by non-reentrant UI/application operations. A repeated call receives the current promise instead of starting another write or confirmation. Screens own disabled/loading state and correction workflow; the coordinator owns no UI or persistent state.
+
+Workout and routine storage entry points apply the same semantic guardrails as defense in depth before opening a write. Storage still returns/rejects and never displays feedback. Backup restore runs file-size checks in the screen before reading, then application-level complexity, migration/schema, semantic-value, and duplicate-ID checks before the atomic replacement transaction.
+
 To add or change a storage operation:
 
 1. Add an explicit record-specific function in the relevant storage module.
@@ -106,8 +113,8 @@ Screen modules may query and update their DOM, bind generated controls, call dom
 
 Feature state now has a specific owner:
 
-- `active-workout.js`: editing workout ID, session timer handle, exercise-detail element/tab/render token, drag state, focus token, completion workout, and completion tags
-- `exercise-picker.js`: picker options and selection guard; the component reads routines and completed workouts through the existing storage interfaces and receives current-workout names and the add command from the router
+- `active-workout.js`: editing workout ID, session timer handle, exercise-detail element/tab/render token, drag state, focus token, completion workout, and completion tags; Exercise Details asks the catalog boundary for an optional name match and builds catalog or generic Guide DOM without changing the active exercise
+- `exercise-picker.js`: local/catalog result state, collapsed-filter state/count, limited-versus-expanded local results, preview selection, async load token, and selection guard; the component reads routines and completed workouts through the existing storage interfaces, reads only the provider-neutral catalog boundary, and receives current-workout names and the existing name-only add command from the router
 - `today.js`: CTA mode/morph state and Home active-workout timer handle
 - `routines.js`: routine draft exercises and editing routine ID
 - `indexed-db.js`: open database connection
@@ -117,6 +124,24 @@ Feature state now has a specific owner:
 Other modules use exported query or command functions such as `getEditingWorkoutId`, `setEditingWorkoutId`, and `completeActiveExerciseDetailSet`; they do not write those state variables directly.
 
 The manual rest timer has no runtime state or module. Workout elapsed-time ownership remains split between `active-workout.js` for the live session and `today.js` for the Home resume state; saved duration remains a workout-metrics and stored-workout concern.
+
+## Exercise catalog boundary
+
+The catalog prototype is a static-data feature with a development-only ingestion step:
+
+1. `scripts/refresh-exercise-catalog.mjs` obtains one official Free Exercise DB revision.
+2. `free-exercise-db-adapter.js` converts provider records into the internal contract and reports malformed/duplicate records.
+3. Strict validation writes `src/data/exercise-catalog.json` only after the full source is usable.
+4. `catalog-loader.js` fetches the same-origin static asset asynchronously, retains it only in memory, and constructs one resolver index for that loaded snapshot.
+5. `catalog-search.js` ranks and filters normalized data and merges it with independently collected local names.
+6. `exercise-picker.js` renders a short local section, catalog results/status, compact filter disclosure, and contained summary preview.
+7. Selection crosses into Active Workout as a string name only.
+8. `exercise-catalog-resolver.js` can later map any displayed saved name to one unambiguous normalized-name or reviewed-alias match. It does not read the DOM or storage and deliberately performs no fuzzy matching.
+9. `exercise-guide-adapter.js` converts a matched record into provider-neutral Guide data. `active-workout.js` inserts provider strings with `textContent`, or keeps the existing generic Guide when matching/instructions are unavailable.
+
+The resolver result is render-only: saved local name → resolver → optional catalog match → Guide. There is no rename, history merge, Stats regrouping, alias persistence, or provider-field write. The browser never calls the upstream provider. The service worker owns offline caching of the catalog asset and production modules. IndexedDB, localStorage, backup export/import, application-schema migration, and workout normalization know nothing about the catalog. A failed, malformed, ambiguous, or instruction-less match therefore cannot block a workout, local option, custom exercise, or generic Guide.
+
+The normalized contract, provider comparison, licensing evidence, refresh workflow, measurements, and deferred decisions are documented in [EXERCISE_CATALOG_SPIKE.md](EXERCISE_CATALOG_SPIKE.md).
 
 ## Remaining transitional globals
 
@@ -130,9 +155,9 @@ No mutable feature state, calculation, icon, settings accessor, or storage funct
 
 ## Testing
 
-Pure domain functions and the backup-structure validator are imported directly by Node's built-in test runner from `tests/unit/`. These tests cover formulas, warm-up handling, aggregation, PR comparison, schedule boundaries, explicit-time rules, saveability, progression targets, and pre-write backup rejection without a browser.
+Pure domain functions, catalog contracts/adapters/search/resolution/Guide adaptation, and the backup-structure validator are imported directly by Node's built-in test runner from `tests/unit/`. These tests cover formulas, warm-up handling, aggregation, PR comparison, schedule boundaries, explicit-time rules, saveability, progression targets, catalog normalization/ranking/failure behavior, conservative matching/ambiguity, preview/Guide shaping, and pre-write backup rejection without a browser.
 
-Playwright remains responsible for storage integration, DOM rendering, navigation, routine selection, the local exercise picker, Exercise Details scroll ownership, draft recovery, workout save/update behavior, settings, backup compatibility and rollback, and representative larger histories.
+Playwright remains responsible for storage integration, DOM rendering, navigation, routine selection, compact local/catalog exercise-picker behavior, offline/failure paths, preview scroll ownership, catalog/generic Guide selection, exact/alias/history enrichment without rewrites, Exercise Details scroll ownership, draft recovery, workout save/update behavior, settings, backup compatibility and rollback, and representative larger histories.
 
 Storage errors propagate to screens or application callers. Unit tests assert pure return values; Playwright asserts the user-visible result and checks page and console errors.
 
@@ -145,7 +170,7 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 3. Bump the cache name once for the completed change set.
 4. Verify an online load before testing cached/offline startup.
 
-The current cache is `hector-workout-tracker-pwa-v15`.
+The current cache is `hector-workout-tracker-pwa-v16`. It includes every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets. This refinement is part of the same unreleased v16 branch, so adding the new paths completes that app shell without creating a second cache version.
 
 ## Versioned data contracts
 

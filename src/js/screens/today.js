@@ -1,4 +1,5 @@
 import "../core/globals.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
 import { getTodayPlan } from "../application/schedule.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import {
@@ -14,6 +15,10 @@ import {
   toast
 } from "../core/utils.js";
 import { dateKeyFromDate, getWorkoutStreak, mondayFirstWeekDates } from "../domain/schedule.js";
+import {
+  firstValidationMessage,
+  validateWorkoutInput
+} from "../domain/input-guardrails.js";
 import { estimateWorkoutDuration, getWorkoutTags } from "../domain/training-rules.js";
 import {
   buildCompletionSummary,
@@ -40,6 +45,20 @@ import {
   stopSessionElapsedTimer,
   updateAllExerciseHints
 } from "./active-workout.js";
+
+const startWorkoutCoordinator = createActionCoordinator();
+const resumeWorkoutCoordinator = createActionCoordinator();
+
+function setTodayWorkoutActionPending(pending) {
+  for (const id of [
+    "todayStartWorkout",
+    "todayCardAction",
+    "todayReviewStartWorkout",
+    "todayReviewStartAnother",
+  ]) {
+    if ($(id)) $(id).disabled = pending;
+  }
+}
 import { renderBackupStatus } from "./backup.js";
 
 let todayActiveElapsedInterval = null;
@@ -465,7 +484,7 @@ export async function handleTodayWorkoutCardClick(event) {
   await openTodayWorkoutReview();
 }
 
-async function startTodayWorkout(options = {}) {
+async function performStartTodayWorkout(options = {}) {
   const forceNew = Boolean(options.forceNew);
   const draft = getDraft();
   if (!forceNew && draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime) {
@@ -490,14 +509,52 @@ async function startTodayWorkout(options = {}) {
   saveDraftSilently();
 }
 
+async function startTodayWorkout(options = {}) {
+  return startWorkoutCoordinator.run(async () => {
+    setTodayWorkoutActionPending(true);
+    try {
+      return await performStartTodayWorkout(options);
+    } catch (error) {
+      console.info("Workout start failed.", error);
+      toast("Could not start the workout. Your existing draft is unchanged.");
+      return false;
+    } finally {
+      setTodayWorkoutActionPending(false);
+    }
+  }).promise;
+}
+
 export async function resumeWorkoutFromToday() {
-  await restoreDraftFromStorage();
+  return resumeWorkoutCoordinator.run(async () => {
+    setTodayWorkoutActionPending(true);
+    try {
+      return await restoreDraftFromStorage();
+    } catch (error) {
+      console.info("Workout draft restore failed.", error);
+      toast("Could not restore the workout draft. Stored data was left unchanged.");
+      return false;
+    } finally {
+      setTodayWorkoutActionPending(false);
+    }
+  }).promise;
 }
 
 export async function restoreDraftFromStorage() {
   const draft = getDraft();
   if (!draft || !Array.isArray(draft.exercises)) {
     toast("No workout draft found.");
+    return false;
+  }
+  const validation = validateWorkoutInput(draft, {
+    allowHistoricalRpeZero: true,
+    allowIncompleteExerciseNames: true,
+    todayValue: today(),
+  });
+  const unsafeCollection = validation.errors.find(
+    (error) => error.code === "collection_too_large",
+  );
+  if (unsafeCollection) {
+    toast(firstValidationMessage({ errors: [unsafeCollection], warnings: [] }));
     return false;
   }
 

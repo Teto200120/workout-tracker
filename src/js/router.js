@@ -16,6 +16,7 @@ import {
   closeExerciseDetail,
   completeActiveExerciseDetailSet,
   addExerciseToWorkout,
+  bindActiveWorkoutGuardrails,
   endExerciseDrag,
   finishCompletionPopup,
   getEditingWorkoutId,
@@ -128,6 +129,7 @@ export function switchScreen(name) {
 }
 
 function bindEvents() {
+  bindActiveWorkoutGuardrails();
   window.addEventListener("scroll", updateTodayCtaCompact, { passive: true });
   window.addEventListener("resize", updateTodayCtaCompact, { passive: true });
   document.addEventListener("focusin", (event) => {

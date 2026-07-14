@@ -1,6 +1,11 @@
 import "./globals.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
 import { DAY_LABELS, DEFAULT_APP_SETTINGS } from "./constants.js";
-import { cleanText, normalizeRange, toast } from "./utils.js";
+import { cleanText, toast } from "./utils.js";
+import {
+  firstValidationMessage,
+  validateSettingsInput
+} from "../domain/input-guardrails.js";
 import { getRoutines } from "../storage/indexed-db.js";
 import {
   cloneDefaultSettings,
@@ -10,6 +15,47 @@ import {
 } from "../storage/local.js";
 
 export { cloneDefaultSettings, getAppSettings };
+
+const settingsCoordinator = createActionCoordinator();
+
+const SETTINGS_INPUT_IDS = Object.freeze({
+  defaultWeightJump: "settingsWeightJump",
+  compoundMin: "settingsCompoundMin",
+  compoundMax: "settingsCompoundMax",
+  pullMin: "settingsPullMin",
+  pullMax: "settingsPullMax",
+  isolationMin: "settingsIsolationMin",
+  isolationMax: "settingsIsolationMax",
+  generalMin: "settingsGeneralMin",
+  generalMax: "settingsGeneralMax"
+});
+
+function clearSettingsValidation() {
+  Object.values(SETTINGS_INPUT_IDS).forEach((inputId) =>
+    $(inputId)?.removeAttribute("aria-invalid"),
+  );
+  all("[data-settings-validation]").forEach((feedback) => feedback.remove());
+}
+
+function showSettingsValidation(error) {
+  clearSettingsValidation();
+  const field = error?.path?.replace(/^settings\./u, "");
+  const input = $(SETTINGS_INPUT_IDS[field]);
+  if (!input) return;
+  input.setAttribute("aria-invalid", "true");
+  const feedback = document.createElement("p");
+  feedback.className = "field-validation";
+  feedback.dataset.settingsValidation = "true";
+  feedback.setAttribute("role", "alert");
+  feedback.textContent = error.message;
+  const row = input.closest(".settings-list-row");
+  (row || input).insertAdjacentElement("afterend", feedback);
+  input.focus();
+}
+
+function numericFormValue(value) {
+  return Number(String(value).trim().replace(",", "."));
+}
 
 export function setAppSettings(settings) {
   persistAppSettings(settings);
@@ -76,45 +122,88 @@ export async function renderSettings() {
 }
 
 export async function saveSettingsFromForm() {
-  const current = getAppSettings();
-  const schedule = {};
-  all(".settings-day-row").forEach((row) => {
-    const index = row.dataset.settingsDay;
-    schedule[index] = {
-      kind: row.querySelector(".settings-day-kind").value,
-      routine: row.querySelector(".settings-day-routine").value
-    };
-  });
+  return settingsCoordinator.run(async () => {
+    const saveButton = $("saveSettings");
+    if (saveButton) saveButton.disabled = true;
+    try {
+      const schedule = {};
+      all(".settings-day-row").forEach((row) => {
+        const index = row.dataset.settingsDay;
+        schedule[index] = {
+          kind: row.querySelector(".settings-day-kind").value,
+          routine: row.querySelector(".settings-day-routine").value
+        };
+      });
 
-  const compound = normalizeRange($("settingsCompoundMin").value, $("settingsCompoundMax").value, current.compoundMin, current.compoundMax);
-  const pull = normalizeRange($("settingsPullMin").value, $("settingsPullMax").value, current.pullMin, current.pullMax);
-  const isolation = normalizeRange($("settingsIsolationMin").value, $("settingsIsolationMax").value, current.isolationMin, current.isolationMax);
-  const general = normalizeRange($("settingsGeneralMin").value, $("settingsGeneralMax").value, current.generalMin, current.generalMax);
-
-  setAppSettings({
-    schedule,
-    defaultWeightJump: Math.max(0.5, Number($("settingsWeightJump").value || current.defaultWeightJump || 5)),
-    compoundMin: compound.min,
-    compoundMax: compound.max,
-    pullMin: pull.min,
-    pullMax: pull.max,
-    isolationMin: isolation.min,
-    isolationMax: isolation.max,
-    generalMin: general.min,
-    generalMax: general.max,
-    rpeAware: $("settingsRpeAware").checked,
-    haptics: $("settingsHaptics").checked,
-    animations: $("settingsAnimations").checked
-  });
-
-  toast("Settings saved.");
+      const rawSettings = {
+        defaultWeightJump: $("settingsWeightJump").value,
+        compoundMin: $("settingsCompoundMin").value,
+        compoundMax: $("settingsCompoundMax").value,
+        pullMin: $("settingsPullMin").value,
+        pullMax: $("settingsPullMax").value,
+        isolationMin: $("settingsIsolationMin").value,
+        isolationMax: $("settingsIsolationMax").value,
+        generalMin: $("settingsGeneralMin").value,
+        generalMax: $("settingsGeneralMax").value
+      };
+      const validation = validateSettingsInput(rawSettings);
+      if (!validation.valid) {
+        showSettingsValidation(validation.errors[0]);
+        toast(firstValidationMessage(validation));
+        return false;
+      }
+      if (
+        validation.warnings.length &&
+        !confirm(`${firstValidationMessage({ errors: [], warnings: validation.warnings })}\n\nSave these settings anyway?`)
+      ) {
+        return false;
+      }
+      clearSettingsValidation();
+      setAppSettings({
+        schedule,
+        defaultWeightJump: numericFormValue(rawSettings.defaultWeightJump),
+        compoundMin: numericFormValue(rawSettings.compoundMin),
+        compoundMax: numericFormValue(rawSettings.compoundMax),
+        pullMin: numericFormValue(rawSettings.pullMin),
+        pullMax: numericFormValue(rawSettings.pullMax),
+        isolationMin: numericFormValue(rawSettings.isolationMin),
+        isolationMax: numericFormValue(rawSettings.isolationMax),
+        generalMin: numericFormValue(rawSettings.generalMin),
+        generalMax: numericFormValue(rawSettings.generalMax),
+        rpeAware: $("settingsRpeAware").checked,
+        haptics: $("settingsHaptics").checked,
+        animations: $("settingsAnimations").checked
+      });
+      toast("Settings saved.");
+      return true;
+    } catch (error) {
+      console.info("Settings save failed.", error);
+      toast("Could not save settings. Your entered values are still available.");
+      return false;
+    } finally {
+      if (saveButton) saveButton.disabled = false;
+    }
+  }).promise;
 }
 
 export async function resetAppSettings() {
-  if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return;
-  removeAppSettings();
-  applyAppSettings();
-  await renderSettings();
-  toast("Settings reset.");
+  return settingsCoordinator.run(async () => {
+    const resetButton = $("resetSettings");
+    if (resetButton) resetButton.disabled = true;
+    try {
+      if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return false;
+      removeAppSettings();
+      applyAppSettings();
+      await renderSettings();
+      toast("Settings reset.");
+      return true;
+    } catch (error) {
+      console.info("Settings reset failed.", error);
+      toast("Could not reset settings. Existing settings were left in place.");
+      return false;
+    } finally {
+      if (resetButton) resetButton.disabled = false;
+    }
+  }).promise;
 }
 

@@ -151,7 +151,8 @@
           <div class="grid-2">
             <div>
               <label for="workoutDate">Date</label>
-              <input id="workoutDate" type="date" />
+              <input id="workoutDate" type="date" required aria-describedby="workoutDateError" />
+              <p class="field-validation" id="workoutDateError" role="alert" aria-live="polite"></p>
             </div>
             <div>
               <label for="workoutType">Routine</label>
@@ -162,11 +163,13 @@
           <div class="grid-2" style="margin-top:10px;">
             <div>
               <label for="startTime">Start Time</label>
-              <input id="startTime" type="time" />
+              <input id="startTime" type="time" aria-describedby="startTimeError" />
+              <p class="field-validation" id="startTimeError" role="alert" aria-live="polite"></p>
             </div>
             <div>
               <label for="endTime">End Time</label>
-              <input id="endTime" type="time" />
+              <input id="endTime" type="time" aria-describedby="endTimeError" />
+              <p class="field-validation" id="endTimeError" role="alert" aria-live="polite"></p>
             </div>
           </div>
 
@@ -192,7 +195,9 @@
 
         <div class="card">
           <label for="workoutNotes">Workout Notes</label>
-          <textarea id="workoutNotes" placeholder="Energy, soreness, pre-workout, form notes, meal timing, etc."></textarea>
+          <textarea id="workoutNotes" placeholder="Energy, soreness, pre-workout, form notes, meal timing, etc." aria-describedby="workoutNotesHint workoutNotesError"></textarea>
+          <p class="field-hint" id="workoutNotesHint">Up to 4,000 characters.</p>
+          <p class="field-validation" id="workoutNotesError" role="alert" aria-live="polite"></p>
         </div>
 
         <div class="save-dock">
@@ -454,7 +459,8 @@
           <div class="progress-form">
             <div>
               <label for="weeklyGoal">Weekly Workout Goal</label>
-              <input id="weeklyGoal" type="number" min="1" step="1" placeholder="Example: 4" />
+              <input id="weeklyGoal" type="number" min="1" max="100" step="1" placeholder="Example: 4" aria-describedby="weeklyGoalError" />
+              <p class="field-validation" id="weeklyGoalError" role="alert" aria-live="polite"></p>
             </div>
           </div>
           <button class="success" id="saveGoals" type="button" style="width:100%; margin-top:10px;">Save Goals</button>
@@ -623,14 +629,18 @@
             <div class="routine-builder-grid">
               <div>
                 <label for="templateName">Routine Name</label>
-                <input id="templateName" type="text" placeholder="Example: Chest / Triceps" />
+                <input id="templateName" type="text" placeholder="Example: Chest / Triceps" aria-describedby="templateNameHint templateNameError" />
+                <p class="field-hint" id="templateNameHint">Up to 80 characters.</p>
+                <p class="field-validation" id="templateNameError" role="alert" aria-live="polite"></p>
               </div>
               <div>
                 <label for="templateExerciseInput">Exercise Name</label>
                 <div class="routine-add-row">
-                  <input id="templateExerciseInput" type="text" placeholder="Example: Flat Bench Press" />
+                  <input id="templateExerciseInput" type="text" placeholder="Example: Flat Bench Press" aria-describedby="templateExerciseHint templateExerciseError" />
                   <button class="primary" id="addTemplateExercise" type="button">Add</button>
                 </div>
+                <p class="field-hint" id="templateExerciseHint">Up to 120 characters.</p>
+                <p class="field-validation" id="templateExerciseError" role="alert" aria-live="polite"></p>
               </div>
             </div>
             <div class="routine-draft-panel">
@@ -887,30 +897,58 @@
     <div class="exercise-picker-handle" aria-hidden="true"></div>
     <header class="exercise-picker-header">
       <div>
-        <span class="exercise-picker-eyebrow">Active Workout</span>
         <h2 id="exercisePickerTitle">Add Exercise</h2>
-        <p id="exercisePickerDescription">Choose from your routines and workout history, or create a custom exercise.</p>
+        <p class="sr-only" id="exercisePickerDescription">Choose from your exercises and the offline catalog, or create a custom exercise.</p>
       </div>
       <button class="exercise-picker-close" type="button" data-exercise-picker-close aria-label="Close Add Exercise">×</button>
     </header>
 
     <section class="exercise-picker-panel" id="exercisePickerBrowse">
-      <label for="exercisePickerSearch">Search exercises</label>
+      <label class="sr-only" for="exercisePickerSearch">Search exercises</label>
       <input id="exercisePickerSearch" type="search" inputmode="search" autocomplete="off" placeholder="Search by exercise name" />
+      <div class="exercise-picker-tools">
+        <button class="exercise-picker-filter-toggle" id="exercisePickerFilterToggle" type="button" aria-controls="exercisePickerFilters" aria-expanded="false" disabled>
+          <span>Filters</span>
+          <span class="exercise-picker-filter-count hidden" id="exercisePickerFilterCount" aria-hidden="true">0</span>
+        </button>
+        <p class="exercise-picker-catalog-status" id="exercisePickerCatalogStatus" aria-live="polite">Local only</p>
+      </div>
+      <div class="exercise-picker-filters hidden" id="exercisePickerFilters" aria-label="Catalog filters">
+        <label>
+          <span>Muscle</span>
+          <select id="exercisePickerMuscleFilter"><option value="">All muscles</option></select>
+        </label>
+        <label>
+          <span>Equipment</span>
+          <select id="exercisePickerEquipmentFilter"><option value="">All equipment</option></select>
+        </label>
+        <label>
+          <span>Category</span>
+          <select id="exercisePickerCategoryFilter"><option value="">All categories</option></select>
+        </label>
+        <button class="exercise-picker-filter-reset" id="exercisePickerResetFilters" type="button" disabled>Reset</button>
+      </div>
       <div class="exercise-picker-results-heading">
-        <strong>Existing exercises</strong>
+        <strong>Results</strong>
         <span id="exercisePickerResultCount" aria-live="polite">Loading exercises…</span>
       </div>
-      <div class="exercise-picker-options" id="exercisePickerOptions" aria-label="Existing exercise options"></div>
+      <div class="exercise-picker-options" id="exercisePickerOptions" aria-label="Exercise options"></div>
       <p class="exercise-picker-empty hidden" id="exercisePickerEmpty" role="status"></p>
       <button class="exercise-picker-create-action" id="exercisePickerCreateAction" type="button">+ Create New Exercise</button>
+    </section>
+
+    <section class="exercise-picker-panel hidden" id="exercisePickerPreview">
+      <button class="exercise-picker-back" id="exercisePickerPreviewBack" type="button">← Back to results</button>
+      <div class="exercise-picker-preview-scroll" id="exercisePickerPreviewContent"></div>
+      <button class="exercise-picker-submit" id="exercisePickerPreviewAdd" type="button">Add to Workout</button>
     </section>
 
     <section class="exercise-picker-panel hidden" id="exercisePickerCreate">
       <button class="exercise-picker-back" id="exercisePickerCreateBack" type="button">← Back to exercises</button>
       <form class="exercise-picker-create-form" id="exercisePickerCreateForm" novalidate>
         <label for="exercisePickerCustomName">Custom exercise name</label>
-        <input id="exercisePickerCustomName" type="text" autocomplete="off" placeholder="Example: Landmine Press" aria-describedby="exercisePickerCustomError" />
+        <input id="exercisePickerCustomName" type="text" autocomplete="off" placeholder="Example: Landmine Press" aria-describedby="exercisePickerCustomHint exercisePickerCustomError" />
+        <p class="field-hint" id="exercisePickerCustomHint">Up to 120 characters. Unicode and emoji are supported.</p>
         <p class="exercise-picker-error" id="exercisePickerCustomError" role="alert"></p>
         <button class="exercise-picker-submit" type="submit">Add Exercise</button>
       </form>
@@ -922,7 +960,7 @@
   </dialog>
 
 
-  <div class="completion-overlay hidden" id="completionModal" role="dialog" aria-modal="true" aria-labelledby="completionTitle">
+  <div class="completion-overlay hidden" id="completionModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="completionTitle">
     <div class="completion-card">
       <div class="completion-kicker">✓ Workout Complete</div>
       <h2 id="completionTitle" style="margin-bottom:4px;">Nice work</h2>
@@ -936,7 +974,9 @@
         <p class="muted small" style="margin:4px 0 0;">Optional. Tags help future recommendations without making you type notes every time.</p>
         <div class="tag-grid" id="completionTagGrid"></div>
         <button class="ghost" id="completionCustomNoteButton" type="button" style="width:100%; margin-top:10px;">+ Add custom note</button>
-        <textarea class="hidden" id="completionCustomNote" placeholder="Anything specific about this session?"></textarea>
+        <textarea class="hidden" id="completionCustomNote" placeholder="Anything specific about this session?" aria-describedby="completionCustomNoteHint completionCustomNoteError"></textarea>
+        <p class="field-hint" id="completionCustomNoteHint">Up to 1,000 characters.</p>
+        <p class="field-validation" id="completionCustomNoteError" role="alert" aria-live="polite"></p>
       </div>
 
       <div class="completion-actions">

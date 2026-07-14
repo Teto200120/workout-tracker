@@ -40,5 +40,11 @@ export function backupFailureMessage(error) {
   if (error?.code === "backup_restore_failed") {
     return "Could not import backup. Existing data was left unchanged.";
   }
+  if (error?.code === "backup_guardrail_failed") {
+    const message = error.validationErrors?.[0]?.message;
+    return message
+      ? `Could not import backup. ${message}`
+      : "Could not import backup. The file exceeds the app's safety limits.";
+  }
   return "Could not import backup. The file is malformed or unsupported.";
 }

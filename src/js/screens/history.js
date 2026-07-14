@@ -1,4 +1,5 @@
 import "../core/globals.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { cleanText, dateLabel, toast } from "../core/utils.js";
 import { inferMuscleTag } from "../domain/training-rules.js";
@@ -11,6 +12,9 @@ import {
   showSessionView,
   updateAllExerciseHints
 } from "./active-workout.js";
+
+const historyEditCoordinator = createActionCoordinator();
+const historyDeleteCoordinator = createActionCoordinator();
 
 export async function renderHistory() {
   const workouts = (await getWorkouts()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
@@ -94,33 +98,51 @@ function renderExerciseDetails(exercise) {
 }
 
 async function editWorkout(workoutId) {
-  const workout = (await getWorkouts()).find((item) => item.id === workoutId);
-  if (!workout) return;
+  return historyEditCoordinator.run(async () => {
+    try {
+      const workout = (await getWorkouts()).find((item) => item.id === workoutId);
+      if (!workout) return false;
 
-  setEditingWorkoutId(workout.id);
-  $("workoutDate").value = workout.date;
-  $("startTime").value = workout.startTime || "";
-  $("endTime").value = workout.endTime || "";
-  await refreshTemplateDropdowns(workout.type);
-  $("workoutType").value = workout.type;
-  $("workoutNotes").value = workout.notes || "";
-  $("saveWorkout").textContent = "Update Workout";
+      setEditingWorkoutId(workout.id);
+      $("workoutDate").value = workout.date;
+      $("startTime").value = workout.startTime || "";
+      $("endTime").value = workout.endTime || "";
+      await refreshTemplateDropdowns(workout.type);
+      $("workoutType").value = workout.type;
+      $("workoutNotes").value = workout.notes || "";
+      $("saveWorkout").textContent = "Update Workout";
 
-  const list = $("exerciseList");
-  list.innerHTML = "";
-  workout.exercises.forEach((exercise) => list.appendChild(makeExercise(exercise)));
-  collapseAllButFirstExercise();
-  await updateAllExerciseHints();
-  switchScreen("log");
-  showSessionView();
-  toast("Workout loaded for editing.");
+      const list = $("exerciseList");
+      list.innerHTML = "";
+      workout.exercises.forEach((exercise) => list.appendChild(makeExercise(exercise)));
+      collapseAllButFirstExercise();
+      await updateAllExerciseHints();
+      switchScreen("log");
+      showSessionView();
+      toast("Workout loaded for editing.");
+      return true;
+    } catch (error) {
+      console.info("Workout edit load failed.", error);
+      toast("Could not load this workout for editing.");
+      return false;
+    }
+  }).promise;
 }
 
 async function deleteWorkout(workoutId) {
-  if (!confirm("Delete this workout?")) return;
-  await deleteWorkoutRecord(workoutId);
-  await renderAll();
-  toast("Workout deleted.");
+  return historyDeleteCoordinator.run(async () => {
+    try {
+      if (!confirm("Delete this workout?")) return false;
+      await deleteWorkoutRecord(workoutId);
+      await renderAll();
+      toast("Workout deleted.");
+      return true;
+    } catch (error) {
+      console.info("Workout delete failed.", error);
+      toast("Could not delete the workout. Existing data is unchanged.");
+      return false;
+    }
+  }).promise;
 }
 
 export function bindHistoryActions() {

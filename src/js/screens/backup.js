@@ -7,13 +7,35 @@ import {
   restoreBackup,
   validateBackupStructure
 } from "../application/backup.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { applyAppSettings } from "../core/settings.js";
 import { today, toast } from "../core/utils.js";
+import {
+  firstValidationMessage,
+  validateBackupFileSize
+} from "../domain/input-guardrails.js";
 import { backupFailureMessage } from "../schema/errors.js";
 import { getLegacyWeights, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
-import { getBackupMeta, setBackupMeta } from "../storage/local.js";
+import { getBackupMeta, getDraft, setBackupMeta } from "../storage/local.js";
 import { loadWorkoutTemplate, stopSessionElapsedTimer } from "./active-workout.js";
+
+const exportCoordinator = createActionCoordinator();
+const importCoordinator = createActionCoordinator();
+const clearCoordinator = createActionCoordinator();
+
+function setBackupActionPending(action, pending) {
+  const buttonIds = action === "export"
+    ? ["exportData", "todayExportBackup"]
+    : action === "import"
+      ? ["importData"]
+      : ["clearData"];
+  buttonIds.forEach((buttonId) => {
+    const button = $(buttonId);
+    if (button) button.disabled = pending;
+  });
+  if (action === "import") $("importFile").disabled = pending;
+}
 
 export async function renderBackupStatus() {
   if (!isDatabaseOpen()) return;
@@ -84,46 +106,80 @@ export async function renderBackupStatus() {
 }
 
 export async function exportData() {
-  const exportedAt = new Date().toISOString();
-  const data = await buildBackup(exportedAt);
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `workout-tracker-backup-${today()}.json`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-  setBackupMeta({ ...getBackupMeta(), lastExportedAt: exportedAt });
-  await renderBackupStatus();
-  toast("Backup exported.");
+  return exportCoordinator.run(async () => {
+    setBackupActionPending("export", true);
+    try {
+      const exportedAt = new Date().toISOString();
+      const data = await buildBackup(exportedAt);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `workout-tracker-backup-${today()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setBackupMeta({ ...getBackupMeta(), lastExportedAt: exportedAt });
+      await renderBackupStatus();
+      toast("Backup exported.");
+    } catch (error) {
+      console.info("Backup export failed.", error);
+      toast("Could not export backup. Your local data is unchanged.");
+    } finally {
+      setBackupActionPending("export", false);
+    }
+  }).promise;
 }
 
 export async function importData(file) {
-  try {
-    const data = JSON.parse(await file.text());
-    validateBackupStructure(data);
-    if (!confirm("Import this backup? Existing entries stay. Matching IDs will be overwritten.")) return;
-    await restoreBackup(data);
-    applyAppSettings();
-    await refreshTemplateDropdowns();
-    await renderAll();
-    toast("Backup imported.");
-  } catch (error) {
-    toast(backupFailureMessage(error));
-  }
+  return importCoordinator.run(async () => {
+    setBackupActionPending("import", true);
+    try {
+      const sizeResult = validateBackupFileSize(file?.size);
+      if (!sizeResult.valid) {
+        toast(firstValidationMessage(sizeResult));
+        return;
+      }
+      const data = JSON.parse(await file.text());
+      validateBackupStructure(data);
+      const draftWarning = getDraft()
+        ? " Your unsaved workout draft will stay on this device."
+        : "";
+      if (!confirm(`Import this backup? Existing entries stay. Matching IDs will be overwritten.${draftWarning}`)) return;
+      await restoreBackup(data);
+      applyAppSettings();
+      await refreshTemplateDropdowns();
+      await renderAll();
+      toast("Backup imported.");
+    } catch (error) {
+      console.info("Backup import failed.", error);
+      toast(backupFailureMessage(error));
+    } finally {
+      setBackupActionPending("import", false);
+    }
+  }).promise;
 }
 
 export async function clearAllData() {
-  if (!confirm("Clear all local app data from this browser?")) return;
-  await clearApplicationData();
-  stopSessionElapsedTimer();
-  stopTodayActiveElapsedTimer();
-  applyAppSettings();
-  await refreshTemplateDropdowns();
-  await loadWorkoutTemplate();
-  await renderAll();
-  toast("All local data cleared.");
+  return clearCoordinator.run(async () => {
+    setBackupActionPending("clear", true);
+    try {
+      if (!confirm("Clear all local app data from this browser?")) return;
+      await clearApplicationData();
+      stopSessionElapsedTimer();
+      stopTodayActiveElapsedTimer();
+      applyAppSettings();
+      await refreshTemplateDropdowns();
+      await loadWorkoutTemplate();
+      await renderAll();
+      toast("All local data cleared.");
+    } catch (error) {
+      console.info("Local data clear failed.", error);
+      toast("Could not clear local data. Existing data was left in place where possible.");
+    } finally {
+      setBackupActionPending("clear", false);
+    }
+  }).promise;
 }
 
