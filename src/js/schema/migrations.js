@@ -1,10 +1,12 @@
 import { DataSchemaError, createValidationError } from "./errors.js";
+import { validateDisplayName } from "../domain/input-guardrails.js";
 import { clonePersistedValue, normalizeApplicationData } from "./normalize.js";
 import { assertValidApplicationData, isPlainObject, validateApplicationData } from "./validators.js";
 import {
   CURRENT_APPLICATION_SCHEMA_VERSION,
   CURRENT_BACKUP_FILE_VERSION,
   LEGACY_APPLICATION_SCHEMA_VERSION,
+  PREVIOUS_APPLICATION_SCHEMA_VERSION,
   detectApplicationSchemaVersion,
   detectBackupApplicationSchemaVersion,
   detectBackupFileVersion
@@ -12,26 +14,75 @@ import {
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
+function normalizeValidatedDisplayName(value, options = {}) {
+  if (value === null) return null;
+  const validation = validateDisplayName(value);
+  if (!validation.valid) {
+    throw createValidationError(
+      validation.errors.map((error) => ({
+        ...error,
+        path: "settings.displayName",
+      })),
+      options,
+    );
+  }
+  return validation.normalized;
+}
+
 export function migrateLegacyApplicationDataToV1(value, options = {}) {
   assertValidApplicationData(value, {
     legacy: true,
     deferIdConstraints: options.deferIdConstraints,
     source: options.source || "application",
     fromVersion: LEGACY_APPLICATION_SCHEMA_VERSION,
-    toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
+    toVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION
   });
   const migrated = normalizeApplicationData(value);
+  if (migrated.settings) delete migrated.settings.displayName;
   assertValidApplicationData(migrated, {
+    allowMissingDisplayName: true,
     deferIdConstraints: options.deferIdConstraints,
     source: options.source || "application",
     fromVersion: LEGACY_APPLICATION_SCHEMA_VERSION,
+    toVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION
+  });
+  return migrated;
+}
+
+export function migrateApplicationDataV1ToV2(value, options = {}) {
+  assertValidApplicationData(value, {
+    allowMissingDisplayName: true,
+    deferIdConstraints: options.deferIdConstraints,
+    source: options.source || "application",
+    fromVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
+    toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
+  });
+  const migrated = clonePersistedValue(value);
+  if (migrated.settings !== null) {
+    const rawDisplayName = Object.prototype.hasOwnProperty.call(migrated.settings, "displayName")
+      ? migrated.settings.displayName
+      : null;
+    migrated.settings.displayName = normalizeValidatedDisplayName(
+      rawDisplayName,
+      {
+        source: options.source || "application",
+        fromVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
+        toVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
+      },
+    );
+  }
+  assertValidApplicationData(migrated, {
+    deferIdConstraints: options.deferIdConstraints,
+    source: options.source || "application",
+    fromVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
     toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
   });
   return migrated;
 }
 
 export const APPLICATION_MIGRATIONS = Object.freeze({
-  [LEGACY_APPLICATION_SCHEMA_VERSION]: migrateLegacyApplicationDataToV1
+  [LEGACY_APPLICATION_SCHEMA_VERSION]: migrateLegacyApplicationDataToV1,
+  [PREVIOUS_APPLICATION_SCHEMA_VERSION]: migrateApplicationDataV1ToV2
 });
 
 export function migrateApplicationData(value, fromVersion, options = {}) {
@@ -61,7 +112,10 @@ export function migrateApplicationData(value, fromVersion, options = {}) {
     }
     current = migrate(current, options);
     version += 1;
-    const validation = validateApplicationData(current, { deferIdConstraints: options.deferIdConstraints });
+    const validation = validateApplicationData(current, {
+      allowMissingDisplayName: version === PREVIOUS_APPLICATION_SCHEMA_VERSION,
+      deferIdConstraints: options.deferIdConstraints
+    });
     if (!validation.valid) {
       throw createValidationError(validation.errors, {
         code: "invalid_migration_output",
@@ -130,6 +184,16 @@ export function prepareBackupImport(data) {
     deferIdConstraints: true,
     source: "backup"
   });
+  if (migratedData.settings?.displayName !== null) {
+    migratedData.settings.displayName = normalizeValidatedDisplayName(
+      migratedData.settings.displayName,
+      {
+        source: "backup",
+        fromVersion: applicationSchemaVersion,
+        toVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
+      },
+    );
+  }
   return {
     backupFileVersion,
     applicationSchemaVersion,

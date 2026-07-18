@@ -33,6 +33,36 @@ test("canonical application and record contracts validate", () => {
   assert.equal(validateDraft(canonicalDraft()).valid, true);
 });
 
+test("display name is explicit in schema two and optional only during legacy migration", () => {
+  const missing = canonicalSettings();
+  delete missing.displayName;
+  assert.deepEqual(validateSettings(missing).errors[0], {
+    path: "settings.displayName",
+    code: "required_field",
+    message: "displayName is required.",
+  });
+  assert.equal(
+    validateSettings(missing, { allowMissingDisplayName: true }).valid,
+    true,
+  );
+  assert.equal(
+    validateSettings(canonicalSettings({ displayName: null })).valid,
+    true,
+  );
+  assert.equal(
+    validateSettings(canonicalSettings({ displayName: "José 🏋️" })).valid,
+    true,
+  );
+  assert.deepEqual(
+    validateSettings(canonicalSettings({ displayName: 42 })).errors[0],
+    {
+      path: "settings.displayName",
+      code: "expected_string_or_null",
+      message: "displayName must be a string or null.",
+    },
+  );
+});
+
 test("valid zero values and missing optional duration are accepted", () => {
   assert.equal(
     validateApplicationData(getSchemaFixture("validZeroValues")).valid,

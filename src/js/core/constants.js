@@ -29,6 +29,7 @@ export const APPLICATION_SCHEMA_VERSION_KEY = "hector_workout_data_schema_versio
 export const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export const DEFAULT_APP_SETTINGS = {
+  displayName: null,
   schedule: {
     0: { kind: "rest", routine: "Custom" },
     1: { kind: "gym", routine: "Chest / Triceps" },

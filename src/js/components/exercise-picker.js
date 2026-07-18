@@ -20,6 +20,57 @@ import { getRoutines, getWorkouts } from "../storage/indexed-db.js";
 
 const CATALOG_RESULT_LIMIT = INPUT_LIMITS.catalogResults;
 const LOCAL_RESULT_LIMIT = 3;
+const PICKER_CONTEXTS = new Set(["active-workout", "routine"]);
+const PICKER_MODES = new Set(["add", "replace"]);
+
+let pickerController = null;
+
+export function createExercisePickerSelectionSession({
+  context = "active-workout",
+  mode = "add",
+  onSelect,
+  onCancel,
+} = {}) {
+  if (!PICKER_CONTEXTS.has(context)) {
+    throw new TypeError(`Unsupported exercise-picker context: ${context}`);
+  }
+  if (!PICKER_MODES.has(mode)) {
+    throw new TypeError(`Unsupported exercise-picker mode: ${mode}`);
+  }
+  let settled = false;
+
+  return Object.freeze({
+    context,
+    mode,
+    get settled() {
+      return settled;
+    },
+    select(name) {
+      if (settled || typeof name !== "string") {
+        return { accepted: false, result: null, promise: Promise.resolve(false) };
+      }
+      const validation = validateExerciseName(name);
+      if (!validation.valid) {
+        return { accepted: false, result: null, promise: Promise.resolve(false) };
+      }
+      settled = true;
+      const result = Object.freeze({ name: validation.normalized });
+      return {
+        accepted: true,
+        result,
+        promise: Promise.resolve(onSelect?.(result)).then(() => true),
+      };
+    },
+    cancel() {
+      if (settled) return { accepted: false, promise: Promise.resolve(false) };
+      settled = true;
+      return {
+        accepted: true,
+        promise: Promise.resolve(onCancel?.()).then(() => true),
+      };
+    },
+  });
+}
 
 function appendText(parent, tagName, text, className = "") {
   const element = document.createElement(tagName);
@@ -37,12 +88,10 @@ function displayValue(value) {
     .join(" ");
 }
 
-export function bindExercisePicker({
-  trigger,
-  getCurrentExerciseNames,
-  onSelect,
-}) {
+function createExercisePickerController() {
   const dialog = document.querySelector("#exercisePicker");
+  const title = document.querySelector("#exercisePickerTitle");
+  const description = document.querySelector("#exercisePickerDescription");
   const browsePanel = document.querySelector("#exercisePickerBrowse");
   const createPanel = document.querySelector("#exercisePickerCreate");
   const previewPanel = document.querySelector("#exercisePickerPreview");
@@ -72,13 +121,16 @@ export function bindExercisePicker({
     "#exercisePickerPreviewContent",
   );
   const previewAdd = document.querySelector("#exercisePickerPreviewAdd");
+  const createSubmit = customForm?.querySelector('button[type="submit"]');
+  const closeButton = document.querySelector(".exercise-picker-close");
   const closeActions = document.querySelectorAll(
     "[data-exercise-picker-close]",
   );
 
   if (
-    !trigger ||
     !dialog ||
+    !title ||
+    !description ||
     !browsePanel ||
     !createPanel ||
     !previewPanel ||
@@ -101,7 +153,9 @@ export function bindExercisePicker({
     !backAction ||
     !previewBack ||
     !previewContent ||
-    !previewAdd
+    !previewAdd ||
+    !createSubmit ||
+    !closeButton
   ) {
     return;
   }
@@ -112,6 +166,57 @@ export function bindExercisePicker({
   let selecting = false;
   let openToken = 0;
   let showAllLocalResults = false;
+  let activeRequest = null;
+  let selectionSession = null;
+  let returnFocusTarget = null;
+
+  function normalizeRequest(request = {}) {
+    const context = PICKER_CONTEXTS.has(request.context)
+      ? request.context
+      : "active-workout";
+    const mode = PICKER_MODES.has(request.mode) ? request.mode : "add";
+    return {
+      context,
+      mode,
+      currentName:
+        typeof request.currentName === "string" ? request.currentName : "",
+      excludedNames: Array.isArray(request.excludedNames)
+        ? [...request.excludedNames]
+        : [],
+      getCurrentExerciseNames:
+        typeof request.getCurrentExerciseNames === "function"
+          ? request.getCurrentExerciseNames
+          : () => [...(request.currentExerciseNames || [])],
+      onSelect: request.onSelect,
+      onCancel: request.onCancel,
+      origin: request.origin,
+      getReturnFocusTarget:
+        typeof request.getReturnFocusTarget === "function"
+          ? request.getReturnFocusTarget
+          : null,
+    };
+  }
+
+  function applyRequestCopy(request) {
+    const routine = request.context === "routine";
+    const replacing = request.mode === "replace";
+    title.textContent = routine
+      ? replacing
+        ? "Change Routine Exercise"
+        : "Add Exercise to Routine"
+      : "Add Exercise";
+    description.textContent = routine
+      ? "Choose from your exercises and the offline catalog, or use a custom exercise name for this routine."
+      : "Choose from your exercises and the offline catalog, or create a custom exercise.";
+    const actionLabel = routine
+      ? replacing
+        ? "Use in Routine"
+        : "Add to Routine"
+      : "Add to Workout";
+    previewAdd.textContent = actionLabel;
+    createSubmit.textContent = actionLabel;
+    closeButton.setAttribute("aria-label", `Close ${title.textContent}`);
+  }
 
   function currentFilters() {
     return {
@@ -408,22 +513,31 @@ export function bindExercisePicker({
 
   async function chooseExercise(name) {
     if (selecting) return;
+    const selection = selectionSession?.select(name);
+    if (!selection?.accepted) return;
     selecting = true;
     dialog.close("selected");
     try {
-      await onSelect(name);
+      await selection.promise;
+    } catch (error) {
+      console.info("Exercise selection callback failed.", error);
     } finally {
       selecting = false;
     }
   }
 
-  async function openPicker() {
-    if (dialog.open) return;
+  async function openPicker(request = {}) {
+    if (dialog.open) return false;
+    activeRequest = normalizeRequest(request);
+    applyRequestCopy(activeRequest);
+    selectionSession = createExercisePickerSelectionSession(activeRequest);
+    returnFocusTarget = activeRequest.origin || document.activeElement;
     const token = ++openToken;
     selecting = false;
     localOptions = [];
     catalogExercises = [];
-    searchInput.value = "";
+    searchInput.value =
+      activeRequest.mode === "replace" ? activeRequest.currentName : "";
     customInput.value = "";
     customInput.removeAttribute("aria-invalid");
     customError.textContent = "";
@@ -438,6 +552,7 @@ export function bindExercisePicker({
     optionsContainer.replaceChildren();
     createAction.disabled = true;
     showBrowsePanel();
+    dialog.returnValue = "";
     dialog.showModal();
     requestAnimationFrame(() => searchInput.focus());
 
@@ -451,24 +566,34 @@ export function bindExercisePicker({
       renderOptions();
     });
 
-    const [routines, workouts] = await Promise.all([
-      getRoutines(),
-      getWorkouts(),
-    ]);
+    let routines = [];
+    let workouts = [];
+    try {
+      [routines, workouts] = await Promise.all([getRoutines(), getWorkouts()]);
+    } catch (error) {
+      console.info("Local exercise options could not be loaded.", error);
+    }
     if (!dialog.open || token !== openToken) return;
+    let currentExercises = [];
+    try {
+      const values = activeRequest.getCurrentExerciseNames();
+      currentExercises = Array.isArray(values) ? values : [];
+    } catch (error) {
+      console.info("Current exercise names could not be read.", error);
+    }
     localOptions = buildExerciseOptions({
       defaultRoutines: Object.entries(DEFAULT_TEMPLATES).map(
         ([name, exercises]) => ({ name, exercises }),
       ),
       routines,
       workouts,
-      currentExercises: getCurrentExerciseNames(),
+      currentExercises,
     });
     createAction.disabled = false;
     renderOptions();
+    return true;
   }
 
-  trigger.addEventListener("click", openPicker);
   searchInput.addEventListener("input", () => {
     showAllLocalResults = false;
     renderOptions();
@@ -565,6 +690,10 @@ export function bindExercisePicker({
     },
     true,
   );
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    dialog.close("cancel");
+  });
   dialog.addEventListener("click", (event) => {
     if (event.target !== dialog) return;
     const bounds = dialog.getBoundingClientRect();
@@ -577,7 +706,41 @@ export function bindExercisePicker({
   });
   dialog.addEventListener("close", () => {
     openToken += 1;
+    const closedSession = selectionSession;
+    const focusTarget =
+      activeRequest?.getReturnFocusTarget?.() || returnFocusTarget;
+    selectionSession = null;
+    activeRequest = null;
+    returnFocusTarget = null;
     showBrowsePanel();
-    trigger.focus({ preventScroll: true });
+    if (dialog.returnValue !== "selected") {
+      closedSession?.cancel().promise.catch((error) => {
+        console.info("Exercise picker cancellation callback failed.", error);
+      });
+    }
+    if (focusTarget?.isConnected && typeof focusTarget.focus === "function") {
+      focusTarget.focus({ preventScroll: true });
+    }
   });
+
+  return Object.freeze({ open: openPicker });
+}
+
+export function initializeExercisePicker() {
+  if (!pickerController) pickerController = createExercisePickerController();
+  return pickerController;
+}
+
+export function openExercisePicker(options = {}) {
+  const controller = initializeExercisePicker();
+  return controller?.open(options) ?? Promise.resolve(false);
+}
+
+export function bindExercisePicker({ trigger, ...options }) {
+  if (!trigger) return () => {};
+  initializeExercisePicker();
+  const handleOpen = () =>
+    openExercisePicker({ ...options, origin: trigger });
+  trigger.addEventListener("click", handleOpen);
+  return () => trigger.removeEventListener("click", handleOpen);
 }

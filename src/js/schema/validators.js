@@ -263,6 +263,13 @@ export function validateSettings(value, options = {}) {
     addError(errors, path, "expected_object", "Settings must be an object.");
     return validationResult(errors);
   }
+  if (!hasOwn(value, "displayName")) {
+    if (!legacy && !options.allowMissingDisplayName) {
+      addError(errors, `${path}.displayName`, "required_field", "displayName is required.");
+    }
+  } else if (value.displayName !== null && typeof value.displayName !== "string") {
+    addError(errors, `${path}.displayName`, "expected_string_or_null", "displayName must be a string or null.");
+  }
   if (required(errors, value, "schedule", path, legacy)) validateSchedule(value.schedule, `${path}.schedule`, errors, legacy);
   SETTINGS_NUMBER_FIELDS.forEach((field) => {
     if (!required(errors, value, field, path, legacy)) return;
@@ -396,7 +403,11 @@ export function validateApplicationData(value, options = {}) {
     if (!hasOwn(value, field)) addError(errors, field, "required_field", `${field} is required.`);
     else if (value[field] === undefined) addError(errors, field, "expected_object_or_null", `${field} must be an object or null.`);
   });
-  if (value.settings !== null && value.settings !== undefined) errors.push(...validateSettings(value.settings, { path: "settings", legacy }).errors);
+  if (value.settings !== null && value.settings !== undefined) errors.push(...validateSettings(value.settings, {
+    path: "settings",
+    legacy,
+    allowMissingDisplayName: options.allowMissingDisplayName
+  }).errors);
   if (value.goals !== null && value.goals !== undefined) errors.push(...validateGoals(value.goals, { path: "goals", legacy }).errors);
   if (value.draft !== null && value.draft !== undefined) errors.push(...validateDraft(value.draft, { ...options, path: "draft", legacy }).errors);
   if (value.backupMeta !== null && value.backupMeta !== undefined) errors.push(...validateBackupMeta(value.backupMeta, { path: "backupMeta", legacy }).errors);

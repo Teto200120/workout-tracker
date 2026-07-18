@@ -1,4 +1,5 @@
 import "../core/globals.js";
+import { getDisplayName } from "../application/display-name.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { getTodayPlan } from "../application/schedule.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
@@ -253,7 +254,18 @@ function updateTodayGreeting(workouts) {
   const greeting = $("todayGreeting");
   const dateLine = $("todayDateLine");
   const streakBadge = $("todayStreakBadge");
-  if (greeting) greeting.innerHTML = `${getGreetingText()}, <span class="accent">Hector</span>!`;
+  if (greeting) {
+    const displayName = getDisplayName();
+    greeting.replaceChildren();
+    if (displayName) {
+      const accent = document.createElement("span");
+      accent.className = "accent";
+      accent.textContent = displayName;
+      greeting.append(`${getGreetingText()}, `, accent, "!");
+    } else {
+      greeting.textContent = getGreetingText();
+    }
+  }
   if (dateLine) dateLine.textContent = prettyTodayDate();
   if (streakBadge) streakBadge.textContent = `🔥 ${getWorkoutStreak(workouts, new Date())}`;
 }

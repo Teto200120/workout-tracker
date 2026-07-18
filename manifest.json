@@ -1,5 +1,5 @@
 {
-  "name": "Hector's Workout Tracker",
+  "name": "Workout Tracker",
   "short_name": "Workout Tracker",
   "description": "Local-first workout tracker for workouts, routines, progress, and backups.",
   "start_url": "./index.html",

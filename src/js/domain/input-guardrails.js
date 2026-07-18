@@ -9,6 +9,7 @@ export const INPUT_LIMITS = Object.freeze({
   repRangeMaximum: 1_000,
   weeklyGoalMinimum: 1,
   weeklyGoalMaximum: 100,
+  displayNameLength: 80,
   exerciseNameLength: 120,
   routineNameLength: 80,
   workoutTypeLength: 80,
@@ -339,6 +340,15 @@ export function validateExerciseName(value, options = {}) {
     required: options.required !== false,
     trim: true,
     maximumLength: INPUT_LIMITS.exerciseNameLength,
+  });
+}
+
+export function validateDisplayName(value) {
+  return validateTextInput(value, {
+    label: "Display name",
+    required: true,
+    trim: true,
+    maximumLength: INPUT_LIMITS.displayNameLength,
   });
 }
 
@@ -691,6 +701,14 @@ export function validateSettingsInput(settings = {}) {
       "settings.defaultWeightJump",
     ),
   ];
+  if (settings.displayName !== null && settings.displayName !== undefined) {
+    parts.push(
+      withPath(
+        validateDisplayName(settings.displayName),
+        "settings.displayName",
+      ),
+    );
+  }
   for (const [key, label] of [
     ["compound", "Compound rep range"],
     ["pull", "Pull rep range"],

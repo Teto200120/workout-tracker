@@ -22,6 +22,29 @@ test("backup validation migrates legacy arrays and keeps legacy weights optional
 
   const withWeights = validateBackupStructure(legacyBackup());
   assert.equal(withWeights.legacyWeights[0].weight, 175.5);
+  assert.equal(
+    prepareBackupImport(legacyBackup()).data.settings.displayName,
+    null,
+  );
+});
+
+test("backup validation preserves valid names and rejects malformed names atomically", () => {
+  const named = currentBackup();
+  named.settings.displayName = "  Zoë 🏋️  ";
+  const validated = prepareBackupImport(named);
+  assert.equal(validated.data.settings.displayName, "Zoë 🏋️");
+
+  for (const displayName of [42, "x".repeat(81), "\u200B\u200C"]) {
+    const malformed = currentBackup();
+    malformed.settings.displayName = displayName;
+    assert.throws(
+      () => validateBackupStructure(malformed),
+      (error) =>
+        ["schema_validation_failed", "backup_guardrail_failed"].includes(
+          error.code,
+        ) && error.path === "settings.displayName",
+    );
+  }
 });
 
 test("backup validation rejects non-array record collections", () => {

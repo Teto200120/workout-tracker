@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-v16";
+const CACHE_NAME = "hector-workout-tracker-pwa-v17";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "./icon-512.png",
   "./src/styles/main.css",
   "./src/styles/base.css",
+  "./src/styles/onboarding.css",
   "./src/styles/today-base.css",
   "./src/styles/active-workout-base.css",
   "./src/styles/screens.css",
@@ -18,6 +19,7 @@ const APP_SHELL = [
   "./src/js/application/backup.js",
   "./src/js/application/action-coordinator.js",
   "./src/js/application/data-schema.js",
+  "./src/js/application/display-name.js",
   "./src/js/application/schedule.js",
   "./src/js/core/constants.js",
   "./src/js/core/globals.js",
@@ -38,6 +40,7 @@ const APP_SHELL = [
   "./src/data/exercise-catalog.json",
   "./src/js/domain/exercise-options.js",
   "./src/js/domain/input-guardrails.js",
+  "./src/js/domain/routine-draft.js",
   "./src/js/domain/schedule.js",
   "./src/js/domain/training-rules.js",
   "./src/js/domain/workout-metrics.js",
@@ -53,7 +56,8 @@ const APP_SHELL = [
   "./src/js/screens/history.js",
   "./src/js/screens/routines.js",
   "./src/js/screens/backup.js",
-  "./src/js/screens/profile.js"
+  "./src/js/screens/profile.js",
+  "./src/js/screens/onboarding.js"
 ];
 
 self.addEventListener("install", (event) => {

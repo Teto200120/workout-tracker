@@ -116,9 +116,13 @@ test("settings and goals apply current defaults while preserving compatibility f
   });
   assert.equal(settings.animations, false);
   assert.equal(settings.haptics, true);
+  assert.equal(settings.displayName, null);
   assert.equal(settings.schedule["1"].routine, "Custom Routine");
   assert.equal(settings.schedule["1"].color, "blue");
   assert.deepEqual(settings.futureSetting, { retained: true });
+
+  const namedSettings = normalizeSettings({ displayName: "  Amélie 🏋️  " });
+  assert.equal(namedSettings.displayName, "Amélie 🏋️");
 
   const goals = normalizeGoals({
     weeklyGoal: "3",

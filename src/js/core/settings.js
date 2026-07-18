@@ -10,7 +10,6 @@ import { getRoutines } from "../storage/indexed-db.js";
 import {
   cloneDefaultSettings,
   getAppSettings,
-  removeAppSettings,
   setAppSettings as persistAppSettings
 } from "../storage/local.js";
 
@@ -160,6 +159,7 @@ export async function saveSettingsFromForm() {
       }
       clearSettingsValidation();
       setAppSettings({
+        displayName: getAppSettings().displayName,
         schedule,
         defaultWeightJump: numericFormValue(rawSettings.defaultWeightJump),
         compoundMin: numericFormValue(rawSettings.compoundMin),
@@ -192,7 +192,8 @@ export async function resetAppSettings() {
     if (resetButton) resetButton.disabled = true;
     try {
       if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return false;
-      removeAppSettings();
+      const displayName = getAppSettings().displayName;
+      setAppSettings({ ...cloneDefaultSettings(), displayName });
       applyAppSettings();
       await renderSettings();
       toast("Settings reset.");

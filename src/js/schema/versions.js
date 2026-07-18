@@ -1,7 +1,8 @@
 import { DataSchemaError } from "./errors.js";
 
 export const LEGACY_APPLICATION_SCHEMA_VERSION = 0;
-export const CURRENT_APPLICATION_SCHEMA_VERSION = 1;
+export const PREVIOUS_APPLICATION_SCHEMA_VERSION = 1;
+export const CURRENT_APPLICATION_SCHEMA_VERSION = 2;
 
 export const UNVERSIONED_BACKUP_FILE_VERSION = 0;
 export const CURRENT_BACKUP_FILE_VERSION = 3;
@@ -43,7 +44,7 @@ export function detectApplicationSchemaVersion(marker) {
       toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
     });
   }
-  if (![LEGACY_APPLICATION_SCHEMA_VERSION, CURRENT_APPLICATION_SCHEMA_VERSION].includes(version)) {
+  if (![LEGACY_APPLICATION_SCHEMA_VERSION, PREVIOUS_APPLICATION_SCHEMA_VERSION, CURRENT_APPLICATION_SCHEMA_VERSION].includes(version)) {
     throw new DataSchemaError("Unsupported application data-schema version.", {
       code: "unsupported_application_schema_version",
       path: "applicationSchemaVersion",

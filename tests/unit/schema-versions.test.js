@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   CURRENT_APPLICATION_SCHEMA_VERSION,
   CURRENT_BACKUP_FILE_VERSION,
+  PREVIOUS_APPLICATION_SCHEMA_VERSION,
   detectApplicationSchemaVersion,
   detectBackupApplicationSchemaVersion,
   detectBackupFileVersion,
@@ -21,6 +22,17 @@ test("current schema marker is accepted", () => {
   assert.equal(
     detectApplicationSchemaVersion(CURRENT_APPLICATION_SCHEMA_VERSION),
     CURRENT_APPLICATION_SCHEMA_VERSION,
+  );
+});
+
+test("the previous display-name schema is accepted for migration", () => {
+  assert.equal(
+    detectApplicationSchemaVersion(PREVIOUS_APPLICATION_SCHEMA_VERSION),
+    PREVIOUS_APPLICATION_SCHEMA_VERSION,
+  );
+  assert.equal(
+    detectApplicationSchemaVersion(String(PREVIOUS_APPLICATION_SCHEMA_VERSION)),
+    PREVIOUS_APPLICATION_SCHEMA_VERSION,
   );
 });
 

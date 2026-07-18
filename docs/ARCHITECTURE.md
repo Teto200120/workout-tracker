@@ -11,7 +11,7 @@ The deployed app remains directly served HTML, CSS, images, and browser-native E
 1. Import and start `init()` from `router.js`.
 2. Register `service-worker.js` after the window load event.
 
-`src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, and app-wide rendering. Startup opens IndexedDB, completes application-schema detection, validation, and migration before rendering, applies settings, seeds routines only when the routine store is empty, binds events, prepares routine selectors, renders all screens, and opens Home.
+`src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, and app-wide rendering. Startup opens IndexedDB, completes application-schema detection, validation, and migration, applies settings, and then evaluates the display-name gate while the static app shell remains hidden. A required name shows the one-screen onboarding surface; a usable saved name continues through routine seeding, event binding, selector preparation, app-wide rendering, and Home.
 
 ## Dependency direction
 
@@ -85,11 +85,13 @@ To add a pure workout calculation:
 - Lifecycle: `openDatabase`, `isDatabaseOpen`, `seedDefaultTemplates`
 - App-wide operations: `getAllApplicationRecords`, `clearApplicationStores`, `importBackupRecords`, `replaceApplicationRecords`
 
-The database name, version, store names, key paths, and indexes are unchanged. Record-specific writes validate schema 1 before opening a write request. `importBackupRecords` keeps one read-write transaction across all three stores, handles request and transaction errors, and explicitly aborts if synchronous or asynchronous insertion fails. `replaceApplicationRecords` uses the same multi-store transaction for startup migration and compensating rollback.
+The database name, version, store names, key paths, and indexes are unchanged. Record-specific writes validate schema 2 before opening a write request. `importBackupRecords` keeps one read-write transaction across all three stores, handles request and transaction errors, and explicitly aborts if synchronous or asynchronous insertion fails. `replaceApplicationRecords` uses the same multi-store transaction for startup migration and compensating rollback.
 
 `storage/local.js` owns the existing settings, goals, draft, and backup-metadata keys plus `hector_workout_data_schema_version`. It provides typed-by-purpose reads and validated writes, raw snapshot/restore operations for cross-storage recovery, and application cleanup. Clear All Local Data removes the schema marker.
 
 `application/data-schema.js` coordinates startup reads, the pure migration pipeline, transactional IndexedDB replacement, localStorage persistence, marker-last completion, and compensating rollback. Current-version startup validates without rewriting records.
+
+`application/display-name.js` owns the onboarding-required decision and the single-flight validated settings write. Onboarding and Profile own DOM feedback; this application boundary preserves every unrelated setting and returns a name-only result.
 
 `application/backup.js` builds canonical backup-file version 3 payloads, migrates supported legacy envelopes, validates before confirmation and writes, coordinates atomic IndexedDB import with localStorage restoration and compensating rollback, and clears application-owned data. File selection, downloads, confirmations, rendering, and toast messages remain in `screens/backup.js`.
 
@@ -114,9 +116,11 @@ Screen modules may query and update their DOM, bind generated controls, call dom
 Feature state now has a specific owner:
 
 - `active-workout.js`: editing workout ID, session timer handle, exercise-detail element/tab/render token, drag state, focus token, completion workout, and completion tags; Exercise Details asks the catalog boundary for an optional name match and builds catalog or generic Guide DOM without changing the active exercise
-- `exercise-picker.js`: local/catalog result state, collapsed-filter state/count, limited-versus-expanded local results, preview selection, async load token, and selection guard; the component reads routines and completed workouts through the existing storage interfaces, reads only the provider-neutral catalog boundary, and receives current-workout names and the existing name-only add command from the router
+- `exercise-picker.js`: one dialog controller with per-open Active Workout or Routine context and add/replace mode; it owns local/catalog result state, collapsed-filter state/count, limited-versus-expanded local results, preview selection, async load token, focus return, and selection guard, and resolves only `{ name }`
 - `today.js`: CTA mode/morph state and Home active-workout timer handle
-- `routines.js`: routine draft exercises and editing routine ID
+- `routines.js`: routine draft exercises and editing routine ID; Browse and Change update only this unsaved name array until the established Save Routine action succeeds
+- `onboarding.js`: the one-screen gate, retryable inline storage feedback, and reveal transition
+- `profile.js`: display-name rendering plus the later edit/cancel/save UI
 - `indexed-db.js`: open database connection
 - Router and DOM: currently visible screen and rendered active exercise position
 - localStorage draft: serialized recovery state, including the editing workout ID and active exercise index
@@ -135,7 +139,7 @@ The catalog prototype is a static-data feature with a development-only ingestion
 4. `catalog-loader.js` fetches the same-origin static asset asynchronously, retains it only in memory, and constructs one resolver index for that loaded snapshot.
 5. `catalog-search.js` ranks and filters normalized data and merges it with independently collected local names.
 6. `exercise-picker.js` renders a short local section, catalog results/status, compact filter disclosure, and contained summary preview.
-7. Selection crosses into Active Workout as a string name only.
+7. Selection crosses into Active Workout or the routine draft as a provider-independent name only. Routine replace changes only the selected unsaved row; opening a routine never renames existing entries.
 8. `exercise-catalog-resolver.js` can later map any displayed saved name to one unambiguous normalized-name or reviewed-alias match. It does not read the DOM or storage and deliberately performs no fuzzy matching.
 9. `exercise-guide-adapter.js` converts a matched record into provider-neutral Guide data. `active-workout.js` inserts provider strings with `textContent`, or keeps the existing generic Guide when matching/instructions are unavailable.
 
@@ -157,7 +161,7 @@ No mutable feature state, calculation, icon, settings accessor, or storage funct
 
 Pure domain functions, catalog contracts/adapters/search/resolution/Guide adaptation, and the backup-structure validator are imported directly by Node's built-in test runner from `tests/unit/`. These tests cover formulas, warm-up handling, aggregation, PR comparison, schedule boundaries, explicit-time rules, saveability, progression targets, catalog normalization/ranking/failure behavior, conservative matching/ambiguity, preview/Guide shaping, and pre-write backup rejection without a browser.
 
-Playwright remains responsible for storage integration, DOM rendering, navigation, routine selection, compact local/catalog exercise-picker behavior, offline/failure paths, preview scroll ownership, catalog/generic Guide selection, exact/alias/history enrichment without rewrites, Exercise Details scroll ownership, draft recovery, workout save/update behavior, settings, backup compatibility and rollback, and representative larger histories.
+Playwright remains responsible for storage integration, first-run gating and no-Home-flash behavior, display-name edit/retry/clear/backup flows, DOM rendering, navigation, Active Workout and Routine add/replace/cancel selection, compact local/catalog exercise-picker behavior, offline/failure paths, preview scroll ownership, catalog/generic Guide selection, exact/alias/history enrichment without rewrites, Exercise Details scroll ownership, draft recovery, workout save/update behavior, settings, backup compatibility and rollback, and representative larger histories.
 
 Storage errors propagate to screens or application callers. Unit tests assert pure return values; Playwright asserts the user-visible result and checks page and console errors.
 
@@ -170,8 +174,8 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 3. Bump the cache name once for the completed change set.
 4. Verify an online load before testing cached/offline startup.
 
-The current cache is `hector-workout-tracker-pwa-v16`. It includes every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets. This refinement is part of the same unreleased v16 branch, so adding the new paths completes that app shell without creating a second cache version.
+The current cache is `hector-workout-tracker-pwa-v17`. It includes the onboarding screen and application module, routine-draft domain helper, shared picker, every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets.
 
 ## Versioned data contracts
 
-The full record contracts, application schema 0-to-1 migration, version boundaries, startup recovery sequence, backup compatibility rules, future-version behavior, and future-migration procedure are documented in [DATA_SCHEMA.md](DATA_SCHEMA.md). IndexedDB remains version 2, application data is schema 1, and new backup files are version 3. The legacy `weights` store and backups without a `weights` array remain supported.
+The full record contracts, ordered application schema 0-to-1-to-2 migration, version boundaries, startup recovery and onboarding sequence, backup compatibility rules, future-version behavior, and future-migration procedure are documented in [DATA_SCHEMA.md](DATA_SCHEMA.md). IndexedDB remains version 2, application data is schema 2, and new backup files remain version 3. The legacy `weights` store and backups without a `weights` array remain supported.

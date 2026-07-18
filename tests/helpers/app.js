@@ -20,7 +20,23 @@ export function monitorRuntime(page) {
   return () => expect(errors, "unexpected browser errors").toEqual([]);
 }
 
-export async function loadApp(page) {
+export async function completeOnboarding(page, displayName = "Test User") {
+  const onboarding = page.locator("#onboarding");
+  if (!(await onboarding.isVisible())) return;
+  await expect(page.locator("#appShell")).toBeHidden();
+  await page.locator("#onboardingDisplayName").fill(displayName);
+  await page.locator("#onboardingSubmit").click();
+  await expect(onboarding).toBeHidden();
+  await expect(page.locator("#appShell")).toBeVisible();
+}
+
+export async function loadApp(
+  page,
+  {
+    completeOnboarding: shouldCompleteOnboarding = true,
+    displayName = "Test User",
+  } = {},
+) {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "vibrate", {
       configurable: true,
@@ -28,10 +44,16 @@ export async function loadApp(page) {
     });
   });
   await page.goto("/");
-  await expect(page).toHaveTitle("Hector's Workout Tracker");
+  await expect(page).toHaveTitle("Workout Tracker");
+  await waitForDatabaseOpen(page);
+  if (!shouldCompleteOnboarding) {
+    await expect(page.locator("#onboarding")).toBeVisible();
+    await expect(page.locator("#appShell")).toBeHidden();
+    return;
+  }
+  await completeOnboarding(page, displayName);
   await expect(page.locator("#log")).toHaveClass(/active/);
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
-  await waitForDatabaseOpen(page);
 }
 
 export async function waitForDatabaseOpen(page) {

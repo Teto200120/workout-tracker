@@ -7,6 +7,7 @@ import {
   canonicalWorkout,
 } from "../fixtures/schema-data.js";
 import {
+  completeOnboarding,
   loadApp,
   monitorRuntime,
   readStore,
@@ -76,6 +77,8 @@ test("legacy startup migrates IndexedDB and localStorage without duplication", a
   await seedRawApplicationData(page, legacySeed());
   await page.reload();
   await waitForDatabaseOpen(page);
+  await expect(page.locator("#onboarding")).toBeVisible();
+  await completeOnboarding(page, "Migration User");
 
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
   expect(
@@ -155,6 +158,7 @@ test("current startup validates without rewriting or duplicating records", async
   const workout = canonicalWorkout({ currentSentinel: { unchanged: true } });
   const routine = canonicalRoutine({ name: "Current Browser Routine" });
   const settings = canonicalSettings({
+    displayName: "Current User",
     animations: false,
     currentSettingSentinel: 0,
   });
@@ -222,6 +226,8 @@ test("failed startup migration preserves source data and succeeds on retry", asy
   await seedRawApplicationData(page, legacySeed());
   await page.reload();
   await waitForDatabaseOpen(page);
+  await expect(page.locator("#onboarding")).toBeVisible();
+  await completeOnboarding(page, "Retry User");
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
   expect(
     await page.evaluate(() =>

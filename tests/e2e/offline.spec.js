@@ -1,6 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
-import { monitorRuntime, readStore, startRoutine } from "../helpers/app.js";
+import {
+  completeOnboarding,
+  monitorRuntime,
+  openPrimary,
+  readStore,
+  startRoutine,
+} from "../helpers/app.js";
 
 test.use({ serviceWorkers: "allow" });
 
@@ -26,7 +32,8 @@ test("the current app shell starts from the service-worker cache offline", async
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
   await page.goto("/");
-  await expect(page).toHaveTitle("Hector's Workout Tracker");
+  await expect(page).toHaveTitle("Workout Tracker");
+  await completeOnboarding(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
   await expect
@@ -46,7 +53,7 @@ test("the current app shell starts from the service-worker cache offline", async
   await context.setOffline(true);
   try {
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page).toHaveTitle("Hector's Workout Tracker");
+    await expect(page).toHaveTitle("Workout Tracker");
     await expect(page.locator("#log")).toHaveClass(/active/);
     await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
     await expect(page.locator("#todayStartWorkout .cta-label")).toContainText(
@@ -81,8 +88,18 @@ test("the current app shell starts from the service-worker cache offline", async
     await expect(page.locator("#completionModal")).toBeHidden();
     expect(await readStore(page, "workouts")).toHaveLength(1);
 
+    await openPrimary(page, "profile");
+    await page.locator('[data-profile-target="templates"]').click();
+    await page.locator("#browseTemplateExercise").click();
+    await page.locator("#exercisePickerSearch").fill("Air Bike");
+    await page.locator('[data-catalog-id="free-exercise-db:Air_Bike"]').click();
+    await page.locator("#exercisePickerPreviewAdd").click();
+    await expect(
+      page.locator("#templateDraftList .routine-draft-name"),
+    ).toHaveText("Air Bike");
+
     await page.reload({ waitUntil: "domcontentloaded" });
-    await expect(page).toHaveTitle("Hector's Workout Tracker");
+    await expect(page).toHaveTitle("Workout Tracker");
     await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
     expect(await readStore(page, "workouts")).toHaveLength(1);
     assertNoRuntimeErrors();

@@ -8,6 +8,7 @@ import {
   validateBackupStructure
 } from "../application/backup.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
+import { isOnboardingRequired } from "../application/display-name.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { applyAppSettings } from "../core/settings.js";
 import { today, toast } from "../core/utils.js";
@@ -19,6 +20,7 @@ import { backupFailureMessage } from "../schema/errors.js";
 import { getLegacyWeights, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
 import { getBackupMeta, getDraft, setBackupMeta } from "../storage/local.js";
 import { loadWorkoutTemplate, stopSessionElapsedTimer } from "./active-workout.js";
+import { showOnboarding } from "./onboarding.js";
 
 const exportCoordinator = createActionCoordinator();
 const importCoordinator = createActionCoordinator();
@@ -151,6 +153,7 @@ export async function importData(file) {
       applyAppSettings();
       await refreshTemplateDropdowns();
       await renderAll();
+      if (isOnboardingRequired()) showOnboarding({ resetInput: true });
       toast("Backup imported.");
     } catch (error) {
       console.info("Backup import failed.", error);
@@ -173,6 +176,7 @@ export async function clearAllData() {
       await refreshTemplateDropdowns();
       await loadWorkoutTemplate();
       await renderAll();
+      showOnboarding({ resetInput: true });
       toast("All local data cleared.");
     } catch (error) {
       console.info("Local data clear failed.", error);
