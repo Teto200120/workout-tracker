@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  completeOnboarding,
   getDisplayName,
   isOnboardingRequired,
   saveDisplayName,
@@ -15,17 +16,23 @@ function settings(displayName) {
   return structuredClone({ ...DEFAULT_APP_SETTINGS, displayName });
 }
 
-function installLocalStorage(initialSettings, { failWrites = false } = {}) {
+function installLocalStorage(
+  initialSettings,
+  { failKey = null, failWrites = false, initialMarker } = {},
+) {
   const values = new Map();
   if (initialSettings !== undefined) {
     values.set("hector_workout_settings_v1", JSON.stringify(initialSettings));
+  }
+  if (initialMarker !== undefined) {
+    values.set("hector_workout_data_schema_version", String(initialMarker));
   }
   const storage = {
     getItem(key) {
       return values.has(key) ? values.get(key) : null;
     },
     setItem(key, value) {
-      if (failWrites) throw new Error("storage unavailable");
+      if (failWrites || key === failKey) throw new Error("storage unavailable");
       values.set(key, String(value));
     },
     removeItem(key) {
@@ -113,6 +120,41 @@ test("a failed display-name write leaves onboarding required and releases for re
 
   installLocalStorage(original);
   const retry = saveDisplayName("Alex");
+  assert.equal(retry.started, true);
+  assert.equal((await retry.promise).saved, true);
+});
+
+test("onboarding persists settings before the current schema marker", async () => {
+  const original = settings(null);
+  const values = installLocalStorage(original, { initialMarker: 2 });
+  const result = await completeOnboarding("  Alex  ").promise;
+  assert.equal(result.saved, true);
+  assert.equal(result.displayName, "Alex");
+  assert.equal(
+    JSON.parse(values.get("hector_workout_settings_v1")).displayName,
+    "Alex",
+  );
+  assert.equal(values.get("hector_workout_data_schema_version"), "2");
+});
+
+test("onboarding marker failure rolls back the display name and allows retry", async () => {
+  const original = settings(null);
+  const values = installLocalStorage(original, {
+    failKey: "hector_workout_data_schema_version",
+    initialMarker: 2,
+  });
+  await assert.rejects(
+    completeOnboarding("Retry Me").promise,
+    (error) => error.code === "onboarding_persistence_failed",
+  );
+  assert.deepEqual(
+    JSON.parse(values.get("hector_workout_settings_v1")),
+    original,
+  );
+  assert.equal(values.get("hector_workout_data_schema_version"), "2");
+
+  installLocalStorage(original, { initialMarker: 2 });
+  const retry = completeOnboarding("Retry Me");
   assert.equal(retry.started, true);
   assert.equal((await retry.promise).saved, true);
 });

@@ -133,6 +133,7 @@ export async function clearApplicationData() {
   await clearApplicationStores();
   clearApplicationLocalStorage();
   await seedDefaultTemplates();
+  setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
 }
 
 export function daysSinceBackup(lastExportedAt, now = new Date()) {

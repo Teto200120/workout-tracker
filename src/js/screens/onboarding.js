@@ -1,4 +1,4 @@
-import { saveDisplayName } from "../application/display-name.js";
+import { completeOnboarding } from "../application/display-name.js";
 import {
   firstValidationMessage,
   validateDisplayName,
@@ -87,7 +87,7 @@ async function submitOnboarding(event) {
   }
   clearError();
   try {
-    const operation = saveDisplayName(input.value);
+    const operation = completeOnboarding(input.value);
     const result = await operation.promise;
     if (!result.saved) {
       showError(result.message || "Enter a valid display name.");

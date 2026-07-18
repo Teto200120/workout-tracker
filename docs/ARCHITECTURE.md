@@ -174,7 +174,7 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 3. Bump the cache name once for the completed change set.
 4. Verify an online load before testing cached/offline startup.
 
-The current cache is `hector-workout-tracker-pwa-v17`. It includes the onboarding screen and application module, routine-draft domain helper, shared picker, every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets.
+The current cache is `hector-workout-tracker-pwa-v18`. It includes the onboarding screen and application module, routine-draft domain helper, shared picker, every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets.
 
 ## Versioned data contracts
 

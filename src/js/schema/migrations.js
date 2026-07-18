@@ -184,7 +184,10 @@ export function prepareBackupImport(data) {
     deferIdConstraints: true,
     source: "backup"
   });
-  if (migratedData.settings?.displayName !== null) {
+  if (
+    migratedData.settings !== null &&
+    migratedData.settings.displayName !== null
+  ) {
     migratedData.settings.displayName = normalizeValidatedDisplayName(
       migratedData.settings.displayName,
       {

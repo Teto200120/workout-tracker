@@ -101,6 +101,33 @@ test("first launch gates the app, validates safely, retries storage, and persist
   await page.evaluate(() => {
     globalThis.__restoreStorageSetItem();
     delete globalThis.__restoreStorageSetItem;
+    const original = Storage.prototype.setItem;
+    globalThis.__restoreMarkerSetItem = () => {
+      Storage.prototype.setItem = original;
+    };
+    Storage.prototype.setItem = function setItem(key, value) {
+      if (key === "hector_workout_data_schema_version") {
+        throw new DOMException("Storage is unavailable", "QuotaExceededError");
+      }
+      return original.call(this, key, value);
+    };
+  });
+  await input.fill("Marker Retry");
+  await page.locator("#onboardingSubmit").click();
+  await expect(page.locator("#onboardingError")).toContainText(
+    "Could not save your name",
+  );
+  await expect(input).toHaveValue("Marker Retry");
+  await expect(page.locator("#onboarding")).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("hector_workout_settings_v1"),
+    ),
+  ).toBe(null);
+
+  await page.evaluate(() => {
+    globalThis.__restoreMarkerSetItem();
+    delete globalThis.__restoreMarkerSetItem;
     globalThis.__settingsWriteCount = 0;
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function setItem(key, value) {

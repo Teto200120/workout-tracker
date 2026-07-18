@@ -77,10 +77,30 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
   expect(exported.templates).toHaveLength(1);
   expect(exported.settings.displayName).toBe("Test User");
 
+  await page.evaluate(() => {
+    globalThis.__schemaMarkerResetEvents = [];
+    const originalRemoveItem = Storage.prototype.removeItem;
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.removeItem = function removeItem(key) {
+      if (key === "hector_workout_data_schema_version") {
+        globalThis.__schemaMarkerResetEvents.push("remove");
+      }
+      return originalRemoveItem.call(this, key);
+    };
+    Storage.prototype.setItem = function setItem(key, value) {
+      if (key === "hector_workout_data_schema_version") {
+        globalThis.__schemaMarkerResetEvents.push(`set:${value}`);
+      }
+      return originalSetItem.call(this, key, value);
+    };
+  });
   page.once("dialog", (dialog) => dialog.accept());
   await page.locator("#clearData").click();
   expect(await readStore(page, "workouts")).toEqual([]);
   expect(await readStore(page, "weights")).toEqual([]);
+  expect(
+    (await readStore(page, "templates")).some((item) => item.id === routine.id),
+  ).toBe(false);
   const storageAfterClear = await page.evaluate(() => ({
     goals: localStorage.getItem("hector_workout_goals_v1"),
     draft: localStorage.getItem("hector_workout_draft_v1"),
@@ -93,10 +113,21 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     draft: null,
     settings: null,
     backup: null,
-    schema: null,
+    schema: String(CURRENT_APPLICATION_SCHEMA_VERSION),
   });
+  expect(
+    await page.evaluate(() => globalThis.__schemaMarkerResetEvents),
+  ).toEqual(["remove", `set:${CURRENT_APPLICATION_SCHEMA_VERSION}`]);
   await expect(page.locator("#onboarding")).toBeVisible();
-  await completeOnboarding(page, "Temporary User");
+  await completeOnboarding(page, "Reset User");
+  await page.reload();
+  await expect(page.locator("#onboarding")).toBeHidden();
+  await expect(page.locator("#todayGreeting")).toContainText("Reset User");
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("hector_workout_data_schema_version"),
+    ),
+  ).toBe(String(CURRENT_APPLICATION_SCHEMA_VERSION));
   await openBackup(page);
 
   delete exported.weights;

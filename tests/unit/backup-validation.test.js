@@ -5,6 +5,7 @@ import { prepareBackupImport } from "../../src/js/schema/migrations.js";
 import {
   CURRENT_APPLICATION_SCHEMA_VERSION,
   CURRENT_BACKUP_FILE_VERSION,
+  SUPPORTED_BACKUP_FILE_VERSIONS,
 } from "../../src/js/schema/versions.js";
 import {
   canonicalWorkout,
@@ -26,6 +27,45 @@ test("backup validation migrates legacy arrays and keeps legacy weights optional
     prepareBackupImport(legacyBackup()).data.settings.displayName,
     null,
   );
+});
+
+test("backups without settings stay settings-less across every supported file version", () => {
+  for (const version of SUPPORTED_BACKUP_FILE_VERSIONS) {
+    const backup =
+      version === CURRENT_BACKUP_FILE_VERSION
+        ? currentBackup()
+        : legacyBackup({ version });
+    if (version === 0) delete backup.version;
+    delete backup.settings;
+
+    const prepared = prepareBackupImport(backup);
+    assert.equal(prepared.backupFileVersion, version);
+    assert.equal(prepared.presence.settings, false);
+    assert.equal(prepared.data.settings, null);
+    assert.doesNotThrow(() => validateBackupStructure(backup));
+  }
+});
+
+test("a backup with null settings stays settings-less", () => {
+  const prepared = prepareBackupImport(currentBackup({ settings: null }));
+  assert.equal(prepared.presence.settings, false);
+  assert.equal(prepared.data.settings, null);
+});
+
+test("a backup with a null display name preserves the null name", () => {
+  const backup = currentBackup();
+  backup.settings.displayName = null;
+  const prepared = prepareBackupImport(backup);
+  assert.equal(prepared.presence.settings, true);
+  assert.equal(prepared.data.settings.displayName, null);
+});
+
+test("a backup with a valid display name normalizes and preserves the name", () => {
+  const backup = currentBackup();
+  backup.settings.displayName = "  Zoë 🏋️  ";
+  const prepared = prepareBackupImport(backup);
+  assert.equal(prepared.presence.settings, true);
+  assert.equal(prepared.data.settings.displayName, "Zoë 🏋️");
 });
 
 test("backup validation preserves valid names and rejects malformed names atomically", () => {

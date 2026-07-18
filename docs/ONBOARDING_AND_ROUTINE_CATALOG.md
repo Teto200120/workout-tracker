@@ -37,7 +37,7 @@ Local options remain usable while the static catalog loads or if it fails. Custo
 - IndexedDB database version remains `2`; no store or index changed.
 - Application data-schema version is `2`; schema `1` migrates by adding `settings.displayName`, using `null` when no name existed.
 - Backup-file version remains `3`; the envelope already declares its independent `applicationSchemaVersion`.
-- Service-worker cache is `hector-workout-tracker-pwa-v17`.
+- Service-worker cache is `hector-workout-tracker-pwa-v18`.
 - Existing database, localStorage, package, and cache prefixes containing `hector` remain compatibility identifiers only. User-facing product copy is generic.
 
 The focused automated coverage is in `tests/unit/display-name.test.js`, `tests/unit/exercise-picker-context.test.js`, `tests/unit/routine-draft.test.js`, `tests/unit/schema-migrations.test.js`, `tests/unit/backup-validation.test.js`, and `tests/e2e/onboarding-routine-catalog.spec.js`. Backup, migration, offline, and existing picker regressions remain covered by their established suites.
