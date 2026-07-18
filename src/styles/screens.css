@@ -309,6 +309,43 @@
   text-align: right;
 }
 
+.settings-name-edit {
+  min-height: 44px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.13);
+  border: 1px solid rgba(255, 107, 69, 0.24);
+}
+
+.settings-name-form {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-top: 1px solid rgba(166, 190, 220, 0.13);
+}
+
+.settings-name-form label {
+  margin: 0;
+  color: #f7fbff;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.settings-name-form input {
+  min-height: 50px;
+  border-radius: 15px;
+  color: #f7fbff;
+  background: rgba(7, 27, 49, 0.58);
+}
+
+.settings-name-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .settings-range-pair {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1002,6 +1039,15 @@ body:has(#settings.active) #settings .muted {
   min-width: 74px;
 }
 
+.routine-browse-action {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 8px;
+  color: #ffd3c7;
+  background: rgba(255, 107, 69, 0.12);
+  border: 1px solid rgba(255, 107, 69, 0.24);
+}
+
 .routine-draft-panel {
   display: grid;
   gap: 10px;
@@ -1081,9 +1127,23 @@ body:has(#settings.active) #settings .muted {
 }
 
 .routine-remove-action {
-  min-height: 34px;
+  min-height: 44px;
   padding: 7px 10px;
   border-radius: 999px;
+  font-size: 0.76rem;
+}
+
+.routine-draft-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.routine-change-action {
+  min-height: 44px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #dceeff;
   font-size: 0.76rem;
 }
 
@@ -1961,6 +2021,14 @@ body:has(#dashboard.active) .tabs .tab.active {
   .settings-action-bar {
     grid-template-columns: 1fr;
   }
+
+  .routine-draft-row {
+    align-items: start;
+  }
+
+  .routine-draft-actions {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 430px) {
@@ -1992,6 +2060,10 @@ body:has(#dashboard.active) .tabs .tab.active {
   .settings-primary-action,
   .settings-secondary-action {
     min-height: 48px;
+  }
+
+  .settings-name-actions {
+    grid-template-columns: 1fr;
   }
 }
 

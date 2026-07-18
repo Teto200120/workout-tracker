@@ -12,7 +12,7 @@ The guardrail policy is:
 4. Ask for confirmation when a valid value is merely unusual.
 5. Keep the affected action retryable after failure.
 
-IndexedDB remains version 2, the application schema remains version 1, backup files remain version 3, and the service-worker cache remains `hector-workout-tracker-pwa-v16`.
+IndexedDB remains version 2, the application schema is version 2 after the display-name addition, backup files remain version 3, and the service-worker cache is `hector-workout-tracker-pwa-v17`.
 
 ## Risk matrix
 
@@ -28,11 +28,11 @@ IndexedDB remains version 2, the application schema remains version 1, backup fi
 | Backup import                          | File size, nesting, duplicate IDs, and domain-extreme values were unchecked before parsing/writes | Yes                                                 | Schema errors existed, but not practical abuse limits    | Imports could overlap                                                        | Critical: pre-parse size limit, complexity/domain validation, single-flight atomic restore |
 | Draft/local storage                    | A quota or browser storage exception could escape a UI event                                      | Draft only                                          | No durable correction message                            | Autosave could repeat the exception                                          | High: preserve visible inputs, skip invalid snapshots, recoverable failure messaging       |
 | Navigation and dialogs                 | Reload/back/rapid open-close could expose stale dialog or focus state                             | Indirectly                                          | Native dialog behavior plus existing routes              | Multiple opens and quick tabs were possible                                  | Medium: one dialog, focus trap/return, body lock, reload-safe hidden state                 |
-| Offline/catalog/service worker         | Missing assets could remove enrichment or create mixed-version modules                            | No catalog persistence                              | Generic Guide fallback existed                           | Repeated filtering only                                                      | Medium: bounded catalog contract; app-shell path coverage; v16 retained                    |
+| Offline/catalog/service worker         | Missing assets could remove enrichment or create mixed-version modules                            | No catalog persistence                              | Generic Guide fallback existed                           | Repeated filtering only                                                      | Medium: bounded catalog contract; app-shell path coverage; v17 includes current modules    |
 
 ## Input and action inventory
 
-The “storage boundary” column describes whether an invalid value can become canonical data after this pass. Schema validation remains a separate compatibility layer; the domain guardrails add beta-specific semantics without changing schema 1.
+The “storage boundary” column describes whether an invalid value can become canonical data after this pass. Schema validation remains a separate compatibility layer; the domain guardrails add beta-specific semantics without changing the schema-2 workout, routine, or catalog contracts.
 
 ### Active workout
 
@@ -126,7 +126,7 @@ The “storage boundary” column describes whether an invalid value can become 
 | Repeated navigation/open taps         | Screen changes are idempotent; one native Add Exercise dialog is used. Catalog preview selection has one in-flight outcome.                                                                                |
 | Dialog focus/scroll                   | Completion and exercise-picker flows trap/restore focus, lock document scrolling, preserve visible focus, and expose existing labels.                                                                      |
 | Navigating away with unsaved data     | Existing active-draft behavior remains; backup import adds a specific unsaved-draft confirmation.                                                                                                          |
-| Offline startup/service-worker update | Existing app-shell and generic catalog fallback remain; both new production modules are cached in v16.                                                                                                     |
+| Offline startup/service-worker update | Existing app-shell and generic catalog fallback remain; the production modules are cached in v17.                                                                                                          |
 | Current and legacy startup            | Existing schema 0-to-1 migration, marker-last behavior, and current-version no-rewrite path remain unchanged.                                                                                              |
 
 ## Exact limits and rationale

@@ -92,7 +92,7 @@ The same collector supplies both saved workouts and draft recovery. Therefore a 
 | Image licensing        | **Unknown:** the repository license is verified, but individual inherited image provenance and model/property considerations were not independently established. No images or image paths ship in the prototype.                   |
 | Localization           | **Observed:** English names/instructions only in the pinned snapshot; no locale field.                                                                                                                                             |
 | CORS                   | **Unknown:** not relied on or claimed.                                                                                                                                                                                             |
-| Offline strategy       | **Prototype:** normalize once, commit static JSON, cache it in app shell v16, search on-device.                                                                                                                                    |
+| Offline strategy       | **Prototype:** normalize once, commit static JSON, cache it in app shell v17, search on-device.                                                                                                                                    |
 | Update frequency       | **Observed:** current `main` commit is May 24, 2026; much of the dataset history predates it. Updates are maintainer-driven, not a guaranteed release cadence.                                                                     |
 | Data quality           | **Observed:** 29 null force, 87 null mechanic, 77 null equipment, and 5 empty instruction arrays. Some instruction prose contains grammar/formatting issues.                                                                       |
 | Duplicate names        | **Observed:** no exact case-insensitive duplicate names at the pinned revision. Adapter deduplication remains defensive.                                                                                                           |
@@ -238,7 +238,7 @@ Every usable runtime entry has this provider-independent shape:
 
 Required minimum provider inputs are a stable source ID and non-empty name. Missing optional scalar values become `null`; missing list values become `[]`. Names and strings are trimmed. Normalization is pure and does not mutate provider input. Unknown provider fields and upstream image paths are not copied. IDs, records, and names are deduplicated deterministically after normalized name/ID sorting.
 
-The contract is runtime/disposable catalog data, not application data schema 1. The UI imports only provider-neutral loader/search functions. Provider-specific field names are confined to `free-exercise-db-adapter.js` and the development refresh script.
+The contract is runtime/disposable catalog data, not application data schema 2. The UI imports only provider-neutral loader/search functions. Provider-specific field names are confined to `free-exercise-db-adapter.js` and the development refresh script.
 
 ## Catalog modules and interface
 
@@ -264,7 +264,7 @@ provider adapter + strict validation
         v
 src/data/exercise-catalog.json
         |
-        | static HTTP + service-worker app shell v16
+| static HTTP + service-worker app shell v17
         v
 catalog loader -> pure local search -> Add Exercise picker
        |                              |
@@ -346,7 +346,7 @@ Provider instruction text is trimmed, blank steps are removed, order is preserve
 - A compact live status distinguishes loading, ready, malformed-record skips, and unavailable states.
 - An invalid envelope, failed request, or zero usable records results in a non-blocking unavailable state.
 - A malformed individual record is skipped while valid records remain searchable.
-- `exercise-catalog.json` and every new production catalog module are in service-worker cache `hector-workout-tracker-pwa-v16`.
+- `exercise-catalog.json` and every production catalog, onboarding, and shared-picker module are in service-worker cache `hector-workout-tracker-pwa-v17`.
 - After one controlled online load, automated coverage reloads offline, resumes the draft, searches the cached catalog, and opens a catalog-backed Guide for an existing alias name.
 - If the cached asset cannot be loaded or parsed, local/custom picking and the generic Guide remain available without an error surface.
 - The catalog is disposable app-shell data, not IndexedDB user data and not part of backup export/import.
@@ -431,11 +431,11 @@ The beta-hardening pass now rejects overlong search/custom names, caps provider-
 - Package the normalized asset through an Android-specific repository/cache boundary.
 - Reuse the contract and adapter concepts, not service-worker or DOM code.
 - Decide resource packaging, background refresh, localization, accessibility, and device storage separately.
-- Do not add Android-only fields to web schema 1.
+- Do not add Android-only fields to web schema 2.
 
 ## Manual Samsung Galaxy S24 Ultra checks
 
-- Install/update to cache v16 online, enable airplane mode, cold-start, resume a draft, and search `Air Bike`.
+- Install/update to cache v17 online, enable airplane mode, cold-start, resume a draft, and search `Air Bike` from Active Workout and Routines.
 - Confirm local results and Create New Exercise remain usable while catalog loading is delayed or unavailable.
 - Confirm the filter panel is collapsed by default, its active count is announced, Reset works, and opening/closing it does not crowd or horizontally overflow the dialog.
 - With an empty query, confirm three local rows plus Show All keep local names accessible and the catalog heading/first row reachable. Search `Air Bike` and confirm a catalog result appears immediately.

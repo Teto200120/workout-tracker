@@ -74,7 +74,7 @@ export async function buildBackup(exportedAt) {
   });
   assertValidApplicationData(applicationData, { source: "backup" });
   return {
-    app: "Hector's Workout Tracker",
+    app: "Workout Tracker",
     backupFileVersion: CURRENT_BACKUP_FILE_VERSION,
     applicationSchemaVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
     database: DB_NAME,
@@ -103,6 +103,7 @@ export async function restoreBackup(data) {
     await seedDefaultTemplates();
     if (prepared.presence.goals) setGoals(prepared.data.goals);
     if (prepared.presence.settings) setAppSettings(prepared.data.settings);
+    else setAppSettings({ ...getAppSettings(), displayName: null });
     if (prepared.presence.backupMeta) setBackupMeta(prepared.data.backupMeta);
     setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
   } catch (cause) {
@@ -132,6 +133,7 @@ export async function clearApplicationData() {
   await clearApplicationStores();
   clearApplicationLocalStorage();
   await seedDefaultTemplates();
+  setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
 }
 
 export function daysSinceBackup(lastExportedAt, now = new Date()) {

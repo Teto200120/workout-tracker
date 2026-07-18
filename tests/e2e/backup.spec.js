@@ -5,6 +5,7 @@ import {
   CURRENT_BACKUP_FILE_VERSION,
 } from "../../src/js/schema/versions.js";
 import {
+  completeOnboarding,
   loadApp,
   monitorRuntime,
   openPrimary,
@@ -50,10 +51,11 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
       "hector_workout_goals_v1",
       JSON.stringify({ weeklyGoal: 3 }),
     );
-    const { cloneDefaultSettings, setAppSettings } =
+    const { cloneDefaultSettings, getAppSettings, setAppSettings } =
       await import("/src/js/core/settings.js");
     setAppSettings({
       ...cloneDefaultSettings(),
+      displayName: getAppSettings().displayName,
       animations: false,
     });
   });
@@ -73,11 +75,32 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
   expect(exported.version).toBeUndefined();
   expect(exported.workouts).toHaveLength(1);
   expect(exported.templates).toHaveLength(1);
+  expect(exported.settings.displayName).toBe("Test User");
 
+  await page.evaluate(() => {
+    globalThis.__schemaMarkerResetEvents = [];
+    const originalRemoveItem = Storage.prototype.removeItem;
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.removeItem = function removeItem(key) {
+      if (key === "hector_workout_data_schema_version") {
+        globalThis.__schemaMarkerResetEvents.push("remove");
+      }
+      return originalRemoveItem.call(this, key);
+    };
+    Storage.prototype.setItem = function setItem(key, value) {
+      if (key === "hector_workout_data_schema_version") {
+        globalThis.__schemaMarkerResetEvents.push(`set:${value}`);
+      }
+      return originalSetItem.call(this, key, value);
+    };
+  });
   page.once("dialog", (dialog) => dialog.accept());
   await page.locator("#clearData").click();
   expect(await readStore(page, "workouts")).toEqual([]);
   expect(await readStore(page, "weights")).toEqual([]);
+  expect(
+    (await readStore(page, "templates")).some((item) => item.id === routine.id),
+  ).toBe(false);
   const storageAfterClear = await page.evaluate(() => ({
     goals: localStorage.getItem("hector_workout_goals_v1"),
     draft: localStorage.getItem("hector_workout_draft_v1"),
@@ -90,8 +113,22 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     draft: null,
     settings: null,
     backup: null,
-    schema: null,
+    schema: String(CURRENT_APPLICATION_SCHEMA_VERSION),
   });
+  expect(
+    await page.evaluate(() => globalThis.__schemaMarkerResetEvents),
+  ).toEqual(["remove", `set:${CURRENT_APPLICATION_SCHEMA_VERSION}`]);
+  await expect(page.locator("#onboarding")).toBeVisible();
+  await completeOnboarding(page, "Reset User");
+  await page.reload();
+  await expect(page.locator("#onboarding")).toBeHidden();
+  await expect(page.locator("#todayGreeting")).toContainText("Reset User");
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("hector_workout_data_schema_version"),
+    ),
+  ).toBe(String(CURRENT_APPLICATION_SCHEMA_VERSION));
+  await openBackup(page);
 
   delete exported.weights;
   const validPath = testInfo.outputPath("backup-without-weights.json");
@@ -116,11 +153,38 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
   await expect(page.locator("#todayWorkoutSelect")).toContainText(
     "Round Trip Routine",
   );
+  await expect(page.locator("#todayGreeting")).toContainText("Test User");
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("hector_workout_settings_v1"))
+          .displayName,
+    ),
+  ).toBe("Test User");
 
   const invalidPath = testInfo.outputPath("invalid-backup.json");
   await writeFile(invalidPath, JSON.stringify({ workouts: "not-an-array" }));
   await page.locator("#importFile").setInputFiles(invalidPath);
   await expect(page.locator("#toast")).toContainText("Could not import backup");
+  expect(await readStore(page, "workouts")).toHaveLength(1);
+
+  const malformedNamePath = testInfo.outputPath("malformed-name-backup.json");
+  await writeFile(
+    malformedNamePath,
+    JSON.stringify({
+      ...exported,
+      settings: { ...exported.settings, displayName: "x".repeat(81) },
+    }),
+  );
+  await page.locator("#importFile").setInputFiles(malformedNamePath);
+  await expect(page.locator("#toast")).toContainText("Could not import backup");
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("hector_workout_settings_v1"))
+          .displayName,
+    ),
+  ).toBe("Test User");
   expect(await readStore(page, "workouts")).toHaveLength(1);
 
   const partialPath = testInfo.outputPath("transaction-failure-backup.json");
@@ -208,6 +272,16 @@ test("legacy backups migrate and future backup versions are rejected", async ({
     done: true,
     warmup: false,
   });
+  await expect(page.locator("#onboarding")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("hector_workout_settings_v1"))
+          .displayName,
+    ),
+  ).toBe(null);
+  await completeOnboarding(page, "Legacy Import User");
+  await openBackup(page);
 
   const beforeFutureImport = await readStore(page, "workouts");
   const futurePath = testInfo.outputPath("future-backup.json");

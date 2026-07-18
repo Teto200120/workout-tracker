@@ -1,10 +1,13 @@
 import { toast } from "./core/utils.js";
 import { init } from "./router.js";
 import { startupFailureMessage } from "./schema/errors.js";
+import { showStartupFailure } from "./screens/onboarding.js";
 
 init().catch((error) => {
   console.error("Tracker startup failed:", error);
-  toast(startupFailureMessage(error));
+  const message = startupFailureMessage(error);
+  showStartupFailure(message);
+  toast(message);
 });
 
 if ("serviceWorker" in navigator) {

@@ -12,12 +12,13 @@ import {
   legacyApplicationData,
 } from "../fixtures/schema-data.js";
 
-test("the registry contains the single real legacy-to-current migration", () => {
-  assert.deepEqual(Object.keys(APPLICATION_MIGRATIONS), ["0"]);
+test("the registry contains ordered legacy-to-v1 and display-name v1-to-v2 migrations", () => {
+  assert.deepEqual(Object.keys(APPLICATION_MIGRATIONS), ["0", "1"]);
   assert.equal(typeof APPLICATION_MIGRATIONS[0], "function");
+  assert.equal(typeof APPLICATION_MIGRATIONS[1], "function");
 });
 
-test("legacy version zero migrates to canonical schema one", () => {
+test("legacy version zero migrates through canonical schema two", () => {
   const legacy = legacyApplicationData();
   const migrated = migrateApplicationData(legacy, 0);
   assert.equal(validateApplicationData(migrated).valid, true);
@@ -25,7 +26,21 @@ test("legacy version zero migrates to canonical schema one", () => {
   assert.equal(migrated.workouts[0].date, legacy.workouts[0].date);
   assert.equal(migrated.workouts[0].exercises[0].sets[0].weight, "0");
   assert.equal(migrated.settings.animations, false);
+  assert.equal(migrated.settings.displayName, null);
   assert.equal(migrated.goals.weeklyGoal, 3);
+});
+
+test("schema one gains a null display name without changing existing settings", () => {
+  const schemaOne = canonicalApplicationData();
+  delete schemaOne.settings.displayName;
+  const before = structuredClone(schemaOne);
+  const migrated = migrateApplicationData(schemaOne, 1);
+  assert.equal(migrated.settings.displayName, null);
+  assert.deepEqual(
+    { ...migrated.settings, displayName: undefined },
+    { ...before.settings, displayName: undefined },
+  );
+  assert.deepEqual(schemaOne, before);
 });
 
 test("migration is deterministic and does not mutate its input", () => {

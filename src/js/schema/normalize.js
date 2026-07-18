@@ -103,6 +103,11 @@ export function normalizeSettings(value = {}) {
     };
   });
   const normalized = { ...defaults, ...source, schedule };
+  normalized.displayName = source.displayName === null || source.displayName === undefined
+    ? null
+    : typeof source.displayName === "string"
+      ? normalizeText(source.displayName, { trim: true })
+      : source.displayName;
   SETTINGS_NUMBER_FIELDS.forEach((field) => {
     const sourceValue = source[field];
     normalized[field] = sourceValue === null || sourceValue === undefined || sourceValue === "" ? defaults[field] : Number(sourceValue);

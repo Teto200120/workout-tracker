@@ -7,14 +7,14 @@ The tracker has three deliberately separate version concepts:
 | Concept                         | Current value | Storage                                                | Responsibility                                                                        |
 | ------------------------------- | ------------: | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | IndexedDB database version      |             2 | `indexedDB.open("hector_workout_tracker_fresh_v1", 2)` | Creates or upgrades object stores and indexes only.                                   |
-| Application data-schema version |             1 | localStorage key `hector_workout_data_schema_version`  | Describes the logical shape of all application-owned IndexedDB and localStorage data. |
+| Application data-schema version |             2 | localStorage key `hector_workout_data_schema_version`  | Describes the logical shape of all application-owned IndexedDB and localStorage data. |
 | Backup-file version             |             3 | `backupFileVersion` in exported JSON                   | Describes the backup envelope and import/export contract.                             |
 
-IndexedDB remains at version 2 because schema 1 needs no new store or index. The application schema marker is not stored on individual records. A single marker is sufficient because startup reads, validates, and migrates the full application snapshot before any screen renders.
+IndexedDB remains at version 2 because schema 2 needs no new store or index. The application schema marker is not stored on individual records. A single marker is sufficient because startup reads, validates, and migrates the full application snapshot before any application screen renders.
 
-A missing application marker means legacy application schema 0. A marker greater than 1 is a future version and stops startup without writing. Invalid, negative, fractional, or non-numeric markers also stop startup.
+A missing application marker means legacy application schema 0. Schema 1 is the prior canonical snapshot without a required display-name field. A marker greater than 2 is a future version and stops startup without writing. Invalid, negative, fractional, or non-numeric markers also stop startup.
 
-Backup imports support unversioned envelopes as backup version 0, historical version 1, and the prior exported version 2. New exports use version 3. Version 3 requires both `backupFileVersion: 3` and `applicationSchemaVersion: 1`. A higher backup or application-schema version is rejected as newer data rather than guessed at or downgraded.
+Backup imports support unversioned envelopes as backup version 0, historical version 1, and the prior exported version 2. New exports use version 3. Version 3 requires both `backupFileVersion: 3` and `applicationSchemaVersion: 2`. The backup-file version does not increase because the envelope already versions its application snapshot independently. A higher backup or application-schema version is rejected as newer data rather than guessed at or downgraded.
 
 ## Canonical application snapshot
 
@@ -54,7 +54,7 @@ The app has no canonical set ID today. Set order is the array order. Numeric leg
 | `notes` | Yes      | String; `""` is valid.                                                      |
 | `sets`  | Yes      | Ordered set array; an empty array is valid.                                 |
 
-Schema 1 has no exercise-catalog ID, image URL, equipment taxonomy, muscle taxonomy, API source, or remote metadata. Unknown existing metadata is retained but is not interpreted as a catalog identity.
+Schema 2 has no exercise-catalog ID, image URL, equipment taxonomy, muscle taxonomy, API source, or remote metadata. Unknown existing metadata is retained but is not interpreted as a catalog identity.
 
 ## Workout
 
@@ -89,6 +89,7 @@ Exercise order is represented only by the array. No separate order values are ad
 
 The canonical settings object includes every current behavior setting:
 
+- `displayName`: `null` when onboarding is required, otherwise a trimmed validated string of at most 80 Unicode code points.
 - `schedule`: entries `0` through `6`, each with `kind` (`gym`, `rest`, or `soccer`) and a routine-name string.
 - `defaultWeightJump`.
 - `compoundMin` and `compoundMax`.
@@ -99,7 +100,7 @@ The canonical settings object includes every current behavior setting:
 - `haptics`.
 - `animations`.
 
-Numeric settings are finite numbers. Rep-range values are at least 1 and each maximum is greater than or equal to its minimum. The weight jump is greater than zero. Flags are booleans. Missing legacy fields and schedule days receive the existing values from `DEFAULT_APP_SETTINGS`. Convertible legacy number and boolean strings are normalized.
+Numeric settings are finite numbers. Rep-range values are at least 1 and each maximum is greater than or equal to its minimum. The weight jump is greater than zero. Flags are booleans. A non-null display name must be visible safe text: blank, invisible-only, control-character, non-string, and over-limit values are invalid. Missing legacy fields and schedule days receive the existing values from `DEFAULT_APP_SETTINGS`. Convertible legacy number and boolean strings are normalized.
 
 ## Goals
 
@@ -141,21 +142,21 @@ New exports contain:
 
 ```js
 {
-  app: "Hector's Workout Tracker",
+  app: "Workout Tracker",
   backupFileVersion: 3,
-  applicationSchemaVersion: 1,
+  applicationSchemaVersion: 2,
   database: "hector_workout_tracker_fresh_v1",
   exportedAt: "ISO timestamp",
   workouts: [],
   weights: [],
   templates: [],
   goals: {},
-  settings: {},
+  settings: { displayName: "Local User", /* existing settings */ },
   backupMeta: {}
 }
 ```
 
-`workouts` is required. `weights` and `templates` remain optional on legacy imports. `goals`, `settings`, and `backupMeta` are restored only when present. Drafts are not exported. Legacy envelopes use the former generic `version` field or no version; version 3 deliberately uses the unambiguous `backupFileVersion` name.
+`workouts` is required. `weights` and `templates` remain optional on legacy imports. `goals`, `settings`, and `backupMeta` are restored only when present. Drafts are not exported. A current export carries its display name in `settings`. Supported older files without a usable name restore their compatible data and leave `displayName: null`, so onboarding runs before Home is shown. Legacy envelopes use the former generic `version` field or no version; version 3 deliberately uses the unambiguous `backupFileVersion` name.
 
 ## Validation and normalization
 
@@ -165,9 +166,9 @@ Canonical validation checks required objects and arrays, nested record paths, da
 
 `src/js/schema/normalize.js` is pure and non-mutating. It deep-clones safe persisted values, preserves IDs and dates, preserves set and exercise order, fills only existing application defaults, normalizes known scalar/boolean fields, and retains unknown safe fields. It never generates an ID, changes a workout date, recalculates duration, computes a record, or adds exercise-catalog data.
 
-## Migration 0 to 1
+## Migrations 0 to 1 to 2
 
-Schema 0 is the real unversioned data produced by the app before this change. The one registered migration:
+Schema 0 is the real unversioned data produced by the app before schema coordination. Migration 0 to 1:
 
 1. Validates the legacy snapshot with leniency only for documented missing/defaulted fields and convertible historic scalar forms.
 2. Adds missing set flags and scalar fields.
@@ -179,7 +180,9 @@ Schema 0 is the real unversioned data produced by the app before this change. Th
 8. Normalizes legacy weight numeric values.
 9. Validates the complete schema 1 output.
 
-There are no invented intermediate application versions. The migration registry maps each source version to exactly the next version. Current schema 1 data is validated and cloned by the pure pipeline but is not rewritten during startup.
+Migration 1 to 2 adds `settings.displayName`. A missing name becomes `null`; a present string is validated and boundary whitespace is normalized. Invalid names fail before persistence. The migration does not change IndexedDB records or any other settings field.
+
+The migration registry maps each source version to exactly the next version. Current schema 2 data is validated and cloned by the pure pipeline but is not rewritten during startup.
 
 ## Startup and recovery
 
@@ -193,18 +196,18 @@ Startup order is:
 6. Replace all affected IndexedDB records in one read-write transaction. Clear and put requests are queued only after the full migrated snapshot exists; any synchronous or request failure aborts the transaction.
 7. Write canonical localStorage values.
 8. Write `hector_workout_data_schema_version` last.
-9. Seed default routines only after schema handling succeeds.
-10. Bind and render the application.
+9. Apply settings, bind onboarding, and evaluate the display-name gate while the app shell remains hidden.
+10. If a name is required, show only onboarding. Otherwise seed defaults, bind application events, render, and open Home.
 
 If a persistence step fails, the coordinator restores the original IndexedDB records with a compensating multi-store transaction when needed, restores the exact raw localStorage snapshot, leaves the schema marker unchanged, and throws a structured error. Startup does not render. The screen shows a concise recovery message and the console receives the full technical error. The next startup can retry.
 
-IndexedDB and localStorage cannot share a native transaction. The implementation minimizes that boundary by preparing everything first, using one IndexedDB transaction, snapshotting exact localStorage strings, writing the marker last, and compensating caught failures. A browser or device process termination in the narrow interval between storage technologies cannot be synchronously compensated; the absent old marker and idempotent 0-to-1 migration make the next startup safe and non-duplicating.
+IndexedDB and localStorage cannot share a native transaction. The implementation minimizes that boundary by preparing everything first, using one IndexedDB transaction, snapshotting exact localStorage strings, writing the marker last, and compensating caught failures. A browser or device process termination in the narrow interval between storage technologies cannot be synchronously compensated; the absent old marker and ordered idempotent migrations make the next startup safe and non-duplicating.
 
 ## Backup restore safety
 
 Backup detection, validation, application-schema migration, normalization, and post-migration validation complete before confirmation or writes. Imported IndexedDB records are merged by ID exactly as before; unrelated existing entries stay. Workouts, weights, and routines share one transaction with explicit abort handling.
 
-Before import, the app snapshots every IndexedDB store and exact application localStorage strings. If a caught failure occurs after the import transaction, a compensating replacement restores the original stores and raw localStorage. The schema marker is written only after imported records, default-routine handling, and supplied localStorage values succeed. Future files and malformed structures are never written.
+Before import, the app snapshots every IndexedDB store and exact application localStorage strings. If a caught failure occurs after the import transaction, a compensating replacement restores the original stores and raw localStorage. The schema marker is written only after imported records, default-routine handling, and supplied localStorage values succeed. Future files, malformed structures, and malformed display names are never written. A missing legacy name is compatible and deliberately produces onboarding after import rather than inventing a person.
 
 ## Adding a future schema migration
 
@@ -219,8 +222,8 @@ Before import, the app snapshots every IndexedDB store and exact application loc
 
 ## Compatibility guarantees and deferred work
 
-Schema 1 preserves the existing database name, IndexedDB version, stores, indexes, localStorage data keys, workout/routine IDs, workout dates, ordering, legacy weights, backup merge semantics, optional legacy backup weights, current draft behavior, and visible workout workflows. Safe unknown record fields survive migration and new backup round trips.
+Schema 2 preserves the existing database name, IndexedDB version, stores, indexes, localStorage data keys, workout/routine IDs, workout dates, ordering, legacy weights, backup merge semantics, optional legacy backup weights, current draft behavior, and visible workout workflows. Its only new canonical field is `settings.displayName`. Safe unknown record fields survive migration and new backup round trips.
 
 The exercise-catalog prototype does not change these contracts. `src/data/exercise-catalog.json` is versioned disposable application content cached by the service worker, not application-owned user data. It is never read or written by IndexedDB/localStorage interfaces, schema migration, normalization, backup export/import, or Clear All Local Data. Selecting a catalog entry passes only its canonical name into the existing Exercise contract, so drafts and saved workouts remain `{ name, notes, sets }`.
 
-Schema 1 deliberately adds no catalog ID, provider/source, remote image, equipment taxonomy, muscle taxonomy, instruction/version reference, sync status, catalog/custom discriminator, account ownership, or Android-only field. Custom exercises and catalog-derived names are intentionally indistinguishable after selection. A future requirement for durable catalog identity must define compatibility and custom-exercise rules as a separate application-schema migration. This document remains the platform-neutral user-data blueprint for that work and an eventual Android implementation; the runtime catalog is not an Android storage migration.
+Schema 2 deliberately adds no catalog ID, provider/source, remote image, equipment taxonomy, muscle taxonomy, instruction/version reference, sync status, catalog/custom discriminator, account ownership, or Android-only field. Custom exercises and catalog-derived names are intentionally indistinguishable after selection in both workouts and routines. A future requirement for durable catalog identity must define compatibility and custom-exercise rules as a separate application-schema migration. This document remains the platform-neutral user-data blueprint for that work and an eventual Android implementation; the runtime catalog is not an Android storage migration.

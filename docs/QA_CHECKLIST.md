@@ -2,18 +2,22 @@
 
 ## Startup
 
-- [ ] Load once with empty storage; Home renders with no console errors.
+- [ ] Load once with empty storage; only the one-screen display-name onboarding renders, with no Home flash or console errors.
+- [ ] Try blank, invisible-only, 81-character, international, emoji, and markup-like names; confirm clear validation, literal safe rendering, retained input, and successful correction.
+- [ ] Force a settings write failure and double-submit; confirm one in-flight attempt, visible retryable feedback, retained input, and no app entry until the retry succeeds.
+- [ ] Save a valid name; confirm Home, Profile, and Settings update, then reload without seeing onboarding.
 - [ ] Reload; default routines are not duplicated.
 - [ ] Confirm Home is active with and without an existing workout draft.
 - [ ] Test once with animations enabled and once disabled.
-- [ ] Seed unversioned workouts, routines, settings, goals, draft, backup metadata, and legacy weights; confirm migration writes schema marker `1` only after all data remains usable.
-- [ ] Reload canonical schema `1` data; confirm records and raw localStorage values are not rewritten or duplicated.
+- [ ] Seed unversioned workouts, routines, settings, goals, draft, backup metadata, and legacy weights; confirm ordered migration writes schema marker `2` only after all data remains usable, then requests a name.
+- [ ] Reload canonical schema `2` data with a valid name; confirm records and raw localStorage values are not rewritten or duplicated.
 - [ ] Seed malformed legacy data; confirm startup stops, the original records remain, the marker stays absent, and the recovery message is visible.
 - [ ] Correct the malformed data and reload; confirm migration retries successfully.
 - [ ] Seed a future application schema marker; confirm startup refuses to downgrade or overwrite it.
 
 ## Home
 
+- [ ] Confirm the saved display name appears in the existing time-of-day greeting and markup-like text is not interpreted as HTML.
 - [ ] Check scheduled workout, rest-day copy, and completed-workout state.
 - [ ] Change the selected routine and start it; the selected routine opens.
 - [ ] Confirm the primary CTA shows Start, Resume, or the completed state correctly.
@@ -86,6 +90,10 @@
 ## Routines
 
 - [ ] Create, name, edit, and delete a routine; add exercises with button and Enter.
+- [ ] Browse the shared picker and add one local, one catalog, and one custom name; confirm only the unsaved draft changes before Save Routine.
+- [ ] Change one existing row through the picker; confirm other rows keep their exact names, Cancel is non-destructive, and focus returns to Browse/Change.
+- [ ] Exercise normalized duplicate add/replace confirmations and rapid selection; confirm intentional repeats require acceptance and no accidental duplicate action occurs.
+- [ ] Make the catalog unavailable and repeat local/custom add plus an empty search; confirm the routine builder remains usable.
 - [ ] Clear an unsaved draft and reset routines to defaults.
 - [ ] Start a saved routine and reload to confirm routine changes persist.
 - [ ] Try blank/81-character routine names, 121-character exercise names, normalized duplicates, and more than 100 exercises; confirm clear correction paths.
@@ -93,6 +101,7 @@
 
 ## Settings
 
+- [ ] Edit the display name, Cancel, save an international/emoji value, force one localStorage failure, and reload; confirm unrelated settings and the prior saved name survive failed/cancelled edits.
 - [ ] Save schedule, weight jump, rep ranges, haptics, and animations.
 - [ ] Reload and confirm settings apply to Home and Stats.
 - [ ] Reset settings and confirm workout history and routines remain.
@@ -102,10 +111,11 @@
 ## Backup Export and Import
 
 - [ ] Export representative workouts, routines, goals, settings, and legacy data.
-- [ ] Inspect the JSON and filename; confirm `backupFileVersion: 3` and `applicationSchemaVersion: 1`, then import it after Clear All Local Data.
+- [ ] Inspect the JSON and filename; confirm `backupFileVersion: 3`, `applicationSchemaVersion: 2`, and the saved display name, then import it after Clear All Local Data.
 - [ ] Confirm all supported data returns and restored routines are usable.
 - [ ] Try malformed JSON and a structurally invalid backup; confirm neither is imported.
-- [ ] Import an unversioned, v1, and v2 legacy backup; confirm each migrates to schema `1` without losing unknown safe record fields.
+- [ ] Import an unversioned, v1, and v2 legacy backup without a name; confirm each migrates to schema `2` without losing unknown safe record fields and requires onboarding before Home.
+- [ ] Import an over-limit, invisible-only, or non-string display name; confirm the whole import is rejected and current data/name remain unchanged.
 - [ ] Import a backup without `weights`; confirm it remains valid and the compatibility store stays intact.
 - [ ] Reimport a new v3 export; confirm meaningful data is equivalent and records are not duplicated beyond merge-by-ID behavior.
 - [ ] Try a future backup-file version and future application-schema version; confirm each is refused without writes.
@@ -113,18 +123,19 @@
 - [ ] Try an empty file, non-JSON, array top level, more than 25 MiB, nesting beyond 20 levels, excessive text, weight/reps above 10,000, and duplicate non-null IDs; confirm rejection occurs before any record changes.
 - [ ] Start a workout draft, import twice rapidly, and confirm one explicit draft warning, one import transaction, preserved draft, and one success outcome.
 - [ ] Cancel the file picker and confirmation; confirm no data changes and Import remains usable.
-- [ ] Clear all local data; confirm `hector_workout_data_schema_version` is removed and the next reload follows fresh-install migration.
+- [ ] Clear all local data; confirm `hector_workout_data_schema_version` and the name are removed and onboarding appears immediately.
 
 ## Offline Startup
 
 - [ ] Load online until the service worker controls the page.
 - [ ] Enable DevTools Network > Offline and reload; Home still renders.
 - [ ] Resume a cached draft offline, open Add Exercise, and confirm catalog search still returns the cached snapshot.
+- [ ] Open Routines offline, Browse the shared catalog, and add a name to the unsaved draft.
 - [ ] Open an existing exact/alias exercise Guide offline; confirm provider steps and attribution render from cache with no provider request.
 - [ ] Make the catalog asset unavailable in a disposable profile; confirm existing/local/custom exercises receive the generic Guide without an error.
 - [ ] Open cached subpages and confirm no mixed-version module errors.
 - [ ] Re-enable networking and confirm the current cache replaces older caches.
-- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v16`, every schema/catalog module is present, and `src/data/exercise-catalog.json` is cached.
+- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v17`, every onboarding/schema/catalog/routine-picker module is present, and `src/data/exercise-catalog.json` is cached.
 - [ ] Save and reload a representative workout while offline; confirm one record, recovered/corrected draft behavior, and no missing `input-guardrails.js` or `action-coordinator.js` request.
 
 ## Mobile Layout
@@ -133,19 +144,21 @@
 - [ ] Confirm no horizontal scrolling, clipped titles, or covered controls.
 - [ ] Focus form inputs and confirm they remain visible above fixed UI and keyboard.
 - [ ] Check the compact exercise picker, expanded filter panel, shortened preview, long catalog-backed Guide, completion overlay, long names, and bottom navigation.
+- [ ] At 412 x 915, check onboarding without nested scrolling and routine Browse/Change with long names, visible actions, 44 px targets, and no horizontal overflow.
 
 ## Samsung Galaxy S24 Ultra data checks
 
 - [ ] In Chrome portrait, migrate representative unversioned local data and confirm Home, History, Stats, Routines, Settings, and draft resume remain usable.
 - [ ] Force a malformed legacy record in a disposable test profile; confirm the migration failure message is readable and original data can still be exported/inspected after correction.
 - [ ] Export a v3 backup, clear data, reimport it, and confirm the schema marker and all supported data return.
-- [ ] Enable airplane mode after an online controlled load; confirm cache v16 starts Home, opens cached subpages, searches the catalog, and renders an existing-name catalog Guide without mixed-version module errors.
+- [ ] Enable airplane mode after an online controlled load; confirm cache v17 starts Home, opens cached subpages, searches the catalog from Active Workout and Routines, and renders an existing-name catalog Guide without mixed-version module errors.
 - [ ] Repeat keyboard, haptic, Exercise Details scrolling, compact filters/count/reset, local/Show All/catalog hierarchy, shortened preview/full Guide, save/edit, and no-horizontal-overflow checks at the device's default display scaling.
 
 ## Accessibility Basics
 
 - [ ] Confirm the active tab exposes `aria-current="page"`.
 - [ ] Check button names, input labels, focus indicators, and touch target size.
+- [ ] Confirm onboarding errors are announced, the name input keeps focus on correction, picker titles/actions describe add versus replace context, Escape/Back/cancel are non-destructive, and focus returns to the launcher.
 - [ ] Confirm the filter disclosure announces expanded/collapsed and active-count state, Reset stays reachable, Guide sections use headings, instructions use an ordered list, and source is not conveyed by color alone.
 - [ ] Activate interactive Stats cards with Enter and Space.
 - [ ] Confirm reduced/disabled motion does not break navigation.

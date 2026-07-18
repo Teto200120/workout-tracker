@@ -1,5 +1,6 @@
 import "./core/globals.js";
 import { ensureCurrentApplicationSchema } from "./application/data-schema.js";
+import { isOnboardingRequired } from "./application/display-name.js";
 import { bindExercisePicker } from "./components/exercise-picker.js";
 import { refreshTemplateDropdowns } from "./components/routine-selectors.js";
 import {
@@ -34,7 +35,12 @@ import {
 } from "./screens/active-workout.js";
 import { clearAllData, exportData, importData, renderBackupStatus } from "./screens/backup.js";
 import { bindHistoryActions, renderHistory } from "./screens/history.js";
-import { renderProfile } from "./screens/profile.js";
+import { bindProfileActions, renderProfile } from "./screens/profile.js";
+import {
+  bindOnboarding,
+  showApplicationShell,
+  showOnboarding,
+} from "./screens/onboarding.js";
 import { buildExerciseStats, renderDashboard, renderExerciseProgress, saveGoalsToStorage } from "./screens/progress.js";
 import {
   addTemplateExercise,
@@ -85,6 +91,9 @@ const STATS_DETAIL_DESTINATIONS = new Set([
   "statsGoals"
 ]);
 
+let applicationStarted = false;
+let eventsBound = false;
+
 function getScreenDestination(name) {
   const destination = SCREEN_ALIASES[name] || name || "home";
   return SCREEN_GROUPS[destination] ? destination : "home";
@@ -129,6 +138,8 @@ export function switchScreen(name) {
 }
 
 function bindEvents() {
+  if (eventsBound) return;
+  eventsBound = true;
   bindActiveWorkoutGuardrails();
   window.addEventListener("scroll", updateTodayCtaCompact, { passive: true });
   window.addEventListener("resize", updateTodayCtaCompact, { passive: true });
@@ -202,8 +213,10 @@ function bindEvents() {
   $("loadLastWorkout").addEventListener("click", async () => { await loadLastSameWorkout(); saveDraftSilently(); });
   bindExercisePicker({
     trigger: $("addExercise"),
+    context: "active-workout",
+    mode: "add",
     getCurrentExerciseNames: getCurrentWorkoutExerciseNames,
-    onSelect: addExerciseToWorkout
+    onSelect: ({ name }) => addExerciseToWorkout(name)
   });
   $("saveWorkout").addEventListener("click", handleSessionPrimaryAction);
   $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);
@@ -233,6 +246,12 @@ function bindEvents() {
   $("saveGoals").addEventListener("click", saveGoalsToStorage);
   bindHistoryActions();
   bindRoutineActions();
+  bindProfileActions({
+    onDisplayNameSaved: async () => {
+      await renderTodayView();
+      await renderProfile();
+    }
+  });
 }
 
 export async function renderAll() {
@@ -249,17 +268,31 @@ export async function init() {
   await openDatabase();
   await ensureCurrentApplicationSchema();
   applyAppSettings();
-  $("workoutDate").value = today();
-  $("startTime").value = "";
-  $("endTime").value = "";
-  await seedDefaultTemplates();
-  bindEvents();
+  bindOnboarding({ onComplete: activateApplication });
+  if (isOnboardingRequired()) {
+    showOnboarding({ resetInput: true });
+    return;
+  }
+  await activateApplication();
+}
+
+async function activateApplication() {
+  const firstStart = !applicationStarted;
+  if (firstStart) {
+    $("workoutDate").value = today();
+    $("startTime").value = "";
+    $("endTime").value = "";
+    await seedDefaultTemplates();
+    bindEvents();
+    applicationStarted = true;
+  }
   await refreshTemplateDropdowns();
-  await loadWorkoutTemplate();
+  if (firstStart) await loadWorkoutTemplate();
   await renderAll();
   await showTodayView();
+  showApplicationShell();
 
-  if (getDraft()) {
+  if (firstStart && getDraft()) {
     toast("Unsaved workout draft available. Tap Resume Draft if needed.");
   }
 }

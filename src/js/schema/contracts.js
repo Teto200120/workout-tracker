@@ -38,8 +38,8 @@ export const CANONICAL_CONTRACTS = Object.freeze({
     notes: "The exercises array contains ordered exercise-name strings."
   },
   settings: {
-    required: ["schedule", ...SETTINGS_NUMBER_FIELDS, ...SETTINGS_BOOLEAN_FIELDS],
-    notes: "Schedule entries are required for Sunday through Saturday and contain kind and routine."
+    required: ["displayName", "schedule", ...SETTINGS_NUMBER_FIELDS, ...SETTINGS_BOOLEAN_FIELDS],
+    notes: "displayName is a validated string after onboarding or null while onboarding is required. Schedule entries are required for Sunday through Saturday and contain kind and routine."
   },
   goals: {
     required: ["weeklyGoal"],

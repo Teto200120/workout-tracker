@@ -1,6 +1,8 @@
-# Hector's Workout Tracker
+# Workout Tracker
 
-A local-first progressive web app for tracking workouts, routines, progress, and backups.
+A local-first progressive web app for tracking workouts, routines, progress, and backups. First launch asks only for a local display name; the same offline exercise catalog is available when adding workout exercises or building routines.
+
+See [docs/ONBOARDING_AND_ROUTINE_CATALOG.md](docs/ONBOARDING_AND_ROUTINE_CATALOG.md) for the onboarding, display-name, shared-picker, persistence, and compatibility behavior.
 
 ## Development
 

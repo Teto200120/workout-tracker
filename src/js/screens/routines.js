@@ -1,6 +1,7 @@
 import "../core/globals.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
+import { openExercisePicker } from "../components/exercise-picker.js";
 import { cleanText, id, toast } from "../core/utils.js";
 import {
   INPUT_LIMITS,
@@ -11,6 +12,10 @@ import {
   validateRoutineInput,
   validateRoutineName
 } from "../domain/input-guardrails.js";
+import {
+  applyRoutineExerciseSelection,
+  hasRoutineExerciseDuplicate,
+} from "../domain/routine-draft.js";
 import { clearRoutines, deleteRoutine, getRoutines, saveRoutine, seedDefaultTemplates } from "../storage/indexed-db.js";
 import { loadWorkoutTemplate, showSessionView } from "./active-workout.js";
 
@@ -47,39 +52,41 @@ function renderTemplateDraft() {
     <div class="routine-draft-row">
       <span class="routine-draft-index">${index + 1}</span>
       <span class="routine-draft-name">${cleanText(exercise)}</span>
-      <button class="danger routine-remove-action" type="button" data-routine-action="remove-draft" data-exercise-index="${index}">Remove</button>
+      <div class="routine-draft-actions">
+        <button class="ghost routine-change-action" type="button" data-routine-action="change-draft" data-exercise-index="${index}" aria-label="Change ${cleanText(exercise)}">Change</button>
+        <button class="danger routine-remove-action" type="button" data-routine-action="remove-draft" data-exercise-index="${index}" aria-label="Remove ${cleanText(exercise)}">Remove</button>
+      </div>
     </div>
   `).join("");
 }
 
-function addTemplateExercise() {
-  const input = $("templateExerciseInput");
-  const result = validateExerciseName(input.value);
+function addTemplateExerciseName(name) {
+  const result = validateExerciseName(name);
   setRoutineFieldFeedback(
     "templateExerciseInput",
     "templateExerciseError",
     result,
   );
   if (!result.valid) {
-    input.focus();
+    $("templateExerciseInput")?.focus();
     toast(firstValidationMessage(result));
-    return;
+    return false;
   }
   if (templateDraftExercises.length >= INPUT_LIMITS.exercisesPerRoutine) {
     const message = `A routine is limited to ${INPUT_LIMITS.exercisesPerRoutine} exercises.`;
     $("templateExerciseError").textContent = message;
     toast(message);
-    return;
+    return false;
   }
   const value = result.normalized;
-  const duplicate = templateDraftExercises.some(
-    (exercise) => nameComparisonKey(exercise) === nameComparisonKey(value),
-  );
+  const duplicate = hasRoutineExerciseDuplicate(templateDraftExercises, value);
   if (duplicate && !confirm(`${value} is already in this routine. Add it again?`)) {
-    return;
+    return false;
   }
-  templateDraftExercises.push(value);
-  input.value = "";
+  templateDraftExercises = applyRoutineExerciseSelection(
+    templateDraftExercises,
+    { mode: "add", name: value },
+  );
   $("templateExerciseError").textContent = "";
   renderTemplateDraft();
   if (
@@ -88,6 +95,62 @@ function addTemplateExercise() {
   ) {
     toast("This routine now has an unusually large number of exercises.");
   }
+  return true;
+}
+
+function addTemplateExercise() {
+  const input = $("templateExerciseInput");
+  if (!addTemplateExerciseName(input.value)) return;
+  input.value = "";
+}
+
+function replaceTemplateDraftExercise(index, name) {
+  const result = validateExerciseName(name);
+  if (!result.valid) {
+    toast(firstValidationMessage(result));
+    return false;
+  }
+  const duplicate = hasRoutineExerciseDuplicate(
+    templateDraftExercises,
+    result.normalized,
+    { excludeIndex: index },
+  );
+  if (
+    duplicate &&
+    !confirm(`${result.normalized} is already in this routine. Use it again?`)
+  ) {
+    return false;
+  }
+  templateDraftExercises = applyRoutineExerciseSelection(
+    templateDraftExercises,
+    { mode: "replace", index, name: result.normalized },
+  );
+  renderTemplateDraft();
+  return true;
+}
+
+function openRoutinePicker({ mode, index = -1, origin }) {
+  const replacing = mode === "replace";
+  return openExercisePicker({
+    context: "routine",
+    mode,
+    currentName: replacing ? templateDraftExercises[index] || "" : "",
+    excludedNames: templateDraftExercises.filter(
+      (_exercise, exerciseIndex) => exerciseIndex !== index,
+    ),
+    getCurrentExerciseNames: () => [...templateDraftExercises],
+    origin,
+    getReturnFocusTarget: replacing
+      ? () =>
+          $("templateDraftList")?.querySelector(
+            `[data-routine-action="change-draft"][data-exercise-index="${index}"]`,
+          )
+      : () => $("browseTemplateExercise"),
+    onSelect: ({ name }) =>
+      replacing
+        ? replaceTemplateDraftExercise(index, name)
+        : addTemplateExerciseName(name),
+  });
 }
 
 function removeTemplateDraftExercise(index) {
@@ -296,8 +359,18 @@ export async function renderTemplates() {
 
 export function bindRoutineActions() {
   $("templateDraftList").addEventListener("click", (event) => {
-    const button = event.target.closest('[data-routine-action="remove-draft"]');
-    if (button) removeTemplateDraftExercise(Number(button.dataset.exerciseIndex));
+    const button = event.target.closest("[data-routine-action]");
+    if (!button) return;
+    const index = Number(button.dataset.exerciseIndex);
+    if (button.dataset.routineAction === "remove-draft") {
+      removeTemplateDraftExercise(index);
+    }
+    if (button.dataset.routineAction === "change-draft") {
+      openRoutinePicker({ mode: "replace", index, origin: button });
+    }
+  });
+  $("browseTemplateExercise").addEventListener("click", (event) => {
+    openRoutinePicker({ mode: "add", origin: event.currentTarget });
   });
   $("savedTemplates").addEventListener("click", (event) => {
     const button = event.target.closest("[data-routine-action]");

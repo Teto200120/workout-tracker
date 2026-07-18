@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Hector's Workout Tracker</title>
+  <title>Workout Tracker</title>
   <meta name="theme-color" content="#070b14" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -14,9 +14,32 @@
   <link rel="stylesheet" href="src/styles/main.css" />
 </head>
 <body>
-  <div class="app">
+  <section class="onboarding-shell" id="onboarding" hidden aria-labelledby="onboardingTitle">
+    <div class="onboarding-card">
+      <div class="onboarding-brand" aria-hidden="true">WT</div>
+      <p class="onboarding-eyebrow">Workout Tracker</p>
+      <h1 id="onboardingTitle">Welcome to your workout tracker</h1>
+      <p class="onboarding-intro">Keep workouts, routines, and progress on this device, ready whenever you train.</p>
+      <ul class="onboarding-benefits" aria-label="What you can do">
+        <li>Track workouts</li>
+        <li>Resume sessions</li>
+        <li>Review progress</li>
+      </ul>
+      <form class="onboarding-form" id="onboardingForm" novalidate>
+        <label for="onboardingDisplayName">What should we call you?</label>
+        <input id="onboardingDisplayName" type="text" autocomplete="name" enterkeyhint="done" aria-describedby="onboardingNameHint onboardingError" />
+        <p class="field-hint" id="onboardingNameHint">Use up to 80 characters. Your name stays on this device.</p>
+        <p class="field-validation onboarding-error" id="onboardingError" role="alert" aria-live="assertive"></p>
+        <button class="onboarding-primary" id="onboardingSubmit" type="submit">Get started</button>
+      </form>
+      <p class="field-validation onboarding-error" id="onboardingStartupError" role="alert" aria-live="assertive"></p>
+      <button class="onboarding-retry hidden" id="onboardingRetry" type="button">Retry startup</button>
+    </div>
+  </section>
+
+  <div class="app" id="appShell" hidden>
     <header>
-      <h1>Hector's Workout Tracker</h1>
+      <h1>Workout Tracker</h1>
       <p class="subtitle">Local workout log, routines, progress stats, and backup export.</p>
     </header>
 
@@ -40,7 +63,7 @@
         <div id="todayView" class="today-home">
           <div class="today-dashboard-header">
             <div>
-              <h2 class="today-greeting-title" id="todayGreeting">Good Afternoon, <span class="accent">Hector</span>!</h2>
+              <h2 class="today-greeting-title" id="todayGreeting">Welcome</h2>
               <p class="today-date-line" id="todayDateLine">Loading date...</p>
             </div>
             <div class="today-streak-badge" id="todayStreakBadge">🔥 0</div>
@@ -506,9 +529,9 @@
         <div class="card profile-hero-card">
           <div class="profile-hero-top">
             <div class="profile-identity">
-              <div class="profile-avatar" aria-hidden="true">H</div>
+              <div class="profile-avatar" id="profileAvatar" aria-hidden="true">W</div>
               <div>
-                <h2>Hector</h2>
+                <h2 id="profileDisplayName">Workout Tracker</h2>
                 <p class="muted small">Local-first training profile</p>
               </div>
             </div>
@@ -639,6 +662,7 @@
                   <input id="templateExerciseInput" type="text" placeholder="Example: Flat Bench Press" aria-describedby="templateExerciseHint templateExerciseError" />
                   <button class="primary" id="addTemplateExercise" type="button">Add</button>
                 </div>
+                <button class="routine-browse-action" id="browseTemplateExercise" type="button">Browse exercise catalog</button>
                 <p class="field-hint" id="templateExerciseHint">Up to 120 characters.</p>
                 <p class="field-validation" id="templateExerciseError" role="alert" aria-live="polite"></p>
               </div>
@@ -740,6 +764,32 @@
             <h2>Settings</h2>
           </div>
           <span class="settings-header-spacer" aria-hidden="true"></span>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-label">Your Profile</div>
+          <div class="settings-group settings-name-group">
+            <div class="settings-list-row settings-name-summary">
+              <span class="settings-row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+              </span>
+              <div class="settings-row-copy">
+                <strong id="settingsDisplayNameCurrent">Your name</strong>
+                <p>Used for your greeting on Home.</p>
+              </div>
+              <button class="settings-name-edit" id="editDisplayName" type="button">Edit name</button>
+            </div>
+            <form class="settings-name-form hidden" id="displayNameEditForm" novalidate>
+              <label for="settingsDisplayName">Display name</label>
+              <input id="settingsDisplayName" type="text" autocomplete="name" aria-describedby="settingsDisplayNameHint settingsDisplayNameError" />
+              <p class="field-hint" id="settingsDisplayNameHint">Up to 80 characters. Unicode and emoji are supported.</p>
+              <p class="field-validation" id="settingsDisplayNameError" role="alert" aria-live="assertive"></p>
+              <div class="settings-name-actions">
+                <button class="settings-primary-action" id="saveDisplayName" type="submit">Save name</button>
+                <button class="settings-secondary-action" id="cancelDisplayName" type="button">Cancel</button>
+              </div>
+            </form>
+          </div>
         </div>
 
         <div class="settings-section">
@@ -897,7 +947,7 @@
     <div class="exercise-picker-handle" aria-hidden="true"></div>
     <header class="exercise-picker-header">
       <div>
-        <h2 id="exercisePickerTitle">Add Exercise</h2>
+        <h2 id="exercisePickerTitle">Choose Exercise</h2>
         <p class="sr-only" id="exercisePickerDescription">Choose from your exercises and the offline catalog, or create a custom exercise.</p>
       </div>
       <button class="exercise-picker-close" type="button" data-exercise-picker-close aria-label="Close Add Exercise">×</button>
@@ -940,7 +990,7 @@
     <section class="exercise-picker-panel hidden" id="exercisePickerPreview">
       <button class="exercise-picker-back" id="exercisePickerPreviewBack" type="button">← Back to results</button>
       <div class="exercise-picker-preview-scroll" id="exercisePickerPreviewContent"></div>
-      <button class="exercise-picker-submit" id="exercisePickerPreviewAdd" type="button">Add to Workout</button>
+      <button class="exercise-picker-submit" id="exercisePickerPreviewAdd" type="button">Choose Exercise</button>
     </section>
 
     <section class="exercise-picker-panel hidden" id="exercisePickerCreate">
