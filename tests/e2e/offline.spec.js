@@ -138,7 +138,7 @@ test("onboarding and education journeys remain usable offline", async ({
     await expect(page.locator("#homeEducationOffer")).toBeVisible();
 
     await page.locator("#homeEducationStart").click();
-    for (const progress of ["1 of 4", "2 of 4", "3 of 4", "4 of 4"]) {
+    for (const progress of ["1 of 3", "2 of 3", "3 of 3"]) {
       await expect(page.locator("#coachMarkProgress")).toHaveText(progress);
       await page.locator(".coach-mark-next").click();
     }
@@ -148,7 +148,7 @@ test("onboarding and education journeys remain usable offline", async ({
     await page.locator("[data-open-settings]").first().click();
     await expect(page.locator("#settings")).toHaveClass(/active/u);
     await page.locator('[data-education-action="replay-home"]').click();
-    await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 4");
+    await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 3");
     await page.keyboard.press("Escape");
     await expect(page.locator(".coach-mark-root")).toBeHidden();
 

@@ -32,6 +32,7 @@
   margin-bottom: 14px;
   padding: 16px;
   border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(2, 8, 18, 0.16);
 }
 
 .education-inline-tip button {
@@ -47,6 +48,7 @@
   inset: 0;
   z-index: 2147483647;
   pointer-events: auto;
+  animation: coachMarkBackdropIn 180ms ease both;
 }
 
 .coach-mark-blocker {
@@ -63,11 +65,6 @@
     0 0 0 9999px rgba(2, 8, 18, 0.76),
     0 0 0 5px rgba(125, 211, 252, 0.14);
   pointer-events: none;
-  transition:
-    left 160ms ease,
-    top 160ms ease,
-    width 160ms ease,
-    height 160ms ease;
 }
 
 .coach-mark-bubble {
@@ -83,6 +80,26 @@
   background: linear-gradient(180deg, #233954, #162b46);
   box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46);
   pointer-events: auto;
+  transition:
+    left 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    max-height 180ms ease;
+}
+
+.coach-mark-copy,
+.coach-mark-actions {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 90ms ease,
+    transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.coach-mark-root.is-transitioning .coach-mark-copy,
+.coach-mark-root.is-transitioning .coach-mark-actions {
+  opacity: 0;
+  transform: translateY(4px);
 }
 
 .coach-mark-progress {
@@ -183,7 +200,28 @@
   margin: 0;
 }
 
+@keyframes coachMarkBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (max-width: 420px) {
+  .education-offer-actions,
+  .education-inline-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .education-offer-actions button,
+  .education-inline-actions button {
+    width: 100%;
+  }
+
+  .coach-mark-bubble {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
   .coach-mark-actions {
     align-items: stretch;
   }
@@ -194,6 +232,17 @@
 
   .coach-mark-actions > div button {
     flex: 1;
+  }
+
+  .rpe-help-dialog {
+    width: calc(100% - 24px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+    margin: auto 12px max(12px, env(safe-area-inset-bottom));
+    border-radius: 20px;
+  }
+
+  .rpe-help-content {
+    padding: 18px;
   }
 }
 
@@ -211,4 +260,25 @@
 .no-animations .coach-mark-root {
   animation: none !important;
   transition: none !important;
+}
+
+@media (max-width: 600px) {
+  .coach-mark-bubble {
+    gap: 11px;
+    padding: 14px;
+  }
+
+  .coach-mark-progress {
+    margin-bottom: 4px;
+  }
+
+  .coach-mark-copy h2 {
+    font-size: 1.08rem;
+  }
+
+  .coach-mark-copy > p:last-child {
+    margin-top: 5px;
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
 }

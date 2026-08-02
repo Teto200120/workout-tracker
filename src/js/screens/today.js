@@ -14,11 +14,8 @@ import {
 } from "../components/coach-mark.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import {
-  clamp,
   cleanText,
-  easeInOut,
   haptic,
-  lerp,
   motionBehavior,
   replayAnimation,
   timeNow,
@@ -41,7 +38,6 @@ import {
 } from "../domain/workout-metrics.js";
 import { getRoutines, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
 import { getDraft } from "../storage/local.js";
-import { buildExerciseStats, renderTodayProgressGlance } from "./progress.js";
 import {
   closeExerciseDetail,
   collapseAllButIndex,
@@ -70,13 +66,8 @@ function setTodayWorkoutActionPending(pending) {
     if ($(id)) $(id).disabled = pending;
   }
 }
-import { renderBackupStatus } from "./backup.js";
-
 let todayActiveElapsedInterval = null;
 let todayCtaMode = "start";
-let ctaMorphFrame = null;
-let ctaLastSettledState = null;
-let ctaBounceTimeout = null;
 let todayEducationBound = false;
 
 const HOME_TOUR_STEPS = Object.freeze([
@@ -94,11 +85,6 @@ const HOME_TOUR_STEPS = Object.freeze([
     target: '[data-education-target="home-start-resume"]',
     title: "Start or resume",
     body: "This action starts a new workout or resumes the session saved on this device.",
-  },
-  {
-    target: '[data-education-target="home-progress-glance"]',
-    title: "Progress Glance",
-    body: "See a quick summary here. Stats and History hold the deeper view of your saved training.",
   },
 ]);
 
@@ -186,124 +172,9 @@ function setTodayCtaLabel(text) {
   if (label) label.textContent = String(text || "Start Workout").replace(/^🔥\s*/, "");
 }
 
-function getTodayCtaTargetProgress() {
-  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  const scrollY = window.scrollY || 0;
-
-  // Main morph curve.
-  const scrollDriven = clamp((scrollY - 24) / 270);
-
-  // Guarantees the CTA fully compacts when reaching the bottom,
-  // even if the page is too short for the normal morph distance.
-  const bottomDriven = maxScroll > 0 ? clamp(scrollY / maxScroll) : 0;
-
-  return Math.max(scrollDriven, bottomDriven);
-}
-
-function triggerTodayCtaSettleBounce(state) {
-  const dock = $("todayFloatingCta");
-  if (!dock || !shouldShowTodayFloatingCta()) return;
-  if (ctaLastSettledState === state) return;
-
-  ctaLastSettledState = state;
-  dock.classList.remove("cta-bounce-expanded", "cta-bounce-compact");
-  void dock.offsetWidth;
-  dock.classList.add(state === "compact" ? "cta-bounce-compact" : "cta-bounce-expanded");
-
-  clearTimeout(ctaBounceTimeout);
-  ctaBounceTimeout = setTimeout(() => {
-    dock.classList.remove("cta-bounce-expanded", "cta-bounce-compact");
-  }, 360);
-}
-
 function syncTodayFloatingCta() {
   const visible = shouldShowTodayFloatingCta();
   $("todayFloatingCta")?.classList.toggle("hidden", !visible);
-  if (!visible) {
-    document.body.classList.remove("today-cta-compact");
-    ctaLastSettledState = null;
-  }
-  updateTodayCtaCompact();
-}
-
-export function updateTodayCtaCompact() {
-  if (ctaMorphFrame) return;
-  ctaMorphFrame = requestAnimationFrame(() => {
-    ctaMorphFrame = null;
-    applyTodayCtaMorph();
-  });
-}
-
-function applyTodayCtaMorph() {
-  const dock = $("todayFloatingCta");
-  const button = $("todayStartWorkout");
-  if (!dock || !button) return;
-
-  const visible = shouldShowTodayFloatingCta();
-  dock.classList.toggle("hidden", !visible);
-  document.body.classList.remove("today-cta-compact");
-  if (!visible) return;
-
-  const targetProgress = getTodayCtaTargetProgress();
-  const progress = easeInOut(clamp(targetProgress));
-  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
-
-  const fullWidth = Math.min(454, viewportWidth - 44);
-  const compactWidth = viewportWidth <= 390 ? 60 : 64;
-  const fullHeight = viewportWidth <= 390 ? 74 : 80;
-  const compactHeight = viewportWidth <= 390 ? 56 : 58;
-  const fullLeft = viewportWidth / 2;
-  const compactLeft = viewportWidth - (viewportWidth <= 390 ? 48 : 52);
-
-  const width = lerp(fullWidth, compactWidth, progress);
-  const height = lerp(fullHeight, compactHeight, progress);
-  const left = lerp(fullLeft, compactLeft, progress);
-  const radius = lerp(17, 18, progress);
-  const horizontalPadding = lerp(22, 0, progress);
-  const gap = lerp(10, 0, progress);
-  const fontSize = lerp(18.8, 0, progress);
-  const iconSize = lerp(22.5, 24.8, progress);
-  const glow = lerp(0.48, 0.34, progress);
-  const yLift = lerp(0, 2, progress);
-
-  dock.style.setProperty("width", `${width}px`, "important");
-  dock.style.setProperty("left", `${left}px`, "important");
-  dock.style.setProperty("transform", "translateX(-50%)", "important");
-  dock.style.setProperty("bottom", `calc(${82 + yLift}px + env(safe-area-inset-bottom))`, "important");
-
-  button.style.setProperty("width", `${width}px`, "important");
-  button.style.setProperty("min-height", `${height}px`, "important");
-  button.style.setProperty("border-radius", `${radius}px`, "important");
-  button.style.setProperty("padding", `0 ${horizontalPadding}px`, "important");
-  button.style.setProperty("gap", `${gap}px`, "important");
-  button.style.setProperty("font-size", `${fontSize}px`, "important");
-  button.style.removeProperty("transform");
-  button.style.setProperty("box-shadow", `
-    0 ${lerp(18, 14, progress)}px ${lerp(42, 30, progress)}px rgba(255, 104, 69, ${lerp(0.42, 0.32, progress)}),
-    0 0 ${lerp(42, 28, progress)}px rgba(255, 104, 69, ${glow}),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16)
-  `, "important");
-
-  const label = button.querySelector(".cta-label");
-  const icon = button.querySelector(".cta-icon");
-  if (label) {
-    label.style.opacity = String(clamp(1 - progress * 1.45));
-    label.style.maxWidth = `${Math.max(0, (fullWidth - 120) * (1 - progress))}px`;
-    label.style.transform = `translateX(${-10 * progress}px)`;
-  }
-  if (icon) {
-    icon.style.fontSize = `${iconSize}px`;
-    icon.style.transform = `translateX(${lerp(0, 1, progress)}px)`;
-  }
-
-  if (targetProgress <= 0.015) {
-    triggerTodayCtaSettleBounce("expanded");
-  } else if (targetProgress >= 0.985) {
-    triggerTodayCtaSettleBounce("compact");
-  } else {
-    ctaLastSettledState = null;
-    dock.classList.remove("cta-bounce-expanded", "cta-bounce-compact");
-  }
 }
 
 export async function showTodayView() {
@@ -487,8 +358,6 @@ export async function renderTodayView() {
     $("todayPlanNote").innerHTML = `Active session: <strong>${cleanText(activeWorkoutName)}</strong> - ${draftDoneSets}/${draftTotalSets || 0} sets logged.`;
   }
 
-  renderTodayProgressGlance(workouts.sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || "")), buildExerciseStats(workouts));
-  await renderBackupStatus();
   if (hasActiveDraft) startTodayActiveElapsedTimer(draft);
   else stopTodayActiveElapsedTimer();
   syncTodayFloatingCta();

@@ -11,6 +11,21 @@ test("startup, primary navigation, and nested navigation stay coherent", async (
   await expect(page.locator("#todayView")).toBeVisible();
   await expect(homeTab).toHaveClass(/active/);
   await expect(homeTab).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("#todayProgressGlanceCard")).toHaveCount(0);
+  await expect(page.locator("#todayBackupReminder")).toHaveCount(0);
+
+  const cta = page.locator("#todayStartWorkout");
+  await expect(cta).toBeVisible();
+  await expect(cta.locator(".cta-label")).toHaveText("Start Workout");
+  const ctaBeforeScroll = await cta.boundingBox();
+  await page.evaluate(() =>
+    globalThis.scrollTo(0, globalThis.document.documentElement.scrollHeight),
+  );
+  const ctaAfterScroll = await cta.boundingBox();
+  expect(ctaAfterScroll.width).toBeCloseTo(ctaBeforeScroll.width, 0);
+  expect(ctaAfterScroll.height).toBeCloseTo(ctaBeforeScroll.height, 0);
+  await expect(page.locator("body")).not.toHaveClass(/today-cta-compact/u);
+  await expect(cta).toHaveCSS("animation-name", "ctaBreathe");
 
   await openPrimary(page, "stats");
   await expect(page.locator("#dashboard")).toHaveClass(/active/);
