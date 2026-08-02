@@ -115,7 +115,7 @@ const ACTIVE_WORKOUT_EDUCATION_STEPS = Object.freeze([
 
 const RPE_EDUCATION_STEPS = Object.freeze([
   {
-    target: '[data-education-target="rpe-control"]',
+    target: getFocusedRpeEducationTarget,
     title: "Rate the set with RPE",
     body: "RPE describes how hard the set felt. About two reps left is RPE 8, one rep left is RPE 9, and no reps left is RPE 10.",
   },
@@ -125,6 +125,12 @@ function educationSaveFeedback(result) {
   if (!result?.saved) {
     toast("Guidance progress could not be saved. Your workout is still available.");
   }
+}
+
+function getFocusedRpeEducationTarget() {
+  return $("exerciseDetailView")?.querySelector(
+    '[data-education-target="rpe-control"]',
+  );
 }
 
 function resetSessionEducationIfNeeded() {
@@ -155,9 +161,10 @@ function rpeEducationSafe() {
     getAppSettings().rpeAware &&
       !rpeInteractionStarted &&
       !isCoachMarkOpen() &&
+      isExerciseDetailOpen() &&
       canPresentEducation({
-        target: '[data-education-target="rpe-control"]',
-        userEditing: sessionInteractionStarted,
+        target: getFocusedRpeEducationTarget,
+        allowExerciseDetail: true,
         dragActive: Boolean(exerciseDragState),
       }),
   );
@@ -198,15 +205,8 @@ function scheduleActiveWorkoutEducation() {
   resetSessionEducationIfNeeded();
   const replay = hasEducationReplay("activeWorkoutBasics");
   const experience = getEducationExperience("activeWorkoutBasics");
-  if (
-    sessionEducationAttempted &&
-    !replay
-  ) {
-    scheduleRpeEducation();
-    return;
-  }
+  if (sessionEducationAttempted && !replay) return;
   if (!replay && experience?.status !== "unseen") {
-    scheduleRpeEducation();
     return;
   }
   sessionEducationAttempted = true;
@@ -236,7 +236,6 @@ function scheduleActiveWorkoutEducation() {
               lastStep,
             }),
           );
-          scheduleRpeEducation();
         },
       });
     });
@@ -921,6 +920,7 @@ async function openExerciseDetail(exerciseEl, tab = "log") {
   await renderExerciseDetailView();
   view.querySelector(".exercise-detail-scroll")?.scrollTo({ top: 0, behavior: "auto" });
   haptic(12);
+  scheduleRpeEducation();
 }
 
 function closeExerciseDetail() {

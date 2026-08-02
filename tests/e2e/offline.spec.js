@@ -42,6 +42,9 @@ test("the current app shell starts from the service-worker cache offline", async
     )
     .toBe(true);
 
+  const expectedGuideTitle = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Back / Biceps",
+  ).exercises[0];
   await startRoutine(page);
   await page.locator("#addExercise").click();
   await page.locator("#exercisePickerSearch").fill("Air Bike");
@@ -73,7 +76,7 @@ test("the current app shell starts from the service-worker cache offline", async
       "Free Exercise DB",
     );
     await expect(page.locator("#exerciseDetailTitle")).toHaveText(
-      "V-Bar Lat Pulldown",
+      expectedGuideTitle,
     );
     await page.locator("#exerciseDetailBack").click();
     await page.locator(".set-done").evaluateAll((inputs) => {
@@ -157,6 +160,8 @@ test("onboarding and education journeys remain usable offline", async ({
       await expect(page.locator("#coachMarkProgress")).toHaveText(progress);
       await page.locator(".coach-mark-next").click();
     }
+    await expect(page.locator(".coach-mark-root")).toBeHidden();
+    await page.locator(".exercise").first().locator(".guide-row").click();
     await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 1");
     await expect(page.locator("#coachMarkBody")).toContainText("RPE 8");
     await page.locator(".coach-mark-next").click();

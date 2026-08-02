@@ -242,6 +242,9 @@ test("routine builder uses one picker for local, catalog, custom, cancel, duplic
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
   await loadApp(page);
+  const localExercise = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Chest / Triceps",
+  ).exercises[0];
   await openRoutines(page);
   await page.locator("#templateName").fill("Catalog Builder QA");
 
@@ -250,18 +253,16 @@ test("routine builder uses one picker for local, catalog, custom, cancel, duplic
   await expect(page.locator("#exercisePickerTitle")).toHaveText(
     "Add Exercise to Routine",
   );
-  await page.locator("#exercisePickerSearch").fill("Flat Bench Press");
-  await page
-    .locator('#exercisePickerOptions [data-exercise-name="Flat Bench Press"]')
-    .click();
+  await page.locator("#exercisePickerSearch").fill(localExercise);
+  await page.getByRole("button", { name: localExercise, exact: true }).click();
   await expect(page.locator("#exercisePicker")).toBeHidden();
-  expect(await draftExerciseNames(page)).toEqual(["Flat Bench Press"]);
+  expect(await draftExerciseNames(page)).toEqual([localExercise]);
 
   await browse.click();
   await page.keyboard.press("Escape");
   await expect(page.locator("#exercisePicker")).toBeHidden();
   await expect(browse).toBeFocused();
-  expect(await draftExerciseNames(page)).toEqual(["Flat Bench Press"]);
+  expect(await draftExerciseNames(page)).toEqual([localExercise]);
 
   await browse.click();
   await page.locator("#exercisePickerSearch").fill("Air Bike");
@@ -274,10 +275,7 @@ test("routine builder uses one picker for local, catalog, custom, cancel, duplic
     button.click();
   });
   await expect(page.locator("#exercisePicker")).toBeHidden();
-  expect(await draftExerciseNames(page)).toEqual([
-    "Flat Bench Press",
-    "Air Bike",
-  ]);
+  expect(await draftExerciseNames(page)).toEqual([localExercise, "Air Bike"]);
 
   await browse.click();
   await page.locator("#exercisePickerCreateAction").click();
@@ -286,7 +284,7 @@ test("routine builder uses one picker for local, catalog, custom, cancel, duplic
     .locator("#exercisePickerCreateForm")
     .evaluate((form) => form.requestSubmit());
   expect(await draftExerciseNames(page)).toEqual([
-    "Flat Bench Press",
+    localExercise,
     "Air Bike",
     "Custom Arc 🧭",
   ]);
@@ -304,7 +302,7 @@ test("routine builder uses one picker for local, catalog, custom, cancel, duplic
   expect(duplicateMessage).toContain("already in this routine");
   await expect(page.locator("#exercisePicker")).toBeHidden();
   expect(await draftExerciseNames(page)).toEqual([
-    "Flat Bench Press",
+    localExercise,
     "Air Bike",
     "Custom Arc 🧭",
   ]);
@@ -380,6 +378,19 @@ test("routine picker keeps local and custom options usable when the catalog fail
     }),
   );
   await loadApp(page);
+  await page.evaluate(async () => {
+    const { saveRoutine } = await import("/src/js/storage/indexed-db.js");
+    const timestamp = new Date().toISOString();
+    await saveRoutine({
+      id: "user-offline-catalog-routine",
+      name: "User Offline Catalog Routine",
+      exercises: ["Romanian Deadlift"],
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+  await page.reload();
+  await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
   await openRoutines(page);
 
   await page.locator("#browseTemplateExercise").click();

@@ -17,29 +17,36 @@ This is the current handoff for the app-structure touch-up branch. Inspect the r
 - Active Workout guidance follow-up: each mobile spotlight now repositions its target into the clear space beside the compact dialogue before drawing the full six-pixel frame, so exercise, current-set, Finish, and RPE targets are no longer offset or cut through. Spotlight geometry no longer animates behind target movement. The service-worker cache was bumped to `hector-workout-tracker-pwa-v26`.
 - CI geometry correction: coach marks now briefly release the body scroll lock while positioning each target, preserve the resulting scroll offset while restoring the lock, and handle sticky targets from their pre-unlock document position. All four Active Workout steps explicitly require their targets to intersect the mobile viewport while retaining the full padded frame and no-overlap assertions. The service-worker cache was bumped to `hector-workout-tracker-pwa-v27`.
 - Escape reliability correction: an open coach mark now listens for Escape at document scope for its active lifetime, so dismissal works immediately while initial positioning is still moving focus into the dialogue. The existing root-level focus trap, body scroll restoration, guide history, and positioning behavior remain unchanged. The service-worker cache was bumped to `hector-workout-tracker-pwa-v28`.
+- Catalog-backed starter routines: new users now receive five starter templates composed at runtime from normalized catalog records selected by provider-neutral movement metadata. The app-owned default exercise inventory was removed; only catalog canonical names are persisted in the unchanged routine schema, existing routines remain untouched, and an incomplete catalog creates no exercise fallback. The empty Custom routine remains available for user-authored exercises. The service-worker cache was bumped to `hector-workout-tracker-pwa-v29`.
+- Short-viewport Active Workout correction: sticky guide targets are remeasured after the body lock is temporarily released, positioned from their live viewport geometry, and verified again after the lock returns. The 360 x 640 guide contract now covers exercise, current-set, Finish, and RPE targets, with Finish explicitly required to remain fully in view behind a real padded frame. The service-worker cache was bumped to `hector-workout-tracker-pwa-v30`.
+- RPE education placement: the Active Workout guide now ends after its existing three steps. The unchanged one-time RPE explanation appears when the user first opens the focused exercise-detail page, targets that page's RPE control, and retains the existing `rpeBasics` completion/replay state without repeating after dismissal. The service-worker cache was bumped to `hector-workout-tracker-pwa-v31`.
 
-Relevant files: `index.html`, `src/js/router.js`, `src/js/screens/today.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/components/coach-mark.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related browser tests.
+Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-seeding.js`, `src/js/catalog/starter-routines.js`, `src/js/screens/today.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/components/coach-mark.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related unit and browser tests.
 
 ## Remaining planned work
 
-1. Seed initial routines from the existing exercise catalog data. Reuse the current catalog contracts and resolution paths; do not introduce a parallel catalog or provider-specific stored format.
+1. After a completed workout that added exercises, offer an optional user-confirmed prompt to add those exercises to the originating saved routine. Do not mutate a saved routine without explicit confirmation, and preserve completed workout data regardless of the user's choice.
 
 ## Constraints and decisions
 
 - Preserve the Home CTA's breathing animation; the removed behavior is only its scroll-driven compact/shrink morph.
 - Do not restore the removed Progress Glance target to the Home tour.
 - Preserve existing saved routines, workouts, drafts, settings, storage keys, schemas, backup formats, and navigation behavior.
-- Initial routine seeding must remain compatible with existing user-created and previously seeded routines, without duplication or destructive replacement.
+- Catalog-backed starter-routine seeding must remain compatible with existing user-created and previously seeded routines, without duplication or destructive replacement. Starter templates must not introduce app-authored exercise inventories or provider-specific persisted fields.
 - Continue using the project's existing modules, visual language, test setup, and service-worker cache-update convention.
 
 ## Verification at this checkpoint
 
 - `npm run lint`
 - `npm run format:check`
-- `npm run test:unit` — 155 passing
+- `npm run test:unit` — 158 passing
+- Full catalog browser coverage at the configured mobile width — 10 passing
+- Full repository Playwright coverage at the configured mobile width — 52 passing
 - Full beta-education Playwright coverage at the configured mobile width — 8 passing
 - Targeted 390 × 844 Home layout check — passing with no document scroll, aligned card margins/widths, and compact workout-card height
 - Targeted 360 × 640 coach-mark geometry checks across all Home tour steps — passing with in-viewport, non-overlapping card and highlight bounds
+- Targeted 360 × 640 Active Workout guidance geometry across exercise, current-set, Finish, and RPE — passing with every target in view, exact padded bounds, and no dialogue overlap
+- Targeted first-open exercise-detail RPE education — passing online and offline, with no repeat after dismissal
 - Targeted first-run invitation and post-tour overflow checks — passing with a compact anchored out-of-flow dialogue, visible speech tail/depth, and restored content-driven scrolling
 - Targeted 390 Ã— 844 Active Workout guidance geometry across all four available steps â€” passing with exact padded target bounds, no dialogue overlap, and clean console output
 - `node --check` on the touched JavaScript and service-worker files

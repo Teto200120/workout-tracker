@@ -1,5 +1,4 @@
-import { DB_NAME, DB_VERSION, DEFAULT_TEMPLATES, STORES } from "../core/constants.js";
-import { id } from "../core/utils.js";
+import { DB_NAME, DB_VERSION, STORES } from "../core/constants.js";
 import {
   validateRoutineInput,
   validateWorkoutInput
@@ -220,18 +219,4 @@ export function replaceApplicationRecords(records, options = {}) {
     ...options,
     replace: true
   });
-}
-
-export async function seedDefaultTemplates() {
-  const existing = await getRoutines();
-  if (existing.length) return;
-  for (const [name, exercises] of Object.entries(DEFAULT_TEMPLATES)) {
-    await saveRoutine({
-      id: id(),
-      name,
-      exercises,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-  }
 }
