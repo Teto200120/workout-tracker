@@ -149,6 +149,15 @@ function settleLayout() {
   });
 }
 
+function hasStickyPosition(target) {
+  let sticky = target;
+  while (sticky instanceof HTMLElement) {
+    if (getComputedStyle(sticky).position === "sticky") return true;
+    sticky = sticky.parentElement;
+  }
+  return false;
+}
+
 function transitionPause() {
   if (motionBehavior() === "auto") return Promise.resolve();
   return new Promise((resolve) => setTimeout(resolve, 90));
@@ -326,13 +335,44 @@ async function showStep(index, direction = 1) {
   ui.next.textContent = nextStep
     ? "Next"
     : activeState.finalLabel || "Done";
-  found.target.scrollIntoView({
-    behavior: "auto",
-    block: "center",
-    inline: "nearest",
-  });
-  await settleLayout();
-  if (activeState !== stateAtStart || !isElementVisible(found.target)) {
+  const targetDocumentTop =
+    window.scrollY + found.target.getBoundingClientRect().top;
+  const restoreScrollLock = document.body.classList.contains("coach-mark-open");
+  if (restoreScrollLock) document.body.classList.remove("coach-mark-open");
+  let targetReady = false;
+  let positionedScrollTop = null;
+  try {
+    if (restoreScrollLock) await settleLayout();
+    if (hasStickyPosition(found.target)) {
+      window.scrollTo({
+        top: Math.max(0, targetDocumentTop - viewportBounds().top - 4),
+        behavior: "auto",
+      });
+    } else {
+      found.target.scrollIntoView({
+        behavior: "auto",
+        block: "center",
+        inline: "nearest",
+      });
+    }
+    await settleLayout();
+    if (activeState === stateAtStart && isElementVisible(found.target)) {
+      activeState.onStepChange?.(found.index);
+      positionCurrentStep();
+      positionedScrollTop = window.scrollY;
+      targetReady = true;
+    }
+  } finally {
+    if (restoreScrollLock && activeState === stateAtStart) {
+      document.body.classList.add("coach-mark-open");
+      if (positionedScrollTop !== null && document.scrollingElement) {
+        document.scrollingElement.scrollTop = positionedScrollTop;
+        await settleLayout();
+        document.scrollingElement.scrollTop = positionedScrollTop;
+      }
+    }
+  }
+  if (!targetReady) {
     if (activeState === stateAtStart) {
       activeState.missingTarget = true;
       showStep(found.index + direction, direction);
@@ -340,7 +380,8 @@ async function showStep(index, direction = 1) {
     return;
   }
 
-  activeState.onStepChange?.(found.index);
+  await settleLayout();
+  if (activeState !== stateAtStart || !isElementVisible(found.target)) return;
   positionCurrentStep();
   requestAnimationFrame(() => {
     if (activeState !== stateAtStart) return;

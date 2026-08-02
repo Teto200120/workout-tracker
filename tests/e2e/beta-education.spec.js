@@ -108,11 +108,16 @@ async function expectCoachMarkFramesTarget(page, targetSelector) {
     geometry.bubble.top < geometry.highlight.bottom &&
     geometry.bubble.bottom > geometry.highlight.top;
 
+  expect(geometry.target.right).toBeGreaterThan(0);
+  expect(geometry.target.bottom).toBeGreaterThan(0);
+  expect(geometry.target.left).toBeLessThan(geometry.viewport.width);
+  expect(geometry.target.top).toBeLessThan(geometry.viewport.height);
   expect(geometry.highlight.left).toBeCloseTo(expected.left, 0);
   expect(geometry.highlight.top).toBeCloseTo(expected.top, 0);
   expect(geometry.highlight.right).toBeCloseTo(expected.right, 0);
   expect(geometry.highlight.bottom).toBeCloseTo(expected.bottom, 0);
   expect(overlaps).toBe(false);
+  await expect(page.locator("body")).toHaveClass(/coach-mark-open/u);
 }
 
 test("two-step onboarding keeps values, saves name and RPE together, and survives reload", async ({
