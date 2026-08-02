@@ -2,15 +2,6 @@ export const DB_NAME = "hector_workout_tracker_fresh_v1";
 export const DB_VERSION = 2;
 export const STORES = ["workouts", "weights", "templates"];
 
-export const DEFAULT_TEMPLATES = {
-  "Chest / Triceps": ["Flat Bench Press", "Incline Press", "Low-to-High Cable Fly", "Tricep Pushdown"],
-  "Back / Biceps": ["V-Bar Lat Pulldown", "V-Bar Cable Row", "Incline Hammer Curl", "Cable Bicep Curl"],
-  Legs: ["Squat", "Romanian Deadlift", "Leg Press", "Calf Raise"],
-  "Shoulders / Traps": ["Shoulder Press", "Lateral Raise", "Rear Delt Fly", "Shrugs"],
-  "Soccer / Conditioning": ["Warm-up", "Sprint Work", "Agility Work", "Cooldown"],
-  Custom: []
-};
-
 export const DEFAULT_SCHEDULE = {
   0: { kind: "rest", title: "Rest Day", routine: "Custom", note: "No gym workout scheduled. Optional recovery, mobility, or custom workout." },
   1: { kind: "gym", title: "Push Day", routine: "Chest / Triceps", note: "Suggested from your Monday schedule." },

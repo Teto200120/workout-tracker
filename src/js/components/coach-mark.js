@@ -69,7 +69,12 @@ export function canPresentEducation(options = {}) {
   if (document.querySelector("dialog[open]")) return false;
   if (document.querySelector(".completion-overlay:not(.hidden)")) return false;
   if (document.querySelector(".today-review-view:not(.hidden)")) return false;
-  if (document.querySelector(".exercise-detail-view:not(.hidden)")) return false;
+  if (
+    !options.allowExerciseDetail &&
+    document.querySelector(".exercise-detail-view:not(.hidden)")
+  ) {
+    return false;
+  }
   if (document.querySelector(".dragging, [data-drag-active='true']")) {
     return false;
   }
@@ -156,6 +161,68 @@ function hasStickyPosition(target) {
     sticky = sticky.parentElement;
   }
   return false;
+}
+
+function intersectsViewport(rect, bounds = viewportBounds()) {
+  const edge = 4;
+  return (
+    rect.right > bounds.left + edge &&
+    rect.left < bounds.left + bounds.width - edge &&
+    rect.bottom > bounds.top + edge &&
+    rect.top < bounds.top + bounds.height - edge
+  );
+}
+
+async function positionStickyTarget(target) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const bounds = viewportBounds();
+    const rect = target.getBoundingClientRect();
+    if (intersectsViewport(rect, bounds)) return true;
+
+    const edge = 4;
+    const viewportTop = bounds.top + edge;
+    const viewportBottom = bounds.top + bounds.height - edge;
+    const scrollDelta =
+      rect.bottom <= viewportTop
+        ? rect.top - viewportTop
+        : rect.bottom - viewportBottom;
+    window.scrollBy({ top: scrollDelta, behavior: "instant" });
+    await settleLayout();
+  }
+
+  return intersectsViewport(target.getBoundingClientRect());
+}
+
+async function repositionLockedStickyTarget(target) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const bounds = viewportBounds();
+    const rect = target.getBoundingClientRect();
+    if (intersectsViewport(rect, bounds)) return true;
+
+    const edge = 4;
+    const viewportTop = bounds.top + edge;
+    const viewportBottom = bounds.top + bounds.height - edge;
+    const scrollDelta =
+      rect.bottom <= viewportTop
+        ? rect.top - viewportTop
+        : rect.bottom - viewportBottom;
+    const scrollTop = Math.max(0, window.scrollY + scrollDelta);
+
+    document.body.classList.remove("coach-mark-open");
+    try {
+      await settleLayout();
+      window.scrollTo({ top: scrollTop, behavior: "instant" });
+      await settleLayout();
+      if (!intersectsViewport(target.getBoundingClientRect())) {
+        await positionStickyTarget(target);
+      }
+    } finally {
+      document.body.classList.add("coach-mark-open");
+      await settleLayout();
+    }
+  }
+
+  return intersectsViewport(target.getBoundingClientRect());
 }
 
 function transitionPause() {
@@ -335,19 +402,16 @@ async function showStep(index, direction = 1) {
   ui.next.textContent = nextStep
     ? "Next"
     : activeState.finalLabel || "Done";
-  const targetDocumentTop =
-    window.scrollY + found.target.getBoundingClientRect().top;
   const restoreScrollLock = document.body.classList.contains("coach-mark-open");
   if (restoreScrollLock) document.body.classList.remove("coach-mark-open");
   let targetReady = false;
   let positionedScrollTop = null;
   try {
     if (restoreScrollLock) await settleLayout();
-    if (hasStickyPosition(found.target)) {
-      window.scrollTo({
-        top: Math.max(0, targetDocumentTop - viewportBounds().top - 4),
-        behavior: "auto",
-      });
+    const stickyTarget = hasStickyPosition(found.target);
+    let targetIntersectsViewport = true;
+    if (stickyTarget) {
+      targetIntersectsViewport = await positionStickyTarget(found.target);
     } else {
       found.target.scrollIntoView({
         behavior: "auto",
@@ -356,9 +420,13 @@ async function showStep(index, direction = 1) {
       });
     }
     await settleLayout();
-    if (activeState === stateAtStart && isElementVisible(found.target)) {
+    if (
+      activeState === stateAtStart &&
+      isElementVisible(found.target) &&
+      targetIntersectsViewport
+    ) {
       activeState.onStepChange?.(found.index);
-      positionCurrentStep();
+      if (!stickyTarget) positionCurrentStep();
       positionedScrollTop = window.scrollY;
       targetReady = true;
     }
@@ -371,6 +439,14 @@ async function showStep(index, direction = 1) {
         document.scrollingElement.scrollTop = positionedScrollTop;
       }
     }
+  }
+  if (
+    targetReady &&
+    activeState === stateAtStart &&
+    hasStickyPosition(found.target)
+  ) {
+    targetReady = await repositionLockedStickyTarget(found.target);
+    if (targetReady) positionCurrentStep();
   }
   if (!targetReady) {
     if (activeState === stateAtStart) {

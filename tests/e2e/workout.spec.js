@@ -16,15 +16,13 @@ test("starting immediately uses the newly selected Home routine", async ({
   const initialRoutine = await page.locator("#todayWorkoutSelect").inputValue();
   const selectedRoutine =
     initialRoutine === "Back / Biceps" ? "Legs" : "Back / Biceps";
-  const expectedExercises =
-    selectedRoutine === "Legs"
-      ? ["Squat", "Romanian Deadlift", "Leg Press", "Calf Raise"]
-      : [
-          "V-Bar Lat Pulldown",
-          "V-Bar Cable Row",
-          "Incline Hammer Curl",
-          "Cable Bicep Curl",
-        ];
+  const routines = await readStore(page, "templates");
+  const expectedExercises = routines.find(
+    (routine) => routine.name === selectedRoutine,
+  ).exercises;
+  const initialExercises = routines.find(
+    (routine) => routine.name === initialRoutine,
+  ).exercises;
 
   await startRoutine(page, selectedRoutine);
   await expect(page.locator("#workoutType")).toHaveValue(selectedRoutine);
@@ -32,7 +30,7 @@ test("starting immediately uses the newly selected Home routine", async ({
     .locator(".exercise-name")
     .evaluateAll((inputs) => inputs.map((input) => input.value));
   expect(visibleExercises).toEqual(expectedExercises);
-  expect(visibleExercises).not.toContain("Flat Bench Press");
+  expect(visibleExercises).not.toEqual(initialExercises);
   assertNoRuntimeErrors();
 });
 
@@ -187,8 +185,11 @@ test("Add Exercise opens a non-destructive searchable picker", async ({
   await expect(exercises).toHaveCount(initialCount);
   await expect(page.locator(".exercise-picker-option.is-local")).toHaveCount(3);
   await page.locator("[data-show-all-local]").click();
+  const localExercise = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  ).exercises[0];
   await expect(
-    page.getByRole("button", { name: "Flat Bench Press", exact: true }),
+    page.getByRole("button", { name: localExercise, exact: true }),
   ).toHaveCount(1);
 
   await page.locator("#exercisePickerSearch").fill("press");
@@ -219,6 +220,9 @@ test("selecting an existing exercise adds, opens, and restores it from the draft
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
   await loadApp(page);
+  const expectedExercises = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Back / Biceps",
+  ).exercises;
   await startRoutine(page);
 
   const exercises = page.locator(".exercise");
@@ -246,13 +250,7 @@ test("selecting an existing exercise adds, opens, and restores it from the draft
     await page
       .locator(".exercise-name")
       .evaluateAll((inputs) => inputs.map((input) => input.value)),
-  ).toEqual([
-    "V-Bar Lat Pulldown",
-    "V-Bar Cable Row",
-    "Incline Hammer Curl",
-    "Cable Bicep Curl",
-    "Romanian Deadlift",
-  ]);
+  ).toEqual([...expectedExercises, "Romanian Deadlift"]);
   await expect(page.locator(".exercise").last()).not.toHaveClass(/collapsed/);
   assertNoRuntimeErrors();
 });

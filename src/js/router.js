@@ -1,6 +1,7 @@
 import "./core/globals.js";
 import { ensureCurrentApplicationSchema } from "./application/data-schema.js";
 import { isOnboardingRequired } from "./application/display-name.js";
+import { seedDefaultTemplates } from "./application/routine-seeding.js";
 import {
   consumeEducationReplay,
   getEducationExperience,
@@ -17,7 +18,7 @@ import {
   saveSettingsFromForm
 } from "./core/settings.js";
 import { haptic, motionBehavior, replayAnimation, scrollInputIntoView, today, toast } from "./core/utils.js";
-import { getWorkouts, openDatabase, seedDefaultTemplates } from "./storage/indexed-db.js";
+import { getWorkouts, openDatabase } from "./storage/indexed-db.js";
 import { getDraft } from "./storage/local.js";
 import {
   clearDraftStorage,

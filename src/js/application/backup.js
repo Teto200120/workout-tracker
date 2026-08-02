@@ -1,5 +1,6 @@
 import { DB_NAME } from "../core/constants.js";
 import { forgetEducationState } from "./education.js";
+import { seedDefaultTemplates } from "./routine-seeding.js";
 import {
   validateBackupComplexity,
   validateImportedApplicationData
@@ -19,8 +20,7 @@ import {
   getRoutines,
   getWorkouts,
   importBackupRecords,
-  replaceApplicationRecords,
-  seedDefaultTemplates
+  replaceApplicationRecords
 } from "../storage/indexed-db.js";
 import {
   captureApplicationLocalStorage,

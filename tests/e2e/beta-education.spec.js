@@ -73,7 +73,23 @@ async function expectCoachMarkSeparated(page) {
 
 async function expectCoachMarkFramesTarget(page, targetSelector) {
   const root = page.locator(".coach-mark-root");
+  await expect(root).toBeVisible();
   await expect(root).not.toHaveClass(/is-transitioning/u);
+  await expect
+    .poll(() =>
+      page.evaluate((selector) => {
+        const target = globalThis.document.querySelector(selector);
+        if (!target) return false;
+        const bounds = target.getBoundingClientRect();
+        return (
+          bounds.right > 0 &&
+          bounds.bottom > 0 &&
+          bounds.left < globalThis.innerWidth &&
+          bounds.top < globalThis.innerHeight
+        );
+      }, targetSelector),
+    )
+    .toBe(true);
   const geometry = await page.evaluate((selector) => {
     const rect = (element) => {
       const bounds = element.getBoundingClientRect();
@@ -364,7 +380,7 @@ test("Home restores content-driven scrolling after its tour completes", async ({
     .toBeGreaterThan(0);
 });
 
-test("active-workout and RPE guidance use safe contexts and RPE controls follow the preference", async ({
+test("active-workout guidance and first-detail RPE education preserve controls and preference", async ({
   page,
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
@@ -398,17 +414,26 @@ test("active-workout and RPE guidance use safe contexts and RPE controls follow 
   );
   await page.locator(".coach-mark-next").click();
 
+  await expect(page.locator(".coach-mark-root")).toBeHidden();
+  expect((await experience(page, "rpeBasics")).status).toBe("unseen");
+  await page.locator(".exercise").first().locator(".guide-row").click();
+  await expect(page.locator("#exerciseDetailView")).toBeVisible();
   await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 1");
   await expect(page.locator("#coachMarkBody")).toContainText("RPE 8");
   await expectCoachMarkFramesTarget(
     page,
-    '[data-education-target="rpe-control"]',
+    '#exerciseDetailView [data-education-target="rpe-control"]',
   );
   await page.locator(".coach-mark-next").click();
   expect((await experience(page, "activeWorkoutBasics")).status).toBe(
     "completed",
   );
   expect((await experience(page, "rpeBasics")).status).toBe("completed");
+  await page.locator("#exerciseDetailBack").click();
+  await page.locator(".exercise").first().locator(".guide-row").click();
+  await expect(page.locator("#exerciseDetailView")).toBeVisible();
+  await expect(page.locator(".coach-mark-root")).toBeHidden();
+  await page.locator("#exerciseDetailBack").click();
 
   await page.locator(".weight-value").first().fill("100");
   await page.locator("#sessionRoutineTitle").click();
@@ -443,6 +468,65 @@ test("active-workout and RPE guidance use safe contexts and RPE controls follow 
   await page.locator("#todayStartWorkout").click({ force: true });
   await expect(page.locator(".live-rpe-row").first()).toBeVisible();
   await expect(page.locator(".set-rpe").first()).toHaveValue("9");
+  assertNoRuntimeErrors();
+});
+
+test("active-workout guidance frames every target on a short phone viewport", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto("/");
+  await completeOnboarding(page, "Short Workout Guide", {
+    preserveEducation: true,
+  });
+  await page.locator("#homeEducationSkip").click();
+  await startRoutine(page);
+
+  const steps = [
+    ['[data-education-target="active-exercise-card"]', "1 of 3"],
+    ['[data-education-target="active-current-set"]', "2 of 3"],
+    ['[data-education-target="finish-workout"]', "3 of 3"],
+  ];
+  for (const [target, progress] of steps) {
+    await test.step(progress, async () => {
+      await expect(page.locator("#coachMarkProgress")).toHaveText(progress);
+      await expectCoachMarkFramesTarget(page, target);
+      if (target.includes("finish-workout")) {
+        const geometry = await page.evaluate((selector) => {
+          const targetRect = globalThis.document
+            .querySelector(selector)
+            .getBoundingClientRect();
+          const highlightRect = globalThis.document
+            .querySelector(".coach-mark-highlight")
+            .getBoundingClientRect();
+          return {
+            targetTop: targetRect.top,
+            targetBottom: targetRect.bottom,
+            targetHeight: targetRect.height,
+            highlightHeight: highlightRect.height,
+            viewportHeight: globalThis.innerHeight,
+          };
+        }, target);
+        expect(geometry.targetTop).toBeGreaterThanOrEqual(4);
+        expect(geometry.targetBottom).toBeLessThanOrEqual(
+          geometry.viewportHeight - 4,
+        );
+        expect(geometry.highlightHeight).toBeGreaterThan(geometry.targetHeight);
+      }
+      await page.locator(".coach-mark-next").click();
+    });
+  }
+
+  await expect(page.locator(".coach-mark-root")).toBeHidden();
+  await page.locator(".exercise").first().locator(".guide-row").click();
+  await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 1");
+  await expectCoachMarkFramesTarget(
+    page,
+    '#exerciseDetailView [data-education-target="rpe-control"]',
+  );
+  await page.locator(".coach-mark-next").click();
+
   assertNoRuntimeErrors();
 });
 

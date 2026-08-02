@@ -1,5 +1,6 @@
 import "../core/globals.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
+import { seedDefaultTemplates } from "../application/routine-seeding.js";
 import {
   consumeEducationReplay,
   getEducationExperience,
@@ -26,7 +27,7 @@ import {
   applyRoutineExerciseSelection,
   hasRoutineExerciseDuplicate,
 } from "../domain/routine-draft.js";
-import { clearRoutines, deleteRoutine, getRoutines, saveRoutine, seedDefaultTemplates } from "../storage/indexed-db.js";
+import { clearRoutines, deleteRoutine, getRoutines, saveRoutine } from "../storage/indexed-db.js";
 import { loadWorkoutTemplate, showSessionView } from "./active-workout.js";
 
 let templateDraftExercises = [];

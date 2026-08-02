@@ -8,7 +8,6 @@ import {
   resolveCatalogCanonicalName,
 } from "../catalog/catalog-search.js";
 import { buildCatalogPreviewSummary } from "../catalog/exercise-guide-adapter.js";
-import { DEFAULT_TEMPLATES } from "../core/constants.js";
 import { buildExerciseOptions } from "../domain/exercise-options.js";
 import {
   INPUT_LIMITS,
@@ -582,9 +581,6 @@ function createExercisePickerController() {
       console.info("Current exercise names could not be read.", error);
     }
     localOptions = buildExerciseOptions({
-      defaultRoutines: Object.entries(DEFAULT_TEMPLATES).map(
-        ([name, exercises]) => ({ name, exercises }),
-      ),
       routines,
       workouts,
       currentExercises,

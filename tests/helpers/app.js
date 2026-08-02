@@ -112,8 +112,9 @@ export async function seedStores(page, records) {
       saveLegacyWeight,
       saveRoutine,
       saveWorkoutRecord,
-      seedDefaultTemplates,
     } = await import("/src/js/storage/indexed-db.js");
+    const { seedDefaultTemplates } =
+      await import("/src/js/application/routine-seeding.js");
     const { refreshTemplateDropdowns } =
       await import("/src/js/components/routine-selectors.js");
     const { renderAll } = await import("/src/js/router.js");

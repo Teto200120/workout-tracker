@@ -12,7 +12,44 @@ import {
 
 const catalogPath = "src/data/exercise-catalog.json";
 
-test("catalog loads after local options and saves only the canonical exercise name", async ({
+test("new users receive starter routines composed entirely from catalog records", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  const catalogPayload = JSON.parse(await readFile(catalogPath, "utf8"));
+  const catalogByName = new Map(
+    catalogPayload.exercises.map((exercise) => [exercise.name, exercise]),
+  );
+
+  await loadApp(page);
+  const routines = await readStore(page, "templates");
+  const starterRoutines = routines.filter(
+    (routine) => routine.name !== "Custom",
+  );
+  expect(starterRoutines).toHaveLength(5);
+  expect(
+    routines.find((routine) => routine.name === "Custom")?.exercises,
+  ).toEqual([]);
+  for (const routine of starterRoutines) {
+    expect(routine.exercises).toHaveLength(4);
+    for (const exerciseName of routine.exercises) {
+      const catalogExercise = catalogByName.get(exerciseName);
+      expect(catalogExercise, `${routine.name}: ${exerciseName}`).toBeTruthy();
+      expect(catalogExercise.instructions.length).toBeGreaterThan(0);
+    }
+  }
+
+  await openPrimary(page, "profile");
+  await page.locator('[data-profile-target="templates"]').click();
+  await expect(page.locator("#templates")).toHaveClass(/active/u);
+  await expect(page.locator(".routine-card")).toHaveCount(6);
+  await expect(
+    page.locator(".routine-card").filter({ hasText: "Back / Biceps" }),
+  ).toContainText("4 exercises");
+  assertNoRuntimeErrors();
+});
+
+test("catalog-backed local options save only the canonical exercise name", async ({
   page,
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
@@ -33,9 +70,6 @@ test("catalog loads after local options and saves only the canonical exercise na
   const initialCount = await exercises.count();
   await page.locator("#addExercise").click();
   await expect(page.locator(".exercise-picker-option.is-local")).toHaveCount(3);
-  await expect(page.locator("#exercisePickerCatalogStatus")).toContainText(
-    "Loading catalog",
-  );
   await expect(page.locator("#exercisePickerCatalogStatus")).toContainText(
     "873 offline",
   );
@@ -342,7 +376,20 @@ test("a reviewed alias enriches a recovered draft while preserving its saved nam
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
   await loadApp(page);
-  await startRoutine(page, "Back / Biceps");
+  await page.evaluate(async () => {
+    const { saveRoutine } = await import("/src/js/storage/indexed-db.js");
+    const timestamp = new Date().toISOString();
+    await saveRoutine({
+      id: "user-alias-routine",
+      name: "User Alias Routine",
+      exercises: ["V-Bar Lat Pulldown"],
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+  await page.reload();
+  await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
+  await startRoutine(page, "User Alias Routine");
   await page.reload();
   await expect(page.locator("#todayStartWorkout .cta-label")).toContainText(
     "Resume",
@@ -483,7 +530,7 @@ test("one malformed catalog record does not hide usable records", async ({
     }),
   );
   await loadApp(page);
-  await startRoutine(page);
+  await startRoutine(page, "Custom");
   await page.locator("#addExercise").click();
   await expect(page.locator("#exercisePickerCatalogStatus")).toContainText(
     "1 offline",
@@ -510,7 +557,20 @@ test("catalog failure leaves local and custom exercise flows usable", async ({
     }),
   );
   await loadApp(page);
-  await startRoutine(page);
+  await page.evaluate(async () => {
+    const { saveRoutine } = await import("/src/js/storage/indexed-db.js");
+    const timestamp = new Date().toISOString();
+    await saveRoutine({
+      id: "user-catalog-free-routine",
+      name: "User Catalog-Free Library",
+      exercises: ["Romanian Deadlift"],
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+  await page.reload();
+  await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
+  await startRoutine(page, "Custom");
 
   const exercises = page.locator(".exercise");
   const initialCount = await exercises.count();
