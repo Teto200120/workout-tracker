@@ -18,19 +18,44 @@
     <div class="onboarding-card">
       <div class="onboarding-brand" aria-hidden="true">WT</div>
       <p class="onboarding-eyebrow">Workout Tracker</p>
-      <h1 id="onboardingTitle">Welcome to your workout tracker</h1>
-      <p class="onboarding-intro">Keep workouts, routines, and progress on this device, ready whenever you train.</p>
-      <ul class="onboarding-benefits" aria-label="What you can do">
-        <li>Track workouts</li>
-        <li>Resume sessions</li>
-        <li>Review progress</li>
-      </ul>
       <form class="onboarding-form" id="onboardingForm" novalidate>
-        <label for="onboardingDisplayName">What should we call you?</label>
-        <input id="onboardingDisplayName" type="text" autocomplete="name" enterkeyhint="done" aria-describedby="onboardingNameHint onboardingError" />
-        <p class="field-hint" id="onboardingNameHint">Use up to 80 characters. Your name stays on this device.</p>
-        <p class="field-validation onboarding-error" id="onboardingError" role="alert" aria-live="assertive"></p>
-        <button class="onboarding-primary" id="onboardingSubmit" type="submit">Get started</button>
+        <div class="onboarding-step" id="onboardingStepOne">
+          <p class="onboarding-progress">Step 1 of 2</p>
+          <h1 id="onboardingTitle">Welcome to your workout tracker</h1>
+          <p class="onboarding-intro">Track workouts, resume unfinished sessions, and review your progress. Your workout information stays in this browser on this device.</p>
+          <ul class="onboarding-benefits" aria-label="What you can do">
+            <li>Track workouts</li>
+            <li>Resume sessions</li>
+            <li>Review progress</li>
+          </ul>
+          <label for="onboardingDisplayName">What should we call you?</label>
+          <input id="onboardingDisplayName" type="text" autocomplete="name" enterkeyhint="next" aria-describedby="onboardingNameHint onboardingError" />
+          <p class="field-hint" id="onboardingNameHint">Use up to 80 characters. Your name stays on this device.</p>
+          <p class="field-validation onboarding-error" id="onboardingError" role="alert" aria-live="assertive"></p>
+          <button class="onboarding-primary" id="onboardingContinue" type="button">Continue</button>
+        </div>
+        <div class="onboarding-step hidden" id="onboardingStepTwo" aria-hidden="true">
+          <p class="onboarding-progress">Step 2 of 2</p>
+          <h1 id="onboardingRpeTitle">Understand training effort</h1>
+          <p class="onboarding-intro">RPE describes how hard a set felt and can improve your next target suggestion.</p>
+          <div class="onboarding-rpe-scale" aria-label="RPE examples">
+            <span><strong>RPE 8</strong>About two reps remaining</span>
+            <span><strong>RPE 9</strong>About one rep remaining</span>
+            <span><strong>RPE 10</strong>No reps remaining</span>
+          </div>
+          <label class="onboarding-rpe-toggle" for="onboardingRpeAware">
+            <span><strong>Track RPE</strong><small>Show effort fields and use effort-aware suggestions.</small></span>
+            <span class="settings-switch-control">
+              <input id="onboardingRpeAware" type="checkbox" checked />
+              <span class="settings-switch-track" aria-hidden="true"></span>
+            </span>
+          </label>
+          <p class="field-validation onboarding-error" id="onboardingSaveError" role="alert" aria-live="assertive"></p>
+          <div class="onboarding-step-actions">
+            <button class="onboarding-back" id="onboardingBack" type="button">Back</button>
+            <button class="onboarding-primary" id="onboardingSubmit" type="submit">Finish setup</button>
+          </div>
+        </div>
       </form>
       <p class="field-validation onboarding-error" id="onboardingStartupError" role="alert" aria-live="assertive"></p>
       <button class="onboarding-retry hidden" id="onboardingRetry" type="button">Retry startup</button>
@@ -77,7 +102,18 @@
             <div class="today-week-dots" id="todayWeekDots"></div>
           </div>
 
-          <div class="card today-workout-card" id="todayWorkoutCard">
+          <aside class="card education-offer-card hidden" id="homeEducationOffer" aria-labelledby="homeEducationOfferTitle">
+            <div>
+              <h2 id="homeEducationOfferTitle">Want a quick tour?</h2>
+              <p>See where to preview today’s workout, start or resume a session, and find your progress.</p>
+            </div>
+            <div class="education-offer-actions">
+              <button class="primary" id="homeEducationStart" type="button">Show me around</button>
+              <button class="ghost" id="homeEducationSkip" type="button">Skip for now</button>
+            </div>
+          </aside>
+
+          <div class="card today-workout-card" id="todayWorkoutCard" data-education-target="home-workout-card">
             <div class="today-workout-topline">
               <div id="todayStatusPill" class="today-status-pill">Today’s Workout</div>
             </div>
@@ -94,7 +130,7 @@
             </div>
 
             <details class="today-change-panel" id="todayWorkoutDrawer">
-              <summary>
+              <summary data-education-target="home-preview-change">
                 <span>
                   <span class="today-change-kicker">Selected Workout</span>
                   <strong id="todaySelectedWorkoutLabel">Workout</strong>
@@ -112,7 +148,7 @@
             <button class="today-card-secondary-action hidden" id="todayCardAction" type="button">Start Another Workout</button>
           </div>
 
-          <div class="card" id="todayProgressGlanceCard">
+          <div class="card" id="todayProgressGlanceCard" data-education-target="home-progress-glance">
             <div class="today-card-row today-progress-card-heading">
               <div class="today-card-icon">↗</div>
               <div class="today-card-copy">
@@ -153,7 +189,7 @@
               <strong class="session-routine-title" id="sessionRoutineTitle">Workout</strong>
               <span class="live-session-time" id="sessionElapsedTimer">0:00</span>
             </div>
-            <button class="success" id="sessionSaveTop" type="button" aria-label="Finish workout">Finish</button>
+            <button class="success" id="sessionSaveTop" type="button" aria-label="Finish workout" data-education-target="finish-workout">Finish</button>
           </div>
           <div class="live-progress-section">
             <div class="live-progress-row">
@@ -257,6 +293,11 @@
       </section>
 
       <section id="dashboard" class="screen stats-screen stats-dashboard">
+        <aside class="education-inline-tip hidden" id="statsEducationTip" aria-labelledby="statsEducationTitle">
+          <h3 id="statsEducationTitle">How Stats grows</h3>
+          <p>Stats summarizes workouts saved on this device and becomes more useful as your history grows.</p>
+          <button class="ghost" type="button" data-inline-education-complete="statsBasics">Got it</button>
+        </aside>
         <div class="card hero-card stats-hero-card">
           <div class="screen-title-row stats-hero-row">
             <div>
@@ -504,6 +545,12 @@
           <span class="stats-detail-spacer" aria-hidden="true"></span>
         </div>
 
+        <aside class="education-inline-tip hidden" id="historyEducationTip" aria-labelledby="historyEducationTitle">
+          <h3 id="historyEducationTitle">Your saved sessions</h3>
+          <p>History keeps completed workouts together and supports routine filtering and exercise search.</p>
+          <button class="ghost" type="button" data-inline-education-complete="historyBasics">Got it</button>
+        </aside>
+
         <div class="card stats-panel stats-history-card">
           <div class="section-heading stats-history-heading">
             <div>
@@ -640,7 +687,7 @@
           <span class="profile-subpage-spacer" aria-hidden="true"></span>
         </div>
 
-        <details class="card routine-builder-panel" open>
+        <details class="card routine-builder-panel" open data-education-target="routine-editor">
           <summary>
             <span>
               <strong>Create / Edit Routine</strong>
@@ -652,7 +699,7 @@
             <div class="routine-builder-grid">
               <div>
                 <label for="templateName">Routine Name</label>
-                <input id="templateName" type="text" placeholder="Example: Chest / Triceps" aria-describedby="templateNameHint templateNameError" />
+                <input id="templateName" type="text" placeholder="Example: Chest / Triceps" aria-describedby="templateNameHint templateNameError" data-education-target="routine-name" />
                 <p class="field-hint" id="templateNameHint">Up to 80 characters.</p>
                 <p class="field-validation" id="templateNameError" role="alert" aria-live="polite"></p>
               </div>
@@ -662,7 +709,7 @@
                   <input id="templateExerciseInput" type="text" placeholder="Example: Flat Bench Press" aria-describedby="templateExerciseHint templateExerciseError" />
                   <button class="primary" id="addTemplateExercise" type="button">Add</button>
                 </div>
-                <button class="routine-browse-action" id="browseTemplateExercise" type="button">Browse exercise catalog</button>
+                <button class="routine-browse-action" id="browseTemplateExercise" type="button" data-education-target="routine-add-exercises">Browse exercise catalog</button>
                 <p class="field-hint" id="templateExerciseHint">Up to 120 characters.</p>
                 <p class="field-validation" id="templateExerciseError" role="alert" aria-live="polite"></p>
               </div>
@@ -674,7 +721,7 @@
               </div>
               <div id="templateDraftList" class="routine-draft-list"></div>
             </div>
-            <div class="routine-builder-actions">
+            <div class="routine-builder-actions" data-education-target="routine-save">
               <button class="success" id="saveTemplate" type="button">Save Routine</button>
               <button class="ghost" id="clearTemplateDraft" type="button">Clear Draft</button>
             </div>
@@ -814,8 +861,8 @@
                 <svg viewBox="0 0 24 24"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 8v4l3 2"/></svg>
               </span>
               <span class="settings-row-copy">
-                <strong>RPE-aware Targets</strong>
-                <span>Adjust target suggestions using effort.</span>
+                <strong>Track RPE</strong>
+                <span>Show effort fields and allow effort-aware target suggestions.</span>
               </span>
               <span class="settings-switch-control">
                 <input id="settingsRpeAware" type="checkbox" />
@@ -934,6 +981,20 @@
           </div>
         </div>
 
+        <div class="settings-section">
+          <div class="settings-section-label">Help &amp; Guidance</div>
+          <div class="settings-group">
+            <button class="settings-guidance-action" type="button" data-education-action="replay-home">Replay Home tour</button>
+            <button class="settings-guidance-action" type="button" data-education-action="replay-active">Replay Active Workout guide</button>
+            <button class="settings-guidance-action" type="button" data-education-action="replay-routine">Replay Routine Editor guide</button>
+            <button class="settings-guidance-action" type="button" data-education-action="explain-rpe">RPE explained</button>
+            <button class="settings-guidance-action" type="button" data-education-action="replay-history">Show History tip again</button>
+            <button class="settings-guidance-action" type="button" data-education-action="replay-stats">Show Stats tip again</button>
+            <button class="settings-guidance-action" type="button" data-education-action="replay-guide">Show Exercise Guide tip again</button>
+            <button class="settings-guidance-action" type="button" data-education-action="reset-all">Reset all guidance</button>
+          </div>
+        </div>
+
         <div class="settings-action-bar">
           <button class="settings-primary-action" id="saveSettings" type="button">Save Settings</button>
           <button class="settings-secondary-action" id="resetSettings" type="button">Reset Settings</button>
@@ -1048,8 +1109,16 @@
     <div class="today-review-scroll" id="todayReviewContent"></div>
   </div>
 
+  <dialog class="rpe-help-dialog" id="rpeHelpDialog" aria-labelledby="rpeHelpTitle">
+    <div class="rpe-help-content">
+      <h2 id="rpeHelpTitle">RPE explained</h2>
+      <p>RPE describes how hard a set felt. About two reps left is RPE 8, one rep left is RPE 9, and no reps left is RPE 10.</p>
+      <button class="settings-primary-action" id="rpeHelpClose" type="button">Got it</button>
+    </div>
+  </dialog>
+
   <div class="today-floating-cta hidden" id="todayFloatingCta">
-    <button class="today-primary-cta" id="todayStartWorkout" type="button">
+    <button class="today-primary-cta" id="todayStartWorkout" type="button" data-education-target="home-start-resume">
       <span class="cta-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" role="presentation" focusable="false" aria-hidden="true">
           <path d="M8 6.5v11l9-5.5-9-5.5z"/>

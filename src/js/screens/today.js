@@ -1,7 +1,17 @@
 import "../core/globals.js";
 import { getDisplayName } from "../application/display-name.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
+import {
+  claimEducationOffer,
+  hideEducationOffer,
+  isEducationOfferVisible,
+  updateEducationExperience,
+} from "../application/education.js";
 import { getTodayPlan } from "../application/schedule.js";
+import {
+  canPresentEducation,
+  startCoachMark,
+} from "../components/coach-mark.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import {
   clamp,
@@ -67,6 +77,102 @@ let todayCtaMode = "start";
 let ctaMorphFrame = null;
 let ctaLastSettledState = null;
 let ctaBounceTimeout = null;
+let todayEducationBound = false;
+
+const HOME_TOUR_STEPS = Object.freeze([
+  {
+    target: '[data-education-target="home-workout-card"]',
+    title: "Today’s workout",
+    body: "This is the workout suggested for today. If you leave an unfinished session, you can resume it here.",
+  },
+  {
+    target: '[data-education-target="home-preview-change"]',
+    title: "Preview or change",
+    body: "Preview the plan or choose a different saved routine before you start.",
+  },
+  {
+    target: '[data-education-target="home-start-resume"]',
+    title: "Start or resume",
+    body: "This action starts a new workout or resumes the session saved on this device.",
+  },
+  {
+    target: '[data-education-target="home-progress-glance"]',
+    title: "Progress Glance",
+    body: "See a quick summary here. Stats and History hold the deeper view of your saved training.",
+  },
+]);
+
+function educationSaveFeedback(result) {
+  if (!result?.saved) {
+    toast("Guidance progress could not be saved. The rest of the app is still available.");
+  }
+}
+
+function renderHomeEducationOffer() {
+  const offer = $("homeEducationOffer");
+  if (!offer) return;
+  if (!$("log")?.classList.contains("active")) {
+    offer.classList.add("hidden");
+    return;
+  }
+  if (!isEducationOfferVisible("homeTour")) {
+    claimEducationOffer("homeTour");
+  }
+  offer.classList.toggle(
+    "hidden",
+    !isEducationOfferVisible("homeTour"),
+  );
+}
+
+export function startHomeTour({ launcher = null } = {}) {
+  hideEducationOffer("homeTour");
+  $("homeEducationOffer")?.classList.add("hidden");
+  if (!canPresentEducation()) {
+    const result = updateEducationExperience("homeTour", "deferred");
+    educationSaveFeedback(result);
+    toast("The Home tour is still available when the screen is clear.");
+    return false;
+  }
+
+  const startedState = updateEducationExperience(
+    "homeTour",
+    "in_progress",
+    { lastStep: 0 },
+  );
+  educationSaveFeedback(startedState);
+  const started = startCoachMark({
+    steps: HOME_TOUR_STEPS,
+    launcher,
+    onStepChange: (lastStep) => {
+      updateEducationExperience("homeTour", "in_progress", { lastStep });
+    },
+    onClose: ({ reason, lastStep }) => {
+      const result = updateEducationExperience("homeTour", reason, {
+        lastStep,
+      });
+      educationSaveFeedback(result);
+    },
+  });
+  if (!started) {
+    toast("The Home tour is still available when its screen items return.");
+  }
+  return started;
+}
+
+export function bindTodayEducation() {
+  if (todayEducationBound) return;
+  todayEducationBound = true;
+  $("homeEducationStart")?.addEventListener("click", (event) => {
+    startHomeTour({ launcher: event.currentTarget });
+  });
+  $("homeEducationSkip")?.addEventListener("click", () => {
+    hideEducationOffer("homeTour");
+    $("homeEducationOffer")?.classList.add("hidden");
+    educationSaveFeedback(
+      updateEducationExperience("homeTour", "skipped", { lastStep: 0 }),
+    );
+  });
+}
 
 function shouldShowTodayFloatingCta() {
   const logVisible = $("log")?.classList.contains("active");
@@ -386,6 +492,7 @@ export async function renderTodayView() {
   if (hasActiveDraft) startTodayActiveElapsedTimer(draft);
   else stopTodayActiveElapsedTimer();
   syncTodayFloatingCta();
+  renderHomeEducationOffer();
 }
 
 export function closeTodayReview() {

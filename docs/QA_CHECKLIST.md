@@ -2,7 +2,8 @@
 
 ## Startup
 
-- [ ] Load once with empty storage; only the one-screen display-name onboarding renders, with no Home flash or console errors.
+- [ ] Load once with empty storage; only two-step display-name/RPE onboarding renders, with no Home flash or console errors.
+- [ ] Continue validates without saving; Back preserves the name; Track RPE defaults on; Finish Setup persists both values together and retains both after a failed write.
 - [ ] Try blank, invisible-only, 81-character, international, emoji, and markup-like names; confirm clear validation, literal safe rendering, retained input, and successful correction.
 - [ ] Force a settings write failure and double-submit; confirm one in-flight attempt, visible retryable feedback, retained input, and no app entry until the retry succeeds.
 - [ ] Save a valid name; confirm Home, Profile, and Settings update, then reload without seeing onboarding.
@@ -135,7 +136,7 @@
 - [ ] Make the catalog asset unavailable in a disposable profile; confirm existing/local/custom exercises receive the generic Guide without an error.
 - [ ] Open cached subpages and confirm no mixed-version module errors.
 - [ ] Re-enable networking and confirm the current cache replaces older caches.
-- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v17`, every onboarding/schema/catalog/routine-picker module is present, and `src/data/exercise-catalog.json` is cached.
+- [ ] Confirm the active cache name is `hector-workout-tracker-pwa-v19`, every onboarding/education/schema/catalog/routine-picker module is present, and `src/data/exercise-catalog.json` is cached.
 - [ ] Save and reload a representative workout while offline; confirm one record, recovered/corrected draft behavior, and no missing `input-guardrails.js` or `action-coordinator.js` request.
 
 ## Mobile Layout
@@ -151,7 +152,19 @@
 - [ ] In Chrome portrait, migrate representative unversioned local data and confirm Home, History, Stats, Routines, Settings, and draft resume remain usable.
 - [ ] Force a malformed legacy record in a disposable test profile; confirm the migration failure message is readable and original data can still be exported/inspected after correction.
 - [ ] Export a v3 backup, clear data, reimport it, and confirm the schema marker and all supported data return.
-- [ ] Enable airplane mode after an online controlled load; confirm cache v17 starts Home, opens cached subpages, searches the catalog from Active Workout and Routines, and renders an existing-name catalog Guide without mixed-version module errors.
+- [ ] Enable airplane mode after an online controlled load; confirm cache v19 starts Home, runs guidance, opens cached subpages, searches the catalog from Active Workout and Routines, and renders an existing-name catalog Guide without mixed-version module errors.
+
+## Beta education
+
+- [ ] Confirm the Home invitation is nonmodal, appears only for unseen guidance, never auto-starts, and stays skipped after reload.
+- [ ] Complete and replay the four Home steps; verify the compact CTA, Progress Glance, Back/Next/progress, focus trap, focus return, Escape, and Android/browser Back.
+- [ ] Remove one and then all targets in a disposable profile; verify skipped steps and a clean deferred close without a blocking overlay.
+- [ ] Start an untouched workout; verify Active Workout and RPE guidance. Repeat with a focused field, entered set, picker/detail/completion overlay, software keyboard, and drag; verify no interruption.
+- [ ] Disable Track RPE; verify new effort UI and effort-aware suggestions are absent while saved historical RPE remains unchanged, then re-enable it.
+- [ ] Open and replay Routine Editor guidance; verify the picker stays closed, the draft is unchanged, and a previously collapsed builder is restored.
+- [ ] Verify History, Stats, catalog Guide, and generic Guide inline tips in empty and populated states; complete, reload, and replay each.
+- [ ] Reset all guidance; verify onboarding, display name, workouts, routines, drafts, goals, schedule, haptics, animations, and backup metadata are unchanged.
+- [ ] Repeat coach marks with reduced motion/app animations disabled, viewport rotation, browser toolbar changes, and the real Android software keyboard.
 - [ ] Repeat keyboard, haptic, Exercise Details scrolling, compact filters/count/reset, local/Show All/catalog hierarchy, shortened preview/full Guide, save/edit, and no-horizontal-overflow checks at the device's default display scaling.
 
 ## Accessibility Basics

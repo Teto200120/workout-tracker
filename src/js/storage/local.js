@@ -3,6 +3,7 @@ import {
   BACKUP_META_KEY,
   DEFAULT_APP_SETTINGS,
   DRAFT_KEY,
+  EDUCATION_KEY,
   GOALS_KEY,
   SETTINGS_KEY
 } from "../core/constants.js";
@@ -127,6 +128,36 @@ export function setBackupMeta(meta) {
   localStorage.setItem(BACKUP_META_KEY, JSON.stringify(value));
 }
 
+export function getEducationRecord() {
+  const rawValue = localStorage.getItem(EDUCATION_KEY);
+  if (rawValue === null) return null;
+  try {
+    return JSON.parse(rawValue);
+  } catch {
+    return null;
+  }
+}
+
+export function setEducationRecord(record) {
+  localStorage.setItem(EDUCATION_KEY, JSON.stringify(record));
+}
+
+export function getRawEducationRecord() {
+  return localStorage.getItem(EDUCATION_KEY);
+}
+
+export function restoreRawEducationRecord(rawValue) {
+  if (rawValue === null || rawValue === undefined) {
+    localStorage.removeItem(EDUCATION_KEY);
+  } else {
+    localStorage.setItem(EDUCATION_KEY, rawValue);
+  }
+}
+
+export function removeEducationRecord() {
+  localStorage.removeItem(EDUCATION_KEY);
+}
+
 export function captureApplicationLocalStorage() {
   return Object.fromEntries(Object.entries(LOCAL_STORAGE_FIELDS).map(([field, key]) => [field, localStorage.getItem(key)]));
 }
@@ -176,5 +207,6 @@ export function clearApplicationLocalStorage() {
   localStorage.removeItem(GOALS_KEY);
   localStorage.removeItem(DRAFT_KEY);
   localStorage.removeItem(SETTINGS_KEY);
+  localStorage.removeItem(EDUCATION_KEY);
   localStorage.removeItem(APPLICATION_SCHEMA_VERSION_KEY);
 }

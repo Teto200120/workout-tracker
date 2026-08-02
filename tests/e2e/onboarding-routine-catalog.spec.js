@@ -47,7 +47,7 @@ test("first launch gates the app, validates safely, retries storage, and persist
   });
   await loadApp(page, { completeOnboarding: false });
 
-  await expect(page.locator("#onboarding h1")).toHaveText(
+  await expect(page.locator("#onboardingTitle")).toHaveText(
     "Welcome to your workout tracker",
   );
   await expect(page.locator("#onboardingForm")).toBeVisible();
@@ -68,12 +68,12 @@ test("first launch gates the app, validates safely, retries storage, and persist
 
   const input = page.locator("#onboardingDisplayName");
   await input.fill(" \u200B\u200C ");
-  await page.locator("#onboardingSubmit").click();
+  await page.locator("#onboardingContinue").click();
   await expect(page.locator("#onboardingError")).toContainText("required");
   await expect(input).toBeFocused();
 
   await input.fill("x".repeat(81));
-  await page.locator("#onboardingSubmit").click();
+  await page.locator("#onboardingContinue").click();
   await expect(page.locator("#onboardingError")).toContainText(
     "80 characters or fewer",
   );
@@ -91,9 +91,16 @@ test("first launch gates the app, validates safely, retries storage, and persist
     };
   });
   await input.fill("Retry Me");
+  await page.locator("#onboardingContinue").click();
+  await expect(page.locator("#onboardingRpeAware")).toBeChecked();
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("hector_workout_settings_v1"),
+    ),
+  ).toBe(null);
   await page.locator("#onboardingSubmit").click();
-  await expect(page.locator("#onboardingError")).toContainText(
-    "Could not save your name",
+  await expect(page.locator("#onboardingSaveError")).toContainText(
+    "Could not finish setup",
   );
   await expect(input).toHaveValue("Retry Me");
   await expect(page.locator("#onboarding")).toBeVisible();
@@ -112,10 +119,12 @@ test("first launch gates the app, validates safely, retries storage, and persist
       return original.call(this, key, value);
     };
   });
+  await page.locator("#onboardingBack").click();
   await input.fill("Marker Retry");
+  await page.locator("#onboardingContinue").click();
   await page.locator("#onboardingSubmit").click();
-  await expect(page.locator("#onboardingError")).toContainText(
-    "Could not save your name",
+  await expect(page.locator("#onboardingSaveError")).toContainText(
+    "Could not finish setup",
   );
   await expect(input).toHaveValue("Marker Retry");
   await expect(page.locator("#onboarding")).toBeVisible();
@@ -138,7 +147,9 @@ test("first launch gates the app, validates safely, retries storage, and persist
     };
   });
   const safeName = "José <b>Strong</b> 🏋️";
+  await page.locator("#onboardingBack").click();
   await input.fill(`  ${safeName}  `);
+  await page.locator("#onboardingContinue").click();
   await page.locator("#onboardingForm").evaluate((form) => {
     form.dispatchEvent(
       new Event("submit", { bubbles: true, cancelable: true }),

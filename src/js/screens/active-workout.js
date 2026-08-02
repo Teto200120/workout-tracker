@@ -16,6 +16,17 @@ import {
 import { adaptCatalogExerciseToGuide } from "../catalog/exercise-guide-adapter.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import {
+  consumeEducationReplay,
+  getEducationExperience,
+  hasEducationReplay,
+  updateEducationExperience,
+} from "../application/education.js";
+import {
+  canPresentEducation,
+  isCoachMarkOpen,
+  startCoachMark,
+} from "../components/coach-mark.js";
+import {
   cleanText,
   clamp,
   dateLabel,
@@ -78,6 +89,159 @@ const completionCoordinator = createActionCoordinator();
 let workoutSavePending = false;
 let draftStorageFailureShown = false;
 let completionPreviousFocus = null;
+let sessionEducationExercise = null;
+let sessionEducationAttempted = false;
+let sessionInteractionStarted = false;
+let rpeInteractionStarted = false;
+let educationScheduleToken = 0;
+
+const ACTIVE_WORKOUT_EDUCATION_STEPS = Object.freeze([
+  {
+    target: '[data-education-target="active-exercise-card"]',
+    title: "Your exercise area",
+    body: "The session is organized by exercise. Open an exercise to log sets and view its offline guide.",
+  },
+  {
+    target: '[data-education-target="active-current-set"]',
+    title: "Complete the current set",
+    body: "Enter load and repetitions, then complete the set. Changes are kept in the local workout draft so the session can be resumed.",
+  },
+  {
+    target: '[data-education-target="finish-workout"]',
+    title: "Finish the workout",
+    body: "Finish saves the completed workout. Leaving the session keeps its local draft available to resume.",
+  },
+]);
+
+const RPE_EDUCATION_STEPS = Object.freeze([
+  {
+    target: '[data-education-target="rpe-control"]',
+    title: "Rate the set with RPE",
+    body: "RPE describes how hard the set felt. About two reps left is RPE 8, one rep left is RPE 9, and no reps left is RPE 10.",
+  },
+]);
+
+function educationSaveFeedback(result) {
+  if (!result?.saved) {
+    toast("Guidance progress could not be saved. Your workout is still available.");
+  }
+}
+
+function resetSessionEducationIfNeeded() {
+  const firstExercise = $("exerciseList")?.querySelector(".exercise") || null;
+  if (firstExercise === sessionEducationExercise) return;
+  sessionEducationExercise = firstExercise;
+  sessionEducationAttempted = false;
+  sessionInteractionStarted = false;
+  rpeInteractionStarted = false;
+}
+
+function activeWorkoutEducationSafe() {
+  return Boolean(
+    $("sessionView") &&
+      !$("sessionView").classList.contains("hidden") &&
+      !sessionInteractionStarted &&
+      !isExerciseDetailOpen() &&
+      canPresentEducation({
+        target: '[data-education-target="active-exercise-card"]',
+        userEditing: sessionInteractionStarted,
+        dragActive: Boolean(exerciseDragState),
+      }),
+  );
+}
+
+function rpeEducationSafe() {
+  return Boolean(
+    getAppSettings().rpeAware &&
+      !rpeInteractionStarted &&
+      !isCoachMarkOpen() &&
+      canPresentEducation({
+        target: '[data-education-target="rpe-control"]',
+        userEditing: sessionInteractionStarted,
+        dragActive: Boolean(exerciseDragState),
+      }),
+  );
+}
+
+function scheduleRpeEducation() {
+  const token = ++educationScheduleToken;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (token !== educationScheduleToken) return;
+      const replay = hasEducationReplay("rpeBasics");
+      const experience = getEducationExperience("rpeBasics");
+      if (!getAppSettings().rpeAware) return;
+      if (!replay && experience?.status !== "unseen") return;
+      if (!rpeEducationSafe()) {
+        if (replay) consumeEducationReplay("rpeBasics");
+        updateEducationExperience("rpeBasics", "deferred");
+        return;
+      }
+      if (replay) consumeEducationReplay("rpeBasics");
+      updateEducationExperience("rpeBasics", "in_progress", {
+        lastStep: 0,
+      });
+      startCoachMark({
+        steps: RPE_EDUCATION_STEPS,
+        finalLabel: "Got it",
+        onClose: ({ reason, lastStep }) => {
+          educationSaveFeedback(
+            updateEducationExperience("rpeBasics", reason, { lastStep }),
+          );
+        },
+      });
+    });
+  });
+}
+
+function scheduleActiveWorkoutEducation() {
+  resetSessionEducationIfNeeded();
+  const replay = hasEducationReplay("activeWorkoutBasics");
+  const experience = getEducationExperience("activeWorkoutBasics");
+  if (
+    sessionEducationAttempted &&
+    !replay
+  ) {
+    scheduleRpeEducation();
+    return;
+  }
+  if (!replay && experience?.status !== "unseen") {
+    scheduleRpeEducation();
+    return;
+  }
+  sessionEducationAttempted = true;
+  const token = ++educationScheduleToken;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (token !== educationScheduleToken) return;
+      if (!activeWorkoutEducationSafe()) {
+        if (replay) consumeEducationReplay("activeWorkoutBasics");
+        updateEducationExperience("activeWorkoutBasics", "deferred");
+        return;
+      }
+      if (replay) consumeEducationReplay("activeWorkoutBasics");
+      updateEducationExperience("activeWorkoutBasics", "in_progress", {
+        lastStep: 0,
+      });
+      startCoachMark({
+        steps: ACTIVE_WORKOUT_EDUCATION_STEPS,
+        onStepChange: (lastStep) => {
+          updateEducationExperience("activeWorkoutBasics", "in_progress", {
+            lastStep,
+          });
+        },
+        onClose: ({ reason, lastStep }) => {
+          educationSaveFeedback(
+            updateEducationExperience("activeWorkoutBasics", reason, {
+              lastStep,
+            }),
+          );
+          scheduleRpeEducation();
+        },
+      });
+    });
+  });
+}
 
 export function getEditingWorkoutId() {
   return editingWorkoutId;
@@ -119,6 +283,7 @@ function showSessionView() {
   syncSessionUi();
   replayAnimation($("sessionView"), "settle-in", 260);
   window.scrollTo({ top: 0, behavior: motionBehavior() });
+  scheduleActiveWorkoutEducation();
 }
 
 function formatElapsedClock(totalSeconds) {
@@ -342,6 +507,30 @@ export function bindActiveWorkoutGuardrails() {
     );
   });
   $("completionModal")?.addEventListener("keydown", trapCompletionFocus);
+  $("sessionView")?.addEventListener("input", (event) => {
+    sessionInteractionStarted = true;
+    if (
+      event.target.matches(".set-rpe, [data-field='rpe']") ||
+      event.target.closest("[data-education-target='rpe-control']")
+    ) {
+      rpeInteractionStarted = true;
+    }
+  });
+  $("sessionView")?.addEventListener("change", () => {
+    sessionInteractionStarted = true;
+  });
+  $("sessionView")?.addEventListener("click", (event) => {
+    if (
+      event.target.closest(
+        ".complete-set-button, .control-stepper, .set-done, .set-warmup",
+      )
+    ) {
+      sessionInteractionStarted = true;
+    }
+    if (event.target.closest("[data-field='rpe']")) {
+      rpeInteractionStarted = true;
+    }
+  });
 }
 
 function setSetFieldFeedback(exerciseEl, field, result) {
@@ -708,10 +897,11 @@ function getCurrentSetDisplayValues(exerciseEl) {
 }
 
 function controlInputHtml(field, value, label) {
+  if (field === "rpe" && !getAppSettings().rpeAware) return "";
   const inputMode = field === "reps" ? "numeric" : "decimal";
   const placeholder = field === "rpe" ? "-" : "0";
   return `
-    <div class="live-control-row ${field === "rpe" ? "live-rpe-row" : ""}">
+    <div class="live-control-row ${field === "rpe" ? "live-rpe-row" : ""}" ${field === "rpe" ? 'data-education-target="rpe-control"' : ""}>
       <span class="live-control-label">${cleanText(label)}</span>
       <button class="control-stepper" type="button" data-field="${field}" data-delta="-1" aria-label="Decrease ${field}">${iconMinus()}</button>
       <input class="control-value control-value-input ${field}-value" data-field="${field}" inputmode="${inputMode}" autocomplete="off" value="${cleanText(value || "")}" placeholder="${placeholder}" aria-label="${cleanText(label)}" />
@@ -1186,6 +1376,37 @@ async function renderExerciseGuideContent(exerciseEl) {
   return createGenericGuideContent(name);
 }
 
+function addExerciseGuideEducation(content) {
+  const experience = getEducationExperience("exerciseGuideBasics");
+  if (!content || !["unseen", "offered"].includes(experience?.status)) {
+    return content;
+  }
+  if (experience.status === "unseen") {
+    updateEducationExperience("exerciseGuideBasics", "offered", {
+      lastStep: 0,
+    });
+  }
+  const tip = document.createElement("aside");
+  tip.className = "education-inline-tip";
+  tip.setAttribute("aria-labelledby", "exerciseGuideEducationTitle");
+  tip.innerHTML = `
+    <h3 id="exerciseGuideEducationTitle">About this guide</h3>
+    <p>Guide details may use a conservative catalog match. Your saved exercise name is never changed, and a generic guide remains available when no safe match exists.</p>
+    <button class="ghost" type="button">Got it</button>
+  `;
+  tip.querySelector("button").addEventListener("click", () => {
+    const result = updateEducationExperience(
+      "exerciseGuideBasics",
+      "completed",
+      { lastStep: 0 },
+    );
+    educationSaveFeedback(result);
+    tip.remove();
+  });
+  content.prepend(tip);
+  return content;
+}
+
 async function renderExerciseLogContent(exerciseEl) {
   const name = exerciseEl.querySelector(".exercise-name")?.value.trim() || "Exercise";
   const profile = getExerciseProfile(name);
@@ -1389,7 +1610,7 @@ async function renderExerciseDetailView() {
     ? await renderExerciseGuideContent(exerciseEl)
     : await renderExerciseLogContent(exerciseEl);
   if (token !== exerciseDetailRenderToken) return;
-  if (isGuide) content.replaceChildren(renderedContent);
+  if (isGuide) content.replaceChildren(addExerciseGuideEducation(renderedContent));
   else content.innerHTML = renderedContent;
   updateExerciseDetailCompleteButton(exerciseEl);
   bindExerciseDetailControls();
@@ -1650,6 +1871,7 @@ export async function addExerciseToWorkout(name) {
   }
   const exercise = makeExercise({ name: exerciseName });
   $("exerciseList").appendChild(exercise);
+  saveDraftSilently();
   await updateExerciseHint(exercise);
   openExercise(exercise, true);
   saveDraftSilently();
@@ -1709,7 +1931,7 @@ function makeSetRow(set = {}) {
     <div class="set-index">1</div>
     <div><label>Weight</label><input class="set-weight" type="text" inputmode="decimal" autocomplete="off" placeholder="lb" value="${cleanText(set.weight || "")}" /></div>
     <div><label>Reps</label><input class="set-reps" type="text" inputmode="numeric" autocomplete="off" placeholder="reps" value="${cleanText(set.reps || "")}" /></div>
-    <div class="rpe-field"><label>RPE</label><input class="set-rpe" type="text" inputmode="decimal" autocomplete="off" placeholder="1-10" value="${cleanText(set.rpe || "")}" /></div>
+    <div class="rpe-field ${getAppSettings().rpeAware ? "" : "hidden"}"><label>RPE</label><input class="set-rpe" type="text" inputmode="decimal" autocomplete="off" placeholder="1-10" value="${cleanText(set.rpe || "")}" /></div>
     <div class="set-actions">
       <label class="toggle-pill"><input class="set-done" type="checkbox" ${set.done ? "checked" : ""} /> Done</label>
       <label class="toggle-pill warmup"><input class="set-warmup" type="checkbox" ${set.warmup ? "checked" : ""} /> Warm-up</label>
@@ -1739,6 +1961,7 @@ function makeSetRow(set = {}) {
 function makeExercise(data = {}) {
   const exercise = document.createElement("div");
   exercise.className = "exercise";
+  exercise.dataset.educationTarget = "active-exercise-card";
   exercise.innerHTML = `
     <div class="exercise-top">
       <div class="exercise-summary">
@@ -1788,7 +2011,7 @@ function makeExercise(data = {}) {
         <span>Exercise Details</span>
       </button>
       <div class="last-performance muted small"></div>
-      <div class="current-set-panel">
+      <div class="current-set-panel" data-education-target="active-current-set">
         <span class="current-set-label">Current Set<strong>Set 1</strong></span>
         <div class="live-control-row">
           <span class="live-control-label">Weight (lbs)</span>
@@ -1802,7 +2025,7 @@ function makeExercise(data = {}) {
           <input class="control-value control-value-input reps-value" data-field="reps" inputmode="numeric" autocomplete="off" value="0" aria-label="Reps" />
           <button class="control-stepper" type="button" data-field="reps" data-delta="1" aria-label="Increase reps">${iconPlus()}</button>
         </div>
-        <div class="live-control-row live-rpe-row">
+        <div class="live-control-row live-rpe-row ${getAppSettings().rpeAware ? "" : "hidden"}" data-education-target="rpe-control">
           <span class="live-control-label">RPE</span>
           <button class="control-stepper" type="button" data-field="rpe" data-delta="-1" aria-label="Decrease RPE">${iconMinus()}</button>
           <input class="control-value control-value-input rpe-value" data-field="rpe" inputmode="decimal" autocomplete="off" value="" placeholder="-" aria-label="RPE" />
@@ -1897,6 +2120,19 @@ function makeExercise(data = {}) {
   updateExerciseHint(exercise);
   updateExerciseSummary(exercise);
   return exercise;
+}
+
+export function syncRpePreferenceUi() {
+  const enabled = Boolean(getAppSettings().rpeAware);
+  all(".live-rpe-row, .rpe-field").forEach((row) => {
+    row.classList.toggle("hidden", !enabled);
+  });
+  all(".live-rpe-row .control-stepper, .live-rpe-row .control-value-input").forEach(
+    (control) => {
+      control.disabled = !enabled;
+    },
+  );
+  if (isExerciseDetailOpen()) renderExerciseDetailView();
 }
 
 async function loadWorkoutTemplate() {

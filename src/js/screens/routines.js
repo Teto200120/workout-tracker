@@ -1,5 +1,15 @@
 import "../core/globals.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
+import {
+  consumeEducationReplay,
+  getEducationExperience,
+  hasEducationReplay,
+  updateEducationExperience,
+} from "../application/education.js";
+import {
+  canPresentEducation,
+  startCoachMark,
+} from "../components/coach-mark.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { openExercisePicker } from "../components/exercise-picker.js";
 import { cleanText, id, toast } from "../core/utils.js";
@@ -23,6 +33,89 @@ let templateDraftExercises = [];
 let editingTemplateId = null;
 const routineMutationCoordinator = createActionCoordinator();
 const routineStartCoordinator = createActionCoordinator();
+let routineEducationScheduled = false;
+
+const ROUTINE_EDUCATION_STEPS = Object.freeze([
+  {
+    target: '[data-education-target="routine-name"]',
+    title: "Name the routine",
+    body: "This is the name saved in your routine library.",
+  },
+  {
+    target: '[data-education-target="routine-add-exercises"]',
+    title: "Add or browse exercises",
+    body: "Type a custom exercise or choose one from the offline catalog. The picker opens only when you ask for it.",
+  },
+  {
+    target: '[data-education-target="routine-save"]',
+    title: "Draft, then save",
+    body: "Changes stay in this routine draft until Save Routine succeeds. Editing a routine never rewrites existing workout history.",
+  },
+]);
+
+function routineEducationFeedback(result) {
+  if (!result?.saved) {
+    toast("Guidance progress could not be saved. Your routine draft is unchanged.");
+  }
+}
+
+export function scheduleRoutineEditorEducation({ launcher = null } = {}) {
+  if (routineEducationScheduled) return false;
+  const replay = hasEducationReplay("routineEditorBasics");
+  const experience = getEducationExperience("routineEditorBasics");
+  if (!replay && experience?.status !== "unseen") return false;
+  routineEducationScheduled = true;
+  const builder = document.querySelector(
+    '[data-education-target="routine-editor"]',
+  );
+  const restoreClosed = Boolean(builder && !builder.open);
+  if (builder) builder.open = true;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      routineEducationScheduled = false;
+      if (!$("templates")?.classList.contains("active")) {
+        if (restoreClosed && builder) builder.open = false;
+        return;
+      }
+      if (!canPresentEducation({ target: ROUTINE_EDUCATION_STEPS[0].target })) {
+        if (replay) consumeEducationReplay("routineEditorBasics");
+        const result = updateEducationExperience(
+          "routineEditorBasics",
+          "deferred",
+        );
+        if (replay) {
+          routineEducationFeedback(result);
+          toast("The Routine Editor guide is still replayable when the editor is clear.");
+        }
+        if (restoreClosed && builder) builder.open = false;
+        return;
+      }
+      if (replay) consumeEducationReplay("routineEditorBasics");
+      updateEducationExperience("routineEditorBasics", "in_progress", {
+        lastStep: 0,
+      });
+      startCoachMark({
+        steps: ROUTINE_EDUCATION_STEPS,
+        launcher,
+        onStepChange: (lastStep) => {
+          updateEducationExperience("routineEditorBasics", "in_progress", {
+            lastStep,
+          });
+        },
+        onClose: ({ reason, lastStep }) => {
+          routineEducationFeedback(
+            updateEducationExperience("routineEditorBasics", reason, {
+              lastStep,
+            }),
+          );
+          if (restoreClosed && builder) builder.open = false;
+        },
+      });
+    });
+  });
+  return true;
+}
 
 function setRoutineFieldFeedback(inputId, feedbackId, result) {
   const input = $(inputId);

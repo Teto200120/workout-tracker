@@ -1,4 +1,5 @@
 import { DB_NAME } from "../core/constants.js";
+import { forgetEducationState } from "./education.js";
 import {
   validateBackupComplexity,
   validateImportedApplicationData
@@ -132,6 +133,7 @@ export async function restoreBackup(data) {
 export async function clearApplicationData() {
   await clearApplicationStores();
   clearApplicationLocalStorage();
+  forgetEducationState();
   await seedDefaultTemplates();
   setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
 }

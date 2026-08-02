@@ -20,14 +20,49 @@ export function monitorRuntime(page) {
   return () => expect(errors, "unexpected browser errors").toEqual([]);
 }
 
-export async function completeOnboarding(page, displayName = "Test User") {
+async function completeEducationForRegression(page) {
+  await page.evaluate(async () => {
+    const { updateEducationExperience } =
+      await import("/src/js/application/education.js");
+    for (const experienceId of [
+      "homeTour",
+      "activeWorkoutBasics",
+      "rpeBasics",
+      "routineEditorBasics",
+      "historyBasics",
+      "statsBasics",
+      "exerciseGuideBasics",
+    ]) {
+      updateEducationExperience(experienceId, "completed", { lastStep: 0 });
+    }
+    globalThis.document
+      .querySelector("#homeEducationOffer")
+      ?.classList.add("hidden");
+  });
+}
+
+export async function completeOnboarding(
+  page,
+  displayName = "Test User",
+  { preserveEducation = false } = {},
+) {
   const onboarding = page.locator("#onboarding");
+  const appShell = page.locator("#appShell");
+  await expect
+    .poll(
+      async () =>
+        (await onboarding.isVisible()) || (await appShell.isVisible()),
+    )
+    .toBe(true);
   if (!(await onboarding.isVisible())) return;
-  await expect(page.locator("#appShell")).toBeHidden();
+  await expect(appShell).toBeHidden();
   await page.locator("#onboardingDisplayName").fill(displayName);
+  await page.locator("#onboardingContinue").click();
+  await expect(page.locator("#onboardingStepTwo")).toBeVisible();
   await page.locator("#onboardingSubmit").click();
   await expect(onboarding).toBeHidden();
-  await expect(page.locator("#appShell")).toBeVisible();
+  await expect(appShell).toBeVisible();
+  if (!preserveEducation) await completeEducationForRegression(page);
 }
 
 export async function loadApp(
@@ -35,6 +70,7 @@ export async function loadApp(
   {
     completeOnboarding: shouldCompleteOnboarding = true,
     displayName = "Test User",
+    preserveEducation = false,
   } = {},
 ) {
   await page.addInitScript(() => {
@@ -51,7 +87,8 @@ export async function loadApp(
     await expect(page.locator("#appShell")).toBeHidden();
     return;
   }
-  await completeOnboarding(page, displayName);
+  await completeOnboarding(page, displayName, { preserveEducation });
+  if (!preserveEducation) await completeEducationForRegression(page);
   await expect(page.locator("#log")).toHaveClass(/active/);
   await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
 }

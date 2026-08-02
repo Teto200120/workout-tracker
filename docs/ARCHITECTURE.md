@@ -11,7 +11,7 @@ The deployed app remains directly served HTML, CSS, images, and browser-native E
 1. Import and start `init()` from `router.js`.
 2. Register `service-worker.js` after the window load event.
 
-`src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, and app-wide rendering. Startup opens IndexedDB, completes application-schema detection, validation, and migration, applies settings, and then evaluates the display-name gate while the static app shell remains hidden. A required name shows the one-screen onboarding surface; a usable saved name continues through routine seeding, event binding, selector preparation, app-wide rendering, and Home.
+`src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, app-wide rendering, and screen-settle education coordination. Startup opens IndexedDB, completes application-schema detection, validation, and migration, applies settings, and then evaluates the display-name gate while the static app shell remains hidden. A required name shows the two-screen onboarding surface; a usable saved name continues through routine seeding, event binding, selector preparation, app-wide rendering, and Home.
 
 ## Dependency direction
 
@@ -37,6 +37,7 @@ The important boundaries are:
 - `src/js/storage/` owns IndexedDB and localStorage access. Storage functions return values or reject/throw; they do not render, navigate, show toasts, trigger haptics, or open dialogs.
 - `src/js/application/` coordinates domain and storage operations that span more than one data source. It does not render screens.
 - `src/js/components/` contains reusable DOM-facing pieces such as icons and the routine selectors shared by multiple screens.
+- `src/js/domain/education.js` is the pure, versioned education contract; `application/education.js` owns local persistence coordination and session fallback; `components/coach-mark.js` owns reusable accessible overlay behavior.
 - `src/js/catalog/` contains the provider-neutral exercise-catalog contract, pure search/merge and name-resolution rules, reviewed aliases, Guide/preview adaptation, the Free Exercise DB adapter, and the static-asset loader. Provider fields stop at the adapter; catalog records and resolution results are disposable app-shell data rather than application storage.
 - `src/js/screens/` owns rendering, user interaction, feature-local DOM state, and user-facing feedback.
 - `router.js` coordinates startup, navigation, and app-wide rerendering.
@@ -119,7 +120,7 @@ Feature state now has a specific owner:
 - `exercise-picker.js`: one dialog controller with per-open Active Workout or Routine context and add/replace mode; it owns local/catalog result state, collapsed-filter state/count, limited-versus-expanded local results, preview selection, async load token, focus return, and selection guard, and resolves only `{ name }`
 - `today.js`: CTA mode/morph state and Home active-workout timer handle
 - `routines.js`: routine draft exercises and editing routine ID; Browse and Change update only this unsaved name array until the established Save Routine action succeeds
-- `onboarding.js`: the one-screen gate, retryable inline storage feedback, and reveal transition
+- `onboarding.js`: the two-screen name/RPE gate, retained wizard values, retryable inline storage feedback, and reveal transition
 - `profile.js`: display-name rendering plus the later edit/cancel/save UI
 - `indexed-db.js`: open database connection
 - Router and DOM: currently visible screen and rendered active exercise position
@@ -174,7 +175,7 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 3. Bump the cache name once for the completed change set.
 4. Verify an online load before testing cached/offline startup.
 
-The current cache is `hector-workout-tracker-pwa-v18`. It includes the onboarding screen and application module, routine-draft domain helper, shared picker, every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets.
+The current cache is `hector-workout-tracker-pwa-v19`. It includes the onboarding and beta-education modules/styles, routine-draft domain helper, shared picker, every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets.
 
 ## Versioned data contracts
 

@@ -1,4 +1,5 @@
 import { createActionCoordinator } from "./action-coordinator.js";
+import { ensureEducationState, forgetEducationState } from "./education.js";
 import {
   firstValidationMessage,
   validateDisplayName,
@@ -8,7 +9,9 @@ import { CURRENT_APPLICATION_SCHEMA_VERSION } from "../schema/versions.js";
 import {
   captureApplicationLocalStorage,
   getAppSettings,
+  getRawEducationRecord,
   restoreApplicationLocalStorage,
+  restoreRawEducationRecord,
   setApplicationSchemaVersionMarker,
   setAppSettings,
 } from "../storage/local.js";
@@ -46,7 +49,7 @@ export function saveDisplayName(value) {
   });
 }
 
-export function completeOnboarding(value) {
+export function completeOnboarding(value, rpeAware = true) {
   return displayNameCoordinator.run(() => {
     const validation = validateDisplayName(value);
     if (!validation.valid) {
@@ -59,9 +62,16 @@ export function completeOnboarding(value) {
     }
 
     const localSnapshot = captureApplicationLocalStorage();
+    const educationSnapshot = getRawEducationRecord();
     try {
       const settings = getAppSettings();
-      setAppSettings({ ...settings, displayName: validation.normalized });
+      setAppSettings({
+        ...settings,
+        displayName: validation.normalized,
+        rpeAware: Boolean(rpeAware),
+      });
+      const educationResult = ensureEducationState();
+      if (!educationResult.saved) throw educationResult.error;
       setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
     } catch (cause) {
       const rollbackErrors = [];
@@ -70,6 +80,12 @@ export function completeOnboarding(value) {
       } catch (error) {
         rollbackErrors.push(error);
       }
+      try {
+        restoreRawEducationRecord(educationSnapshot);
+      } catch (error) {
+        rollbackErrors.push(error);
+      }
+      forgetEducationState();
       throw new DataSchemaError("Onboarding could not be persisted.", {
         cause,
         code: "onboarding_persistence_failed",
@@ -81,6 +97,7 @@ export function completeOnboarding(value) {
     return {
       saved: true,
       displayName: validation.normalized,
+      rpeAware: Boolean(rpeAware),
       validation,
       message: "",
     };
