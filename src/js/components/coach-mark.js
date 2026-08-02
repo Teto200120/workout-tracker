@@ -418,6 +418,12 @@ function handleKeydown(event) {
   }
 }
 
+function handleDocumentKeydown(event) {
+  if (!activeState || event.key !== "Escape") return;
+  event.preventDefault();
+  closeCoachMark("dismissed");
+}
+
 function handleHistoryBack() {
   if (!activeState) return;
   activeState.historyEntryActive = false;
@@ -425,6 +431,7 @@ function handleHistoryBack() {
 }
 
 function addPositionListeners() {
+  document.addEventListener("keydown", handleDocumentKeydown);
   window.addEventListener("resize", schedulePosition, { passive: true });
   window.addEventListener("orientationchange", schedulePosition, {
     passive: true,
@@ -443,6 +450,7 @@ function addPositionListeners() {
 }
 
 function removePositionListeners() {
+  document.removeEventListener("keydown", handleDocumentKeydown);
   window.removeEventListener("resize", schedulePosition);
   window.removeEventListener("orientationchange", schedulePosition);
   window.removeEventListener("scroll", schedulePosition, true);

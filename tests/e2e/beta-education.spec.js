@@ -257,6 +257,47 @@ test("Home offer skips once and the three-step tour supports focus, Escape, Back
   assertNoRuntimeErrors();
 });
 
+test("Escape closes a Home coach mark before dialogue focus settles", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  await loadApp(page);
+  await openSettings(page);
+  const root = page.locator(".coach-mark-root");
+  const launcher = page.locator('[data-education-action="replay-home"]');
+
+  await page.evaluate(() => {
+    const observer = new globalThis.MutationObserver(() => {
+      const progress = globalThis.document.querySelector("#coachMarkProgress");
+      const coachMark = globalThis.document.querySelector(".coach-mark-root");
+      if (!progress || !coachMark || progress.textContent !== "1 of 3") return;
+      observer.disconnect();
+      coachMark.dataset.escapeFocusWasOutside = String(
+        !coachMark.contains(globalThis.document.activeElement),
+      );
+      globalThis.document.activeElement.dispatchEvent(
+        new globalThis.KeyboardEvent("keydown", {
+          key: "Escape",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    observer.observe(globalThis.document.body, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+  });
+
+  await launcher.click();
+  await expect(root).toHaveAttribute("data-escape-focus-was-outside", "true");
+  await expect(root).toBeHidden();
+  await expect(page.locator("body")).not.toHaveClass(/coach-mark-open/u);
+  await expect(page.locator('.tab[aria-current="page"]')).toBeFocused();
+  assertNoRuntimeErrors();
+});
+
 test("Home remains static and its cards keep compact aligned proportions on a phone", async ({
   page,
 }) => {
