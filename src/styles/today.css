@@ -333,8 +333,7 @@
   display: none !important;
 }
 
-.today-status-card,
-#todayProgressGlanceCard {
+.today-status-card {
   padding: 15px;
 }
 
@@ -372,27 +371,6 @@
   color: var(--today-muted);
 }
 
-.today-progress-card-heading {
-  margin-bottom: 9px;
-}
-
-#todayProgressGlanceCard .section-heading {
-  display: none;
-}
-
-#todayProgressGlance .insight-item {
-  border-radius: 16px;
-  background: transparent;
-  border: 0;
-  padding: 0;
-}
-
-#todayProgressGlance .insight-item + .insight-item {
-  border-top: 1px solid rgba(158, 182, 210, 0.13);
-  padding-top: 10px;
-  margin-top: 2px;
-}
-
 .today-cta-dock {
   position: sticky;
   bottom: 86px;
@@ -423,16 +401,6 @@
   box-shadow:
     0 10px 28px rgba(255, 107, 69, 0.28),
     0 0 26px rgba(255, 107, 69, 0.3);
-}
-
-#todayView .backup-reminder-card {
-  padding: 14px;
-}
-
-#todayView .backup-status-pill {
-  border-color: rgba(255, 107, 69, 0.26);
-  color: #ffd2c5;
-  background: rgba(255, 107, 69, 0.12);
 }
 
 @media (max-width: 700px) {
@@ -787,9 +755,7 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
   font-weight: 900;
 }
 
-.today-status-card,
-#todayProgressGlanceCard,
-#todayView .backup-reminder-card {
+.today-status-card {
   padding: 16px !important;
   border-radius: 16px !important;
 }
@@ -815,19 +781,6 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
 .today-card-copy .muted,
 .today-card-copy .small,
 #todayCompletionText {
-  color: var(--ref-muted);
-}
-
-#todayProgressGlance .insight-item {
-  color: var(--ref-text);
-}
-
-#todayProgressGlance .insight-item strong {
-  font-size: 0.92rem;
-  color: var(--ref-text);
-}
-
-#todayProgressGlance .insight-item p {
   color: var(--ref-muted);
 }
 
@@ -1029,28 +982,6 @@ body:has(#todayView:not(.hidden)) .today-primary-cta {
     transform 180ms ease;
 }
 
-body.today-cta-compact:has(#todayView:not(.hidden)) .today-cta-dock {
-  width: 64px !important;
-  left: auto !important;
-  right: 18px !important;
-  transform: none !important;
-  bottom: calc(82px + env(safe-area-inset-bottom)) !important;
-}
-
-body.today-cta-compact:has(#todayView:not(.hidden)) .today-primary-cta {
-  width: 64px !important;
-  min-height: 58px !important;
-  border-radius: 999px !important;
-  font-size: 0 !important;
-  padding: 0 !important;
-  opacity: 0.94;
-}
-
-body.today-cta-compact:has(#todayView:not(.hidden)) .today-primary-cta::before {
-  content: "🔥";
-  font-size: 1.32rem;
-}
-
 body.no-animations .today-primary-cta {
   animation: none !important;
 }
@@ -1066,9 +997,6 @@ body.no-animations .today-primary-cta {
     width: calc(100vw - 36px) !important;
   }
 
-  body.today-cta-compact:has(#todayView:not(.hidden)) .today-cta-dock {
-    width: 60px !important;
-  }
 }
 
   
@@ -1088,8 +1016,7 @@ body.no-animations .today-primary-cta {
   font-size: 0.86rem !important;
 }
 
-body:has(#todayView:not(.hidden)) .today-cta-dock,
-body.today-cta-compact:has(#todayView:not(.hidden)) .today-cta-dock {
+body:has(#todayView:not(.hidden)) .today-cta-dock {
   position: fixed !important;
   left: 50% !important;
   right: auto !important;
@@ -1102,8 +1029,7 @@ body.today-cta-compact:has(#todayView:not(.hidden)) .today-cta-dock {
   padding: 0 !important;
 }
 
-body:has(#todayView:not(.hidden)) .today-primary-cta,
-body.today-cta-compact:has(#todayView:not(.hidden)) .today-primary-cta {
+body:has(#todayView:not(.hidden)) .today-primary-cta {
   width: 100% !important;
   min-height: 80px !important;
   border-radius: 17px !important;
@@ -1122,22 +1048,16 @@ body.today-cta-compact:has(#todayView:not(.hidden)) .today-primary-cta {
   animation: ctaBreathe 3.8s ease-in-out infinite !important;
 }
 
-body.today-cta-compact:has(#todayView:not(.hidden)) .today-primary-cta::before {
-  content: none !important;
-}
-
 body:has(#todayView:not(.hidden)) #todayView.today-home {
   padding-bottom: 172px !important;
 }
 
 @media (max-width: 390px) {
-  body:has(#todayView:not(.hidden)) .today-cta-dock,
-  body.today-cta-compact:has(#todayView:not(.hidden)) .today-cta-dock {
+  body:has(#todayView:not(.hidden)) .today-cta-dock {
     width: calc(100vw - 36px) !important;
   }
 
-  body:has(#todayView:not(.hidden)) .today-primary-cta,
-  body.today-cta-compact:has(#todayView:not(.hidden)) .today-primary-cta {
+  body:has(#todayView:not(.hidden)) .today-primary-cta {
     min-height: 74px !important;
   }
 }
@@ -1269,80 +1189,9 @@ body:has(#todayView:not(.hidden)) #todayView.today-home {
 }
 
   
-/* === Today Screen Iteration 7: smooth CTA morph while scrolling === */
-.today-floating-cta {
-  transition:
-    left 280ms cubic-bezier(.2,.9,.2,1),
-    width 280ms cubic-bezier(.2,.9,.2,1),
-    bottom 280ms cubic-bezier(.2,.9,.2,1),
-    transform 280ms cubic-bezier(.2,.9,.2,1),
-    opacity 180ms ease !important;
-}
-
 .today-floating-cta .today-primary-cta {
   overflow: hidden !important;
   white-space: nowrap !important;
-  transition:
-    min-height 280ms cubic-bezier(.2,.9,.2,1),
-    border-radius 280ms cubic-bezier(.2,.9,.2,1),
-    padding 280ms cubic-bezier(.2,.9,.2,1),
-    font-size 220ms ease,
-    gap 220ms ease,
-    box-shadow 280ms ease,
-    transform 180ms ease !important;
-}
-
-body.today-cta-compact .today-floating-cta {
-  left: calc(100vw - 52px) !important;
-  bottom: calc(84px + env(safe-area-inset-bottom)) !important;
-  width: 64px !important;
-  transform: translateX(-50%) !important;
-}
-
-body.today-cta-compact .today-floating-cta .today-primary-cta {
-  width: 64px !important;
-  min-height: 58px !important;
-  border-radius: 18px !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  font-size: 0 !important;
-  box-shadow:
-    0 14px 30px rgba(255, 104, 69, 0.32),
-    0 0 30px rgba(255, 104, 69, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
-}
-
-body.today-cta-compact .today-floating-cta .today-primary-cta::before {
-  content: "🔥";
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-@media (max-width: 390px) {
-  body.today-cta-compact .today-floating-cta {
-    left: calc(100vw - 48px) !important;
-    width: 60px !important;
-  }
-
-  body.today-cta-compact .today-floating-cta .today-primary-cta {
-    width: 60px !important;
-    min-height: 56px !important;
-  }
-}
-
-  
-/* === Today Screen Iteration 8: continuous scroll-linked CTA morph === */
-.today-floating-cta {
-  transition: opacity 160ms ease !important;
-  will-change: left, width, bottom, transform !important;
-}
-
-.today-floating-cta .today-primary-cta {
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  transition: none !important;
-  will-change: min-height, border-radius, padding, box-shadow !important;
-  transform: translateZ(0);
 }
 
 .today-floating-cta .cta-icon,
@@ -1350,27 +1199,11 @@ body.today-cta-compact .today-floating-cta .today-primary-cta::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: none !important;
-  will-change: opacity, max-width, transform, font-size;
 }
 
 .today-floating-cta .cta-label {
   overflow: hidden;
   white-space: nowrap;
-}
-
-body.today-cta-compact .today-floating-cta,
-body.today-cta-compact .today-floating-cta .today-primary-cta {
-  left: unset !important;
-  width: unset !important;
-  min-height: unset !important;
-  border-radius: unset !important;
-  font-size: unset !important;
-  padding: unset !important;
-}
-
-body.today-cta-compact .today-floating-cta .today-primary-cta::before {
-  content: none !important;
 }
 
 body.no-animations .today-floating-cta .today-primary-cta {
@@ -1384,7 +1217,7 @@ body.no-animations .today-floating-cta .today-primary-cta {
 }
 
   
-/* === Today Screen Iteration 9: apply scroll interpolation to the button shell too === */
+/* Keep the button shell stable within the floating dock. */
 .today-floating-cta .today-primary-cta {
   max-width: none !important;
   flex: 0 0 auto !important;
@@ -1428,12 +1261,6 @@ body.no-animations .today-floating-cta .today-primary-cta {
 }
 
   
-/* === Today Screen Iteration 13: elastic CTA morph + full-shrink-at-bottom === */
-.today-floating-cta .today-primary-cta {
-  animation: none !important;
-  transform-origin: center !important;
-}
-
 .today-floating-cta .cta-icon svg {
   transform-origin: center;
 }
@@ -1445,40 +1272,6 @@ body.no-animations .today-floating-cta .today-primary-cta {
 }
 
   
-/* === Today Screen Iteration 15: fixed visible CTA + bounce-only settle === */
-.today-floating-cta .today-primary-cta {
-  transform-origin: center !important;
-}
-
-.today-floating-cta.cta-bounce-expanded .today-primary-cta {
-  animation: ctaSettleExpanded 320ms cubic-bezier(.2, .9, .24, 1) !important;
-}
-
-.today-floating-cta.cta-bounce-compact .today-primary-cta {
-  animation: ctaSettleCompact 300ms cubic-bezier(.2, .9, .24, 1) !important;
-}
-
-@keyframes ctaSettleExpanded {
-  0% { transform: scale(1); }
-  42% { transform: scale(1.018); }
-  70% { transform: scale(0.994); }
-  100% { transform: scale(1); }
-}
-
-@keyframes ctaSettleCompact {
-  0% { transform: scale(1); }
-  42% { transform: scale(1.045); }
-  72% { transform: scale(0.988); }
-  100% { transform: scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .today-floating-cta.cta-bounce-expanded .today-primary-cta,
-  .today-floating-cta.cta-bounce-compact .today-primary-cta {
-    animation: none !important;
-  }
-}
-
   
 /* === Today Screen Iteration 17: remove extra blank scroll space === */
 body:has(#todayView:not(.hidden)) #todayView.today-home,
@@ -1490,21 +1283,6 @@ body:has(#todayView:not(.hidden)) #todayView.today-home,
 .today-floating-cta {
   position: fixed !important;
   margin: 0 !important;
-}
-
-  
-/* === Settlement cleanup: direct CTA morph + bounce-only settle === */
-.today-floating-cta .today-primary-cta {
-  animation: none !important;
-  transform-origin: center !important;
-}
-
-.today-floating-cta.cta-bounce-expanded .today-primary-cta {
-  animation: ctaSettleExpanded 320ms cubic-bezier(.2, .9, .24, 1) !important;
-}
-
-.today-floating-cta.cta-bounce-compact .today-primary-cta {
-  animation: ctaSettleCompact 300ms cubic-bezier(.2, .9, .24, 1) !important;
 }
 
 /* === Polish pass: Today state, preview/review, guidance, and motion === */
@@ -1898,4 +1676,89 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
   .exercise-detail-guidance {
     padding: 14px;
   }
+}
+
+/* Home keeps compact rows while allowing genuine content overflow to scroll. */
+body:has(#todayView:not(.hidden)) {
+  min-height: 100dvh;
+}
+
+body:has(#todayView:not(.hidden)) .app {
+  min-height: 100dvh;
+}
+
+body:has(#todayView:not(.hidden)) #todayView.today-home {
+  min-height: 0;
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+
+#homeEducationOffer {
+  position: fixed;
+  left: 50%;
+  top: 118px;
+  z-index: 2147483200;
+  width: min(330px, calc(100vw - 36px));
+  max-height: calc(100dvh - 28px - env(safe-area-inset-bottom));
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  overflow: visible;
+  color: #f7fbff;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(255, 104, 69, 0.09), transparent 38%),
+    linear-gradient(180deg, #263d59, #162b46) !important;
+  border-color: rgba(166, 190, 220, 0.28) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.48),
+    0 8px 18px rgba(2, 8, 18, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  transform: translate(-50%, -50%);
+}
+
+#homeEducationOffer::after {
+  content: "";
+  position: absolute;
+  left: 34px;
+  bottom: -9px;
+  width: 18px;
+  height: 18px;
+  border-right: 1px solid rgba(166, 190, 220, 0.28);
+  border-bottom: 1px solid rgba(166, 190, 220, 0.28);
+  border-radius: 0 0 4px;
+  background: #162b46;
+  box-shadow: 7px 7px 14px rgba(2, 8, 18, 0.2);
+  pointer-events: none;
+  transform: rotate(45deg);
+}
+
+#homeEducationOffer h2 {
+  font-size: 1.08rem;
+}
+
+#homeEducationOffer p {
+  margin-top: 5px;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+#homeEducationOffer .education-offer-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+#homeEducationOffer .education-offer-actions button {
+  width: auto;
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  padding: 9px 10px;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+#homeEducationStart {
+  flex-grow: 1.2 !important;
 }

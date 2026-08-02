@@ -69,8 +69,7 @@ import {
   restoreDraftFromStorage,
   resumeWorkoutFromToday,
   showTodayView,
-  startHomeTour,
-  updateTodayCtaCompact
+  startHomeTour
 } from "./screens/today.js";
 
 const SCREEN_GROUPS = {
@@ -189,7 +188,6 @@ export function switchScreen(name) {
   });
   all(".screen").forEach((screen) => screen.classList.toggle("active", activeScreens.includes(screen.id)));
   document.body.dataset.screenTransitioning = "true";
-  updateTodayCtaCompact();
   replayAnimation($(activeScreens[0]), "settle-in", 260);
   return renderAll()
     .then(settleScreenLayout)
@@ -276,8 +274,6 @@ function bindEvents() {
   eventsBound = true;
   bindActiveWorkoutGuardrails();
   bindTodayEducation();
-  window.addEventListener("scroll", updateTodayCtaCompact, { passive: true });
-  window.addEventListener("resize", updateTodayCtaCompact, { passive: true });
   document.addEventListener("focusin", (event) => {
     if (event.target.matches("input, textarea")) scrollInputIntoView(event.target);
   });
@@ -306,7 +302,6 @@ function bindEvents() {
   $("todayCardAction")?.addEventListener("click", handleTodayCardAction);
   $("todayReviewBack")?.addEventListener("click", closeTodayReview);
   $("todayResumeWorkout").addEventListener("click", resumeWorkoutFromToday);
-  $("todayExportBackup")?.addEventListener("click", exportData);
   $("todayWorkoutSelect").addEventListener("change", renderTodayView);
   all("[data-open-settings]").forEach((button) => button.addEventListener("click", () => switchScreen("settings")));
   all("[data-profile-back]").forEach((button) => button.addEventListener("click", () => switchScreen("profile")));

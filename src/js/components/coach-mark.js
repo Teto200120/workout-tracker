@@ -149,6 +149,64 @@ function settleLayout() {
   });
 }
 
+function hasStickyPosition(target) {
+  let sticky = target;
+  while (sticky instanceof HTMLElement) {
+    if (getComputedStyle(sticky).position === "sticky") return true;
+    sticky = sticky.parentElement;
+  }
+  return false;
+}
+
+function transitionPause() {
+  if (motionBehavior() === "auto") return Promise.resolve();
+  return new Promise((resolve) => setTimeout(resolve, 90));
+}
+
+function setHighlightRect(highlight, rect, bounds) {
+  const padding = 6;
+  const edge = 4;
+  const viewportRight = bounds.left + bounds.width - edge;
+  const viewportBottom = bounds.top + bounds.height - edge;
+  const left = Math.max(bounds.left + edge, rect.left + bounds.left - padding);
+  const top = Math.max(bounds.top + edge, rect.top + bounds.top - padding);
+  const right = Math.min(viewportRight, rect.right + bounds.left + padding);
+  const bottom = Math.min(viewportBottom, rect.bottom + bounds.top + padding);
+
+  highlight.style.left = `${left}px`;
+  highlight.style.top = `${top}px`;
+  highlight.style.width = `${Math.max(0, right - left)}px`;
+  highlight.style.height = `${Math.max(0, bottom - top)}px`;
+}
+
+function keepTargetClearOfBubble(target, rect, bounds, bubbleRect, placement) {
+  const padding = 6;
+  const edge = 4;
+  const gap = 10;
+  const paddedTop = rect.top + bounds.top - padding;
+  const paddedBottom = rect.bottom + bounds.top + padding;
+  const regionTop =
+    placement === "above" || placement === "docked-top"
+      ? bubbleRect.bottom + gap
+      : bounds.top + edge;
+  const regionBottom =
+    placement === "above" || placement === "docked-top"
+      ? bounds.top + bounds.height - edge
+      : bubbleRect.top - gap;
+
+  if (paddedBottom - paddedTop > regionBottom - regionTop) return rect;
+
+  let scrollDelta = 0;
+  if (paddedTop < regionTop) scrollDelta = paddedTop - regionTop;
+  else if (paddedBottom > regionBottom) {
+    scrollDelta = paddedBottom - regionBottom;
+  }
+  if (!scrollDelta) return rect;
+
+  window.scrollBy({ top: scrollDelta, behavior: "auto" });
+  return target.getBoundingClientRect();
+}
+
 function positionCurrentStep() {
   if (!activeState) return;
   const { highlight, bubble } = getComponent();
@@ -159,18 +217,14 @@ function positionCurrentStep() {
   }
 
   const bounds = viewportBounds();
-  const rect = target.getBoundingClientRect();
+  let rect = target.getBoundingClientRect();
   const gap = 12;
   const margin = 14;
   const bottomReserve = 92;
-  const highlightPadding = 6;
   const targetTop = rect.top + bounds.top;
   const targetLeft = rect.left + bounds.left;
-
-  highlight.style.left = `${Math.max(bounds.left + 4, targetLeft - highlightPadding)}px`;
-  highlight.style.top = `${Math.max(bounds.top + 4, targetTop - highlightPadding)}px`;
-  highlight.style.width = `${Math.min(rect.width + highlightPadding * 2, bounds.width - 8)}px`;
-  highlight.style.height = `${Math.min(rect.height + highlightPadding * 2, bounds.height - 8)}px`;
+  const availableHeight = bounds.height - bottomReserve - margin * 2;
+  const narrowLayout = bounds.width <= 600;
 
   const bubbleWidth = Math.min(360, bounds.width - margin * 2);
   bubble.style.width = `${bubbleWidth}px`;
@@ -182,23 +236,50 @@ function positionCurrentStep() {
       bounds.left + bounds.width - bubbleWidth - margin,
     ),
   )}px`;
+  bubble.style.maxHeight = narrowLayout
+    ? `${Math.max(176, availableHeight * 0.46)}px`
+    : `${Math.max(176, availableHeight)}px`;
   const bubbleHeight = bubble.offsetHeight;
-  const availableBelow =
-    bounds.top + bounds.height - bottomReserve - (targetTop + rect.height);
-  const availableAbove = targetTop - bounds.top;
-  const placeBelow =
-    availableBelow >= bubbleHeight + gap || availableBelow >= availableAbove;
-  const unclampedTop = placeBelow
-    ? targetTop + rect.height + gap
-    : targetTop - bubbleHeight - gap;
-  const maximumTop =
-    bounds.top + bounds.height - bottomReserve - bubbleHeight - margin;
-  bubble.style.top = `${Math.max(
-    bounds.top + margin,
-    Math.min(unclampedTop, maximumTop),
-  )}px`;
-  bubble.dataset.placement = placeBelow ? "below" : "above";
+  let placement;
+  let bubbleTop;
+
+  if (narrowLayout) {
+    const targetCenter = targetTop + rect.height / 2;
+    const viewportCenter = bounds.top + availableHeight / 2;
+    const dockAtTop = targetCenter > viewportCenter;
+    placement = dockAtTop ? "docked-top" : "docked-bottom";
+    bubbleTop = dockAtTop
+      ? bounds.top + margin
+      : bounds.top + bounds.height - bottomReserve - bubbleHeight - margin;
+  } else {
+    const availableBelow =
+      bounds.top + bounds.height - bottomReserve - (targetTop + rect.height);
+    const availableAbove = targetTop - bounds.top;
+    const placeBelow =
+      availableBelow >= bubbleHeight + gap || availableBelow >= availableAbove;
+    const unclampedTop = placeBelow
+      ? targetTop + rect.height + gap
+      : targetTop - bubbleHeight - gap;
+    const maximumTop =
+      bounds.top + bounds.height - bottomReserve - bubbleHeight - margin;
+    bubbleTop = Math.max(
+      bounds.top + margin,
+      Math.min(unclampedTop, maximumTop),
+    );
+    placement = placeBelow ? "below" : "above";
+  }
+
+  bubble.style.top = `${bubbleTop}px`;
+  bubble.dataset.placement = placement;
   bubble.style.visibility = "visible";
+  rect = keepTargetClearOfBubble(
+    target,
+    rect,
+    bounds,
+    { top: bubbleTop, bottom: bubbleTop + bubbleHeight },
+    placement,
+  );
+  setHighlightRect(highlight, rect, bounds);
 }
 
 function schedulePosition() {
@@ -233,24 +314,19 @@ async function showStep(index, direction = 1) {
   }
 
   const stateAtStart = activeState;
+  const transitionToken = ++activeState.transitionToken;
   const step = activeState.steps[found.index];
   activeState.index = found.index;
   activeState.target = found.target;
-  found.target.scrollIntoView({
-    behavior: motionBehavior(),
-    block: "center",
-    inline: "nearest",
-  });
-  await settleLayout();
-  if (activeState !== stateAtStart || !isElementVisible(found.target)) {
-    if (activeState === stateAtStart) {
-      activeState.missingTarget = true;
-      showStep(found.index + direction, direction);
-    }
+  const ui = getComponent();
+  ui.root.classList.add("is-transitioning");
+  await transitionPause();
+  if (
+    activeState !== stateAtStart ||
+    activeState.transitionToken !== transitionToken
+  ) {
     return;
   }
-
-  const ui = getComponent();
   ui.progress.textContent = `${found.index + 1} of ${activeState.steps.length}`;
   ui.title.textContent = step.title;
   ui.body.textContent = step.body;
@@ -259,9 +335,59 @@ async function showStep(index, direction = 1) {
   ui.next.textContent = nextStep
     ? "Next"
     : activeState.finalLabel || "Done";
-  activeState.onStepChange?.(found.index);
+  const targetDocumentTop =
+    window.scrollY + found.target.getBoundingClientRect().top;
+  const restoreScrollLock = document.body.classList.contains("coach-mark-open");
+  if (restoreScrollLock) document.body.classList.remove("coach-mark-open");
+  let targetReady = false;
+  let positionedScrollTop = null;
+  try {
+    if (restoreScrollLock) await settleLayout();
+    if (hasStickyPosition(found.target)) {
+      window.scrollTo({
+        top: Math.max(0, targetDocumentTop - viewportBounds().top - 4),
+        behavior: "auto",
+      });
+    } else {
+      found.target.scrollIntoView({
+        behavior: "auto",
+        block: "center",
+        inline: "nearest",
+      });
+    }
+    await settleLayout();
+    if (activeState === stateAtStart && isElementVisible(found.target)) {
+      activeState.onStepChange?.(found.index);
+      positionCurrentStep();
+      positionedScrollTop = window.scrollY;
+      targetReady = true;
+    }
+  } finally {
+    if (restoreScrollLock && activeState === stateAtStart) {
+      document.body.classList.add("coach-mark-open");
+      if (positionedScrollTop !== null && document.scrollingElement) {
+        document.scrollingElement.scrollTop = positionedScrollTop;
+        await settleLayout();
+        document.scrollingElement.scrollTop = positionedScrollTop;
+      }
+    }
+  }
+  if (!targetReady) {
+    if (activeState === stateAtStart) {
+      activeState.missingTarget = true;
+      showStep(found.index + direction, direction);
+    }
+    return;
+  }
+
+  await settleLayout();
+  if (activeState !== stateAtStart || !isElementVisible(found.target)) return;
   positionCurrentStep();
-  requestAnimationFrame(() => ui.next.focus({ preventScroll: true }));
+  requestAnimationFrame(() => {
+    if (activeState !== stateAtStart) return;
+    ui.root.classList.remove("is-transitioning");
+    ui.next.focus({ preventScroll: true });
+  });
 }
 
 function showRelativeStep(direction) {
@@ -292,6 +418,12 @@ function handleKeydown(event) {
   }
 }
 
+function handleDocumentKeydown(event) {
+  if (!activeState || event.key !== "Escape") return;
+  event.preventDefault();
+  closeCoachMark("dismissed");
+}
+
 function handleHistoryBack() {
   if (!activeState) return;
   activeState.historyEntryActive = false;
@@ -299,6 +431,7 @@ function handleHistoryBack() {
 }
 
 function addPositionListeners() {
+  document.addEventListener("keydown", handleDocumentKeydown);
   window.addEventListener("resize", schedulePosition, { passive: true });
   window.addEventListener("orientationchange", schedulePosition, {
     passive: true,
@@ -317,6 +450,7 @@ function addPositionListeners() {
 }
 
 function removePositionListeners() {
+  document.removeEventListener("keydown", handleDocumentKeydown);
   window.removeEventListener("resize", schedulePosition);
   window.removeEventListener("orientationchange", schedulePosition);
   window.removeEventListener("scroll", schedulePosition, true);
@@ -421,6 +555,7 @@ export function startCoachMark(options = {}) {
     onClose: options.onClose,
     missingTarget: false,
     historyEntryActive: false,
+    transitionToken: 0,
   };
   ui.skip.textContent = options.skipLabel || "Skip";
   ui.root.classList.remove("hidden");

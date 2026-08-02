@@ -473,62 +473,6 @@
   border: 1px solid rgba(239, 68, 68, 0.28);
 }
 
-.backup-reminder-card {
-  border-color: rgba(245, 158, 11, 0.28);
-  background:
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.1), transparent 36%),
-    linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(15, 23, 42, 0.96));
-}
-
-.backup-reminder-card.urgent {
-  border-color: rgba(239, 68, 68, 0.32);
-  background:
-    radial-gradient(circle at top right, rgba(239, 68, 68, 0.12), transparent 36%),
-    linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(15, 23, 42, 0.96));
-}
-
-.backup-reminder-line {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.backup-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  min-height: 30px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 900;
-  color: #fde68a;
-  border: 1px solid rgba(245, 158, 11, 0.36);
-  background: rgba(245, 158, 11, 0.14);
-}
-
-.backup-status-pill.good {
-  color: #bbf7d0;
-  border-color: rgba(34, 197, 94, 0.32);
-  background: rgba(34, 197, 94, 0.12);
-}
-
-.backup-status-pill.urgent {
-  color: #fecaca;
-  border-color: rgba(239, 68, 68, 0.36);
-  background: rgba(239, 68, 68, 0.14);
-}
-
-.backup-reminder-actions {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-}
-
 body:has(#profile.active),
 body:has(#templates.active),
 body:has(#backup.active),

@@ -28,7 +28,7 @@ const clearCoordinator = createActionCoordinator();
 
 function setBackupActionPending(action, pending) {
   const buttonIds = action === "export"
-    ? ["exportData", "todayExportBackup"]
+    ? ["exportData"]
     : action === "import"
       ? ["importData"]
       : ["clearData"];
@@ -51,8 +51,6 @@ export async function renderBackupStatus() {
   let level;
   let pill;
   let text;
-  let showToday = false;
-
   if (!hasUserData) {
     level = "good";
     pill = "No data";
@@ -61,7 +59,6 @@ export async function renderBackupStatus() {
     level = "warn";
     pill = "Backup";
     text = "No backup exported yet. Export once so your progress has a safe local copy.";
-    showToday = true;
   } else if (age < 14) {
     level = "good";
     pill = "Current";
@@ -70,23 +67,10 @@ export async function renderBackupStatus() {
     level = "warn";
     pill = "Backup soon";
     text = `${backupAgeText(age)}. Export when convenient so your local progress stays protected.`;
-    showToday = true;
   } else {
     level = "urgent";
     pill = "Backup now";
     text = `${backupAgeText(age)}. Export a fresh backup before adding much more data.`;
-    showToday = true;
-  }
-
-  const todayCard = $("todayBackupReminder");
-  const todayText = $("todayBackupText");
-  const todayPill = $("todayBackupPill");
-  if (todayCard && todayText && todayPill) {
-    todayCard.classList.toggle("hidden", !showToday);
-    todayCard.classList.toggle("urgent", level === "urgent");
-    todayText.textContent = text;
-    todayPill.textContent = pill;
-    todayPill.className = `backup-status-pill ${level === "good" ? "good" : level === "urgent" ? "urgent" : ""}`;
   }
 
   const more = $("backupStatusMore");

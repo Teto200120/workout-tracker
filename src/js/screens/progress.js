@@ -155,11 +155,6 @@ function renderStrengthSnapshot(workouts, exerciseStats) {
   renderInsightList("strengthSnapshotDetail", buildProgressInsights(workouts, exerciseStats, 6), "Strength trends will appear here once you have a few sessions logged.");
 }
 
-function renderTodayProgressGlance(workouts, exerciseStats) {
-  const insights = buildProgressInsights(workouts, exerciseStats, 2);
-  renderInsightList("todayProgressGlance", insights, "Your strength highlights will show here after more logged workouts.");
-}
-
 function renderWeeklyActivityStrip(targetId, countId, activity) {
   const target = $(targetId);
   const count = $(countId);
@@ -438,4 +433,4 @@ export function saveGoalsToStorage() {
   }).promise;
 }
 
-export { buildExerciseStats, renderTodayProgressGlance };
+export { buildExerciseStats };
