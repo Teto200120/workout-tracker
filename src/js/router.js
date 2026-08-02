@@ -1,6 +1,13 @@
 import "./core/globals.js";
 import { ensureCurrentApplicationSchema } from "./application/data-schema.js";
 import { isOnboardingRequired } from "./application/display-name.js";
+import {
+  consumeEducationReplay,
+  getEducationExperience,
+  requestEducationReplay,
+  resetAllGuidance,
+  updateEducationExperience,
+} from "./application/education.js";
 import { bindExercisePicker } from "./components/exercise-picker.js";
 import { refreshTemplateDropdowns } from "./components/routine-selectors.js";
 import {
@@ -28,6 +35,7 @@ import {
   saveDraftSilently,
   saveWorkout,
   setExerciseDetailTab,
+  syncRpePreferenceUi,
   undoLastCompletedSet,
   updateAllExerciseHints,
   getCurrentWorkoutExerciseNames,
@@ -48,6 +56,7 @@ import {
   clearTemplateDraft,
   renderTemplates,
   resetTemplates,
+  scheduleRoutineEditorEducation,
   saveTemplate
 } from "./screens/routines.js";
 import {
@@ -55,10 +64,12 @@ import {
   handleTodayCardAction,
   handleTodayPrimaryCta,
   handleTodayWorkoutCardClick,
+  bindTodayEducation,
   renderTodayView,
   restoreDraftFromStorage,
   resumeWorkoutFromToday,
   showTodayView,
+  startHomeTour,
   updateTodayCtaCompact
 } from "./screens/today.js";
 
@@ -93,6 +104,51 @@ const STATS_DETAIL_DESTINATIONS = new Set([
 
 let applicationStarted = false;
 let eventsBound = false;
+
+function settleScreenLayout() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+
+function educationActionFeedback(result) {
+  if (!result?.saved) {
+    toast("Guidance progress could not be saved. You can keep using the app.");
+  }
+}
+
+function setInlineEducationVisibility(experienceId, elementId, visible) {
+  const tip = $(elementId);
+  if (!tip) return;
+  if (!visible) {
+    tip.classList.add("hidden");
+    return;
+  }
+  const experience = getEducationExperience(experienceId);
+  if (!["unseen", "offered"].includes(experience?.status)) {
+    tip.classList.add("hidden");
+    return;
+  }
+  if (experience.status === "unseen") {
+    updateEducationExperience(experienceId, "offered", { lastStep: 0 });
+  }
+  consumeEducationReplay(experienceId);
+  tip.classList.remove("hidden");
+}
+
+function coordinateScreenEducation(destination) {
+  setInlineEducationVisibility(
+    "statsBasics",
+    "statsEducationTip",
+    destination === "stats",
+  );
+  setInlineEducationVisibility(
+    "historyBasics",
+    "historyEducationTip",
+    destination === "history",
+  );
+  if (destination === "templates") scheduleRoutineEditorEducation();
+}
 
 function getScreenDestination(name) {
   const destination = SCREEN_ALIASES[name] || name || "home";
@@ -132,15 +188,94 @@ export function switchScreen(name) {
     else tab.removeAttribute("aria-current");
   });
   all(".screen").forEach((screen) => screen.classList.toggle("active", activeScreens.includes(screen.id)));
+  document.body.dataset.screenTransitioning = "true";
   updateTodayCtaCompact();
   replayAnimation($(activeScreens[0]), "settle-in", 260);
-  renderAll();
+  return renderAll()
+    .then(settleScreenLayout)
+    .then(() => {
+      document.body.dataset.screenTransitioning = "false";
+      coordinateScreenEducation(destination);
+    })
+    .catch((error) => {
+      document.body.dataset.screenTransitioning = "false";
+      console.info("Screen render failed.", error);
+      toast("This screen could not be refreshed. Try again.");
+    });
+}
+
+async function handleEducationAction(event) {
+  const action = event.currentTarget.dataset.educationAction;
+  const launcher = event.currentTarget;
+  if (action === "reset-all") {
+    if (!confirm("Reset all guidance? Contextual tips will reappear when you reach them.")) return;
+    const result = resetAllGuidance();
+    educationActionFeedback(result);
+    $("statsEducationTip")?.classList.add("hidden");
+    $("historyEducationTip")?.classList.add("hidden");
+    toast(
+      result.saved
+        ? "Guidance reset. Tips will reappear in context."
+        : "Guidance reset for this session, but it could not be saved.",
+    );
+    return;
+  }
+
+  const replayMap = {
+    "replay-home": "homeTour",
+    "replay-active": "activeWorkoutBasics",
+    "replay-routine": "routineEditorBasics",
+    "explain-rpe": "rpeBasics",
+    "replay-history": "historyBasics",
+    "replay-stats": "statsBasics",
+    "replay-guide": "exerciseGuideBasics",
+  };
+  const experienceId = replayMap[action];
+  if (!experienceId) return;
+  const replayResult = requestEducationReplay(experienceId);
+  educationActionFeedback(replayResult);
+
+  if (action === "replay-home") {
+    await switchScreen("home");
+    consumeEducationReplay("homeTour");
+    startHomeTour({ launcher });
+    return;
+  }
+  if (action === "replay-active") {
+    await switchScreen("home");
+    toast("Start or resume a workout to replay the Active Workout guide.");
+    return;
+  }
+  if (action === "replay-routine") {
+    await switchScreen("templates");
+    scheduleRoutineEditorEducation({ launcher });
+    return;
+  }
+  if (action === "explain-rpe") {
+    const dialog = $("rpeHelpDialog");
+    if (dialog && !dialog.open) dialog.showModal();
+    return;
+  }
+  if (action === "replay-history") {
+    await switchScreen("history");
+    coordinateScreenEducation("history");
+    return;
+  }
+  if (action === "replay-stats") {
+    await switchScreen("stats");
+    coordinateScreenEducation("stats");
+    return;
+  }
+  if (action === "replay-guide") {
+    toast("The Guide note will appear when you open an Exercise Guide.");
+  }
 }
 
 function bindEvents() {
   if (eventsBound) return;
   eventsBound = true;
   bindActiveWorkoutGuardrails();
+  bindTodayEducation();
   window.addEventListener("scroll", updateTodayCtaCompact, { passive: true });
   window.addEventListener("resize", updateTodayCtaCompact, { passive: true });
   document.addEventListener("focusin", (event) => {
@@ -181,11 +316,13 @@ function bindEvents() {
   $("settingsBack").addEventListener("click", () => switchScreen("profile"));
   $("saveSettings").addEventListener("click", async () => {
     await saveSettingsFromForm();
+    syncRpePreferenceUi();
     await renderTodayView();
     await updateAllExerciseHints();
   });
   $("resetSettings").addEventListener("click", async () => {
     await resetAppSettings();
+    syncRpePreferenceUi();
     await renderTodayView();
     await updateAllExerciseHints();
   });
@@ -241,6 +378,27 @@ function bindEvents() {
   $("resetTemplates").addEventListener("click", resetTemplates);
   $("restoreDraft").addEventListener("click", restoreDraftFromStorage);
   $("clearDraft").addEventListener("click", () => clearDraftStorage(true));
+
+  all("[data-inline-education-complete]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const experienceId = button.dataset.inlineEducationComplete;
+      const result = updateEducationExperience(experienceId, "completed", {
+        lastStep: 0,
+      });
+      educationActionFeedback(result);
+      button.closest(".education-inline-tip")?.classList.add("hidden");
+    });
+  });
+  all("[data-education-action]").forEach((button) => {
+    button.addEventListener("click", handleEducationAction);
+  });
+  $("rpeHelpClose")?.addEventListener("click", () => {
+    $("rpeHelpDialog")?.close();
+  });
+  $("rpeHelpDialog")?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    event.currentTarget.close();
+  });
 
   $("sessionView").addEventListener("input", () => saveDraftSilently());
   $("saveGoals").addEventListener("click", saveGoalsToStorage);

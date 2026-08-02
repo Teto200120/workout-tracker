@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-v18";
+const CACHE_NAME = "hector-workout-tracker-pwa-v19";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./src/styles/main.css",
   "./src/styles/base.css",
   "./src/styles/onboarding.css",
+  "./src/styles/education.css",
   "./src/styles/today-base.css",
   "./src/styles/active-workout-base.css",
   "./src/styles/screens.css",
@@ -20,6 +21,7 @@ const APP_SHELL = [
   "./src/js/application/action-coordinator.js",
   "./src/js/application/data-schema.js",
   "./src/js/application/display-name.js",
+  "./src/js/application/education.js",
   "./src/js/application/schedule.js",
   "./src/js/core/constants.js",
   "./src/js/core/globals.js",
@@ -29,6 +31,7 @@ const APP_SHELL = [
   "./src/js/storage/indexed-db.js",
   "./src/js/components/icons.js",
   "./src/js/components/exercise-picker.js",
+  "./src/js/components/coach-mark.js",
   "./src/js/components/routine-selectors.js",
   "./src/js/catalog/catalog-contract.js",
   "./src/js/catalog/catalog-loader.js",
@@ -39,6 +42,7 @@ const APP_SHELL = [
   "./src/js/catalog/free-exercise-db-adapter.js",
   "./src/data/exercise-catalog.json",
   "./src/js/domain/exercise-options.js",
+  "./src/js/domain/education.js",
   "./src/js/domain/input-guardrails.js",
   "./src/js/domain/routine-draft.js",
   "./src/js/domain/schedule.js",

@@ -107,3 +107,62 @@ test("the current app shell starts from the service-worker cache offline", async
     await context.setOffline(false);
   }
 });
+
+test("onboarding and education journeys remain usable offline", async ({
+  context,
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  await page.goto("/");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(() => Boolean(navigator.serviceWorker.controller)),
+    )
+    .toBe(true);
+  await page.evaluate(async () => {
+    const { clearApplicationData } =
+      await import("/src/js/application/backup.js");
+    await clearApplicationData();
+  });
+
+  await context.setOffline(true);
+  try {
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("#onboarding")).toBeVisible();
+    await expect(page.locator("#appShell")).toBeHidden();
+    await completeOnboarding(page, "Offline Athlete", {
+      preserveEducation: true,
+    });
+    await expect(page.locator("#homeEducationOffer")).toBeVisible();
+
+    await page.locator("#homeEducationStart").click();
+    for (const progress of ["1 of 4", "2 of 4", "3 of 4", "4 of 4"]) {
+      await expect(page.locator("#coachMarkProgress")).toHaveText(progress);
+      await page.locator(".coach-mark-next").click();
+    }
+    await expect(page.locator(".coach-mark-root")).toBeHidden();
+
+    await openPrimary(page, "profile");
+    await page.locator("[data-open-settings]").first().click();
+    await expect(page.locator("#settings")).toHaveClass(/active/u);
+    await page.locator('[data-education-action="replay-home"]').click();
+    await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 4");
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".coach-mark-root")).toBeHidden();
+
+    await startRoutine(page);
+    for (const progress of ["1 of 3", "2 of 3", "3 of 3"]) {
+      await expect(page.locator("#coachMarkProgress")).toHaveText(progress);
+      await page.locator(".coach-mark-next").click();
+    }
+    await expect(page.locator("#coachMarkProgress")).toHaveText("1 of 1");
+    await expect(page.locator("#coachMarkBody")).toContainText("RPE 8");
+    await page.locator(".coach-mark-next").click();
+    await expect(page.locator(".coach-mark-root")).toBeHidden();
+    assertNoRuntimeErrors();
+  } finally {
+    await context.setOffline(false);
+  }
+});

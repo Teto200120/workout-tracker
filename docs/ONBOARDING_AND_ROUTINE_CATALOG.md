@@ -4,7 +4,7 @@
 
 Startup opens IndexedDB, completes application-schema migration, and loads settings before deciding which UI to reveal. The app shell is hidden in the static HTML, so a new or cleared installation cannot flash Home before the gate runs.
 
-If `settings.displayName` is `null`, missing after migration, or otherwise not a usable visible name, the app shows one onboarding screen. It asks only for a display name and keeps the workout tracker local-first. A successful save reveals Home; a failed browser-storage write leaves the name in the input, shows an inline retryable error, and does not enter the app. Repeated submissions share one in-flight save.
+If `settings.displayName` is `null`, missing after migration, or otherwise not a usable visible name, the app shows two onboarding screens. Welcome validates the display name without writing. Training Effort explains RPE 8–10 and offers Track RPE, enabled by default. Back preserves both values. Finish Setup saves the name, existing `rpeAware` key, education defaults, and current schema marker with compensating rollback. A failed browser-storage write leaves both screens' values intact, shows an inline retryable error, and does not enter the app. Repeated submissions share one in-flight save.
 
 Display names:
 
@@ -37,7 +37,8 @@ Local options remain usable while the static catalog loads or if it fails. Custo
 - IndexedDB database version remains `2`; no store or index changed.
 - Application data-schema version is `2`; schema `1` migrates by adding `settings.displayName`, using `null` when no name existed.
 - Backup-file version remains `3`; the envelope already declares its independent `applicationSchemaVersion`.
-- Service-worker cache is `hector-workout-tracker-pwa-v18`.
+- Education schema version is `1` and remains independent from application data and backups.
+- Service-worker cache is `hector-workout-tracker-pwa-v19`.
 - Existing database, localStorage, package, and cache prefixes containing `hector` remain compatibility identifiers only. User-facing product copy is generic.
 
 The focused automated coverage is in `tests/unit/display-name.test.js`, `tests/unit/exercise-picker-context.test.js`, `tests/unit/routine-draft.test.js`, `tests/unit/schema-migrations.test.js`, `tests/unit/backup-validation.test.js`, and `tests/e2e/onboarding-routine-catalog.spec.js`. Backup, migration, offline, and existing picker regressions remain covered by their established suites.

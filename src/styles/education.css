@@ -1,0 +1,214 @@
+.education-inline-tip,
+.education-offer-card {
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  background: rgba(29, 78, 116, 0.24);
+}
+
+.education-offer-card {
+  display: grid;
+  gap: 14px;
+}
+
+.education-offer-card h2,
+.education-inline-tip h3 {
+  margin: 0;
+}
+
+.education-offer-card p,
+.education-inline-tip p {
+  margin: 5px 0 0;
+  color: var(--muted, #9eb6d2);
+  line-height: 1.5;
+}
+
+.education-offer-actions,
+.education-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.education-inline-tip {
+  margin-bottom: 14px;
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.education-inline-tip button {
+  margin-top: 12px;
+}
+
+.coach-mark-open {
+  overflow: hidden;
+}
+
+.coach-mark-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: auto;
+}
+
+.coach-mark-blocker {
+  position: absolute;
+  inset: 0;
+}
+
+.coach-mark-highlight {
+  position: fixed;
+  border: 2px solid #7dd3fc;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow:
+    0 0 0 9999px rgba(2, 8, 18, 0.76),
+    0 0 0 5px rgba(125, 211, 252, 0.14);
+  pointer-events: none;
+  transition:
+    left 160ms ease,
+    top 160ms ease,
+    width 160ms ease,
+    height 160ms ease;
+}
+
+.coach-mark-bubble {
+  position: fixed;
+  display: grid;
+  gap: 16px;
+  max-height: calc(100dvh - 132px - env(safe-area-inset-bottom));
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid rgba(166, 190, 220, 0.28);
+  border-radius: 20px;
+  color: #f7fbff;
+  background: linear-gradient(180deg, #233954, #162b46);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46);
+  pointer-events: auto;
+}
+
+.coach-mark-progress {
+  margin: 0 0 7px;
+  color: #7dd3fc;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.coach-mark-copy h2 {
+  margin: 0;
+  font-size: 1.18rem;
+}
+
+.coach-mark-copy > p:last-child {
+  margin: 8px 0 0;
+  color: #b7cbe2;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.coach-mark-actions,
+.coach-mark-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coach-mark-actions {
+  justify-content: space-between;
+}
+
+.coach-mark-actions button {
+  min-height: 44px;
+  padding: 9px 14px;
+  border-radius: 13px;
+}
+
+.coach-mark-next {
+  color: #fff;
+  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+}
+
+.coach-mark-back,
+.coach-mark-skip {
+  border: 1px solid rgba(166, 190, 220, 0.2);
+  color: #dceeff;
+  background: rgba(7, 27, 49, 0.52);
+}
+
+.coach-mark-back:disabled {
+  opacity: 0.42;
+}
+
+.coach-mark-bubble :focus-visible {
+  outline: 3px solid rgba(125, 211, 252, 0.45);
+  outline-offset: 2px;
+}
+
+.settings-guidance-action {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 0;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+}
+
+.settings-guidance-action:last-child {
+  border-bottom: 0;
+}
+
+.rpe-help-dialog {
+  width: min(420px, calc(100% - 28px));
+  padding: 0;
+  border: 1px solid rgba(166, 190, 220, 0.25);
+  border-radius: 22px;
+  color: #f7fbff;
+  background: #162b46;
+}
+
+.rpe-help-dialog::backdrop {
+  background: rgba(2, 8, 18, 0.72);
+}
+
+.rpe-help-content {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.rpe-help-content h2,
+.rpe-help-content p {
+  margin: 0;
+}
+
+@media (max-width: 420px) {
+  .coach-mark-actions {
+    align-items: stretch;
+  }
+
+  .coach-mark-actions > div {
+    flex: 1;
+  }
+
+  .coach-mark-actions > div button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-mark-highlight,
+  .coach-mark-bubble,
+  .coach-mark-root {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.no-animations .coach-mark-highlight,
+.no-animations .coach-mark-bubble,
+.no-animations .coach-mark-root {
+  animation: none !important;
+  transition: none !important;
+}

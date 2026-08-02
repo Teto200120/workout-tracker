@@ -29,6 +29,7 @@ The unit suite covers:
 - Startup marker-last ordering, cross-storage rollback, retry, failure-before-effects, and current-version no-rewrite behavior.
 - Input guardrails at exact numeric, text, collection, date/time, backup-size, depth, and node-count boundaries, including blank/zero/negative/scientific/non-finite values, Unicode, control characters, duplicates, and non-mutation.
 - Single-flight action coordination, including repeated callers sharing one operation and release after rejection.
+- Education defaults, malformed/partial/future normalization, content versions, statuses, transitions, step bounds, timestamps, replay/reset, unknown keys, non-mutation, and storage failure fallback.
 - Backup semantic abuse checks for extreme workout numbers, excessive strings, duplicate IDs, and unchanged source objects.
 
 Domain tests should assert business rules and deterministic aggregation. They should not copy production formulas into test helpers, inspect private implementation details, or depend on the real current time.
@@ -59,6 +60,7 @@ The browser suite covers:
 - Stats, History, and search behavior with about 200 fixture workouts.
 - Eight deterministic beta-abuse journeys covering correctable giant/negative/scientific set values; one-record rapid save; Unicode and executable-looking literal text; 205 Add Set taps; double Add Exercise/catalog/routine/import actions; invalid settings/goals; empty/oversized/extreme/duplicate-ID backups; recoverable IndexedDB failure; and malformed/overnight date-time behavior.
 - A controlled offline journey that resumes a draft, searches the cached catalog from Active Workout and Routines, opens a catalog-backed Guide, saves once, reloads, and verifies the IndexedDB workout remains available.
+- Two-screen onboarding with atomic name/RPE persistence; Home offer/tour/replay; coach-mark focus, Escape, browser Back, missing targets, reduced motion, resize, and background blocking; safe Active Workout/RPE/Routine guidance; inline History/Stats/Guide tips; Settings replay/reset; and Clear All Data education removal.
 
 Tests block service workers to prevent an older local cache from mixing assets between runs. Vibration is replaced with a harmless browser stub. Downloads, uploads, and confirmation dialogs are handled through Playwright. Fixtures use the same explicit production storage interfaces as the app.
 

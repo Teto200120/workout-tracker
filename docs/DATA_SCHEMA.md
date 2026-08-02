@@ -2,13 +2,14 @@
 
 ## Version boundaries
 
-The tracker has three deliberately separate version concepts:
+The tracker has four deliberately separate version concepts:
 
 | Concept                         | Current value | Storage                                                | Responsibility                                                                        |
 | ------------------------------- | ------------: | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | IndexedDB database version      |             2 | `indexedDB.open("hector_workout_tracker_fresh_v1", 2)` | Creates or upgrades object stores and indexes only.                                   |
 | Application data-schema version |             2 | localStorage key `hector_workout_data_schema_version`  | Describes the logical shape of all application-owned IndexedDB and localStorage data. |
 | Backup-file version             |             3 | `backupFileVersion` in exported JSON                   | Describes the backup envelope and import/export contract.                             |
+| Education schema version        |             1 | localStorage key `hector_workout_education_v1`         | Describes only local guidance progress and content versions.                          |
 
 IndexedDB remains at version 2 because schema 2 needs no new store or index. The application schema marker is not stored on individual records. A single marker is sufficient because startup reads, validates, and migrates the full application snapshot before any application screen renders.
 
@@ -101,6 +102,14 @@ The canonical settings object includes every current behavior setting:
 - `animations`.
 
 Numeric settings are finite numbers. Rep-range values are at least 1 and each maximum is greater than or equal to its minimum. The weight jump is greater than zero. Flags are booleans. A non-null display name must be visible safe text: blank, invisible-only, control-character, non-string, and over-limit values are invalid. Missing legacy fields and schedule days receive the existing values from `DEFAULT_APP_SETTINGS`. Convertible legacy number and boolean strings are normalized.
+
+`rpeAware` is the user-facing Track RPE preference. Disabling it hides new RPE entry and excludes RPE from target suggestions without deleting historical set values.
+
+## Education progress
+
+Education progress is deliberately outside the canonical application snapshot and application schema. `hector_workout_education_v1` has its own `schemaVersion: 1` plus versioned experience records for Home, Active Workout, RPE, Routine Editor, History, Stats, and Exercise Guide. It is normalized by `domain/education.js`, persisted only through `storage/local.js`, and coordinated by `application/education.js`.
+
+Clear All Data removes this key. Reset Settings leaves it alone. Backup export/import and backup rollback snapshots exclude it in version 3. A future education change must use an experience content version or new ID; it must not increase IndexedDB version 2, application schema 2, or backup version 3.
 
 ## Goals
 

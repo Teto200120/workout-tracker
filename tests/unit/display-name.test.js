@@ -127,13 +127,40 @@ test("a failed display-name write leaves onboarding required and releases for re
 test("onboarding persists settings before the current schema marker", async () => {
   const original = settings(null);
   const values = installLocalStorage(original, { initialMarker: 2 });
-  const result = await completeOnboarding("  Alex  ").promise;
+  const result = await completeOnboarding("  Alex  ", false).promise;
   assert.equal(result.saved, true);
   assert.equal(result.displayName, "Alex");
   assert.equal(
     JSON.parse(values.get("hector_workout_settings_v1")).displayName,
     "Alex",
   );
+  assert.equal(
+    JSON.parse(values.get("hector_workout_settings_v1")).rpeAware,
+    false,
+  );
+  assert.equal(
+    JSON.parse(values.get("hector_workout_education_v1")).schemaVersion,
+    1,
+  );
+  assert.equal(values.get("hector_workout_data_schema_version"), "2");
+});
+
+test("onboarding education failure rolls back name, RPE, and education state", async () => {
+  const original = settings(null);
+  original.rpeAware = true;
+  const values = installLocalStorage(original, {
+    failKey: "hector_workout_education_v1",
+    initialMarker: 2,
+  });
+  await assert.rejects(
+    completeOnboarding("Retry Me", false).promise,
+    (error) => error.code === "onboarding_persistence_failed",
+  );
+  assert.deepEqual(
+    JSON.parse(values.get("hector_workout_settings_v1")),
+    original,
+  );
+  assert.equal(values.has("hector_workout_education_v1"), false);
   assert.equal(values.get("hector_workout_data_schema_version"), "2");
 });
 
