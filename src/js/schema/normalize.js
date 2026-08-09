@@ -74,6 +74,9 @@ export function normalizeWorkout(value = {}) {
   } else {
     normalized.durationMinutes = Number(value.durationMinutes);
   }
+  if (value.originRoutineId === null || value.originRoutineId === undefined) {
+    delete normalized.originRoutineId;
+  }
   return normalized;
 }
 

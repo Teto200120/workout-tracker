@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   applyRoutineExerciseSelection,
+  getRoutineExerciseAdditions,
   hasRoutineExerciseDuplicate,
 } from "../../src/js/domain/routine-draft.js";
 
@@ -62,5 +63,34 @@ test("routine selection rejects invalid names, modes, and replacement indexes", 
         name: "Row",
       }),
     /out of range/u,
+  );
+});
+
+test("routine additions include only new normalized workout exercises", () => {
+  const routineExercises = ["Back Squat", "Romanian Deadlift"];
+  const workoutExercises = [
+    " back   squat ",
+    "  Walking Lunge  ",
+    "walking lunge",
+    "Calf Raise",
+  ];
+  const routineBefore = structuredClone(routineExercises);
+  const workoutBefore = structuredClone(workoutExercises);
+
+  assert.deepEqual(
+    getRoutineExerciseAdditions(routineExercises, workoutExercises),
+    ["Walking Lunge", "Calf Raise"],
+  );
+  assert.deepEqual(routineExercises, routineBefore);
+  assert.deepEqual(workoutExercises, workoutBefore);
+});
+
+test("routine additions are empty when the completed workout has no new valid names", () => {
+  assert.deepEqual(
+    getRoutineExerciseAdditions(
+      ["Bench Press", "Cable Fly"],
+      ["BENCH PRESS", " cable   fly ", "   "],
+    ),
+    [],
   );
 });

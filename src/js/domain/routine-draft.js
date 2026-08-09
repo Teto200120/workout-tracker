@@ -37,3 +37,22 @@ export function applyRoutineExerciseSelection(
   next[index] = validation.normalized;
   return next;
 }
+
+export function getRoutineExerciseAdditions(
+  routineExercises = [],
+  workoutExerciseNames = [],
+) {
+  const knownNames = new Set(routineExercises.map(nameComparisonKey));
+  const additions = [];
+
+  for (const name of workoutExerciseNames) {
+    const validation = validateExerciseName(name);
+    if (!validation.valid) continue;
+    const key = nameComparisonKey(validation.normalized);
+    if (knownNames.has(key)) continue;
+    knownNames.add(key);
+    additions.push(validation.normalized);
+  }
+
+  return additions;
+}

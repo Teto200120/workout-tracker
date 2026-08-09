@@ -20,12 +20,14 @@ This is the current handoff for the app-structure touch-up branch. Inspect the r
 - Catalog-backed starter routines: new users now receive five starter templates composed at runtime from normalized catalog records selected by provider-neutral movement metadata. The app-owned default exercise inventory was removed; only catalog canonical names are persisted in the unchanged routine schema, existing routines remain untouched, and an incomplete catalog creates no exercise fallback. The empty Custom routine remains available for user-authored exercises. The service-worker cache was bumped to `hector-workout-tracker-pwa-v29`.
 - Short-viewport Active Workout correction: sticky guide targets are remeasured after the body lock is temporarily released, positioned from their live viewport geometry, and verified again after the lock returns. The 360 x 640 guide contract now covers exercise, current-set, Finish, and RPE targets, with Finish explicitly required to remain fully in view behind a real padded frame. The service-worker cache was bumped to `hector-workout-tracker-pwa-v30`.
 - RPE education placement: the Active Workout guide now ends after its existing three steps. The unchanged one-time RPE explanation appears when the user first opens the focused exercise-detail page, targets that page's RPE control, and retains the existing `rpeBasics` completion/replay state without repeating after dismissal. The service-worker cache was bumped to `hector-workout-tracker-pwa-v31`.
+- Confirmed routine exercise additions: after a workout is saved, exercises that are not already in its originating saved routine can be added through an explicit confirmation. Declining leaves the routine unchanged, and an unexpected routine persistence failure leaves the completed workout intact. The routine candidate is validated, refreshed by ID before merging, saved through the existing guarded persistence path, and verified after the write. The service-worker cache was bumped to `hector-workout-tracker-pwa-v32`.
+- Routine identity correction: the active workout captures the originating routine ID when its template loads, carries that optional compatible metadata through drafts and completed workouts, restores it before a resumed draft renders, and resolves the optional routine update by ID rather than display name. This prevents a routine rename or same-name replacement from suppressing or redirecting a confirmed update. The service-worker cache was bumped to `hector-workout-tracker-pwa-v33`.
 
-Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-seeding.js`, `src/js/catalog/starter-routines.js`, `src/js/screens/today.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/components/coach-mark.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related unit and browser tests.
+Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-seeding.js`, `src/js/catalog/starter-routines.js`, `src/js/screens/today.js`, `src/js/screens/active-workout.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/components/coach-mark.js`, `src/js/domain/routine-draft.js`, `src/js/schema/normalize.js`, `src/js/schema/validators.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related unit and browser tests.
 
 ## Remaining planned work
 
-1. After a completed workout that added exercises, offer an optional user-confirmed prompt to add those exercises to the originating saved routine. Do not mutate a saved routine without explicit confirmation, and preserve completed workout data regardless of the user's choice.
+- None in this handoff.
 
 ## Constraints and decisions
 
@@ -39,16 +41,11 @@ Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-se
 
 - `npm run lint`
 - `npm run format:check`
-- `npm run test:unit` — 158 passing
-- Full catalog browser coverage at the configured mobile width — 10 passing
-- Full repository Playwright coverage at the configured mobile width — 52 passing
-- Full beta-education Playwright coverage at the configured mobile width — 8 passing
-- Targeted 390 × 844 Home layout check — passing with no document scroll, aligned card margins/widths, and compact workout-card height
-- Targeted 360 × 640 coach-mark geometry checks across all Home tour steps — passing with in-viewport, non-overlapping card and highlight bounds
-- Targeted 360 × 640 Active Workout guidance geometry across exercise, current-set, Finish, and RPE — passing with every target in view, exact padded bounds, and no dialogue overlap
-- Targeted first-open exercise-detail RPE education — passing online and offline, with no repeat after dismissal
-- Targeted first-run invitation and post-tour overflow checks — passing with a compact anchored out-of-flow dialogue, visible speech tail/depth, and restored content-driven scrolling
-- Targeted 390 Ã— 844 Active Workout guidance geometry across all four available steps â€” passing with exact padded target bounds, no dialogue overlap, and clean console output
+- `npm run test:unit` - 161 passing
+- Full `tests/e2e/workout.spec.js` coverage at the configured 412 x 915 mobile viewport - 12 passing
+- Affected Unicode and input-hardening browser case - 1 passing
+- Targeted accept, decline, and injected routine-write-failure flows - 3 passing
+- Targeted 412 x 915 rendered QA - confirmation text identified the exercise and routine, the existing completion dialog stayed in the viewport, both records persisted after acceptance, and console output was clean apart from the expected Playwright service-worker block
 - `node --check` on the touched JavaScript and service-worker files
 
-No commit or push was created.
+No additional commit or push was created for the follow-up fix.

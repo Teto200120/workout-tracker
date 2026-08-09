@@ -172,6 +172,14 @@ export function validateWorkout(value, options = {}) {
 
   if (hasOwn(value, "id")) validateIdentifier(value.id, `${path}.id`, errors, options);
   else addError(errors, `${path}.id`, "required_field", "id is required.");
+  if (hasOwn(value, "originRoutineId") && value.originRoutineId !== null) {
+    validateIdentifier(
+      value.originRoutineId,
+      `${path}.originRoutineId`,
+      errors,
+      options,
+    );
+  }
 
   if (!hasOwn(value, "date")) addError(errors, `${path}.date`, "required_field", "date is required.");
   else if (!isValidDateOnly(value.date)) addError(errors, `${path}.date`, "invalid_date", "date must use YYYY-MM-DD.");

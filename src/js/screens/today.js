@@ -48,6 +48,7 @@ import {
   makeExercise,
   saveDraftSilently,
   setEditingWorkoutId,
+  setOriginRoutineId,
   showSessionView,
   stopSessionElapsedTimer,
   updateAllExerciseHints
@@ -547,6 +548,7 @@ export async function restoreDraftFromStorage() {
   }
 
   setEditingWorkoutId(draft.editingWorkoutId || null);
+  setOriginRoutineId(draft.originRoutineId);
   $("workoutDate").value = draft.date || today();
   await refreshTemplateDropdowns(draft.type);
   $("workoutType").value = draft.type || $("workoutType").value;

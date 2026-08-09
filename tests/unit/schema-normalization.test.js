@@ -73,21 +73,28 @@ test("exercise and routine normalization trims names and preserves order", () =>
 });
 
 test("workout and draft normalization preserve IDs and dates", () => {
-  const workout = canonicalWorkout({ id: "keep-id", date: "2026-01-02" });
+  const workout = canonicalWorkout({
+    id: "keep-id",
+    date: "2026-01-02",
+    originRoutineId: "routine-id",
+  });
   const normalizedWorkout = normalizeWorkout(workout);
   assert.equal(normalizedWorkout.id, "keep-id");
   assert.equal(normalizedWorkout.date, "2026-01-02");
+  assert.equal(normalizedWorkout.originRoutineId, "routine-id");
 
   const draft = normalizeDraft(
     canonicalDraft({
       id: "keep-draft-id",
       date: "2026-02-03",
       activeExerciseIndex: "2",
+      originRoutineId: "routine-id",
     }),
   );
   assert.equal(draft.id, "keep-draft-id");
   assert.equal(draft.date, "2026-02-03");
   assert.equal(draft.activeExerciseIndex, 2);
+  assert.equal(draft.originRoutineId, "routine-id");
 });
 
 test("missing arrays and fields receive existing defaults", () => {

@@ -141,6 +141,18 @@ test("unknown fields are allowed without weakening known-field validation", () =
   );
 });
 
+test("optional origin routine IDs are validated without requiring them for existing workouts", () => {
+  assert.equal(validateWorkout(canonicalWorkout()).valid, true);
+  assert.equal(
+    validateWorkout(canonicalWorkout({ originRoutineId: "routine-id" })).valid,
+    true,
+  );
+  assert.equal(
+    validateWorkout(canonicalWorkout({ originRoutineId: "" })).errors[0].path,
+    "workout.originRoutineId",
+  );
+});
+
 test("malformed fixture paths distinguish workout, exercise, set, and routine failures", () => {
   const cases = [
     ["malformedWorkout", "workouts[0].exercises"],
