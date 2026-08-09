@@ -7,6 +7,25 @@ import {
   startRoutine,
 } from "../helpers/app.js";
 
+async function addCustomWorkoutExercise(page, name) {
+  await page.locator("#addExercise").click();
+  await page.locator("#exercisePickerCreateAction").click();
+  await page.locator("#exercisePickerCustomName").fill(name);
+  await page
+    .locator("#exercisePickerCreateForm")
+    .evaluate((form) => form.requestSubmit());
+  await expect(page.locator("#exercisePicker")).toBeHidden();
+}
+
+async function completeEveryWorkoutSet(page) {
+  await page.locator(".set-done").evaluateAll((inputs) => {
+    inputs.forEach((input) => {
+      input.checked = true;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+}
+
 test("starting immediately uses the newly selected Home routine", async ({
   page,
 }) => {
@@ -352,5 +371,129 @@ test("a completed save appears once in History with details", async ({
     "open",
     "",
   );
+  assertNoRuntimeErrors();
+});
+
+test("confirming the post-workout prompt adds new exercises to the originating routine", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  const exerciseName = "Accepted Routine Addition";
+  await loadApp(page);
+  await startRoutine(page, "Legs");
+  const routineBefore = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+
+  await addCustomWorkoutExercise(page, exerciseName);
+  await completeEveryWorkoutSet(page);
+  const prompt = new Promise((resolve) => {
+    page.once("dialog", async (dialog) => {
+      resolve(dialog.message());
+      await dialog.accept();
+    });
+  });
+  await page.locator("#sessionSaveTop").click();
+
+  expect(await prompt).toContain(
+    `Add "${exerciseName}" to the "Legs" routine for future workouts?`,
+  );
+  await expect(page.locator("#completionModal")).toBeVisible();
+  const savedWorkouts = await readStore(page, "workouts");
+  expect(savedWorkouts).toHaveLength(1);
+  expect(savedWorkouts[0].exercises.map((exercise) => exercise.name)).toContain(
+    exerciseName,
+  );
+  const routineAfter = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+  expect(routineAfter.exercises).toEqual([
+    ...routineBefore.exercises,
+    exerciseName,
+  ]);
+  assertNoRuntimeErrors();
+});
+
+test("declining the post-workout prompt preserves the workout without changing the routine", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  const exerciseName = "Declined Routine Addition";
+  await loadApp(page);
+  await startRoutine(page, "Legs");
+  const routineBefore = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+
+  await addCustomWorkoutExercise(page, exerciseName);
+  await completeEveryWorkoutSet(page);
+  const prompt = new Promise((resolve) => {
+    page.once("dialog", async (dialog) => {
+      resolve(dialog.message());
+      await dialog.dismiss();
+    });
+  });
+  await page.locator("#sessionSaveTop").click();
+
+  expect(await prompt).toContain(
+    `Add "${exerciseName}" to the "Legs" routine for future workouts?`,
+  );
+  await expect(page.locator("#completionModal")).toBeVisible();
+  const savedWorkouts = await readStore(page, "workouts");
+  expect(savedWorkouts).toHaveLength(1);
+  expect(savedWorkouts[0].exercises.map((exercise) => exercise.name)).toContain(
+    exerciseName,
+  );
+  const routineAfter = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+  expect(routineAfter).toEqual(routineBefore);
+  assertNoRuntimeErrors();
+});
+
+test("an unexpected routine write failure still preserves the completed workout", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  const exerciseName = "Failed Routine Addition";
+  await loadApp(page);
+  await startRoutine(page, "Legs");
+  const routineBefore = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+
+  await addCustomWorkoutExercise(page, exerciseName);
+  await completeEveryWorkoutSet(page);
+  await page.evaluate(() => {
+    const originalTransaction = globalThis.IDBDatabase.prototype.transaction;
+    globalThis.IDBDatabase.prototype.transaction = function transaction(
+      storeNames,
+      mode,
+    ) {
+      if (storeNames === "templates" && mode === "readwrite") {
+        throw new DOMException(
+          "Injected routine write failure",
+          "UnknownError",
+        );
+      }
+      return originalTransaction.apply(this, arguments);
+    };
+  });
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.locator("#sessionSaveTop").click();
+
+  await expect(page.locator("#completionModal")).toBeVisible();
+  await expect(page.locator("#toast")).toContainText(
+    "Workout saved, but the routine could not be updated.",
+  );
+  const savedWorkouts = await readStore(page, "workouts");
+  expect(savedWorkouts).toHaveLength(1);
+  expect(savedWorkouts[0].exercises.map((exercise) => exercise.name)).toContain(
+    exerciseName,
+  );
+  const routineAfter = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+  expect(routineAfter).toEqual(routineBefore);
   assertNoRuntimeErrors();
 });

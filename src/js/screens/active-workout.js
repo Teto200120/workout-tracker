@@ -49,6 +49,7 @@ import {
   validateExerciseNotes,
   validateRepetitions,
   validateRpe,
+  validateRoutineInput,
   validateWeight,
   validateWorkoutInput,
   validateWorkoutNotes,
@@ -60,6 +61,7 @@ import {
   inferMuscleTag,
   workSetsOnly
 } from "../domain/training-rules.js";
+import { getRoutineExerciseAdditions } from "../domain/routine-draft.js";
 import {
   buildCompletionSummary,
   durationLabel,
@@ -71,6 +73,7 @@ import {
   getRoutines,
   getWorkouts,
   isDatabaseOpen,
+  saveRoutine,
   saveWorkoutRecord
 } from "../storage/indexed-db.js";
 import { getAppSettings, removeDraft, setDraft } from "../storage/local.js";
@@ -2616,6 +2619,89 @@ function confirmWorkoutWarnings(warnings) {
   return confirm(`${messages.slice(0, 4).join("\n")}\n\nSave this workout anyway?`);
 }
 
+async function offerRoutineExerciseAdditions(workout) {
+  try {
+    const routine = (await getRoutines()).find(
+      (item) => item.name === workout.type,
+    );
+    if (!routine) return { status: "not-applicable" };
+
+    const additions = getRoutineExerciseAdditions(
+      routine.exercises,
+      workout.exercises.map((exercise) => exercise.name),
+    );
+    if (!additions.length) return { status: "not-applicable" };
+
+    const preflightRoutine = {
+      ...routine,
+      exercises: [...routine.exercises, ...additions],
+    };
+    const preflightValidation = validateRoutineInput(preflightRoutine);
+    if (!preflightValidation.valid) {
+      return {
+        status: "unavailable",
+        message: firstValidationMessage(preflightValidation),
+      };
+    }
+
+    let message = additions.length === 1
+      ? `Add "${additions[0]}" to the "${routine.name}" routine for future workouts?`
+      : `Add these exercises to the "${routine.name}" routine for future workouts?\n\n${additions.map((name) => `- ${name}`).join("\n")}`;
+    if (preflightValidation.warnings.length) {
+      message += `\n\n${preflightValidation.warnings[0].message}`;
+    }
+    if (!confirm(message)) return { status: "declined" };
+
+    const latestRoutine = (await getRoutines()).find(
+      (item) => item.id === routine.id,
+    );
+    if (!latestRoutine) {
+      return {
+        status: "unavailable",
+        message: "The originating routine no longer exists.",
+      };
+    }
+    const latestAdditions = getRoutineExerciseAdditions(
+      latestRoutine.exercises,
+      workout.exercises.map((exercise) => exercise.name),
+    );
+    if (latestAdditions.length) {
+      const updatedRoutine = {
+        ...latestRoutine,
+        exercises: [...latestRoutine.exercises, ...latestAdditions],
+        updatedAt: new Date().toISOString(),
+      };
+      const validation = validateRoutineInput(updatedRoutine);
+      if (!validation.valid) {
+        return {
+          status: "unavailable",
+          message: firstValidationMessage(validation),
+        };
+      }
+      await saveRoutine(updatedRoutine);
+    }
+
+    const persistedRoutine = (await getRoutines()).find(
+      (item) => item.id === routine.id,
+    );
+    const remainingAdditions = getRoutineExerciseAdditions(
+      persistedRoutine?.exercises || [],
+      additions,
+    );
+    if (!persistedRoutine || remainingAdditions.length) {
+      throw new Error("The confirmed routine additions were not persisted.");
+    }
+    return {
+      status: "updated",
+      additions,
+      routineName: persistedRoutine.name,
+    };
+  } catch (error) {
+    console.info("Completed workout was saved, but its routine update failed.", error);
+    return { status: "failed" };
+  }
+}
+
 async function performWorkoutSave() {
   const currentEndTime = $("endTime").value;
   const endTime = !currentEndTime && $("startTime").value
@@ -2663,6 +2749,7 @@ async function performWorkoutSave() {
   );
 
   await saveWorkoutRecord(workout);
+  const routineUpdate = await offerRoutineExerciseAdditions(workout);
   clearDraftStorage(false);
   editingWorkoutId = null;
   $("saveWorkout").textContent = "Save Workout";
@@ -2675,6 +2762,16 @@ async function performWorkoutSave() {
   await showTodayView();
   haptic([35, 35, 35]);
   showCompletionPopup(workout, summary);
+  if (routineUpdate.status === "updated") {
+    const exerciseLabel = routineUpdate.additions.length === 1
+      ? routineUpdate.additions[0]
+      : `${routineUpdate.additions.length} exercises`;
+    toast(`${exerciseLabel} added to ${routineUpdate.routineName}.`);
+  } else if (routineUpdate.status === "failed") {
+    toast("Workout saved, but the routine could not be updated.");
+  } else if (routineUpdate.status === "unavailable") {
+    toast(`Workout saved. ${routineUpdate.message} Routine unchanged.`);
+  }
   return true;
 }
 

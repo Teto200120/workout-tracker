@@ -174,7 +174,10 @@ test("custom Unicode input survives while long names, notes, and executable-look
     .locator("#workoutNotes")
     .fill("Quotes ' \" & <script>window.__injected=true</script> ✅");
 
-  page.once("dialog", (dialog) => dialog.accept());
+  page.on("dialog", (dialog) => {
+    if (dialog.message().startsWith("Add ")) return dialog.dismiss();
+    return dialog.accept();
+  });
   await page.locator("#sessionSaveTop").click();
   await expect(page.locator("#completionModal")).toBeVisible();
   await page.locator("#completionDone").click();
