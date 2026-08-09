@@ -22,12 +22,28 @@ This is the current handoff for the app-structure touch-up branch. Inspect the r
 - RPE education placement: the Active Workout guide now ends after its existing three steps. The unchanged one-time RPE explanation appears when the user first opens the focused exercise-detail page, targets that page's RPE control, and retains the existing `rpeBasics` completion/replay state without repeating after dismissal. The service-worker cache was bumped to `hector-workout-tracker-pwa-v31`.
 - Confirmed routine exercise additions: after a workout is saved, exercises that are not already in its originating saved routine can be added through an explicit confirmation. Declining leaves the routine unchanged, and an unexpected routine persistence failure leaves the completed workout intact. The routine candidate is validated, refreshed by ID before merging, saved through the existing guarded persistence path, and verified after the write. The service-worker cache was bumped to `hector-workout-tracker-pwa-v32`.
 - Routine identity correction: the active workout captures the originating routine ID when its template loads, carries that optional compatible metadata through drafts and completed workouts, restores it before a resumed draft renders, and resolves the optional routine update by ID rather than display name. This prevents a routine rename or same-name replacement from suppressing or redirecting a confirmed update. The service-worker cache was bumped to `hector-workout-tracker-pwa-v33`.
+- Beta feedback client: Profile now exposes an accessible, user-facing feedback form with an explicit safe diagnostics allowlist, local screenshot validation and metadata-stripping compression, and this browser's pending-report outbox. Reports are committed before each mocked transport attempt, retained on failure or uncertain cleanup, removed only after confirmed delivery or explicit deletion, excluded from workout backups, and preserved by workout/profile data clearing. The transport has no live endpoint and is replaceable by the separately deployed receiver planned for the next phase. The service-worker cache was bumped to `hector-workout-tracker-pwa-v34`.
+- Mobile feedback ID compatibility: report IDs now prefer native `crypto.randomUUID()` but safely fall back to `crypto.getRandomValues()` when `randomUUID` is missing or rejected, with a valid collision-resistant portable last resort for older browser contexts. The service-worker cache was bumped to `hector-workout-tracker-pwa-v35`.
 
-Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-seeding.js`, `src/js/catalog/starter-routines.js`, `src/js/screens/today.js`, `src/js/screens/active-workout.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/components/coach-mark.js`, `src/js/domain/routine-draft.js`, `src/js/schema/normalize.js`, `src/js/schema/validators.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related unit and browser tests.
+Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-seeding.js`, `src/js/application/feedback.js`, `src/js/catalog/starter-routines.js`, `src/js/screens/today.js`, `src/js/screens/active-workout.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/screens/feedback.js`, `src/js/storage/feedback-outbox.js`, `src/js/components/coach-mark.js`, `src/js/domain/routine-draft.js`, `src/js/domain/feedback.js`, `src/js/schema/normalize.js`, `src/js/schema/validators.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related unit and browser tests.
 
-## Remaining planned work
+## Agreed roadmap
 
-- None in this handoff.
+1. Beta feedback client. Completed in this slice.
+2. Separately deployed beta feedback backend under `backend/cloudflare-worker`.
+3. Beta telemetry.
+4. Optional admin notifications, only after real beta volume justifies them.
+
+Only the first item is in scope for the current slice. The backend, telemetry,
+deployment workflow, hosted credentials, and admin tooling have not started.
+The PWA remains strictly user-facing: it may show this device's feedback form
+and locally pending reports only. Operator review, aggregate submissions,
+management data, and notifications belong to the separate future admin service
+behind the separately deployed backend.
+The client is local-first, not permanently local-only. This slice keeps a clean
+mocked transport boundary so the next backend phase can add cloud delivery while
+retaining queue-before-send, retry, and no-automatic-loss behavior. No live
+receiver or endpoint is configured in the current client.
 
 ## Constraints and decisions
 
@@ -36,6 +52,9 @@ Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-se
 - Preserve existing saved routines, workouts, drafts, settings, storage keys, schemas, backup formats, and navigation behavior.
 - Catalog-backed starter-routine seeding must remain compatible with existing user-created and previously seeded routines, without duplication or destructive replacement. Starter templates must not introduce app-authored exercise inventories or provider-specific persisted fields.
 - Continue using the project's existing modules, visual language, test setup, and service-worker cache-update convention.
+- Keep the PWA user-facing. It may display only the current browser's form and pending-report state; operator review, aggregate submission data, management tools, and optional notifications remain outside this app.
+- Keep feedback local-first but transport-ready. Queue before sending, retain reports across failed or uncertain attempts, expose only the explicit client payload, and do not add a live endpoint until the separately deployed backend slice.
+- Keep the feedback outbox additive and separate from workout schemas, backups, and existing app-data clearing. Never discard a pending report automatically.
 
 ## Verification at this checkpoint
 
@@ -49,3 +68,16 @@ Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-se
 - `node --check` on the touched JavaScript and service-worker files
 
 No additional commit or push was created for the follow-up fix.
+
+## Beta feedback client verification
+
+- `npm.cmd run lint`
+- `npm.cmd run format:check`
+- `npm.cmd run test:unit` - 172 passing
+- `tests/e2e/feedback.spec.js` at the configured 412 x 915 mobile viewport - 6 passing
+- Related Profile navigation, Settings, Backup, and offline browser regressions - 7 passing
+- Focused browser coverage confirmed Profile discoverability, no horizontal overflow, explicit diagnostics disclosure, no request from the mocked transport, failed-report reload persistence, mocked successful retry cleanup, screenshot rejection/compression feedback, confirmed deletion, backup exclusion, and preservation across workout/profile data clearing.
+- Mobile compatibility coverage confirmed report saving and valid UUID-v4 generation when `crypto.randomUUID` is unavailable, plus unit coverage for throwing native APIs, `getRandomValues`, and the portable uniqueness fallback.
+- `node --check` on the added feedback modules and touched router, backup, and service-worker JavaScript.
+
+No commit, push, pull request, dependency installation, backend, endpoint, telemetry, deployment workflow, hosted credential, or admin interface was created for this slice.

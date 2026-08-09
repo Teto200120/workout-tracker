@@ -43,6 +43,7 @@ import {
   updateSessionTitle
 } from "./screens/active-workout.js";
 import { clearAllData, exportData, importData, renderBackupStatus } from "./screens/backup.js";
+import { bindFeedbackActions, renderFeedback } from "./screens/feedback.js";
 import { bindHistoryActions, renderHistory } from "./screens/history.js";
 import { bindProfileActions, renderProfile } from "./screens/profile.js";
 import {
@@ -85,6 +86,7 @@ const SCREEN_GROUPS = {
   profile: ["profile"],
   templates: ["templates"],
   backup: ["backup"],
+  feedback: ["feedback"],
   settings: ["settings"]
 };
 
@@ -157,7 +159,7 @@ function getScreenDestination(name) {
 
 function getActiveNavDestination(destination) {
   if (STATS_DETAIL_DESTINATIONS.has(destination)) return "stats";
-  return ["templates", "backup", "settings"].includes(destination) ? "profile" : destination;
+  return ["templates", "backup", "feedback", "settings"].includes(destination) ? "profile" : destination;
 }
 
 function openStatsDetail(destination) {
@@ -275,6 +277,7 @@ function bindEvents() {
   eventsBound = true;
   bindActiveWorkoutGuardrails();
   bindTodayEducation();
+  bindFeedbackActions();
   document.addEventListener("focusin", (event) => {
     if (event.target.matches("input, textarea")) scrollInputIntoView(event.target);
   });
@@ -413,6 +416,7 @@ export async function renderAll() {
   await renderHistory();
   await renderTemplates();
   await renderProfile();
+  renderFeedback();
   await renderTodayView();
   await renderSettings();
   await renderBackupStatus();

@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-v33";
+const CACHE_NAME = "hector-workout-tracker-pwa-v35";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -22,6 +22,7 @@ const APP_SHELL = [
   "./src/js/application/data-schema.js",
   "./src/js/application/display-name.js",
   "./src/js/application/education.js",
+  "./src/js/application/feedback.js",
   "./src/js/application/routine-seeding.js",
   "./src/js/application/schedule.js",
   "./src/js/core/constants.js",
@@ -29,6 +30,7 @@ const APP_SHELL = [
   "./src/js/core/utils.js",
   "./src/js/core/settings.js",
   "./src/js/storage/local.js",
+  "./src/js/storage/feedback-outbox.js",
   "./src/js/storage/indexed-db.js",
   "./src/js/components/icons.js",
   "./src/js/components/exercise-picker.js",
@@ -46,6 +48,7 @@ const APP_SHELL = [
   "./src/js/domain/exercise-options.js",
   "./src/js/domain/education.js",
   "./src/js/domain/input-guardrails.js",
+  "./src/js/domain/feedback.js",
   "./src/js/domain/routine-draft.js",
   "./src/js/domain/schedule.js",
   "./src/js/domain/training-rules.js",
@@ -62,6 +65,7 @@ const APP_SHELL = [
   "./src/js/screens/history.js",
   "./src/js/screens/routines.js",
   "./src/js/screens/backup.js",
+  "./src/js/screens/feedback.js",
   "./src/js/screens/profile.js",
   "./src/js/screens/onboarding.js"
 ];
