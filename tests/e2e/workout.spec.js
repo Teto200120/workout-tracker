@@ -414,6 +414,83 @@ test("confirming the post-workout prompt adds new exercises to the originating r
   assertNoRuntimeErrors();
 });
 
+test("a renamed originating routine is updated by ID after a draft is resumed", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  const exerciseName = "Resumed Routine Identity Addition";
+  await loadApp(page);
+  await startRoutine(page, "Legs");
+  const originRoutine = (await readStore(page, "templates")).find(
+    (routine) => routine.name === "Legs",
+  );
+
+  await addCustomWorkoutExercise(page, exerciseName);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("hector_workout_draft_v1"))
+            ?.originRoutineId,
+      ),
+    )
+    .toBe(originRoutine.id);
+  await page.evaluate(
+    async ({ originId }) => {
+      const { getRoutines, saveRoutine } =
+        await import("/src/js/storage/indexed-db.js");
+      const routines = await getRoutines();
+      const original = routines.find((routine) => routine.id === originId);
+      const timestamp = new Date().toISOString();
+      await saveRoutine({
+        ...original,
+        name: "Renamed Legs",
+        updatedAt: timestamp,
+      });
+      await saveRoutine({
+        id: "replacement-legs-routine",
+        name: "Legs",
+        exercises: ["Replacement Only"],
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      });
+    },
+    { originId: originRoutine.id },
+  );
+
+  await page.reload();
+  await expect(page.locator("#todayStartWorkout .cta-label")).toContainText(
+    "Resume",
+  );
+  await page.locator("#todayStartWorkout").click({ force: true });
+  await completeEveryWorkoutSet(page);
+  const prompt = new Promise((resolve) => {
+    page.once("dialog", async (dialog) => {
+      resolve(dialog.message());
+      await dialog.accept();
+    });
+  });
+  await page.locator("#sessionSaveTop").click();
+
+  expect(await prompt).toContain(
+    `Add "${exerciseName}" to the "Renamed Legs" routine for future workouts?`,
+  );
+  await expect(page.locator("#completionModal")).toBeVisible();
+  const routinesAfter = await readStore(page, "templates");
+  const renamedOrigin = routinesAfter.find(
+    (routine) => routine.id === originRoutine.id,
+  );
+  const replacementRoutine = routinesAfter.find(
+    (routine) => routine.id === "replacement-legs-routine",
+  );
+  expect(renamedOrigin.exercises).toContain(exerciseName);
+  expect(replacementRoutine.exercises).toEqual(["Replacement Only"]);
+  const savedWorkouts = await readStore(page, "workouts");
+  expect(savedWorkouts).toHaveLength(1);
+  expect(savedWorkouts[0].originRoutineId).toBe(originRoutine.id);
+  assertNoRuntimeErrors();
+});
+
 test("declining the post-workout prompt preserves the workout without changing the routine", async ({
   page,
 }) => {

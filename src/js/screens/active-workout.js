@@ -85,6 +85,7 @@ let exerciseDetailTab = "log";
 let exerciseDetailRenderToken = 0;
 let exerciseFocusScrollToken = 0;
 let editingWorkoutId = null;
+let originRoutineId = null;
 let completionWorkout = null;
 const completionSelectedTags = new Set();
 const workoutSaveCoordinator = createActionCoordinator();
@@ -2141,6 +2142,7 @@ export function syncRpePreferenceUi() {
 async function loadWorkoutTemplate() {
   const type = $("workoutType").value;
   const template = (await getRoutines()).find((item) => item.name === type);
+  setOriginRoutineId(template?.id);
   const names = template?.exercises || [];
   const list = $("exerciseList");
   list.innerHTML = "";
@@ -2426,6 +2428,14 @@ export function clearDraftStorage(showMessage = true) {
   }
 }
 
+export function setOriginRoutineId(value) {
+  originRoutineId = typeof value === "string" && value
+    ? value
+    : typeof value === "number" && Number.isFinite(value)
+      ? value
+      : null;
+}
+
 async function finishCompletionPopup() {
   return completionCoordinator.run(async () => {
     const modal = $("completionModal");
@@ -2524,7 +2534,8 @@ function collectWorkout(options = {}) {
     notes: $("workoutNotes").value.trim(),
     tags: [],
     exercises,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    ...(originRoutineId === null ? {} : { originRoutineId })
   };
 }
 
@@ -2621,8 +2632,11 @@ function confirmWorkoutWarnings(warnings) {
 
 async function offerRoutineExerciseAdditions(workout) {
   try {
+    if (workout.originRoutineId === undefined || workout.originRoutineId === null) {
+      return { status: "not-applicable" };
+    }
     const routine = (await getRoutines()).find(
-      (item) => item.name === workout.type,
+      (item) => item.id === workout.originRoutineId,
     );
     if (!routine) return { status: "not-applicable" };
 
@@ -2653,7 +2667,7 @@ async function offerRoutineExerciseAdditions(workout) {
     if (!confirm(message)) return { status: "declined" };
 
     const latestRoutine = (await getRoutines()).find(
-      (item) => item.id === routine.id,
+      (item) => item.id === workout.originRoutineId,
     );
     if (!latestRoutine) {
       return {
@@ -2682,7 +2696,7 @@ async function offerRoutineExerciseAdditions(workout) {
     }
 
     const persistedRoutine = (await getRoutines()).find(
-      (item) => item.id === routine.id,
+      (item) => item.id === workout.originRoutineId,
     );
     const remainingAdditions = getRoutineExerciseAdditions(
       persistedRoutine?.exercises || [],
