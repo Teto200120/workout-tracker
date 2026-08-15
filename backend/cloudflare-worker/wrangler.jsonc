@@ -1,0 +1,32 @@
+{
+  "name": "workout-tracker-beta-feedback",
+  "main": "src/feedback-receiver.js",
+  "compatibility_date": "2026-08-15",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_ORIGIN": "https://teto200120.github.io",
+  },
+  "d1_databases": [
+    {
+      "binding": "FEEDBACK_DB",
+      "database_name": "workout-tracker-beta-feedback",
+      "database_id": "0649ab77-b1a9-4cf3-b989-0a4215093b39",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FEEDBACK_SCREENSHOTS",
+      "bucket_name": "workout-tracker-beta-feedback-screenshots",
+    },
+  ],
+  "ratelimits": [
+    {
+      "name": "FEEDBACK_RATE_LIMITER",
+      "namespace_id": "26081501",
+      "simple": {
+        "limit": 3,
+        "period": 60,
+      },
+    },
+  ],
+}

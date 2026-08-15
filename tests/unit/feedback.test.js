@@ -6,6 +6,10 @@ import {
   createFeedbackTransportPayload,
 } from "../../src/js/application/feedback.js";
 import {
+  createLiveFeedbackTransport,
+  FEEDBACK_RECEIVER_URL,
+} from "../../src/js/application/feedback-transport.js";
+import {
   collectFeedbackDiagnostics,
   createFeedbackReport,
   createFeedbackReportId,
@@ -167,6 +171,44 @@ test("the future transport payload exposes only the client contract", () => {
   ]);
   assert.equal("attempts" in payload, false);
   assert.equal("lastFailure" in payload, false);
+});
+
+test("the live transport sends only the contract plus a fresh Turnstile token", async () => {
+  const report = createFeedbackReport(
+    reportDraft(),
+    reportOptions("live-report"),
+  );
+  let request;
+  const transport = createLiveFeedbackTransport({
+    getTurnstileToken: async () => "turnstile-token",
+    fetcher: async (url, options) => {
+      request = { url, options };
+      return Response.json({ ok: true });
+    },
+  });
+
+  assert.deepEqual(await transport.send(report), { ok: true });
+  assert.equal(request.url, FEEDBACK_RECEIVER_URL);
+  assert.deepEqual(JSON.parse(request.options.body), {
+    report: createFeedbackTransportPayload(report),
+    turnstileToken: "turnstile-token",
+  });
+});
+
+test("the live transport retains reports when the receiver does not confirm delivery", async () => {
+  const report = createFeedbackReport(
+    reportDraft(),
+    reportOptions("live-failure"),
+  );
+  const transport = createLiveFeedbackTransport({
+    getTurnstileToken: async () => "turnstile-token",
+    fetcher: async () => Response.json({ ok: false }, { status: 503 }),
+  });
+
+  assert.deepEqual(await transport.send(report), {
+    ok: false,
+    code: "temporary_failure",
+  });
 });
 
 test("screenshot validation accepts only safe image types and bounded source size", () => {

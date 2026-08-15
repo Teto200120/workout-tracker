@@ -1,8 +1,11 @@
 import "../core/globals.js";
 import {
   createFeedbackService,
-  createUnavailableFeedbackTransport,
 } from "../application/feedback.js";
+import {
+  createLiveFeedbackTransport,
+  FEEDBACK_TURNSTILE_SITE_KEY,
+} from "../application/feedback-transport.js";
 import {
   collectFeedbackDiagnostics,
   FEEDBACK_MESSAGE_MAX_LENGTH,
@@ -17,7 +20,8 @@ import { createFeedbackOutbox } from "../storage/feedback-outbox.js";
 
 const MAX_SCREENSHOT_EDGE = 1280;
 const outbox = createFeedbackOutbox();
-let transport = createUnavailableFeedbackTransport();
+let turnstileLoad = null;
+let transport = createLiveFeedbackTransport({ getTurnstileToken });
 let service = createFeedbackService({ outbox, transport });
 let screenshot = null;
 let actionsBound = false;
@@ -51,10 +55,52 @@ function formatReportDate(value) {
 }
 
 function failureText(code) {
-  if (code === "unavailable") return "Sending is not configured in this build.";
   if (code === "temporary_failure") return "The last send attempt failed. Your report is still saved.";
   if (code === "invalid_response") return "The receiver did not confirm delivery. Your report is still saved.";
   return "Saved on this device and ready to retry.";
+}
+
+function loadTurnstile() {
+  if (globalThis.turnstile) return Promise.resolve(globalThis.turnstile);
+  if (turnstileLoad) return turnstileLoad;
+  turnstileLoad = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = () =>
+      globalThis.turnstile
+        ? resolve(globalThis.turnstile)
+        : reject(new Error("Verification could not start."));
+    script.onerror = () => reject(new Error("Verification could not start."));
+    document.head.append(script);
+  });
+  return turnstileLoad;
+}
+
+async function getTurnstileToken() {
+  if (globalThis.navigator.onLine === false) {
+    throw new Error("Connect to the internet to verify and send this report.");
+  }
+  setText(
+    "feedbackFormStatus",
+    "Complete the verification to send your saved report.",
+  );
+  const turnstile = await loadTurnstile();
+  const container = $("feedbackTurnstile");
+  if (!container) throw new Error("Verification could not start.");
+  container.replaceChildren();
+  return new Promise((resolve, reject) => {
+    turnstile.render(container, {
+      sitekey: FEEDBACK_TURNSTILE_SITE_KEY,
+      callback: resolve,
+      "error-callback": () =>
+        reject(new Error("Verification did not complete.")),
+      "expired-callback": () =>
+        reject(new Error("Verification expired. Try sending again.")),
+    });
+  });
 }
 
 function setScreenshotPending(pending) {
