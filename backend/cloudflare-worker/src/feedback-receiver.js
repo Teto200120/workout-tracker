@@ -1,4 +1,4 @@
-/* global Headers, Response, TextDecoder, URLSearchParams, atob, fetch */
+/* global Headers, Response, TextDecoder, URLSearchParams, atob, crypto, fetch */
 
 const CATEGORIES = new Set(["bug", "idea", "other"]);
 const SCREENSHOT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -13,6 +13,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 const MAX_SCREENSHOT_BYTES = 425 * 1024;
 const MAX_SCREENSHOT_EDGE = 1280;
 const MAX_REQUEST_BYTES = 600 * 1024;
+const CLAIM_LEASE_MS = 5 * 60 * 1000;
 const TURNSTILE_VERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
@@ -141,12 +142,44 @@ async function verifyTurnstile(token, secret, fetcher) {
   }
 }
 
-function screenshotKey(id, mimeType) {
+function screenshotKey(id, claimId, mimeType) {
   const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.slice(6);
-  return `feedback/${id}/screenshot.${extension}`;
+  return `feedback/${id}/${claimId}.${extension}`;
 }
 
-export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date().toISOString() } = {}) {
+async function readBoundedBody(request) {
+  if (!request.body) return new Uint8Array();
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_REQUEST_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
+export function createFeedbackReceiver({
+  fetcher = fetch,
+  now = () => new Date().toISOString(),
+  nowMs = () => Date.now(),
+} = {}) {
   return {
     async fetch(request, env) {
       const origin = request.headers.get("origin");
@@ -170,8 +203,8 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
       let body;
       let screenshotObjectKey = null;
       try {
-        const bodyBytes = await request.arrayBuffer();
-        if (bodyBytes.byteLength > MAX_REQUEST_BYTES) {
+        const bodyBytes = await readBoundedBody(request);
+        if (!bodyBytes) {
           return json({ ok: false, code: "invalid_request" }, 413, origin);
         }
         body = JSON.parse(new TextDecoder().decode(bodyBytes));
@@ -198,9 +231,24 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
           .first();
         if (existing) return json({ ok: true, duplicate: true }, 200, origin);
 
+        const claimId = crypto.randomUUID();
+        const claimedAt = nowMs();
+        const claim = await env.FEEDBACK_DB.prepare(
+          "INSERT INTO feedback_report_claims (id, claimed_at) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET claimed_at = excluded.claimed_at WHERE feedback_report_claims.claimed_at <= ?",
+        )
+          .bind(report.id, claimedAt, claimedAt - CLAIM_LEASE_MS)
+          .run();
+        if (!claim.meta.changes) {
+          return json({ ok: false, code: "temporary_failure" }, 503, origin);
+        }
+
         const screenshotBytes = decodeScreenshot(report.screenshot);
         if (screenshotBytes) {
-          screenshotObjectKey = screenshotKey(report.id, report.screenshot.mimeType);
+          screenshotObjectKey = screenshotKey(
+            report.id,
+            claimId,
+            report.screenshot.mimeType,
+          );
           await env.FEEDBACK_SCREENSHOTS.put(screenshotObjectKey, screenshotBytes, {
             httpMetadata: { contentType: report.screenshot.mimeType },
           });
@@ -232,6 +280,11 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
             // A later retry safely overwrites this private deterministic key.
           }
         }
+        await env.FEEDBACK_DB.prepare(
+          "DELETE FROM feedback_report_claims WHERE id = ? AND NOT EXISTS (SELECT 1 FROM feedback_reports WHERE id = ?)",
+        )
+          .bind(report.id, report.id)
+          .run();
         return json({ ok: false, code: "temporary_failure" }, 503, origin);
       }
       return json({ ok: true }, 201, origin);

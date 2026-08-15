@@ -25,30 +25,32 @@ the deployed Worker:
 - `TURNSTILE_SECRET`: a Worker secret for server-side Siteverify. Never place
   it in the PWA, source repository, or client request.
 
-The client needs a separately configured public Turnstile site key before the
-mock transport can be replaced. That endpoint/site-key wiring remains out of
-scope here.
+The live PWA holds only the public receiver URL and public Turnstile site key.
+It keeps its local outbox entry until this receiver confirms `{ ok: true }`.
 
 ## Storage and retention
 
 D1 stores only the structured report metadata/text and the R2 object key. R2
-stores only the decoded optional screenshot under a deterministic report ID
-key. Neither object storage nor D1 is public through this Worker.
+stores only the decoded optional screenshot under a private, per-attempt key.
+Neither object storage nor D1 is public through this Worker.
 
 Reports are retained until an authorized future operator deletes both the D1
 row and any corresponding R2 object. Do not configure automatic deletion.
 Thirty days is a future operator-review reminder, not a purge policy.
 
-If an R2 write succeeds but the D1 insert fails, the Worker first attempts to
-delete the private screenshot object, then returns an error and the PWA retains
-its local outbox entry for retry. If that compensating delete also fails, a
-later retry overwrites only the same deterministic private object key; no
-successful response is returned until D1 has accepted the report.
+An in-flight D1 claim serializes attempts with the same report ID. It expires
+after five minutes so an interrupted invocation cannot block the user's local
+retry forever. If an R2 write succeeds but the D1 insert fails, the Worker
+first attempts to delete that attempt's private screenshot object, then returns
+an error and the PWA retains its local outbox entry for retry. A reclaimed
+retry uses a different private object key, so compensation cannot delete a
+separate in-flight attempt's screenshot; no successful response is returned
+until D1 has accepted the report.
 
-## Future PWA integration path
+## PWA integration
 
-The PWA remains on its mocked transport in this change. When the operator has
-created the Worker and Turnstile widget, a separate approved client change must:
+The PWA now uses the public endpoint and public site key in
+`src/js/application/feedback-transport.js`. Any later endpoint change must:
 
 1. supply the public Turnstile site key through deployment-safe app
    configuration (never a secret);
@@ -59,9 +61,8 @@ created the Worker and Turnstile widget, a separate approved client change must:
    responses as retryable and removing the local report only after `{ ok: true
 }`.
 
-The endpoint URL, public site key delivery, and Worker binding values are
-operational decisions and are intentionally not present in the PWA or this
-repository configuration.
+Only the endpoint URL and public site key may be supplied to the PWA; Worker
+secrets and bindings remain deployment-only configuration.
 
 ## Deployment boundary
 
