@@ -187,7 +187,10 @@ test("the live transport sends only the contract plus a fresh Turnstile token", 
     },
   });
 
-  assert.deepEqual(await transport.send(report), { ok: true });
+  assert.deepEqual(
+    await transport.send(createFeedbackTransportPayload(report)),
+    { ok: true },
+  );
   assert.equal(request.url, FEEDBACK_RECEIVER_URL);
   assert.deepEqual(JSON.parse(request.options.body), {
     report: createFeedbackTransportPayload(report),
@@ -205,10 +208,13 @@ test("the live transport retains reports when the receiver does not confirm deli
     fetcher: async () => Response.json({ ok: false }, { status: 503 }),
   });
 
-  assert.deepEqual(await transport.send(report), {
-    ok: false,
-    code: "temporary_failure",
-  });
+  assert.deepEqual(
+    await transport.send(createFeedbackTransportPayload(report)),
+    {
+      ok: false,
+      code: "temporary_failure",
+    },
+  );
 });
 
 test("the live transport preserves safe receiver failure codes for the local outbox", async () => {
@@ -222,10 +228,13 @@ test("the live transport preserves safe receiver failure codes for the local out
       Response.json({ ok: false, code: "challenge_failed" }, { status: 403 }),
   });
 
-  assert.deepEqual(await transport.send(report), {
-    ok: false,
-    code: "challenge_failed",
-  });
+  assert.deepEqual(
+    await transport.send(createFeedbackTransportPayload(report)),
+    {
+      ok: false,
+      code: "challenge_failed",
+    },
+  );
 });
 
 test("the live transport distinguishes verification and network failures", async () => {
@@ -245,14 +254,20 @@ test("the live transport distinguishes verification and network failures", async
     },
   });
 
-  assert.deepEqual(await verificationFailure.send(report), {
-    ok: false,
-    code: "verification_unavailable",
-  });
-  assert.deepEqual(await networkFailure.send(report), {
-    ok: false,
-    code: "network_failure",
-  });
+  assert.deepEqual(
+    await verificationFailure.send(createFeedbackTransportPayload(report)),
+    {
+      ok: false,
+      code: "verification_unavailable",
+    },
+  );
+  assert.deepEqual(
+    await networkFailure.send(createFeedbackTransportPayload(report)),
+    {
+      ok: false,
+      code: "network_failure",
+    },
+  );
 });
 
 test("screenshot validation accepts only safe image types and bounded source size", () => {
