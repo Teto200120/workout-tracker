@@ -7,9 +7,11 @@ export const FEEDBACK_TURNSTILE_SITE_KEY = "0x4AAAAAAERByALEgaItb07n";
 const RECEIVER_FAILURE_CODES = new Set([
   "challenge_failed",
   "invalid_request",
+  "network_failure",
   "origin_not_allowed",
   "rate_limited",
   "temporary_failure",
+  "verification_unavailable",
 ]);
 
 export function createLiveFeedbackTransport({
@@ -25,15 +27,27 @@ export function createLiveFeedbackTransport({
 
   return Object.freeze({
     async send(report) {
-      const turnstileToken = await getTurnstileToken();
-      const response = await fetcher(FEEDBACK_RECEIVER_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          report: createFeedbackTransportPayload(report),
-          turnstileToken,
-        }),
-      });
+      let turnstileToken;
+      try {
+        turnstileToken = await getTurnstileToken();
+      } catch {
+        return { ok: false, code: "verification_unavailable" };
+      }
+
+      let response;
+      try {
+        response = await fetcher(FEEDBACK_RECEIVER_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            report: createFeedbackTransportPayload(report),
+            turnstileToken,
+          }),
+        });
+      } catch {
+        return { ok: false, code: "network_failure" };
+      }
+
       try {
         const result = await response.json();
         if (response.ok && result?.ok === true) return { ok: true };

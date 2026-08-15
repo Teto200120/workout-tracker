@@ -1,4 +1,4 @@
-/* global Headers, Response, TextDecoder, URLSearchParams, atob, crypto, fetch */
+/* global Headers, Response, TextDecoder, URLSearchParams, atob, console, crypto, fetch */
 
 const CATEGORIES = new Set(["bug", "idea", "other"]);
 const SCREENSHOT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -179,6 +179,7 @@ export function createFeedbackReceiver({
   fetcher = fetch,
   now = () => new Date().toISOString(),
   nowMs = () => Date.now(),
+  log = console.log,
 } = {}) {
   return {
     async fetch(request, env) {
@@ -223,6 +224,7 @@ export function createFeedbackReceiver({
       }
 
       const report = body.report;
+      let persistenceStage = "existing_report";
       try {
         const existing = await env.FEEDBACK_DB.prepare(
           "SELECT id FROM feedback_reports WHERE id = ?",
@@ -231,6 +233,7 @@ export function createFeedbackReceiver({
           .first();
         if (existing) return json({ ok: true, duplicate: true }, 200, origin);
 
+        persistenceStage = "claim";
         const claimId = crypto.randomUUID();
         const claimedAt = nowMs();
         const claim = await env.FEEDBACK_DB.prepare(
@@ -244,6 +247,7 @@ export function createFeedbackReceiver({
 
         const screenshotBytes = decodeScreenshot(report.screenshot);
         if (screenshotBytes) {
+          persistenceStage = "screenshot";
           screenshotObjectKey = screenshotKey(
             report.id,
             claimId,
@@ -254,6 +258,7 @@ export function createFeedbackReceiver({
           });
         }
 
+        persistenceStage = "report";
         await env.FEEDBACK_DB.prepare(
           "INSERT INTO feedback_reports (id, category, message, diagnostics_json, screenshot_key, screenshot_mime_type, screenshot_width, screenshot_height, client_created_at, received_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
@@ -271,6 +276,7 @@ export function createFeedbackReceiver({
           )
           .run();
       } catch {
+        log("feedback_delivery_failure", persistenceStage);
         // A failed cross-store write is not delivery. The client keeps its local
         // report and may retry its same deterministic ID without data loss.
         if (screenshotObjectKey) {
