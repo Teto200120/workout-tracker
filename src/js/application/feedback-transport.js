@@ -2,7 +2,7 @@ import { createFeedbackTransportPayload } from "./feedback.js";
 
 export const FEEDBACK_RECEIVER_URL =
   "https://workout-tracker-beta-feedback.hector-workout-tracker.workers.dev";
-export const FEEDBACK_TURNSTILE_SITE_KEY = "0x4AAAAAAERABKBrWmR8IYNl";
+export const FEEDBACK_TURNSTILE_SITE_KEY = "0x4AAAAAAERByALEgaItb07n";
 
 export function createLiveFeedbackTransport({
   getTurnstileToken,
