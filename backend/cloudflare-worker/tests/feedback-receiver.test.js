@@ -96,10 +96,11 @@ function request(body, options = {}) {
   });
 }
 
-function receiver({ verified = true, nowMs } = {}) {
+function receiver({ verified = true, log, nowMs } = {}) {
   return createFeedbackReceiver({
     now: () => "2026-08-15T12:05:00.000Z",
     ...(nowMs ? { nowMs } : {}),
+    ...(log ? { log } : {}),
     async fetcher() {
       return Response.json({ success: verified });
     },
@@ -262,9 +263,11 @@ test("an optional screenshot is decoded into private R2 and duplicate retries st
 
 test("a storage failure compensates a screenshot write and is not acknowledged", async () => {
   const env = createEnvironment();
+  const logs = [];
   const prepare = env.FEEDBACK_DB.prepare;
   env.FEEDBACK_DB.prepare = (query) => {
-    if (!query.startsWith("INSERT INTO feedback_reports")) return prepare(query);
+    if (!query.startsWith("INSERT INTO feedback_reports"))
+      return prepare(query);
     return {
       bind() {
         return {
@@ -282,7 +285,7 @@ test("a storage failure compensates a screenshot write and is not acknowledged",
     height: 1,
     size: 3,
   };
-  const response = await receiver().fetch(
+  const response = await receiver({ log: (...args) => logs.push(args) }).fetch(
     request({ report: { ...REPORT, screenshot }, turnstileToken: "token" }),
     env,
   );
@@ -294,6 +297,7 @@ test("a storage failure compensates a screenshot write and is not acknowledged",
   });
   assert.equal(env.objects.size, 0);
   assert.equal(env.claims.has(REPORT.id), false);
+  assert.deepEqual(logs, [["feedback_delivery_failure", "report"]]);
 });
 
 test("a concurrent duplicate cannot delete the winning screenshot", async () => {
@@ -325,7 +329,10 @@ test("a concurrent duplicate cannot delete the winning screenshot", async () => 
   await putStarted;
   const duplicate = await receiver().fetch(request(body), env);
   assert.equal(duplicate.status, 503);
-  assert.deepEqual(await duplicate.json(), { ok: false, code: "temporary_failure" });
+  assert.deepEqual(await duplicate.json(), {
+    ok: false,
+    code: "temporary_failure",
+  });
   assert.equal(env.deletedObjectKey, null);
 
   allowPut();
@@ -333,7 +340,9 @@ test("a concurrent duplicate cannot delete the winning screenshot", async () => 
   assert.equal(accepted.status, 201);
   assert.equal(env.objects.size, 1);
   assert.equal(
-    [...env.objects.keys()].some((key) => key.startsWith(`feedback/${REPORT.id}/`)),
+    [...env.objects.keys()].some((key) =>
+      key.startsWith(`feedback/${REPORT.id}/`),
+    ),
     true,
   );
 });

@@ -228,6 +228,33 @@ test("the live transport preserves safe receiver failure codes for the local out
   });
 });
 
+test("the live transport distinguishes verification and network failures", async () => {
+  const report = createFeedbackReport(
+    reportDraft(),
+    reportOptions("live-client-failures"),
+  );
+  const verificationFailure = createLiveFeedbackTransport({
+    getTurnstileToken: async () => {
+      throw new Error("verification unavailable");
+    },
+  });
+  const networkFailure = createLiveFeedbackTransport({
+    getTurnstileToken: async () => "turnstile-token",
+    fetcher: async () => {
+      throw new Error("network unavailable");
+    },
+  });
+
+  assert.deepEqual(await verificationFailure.send(report), {
+    ok: false,
+    code: "verification_unavailable",
+  });
+  assert.deepEqual(await networkFailure.send(report), {
+    ok: false,
+    code: "network_failure",
+  });
+});
+
 test("screenshot validation accepts only safe image types and bounded source size", () => {
   assert.equal(
     validateFeedbackScreenshotFile({ type: "image/png", size: 1024 }).valid,

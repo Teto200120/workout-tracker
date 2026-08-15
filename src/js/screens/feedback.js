@@ -67,6 +67,12 @@ function failureText(code) {
   if (code === "invalid_request") {
     return "The receiver could not validate this report. Your report is still saved.";
   }
+  if (code === "network_failure") {
+    return "The receiver could not be reached. Your report is still saved.";
+  }
+  if (code === "verification_unavailable") {
+    return "Verification did not complete. Your report is still saved.";
+  }
   if (code === "temporary_failure") return "The last send attempt failed. Your report is still saved.";
   if (code === "invalid_response") return "The receiver did not confirm delivery. Your report is still saved.";
   return "Saved on this device and ready to retry.";

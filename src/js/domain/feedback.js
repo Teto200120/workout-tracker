@@ -392,11 +392,13 @@ export function isFeedbackReport(report) {
       ![
         "challenge_failed",
         "invalid_request",
+        "network_failure",
         "origin_not_allowed",
         "rate_limited",
         "unavailable",
         "temporary_failure",
         "invalid_response",
+        "verification_unavailable",
       ].includes(
         report.lastFailure,
       )) ||
