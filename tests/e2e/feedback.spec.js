@@ -45,11 +45,18 @@ test("Profile exposes the user-facing feedback form and explicit diagnostics all
   await assertNoRuntimeErrors();
 });
 
-test("a failed current-slice send stays pending across reload and a mocked retry can succeed", async ({
+test("a failed send stays pending across reload and a mocked retry can succeed", async ({
   page,
 }) => {
   const assertNoRuntimeErrors = monitorRuntime(page);
   await openFeedbackFromProfile(page);
+  await page.evaluate(async () => {
+    const { createMockFeedbackTransport } =
+      await import("/src/js/application/feedback.js");
+    const { setFeedbackTransport } =
+      await import("/src/js/screens/feedback.js");
+    setFeedbackTransport(createMockFeedbackTransport(["failure"]));
+  });
   await page
     .getByLabel("Details")
     .fill("The weekly card stopped responding after I returned from Stats.");
@@ -60,7 +67,7 @@ test("a failed current-slice send stays pending across reload and a mocked retry
 
   await expect(page.locator("#feedbackPendingCount")).toHaveText("1 pending");
   await expect(page.locator(".feedback-pending-report")).toContainText(
-    "Sending is not configured in this build.",
+    "The last send attempt failed.",
   );
   await expect(page.locator(".feedback-pending-report")).toContainText(
     "1 send attempt",

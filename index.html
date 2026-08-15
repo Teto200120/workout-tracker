@@ -791,7 +791,7 @@
           <div class="profile-subpage-title">
             <span>Beta Program</span>
             <h2>Send Feedback</h2>
-            <p>Save a report on this device and retry it safely when sending is available.</p>
+            <p>Save a report on this device first, then verify and send it safely.</p>
           </div>
           <span class="profile-subpage-spacer" aria-hidden="true"></span>
         </div>
@@ -859,6 +859,7 @@
             <button class="primary" id="feedbackSubmit" type="submit">Save report</button>
             <p id="feedbackFormStatus" role="status" aria-live="polite">Reports are kept on this device until sending succeeds or you delete them.</p>
           </div>
+          <div id="feedbackTurnstile" class="feedback-turnstile" aria-live="polite"></div>
         </form>
 
         <section class="card feedback-outbox-card" aria-labelledby="feedbackOutboxTitle">
