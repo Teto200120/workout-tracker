@@ -211,6 +211,23 @@ test("the live transport retains reports when the receiver does not confirm deli
   });
 });
 
+test("the live transport preserves safe receiver failure codes for the local outbox", async () => {
+  const report = createFeedbackReport(
+    reportDraft(),
+    reportOptions("live-challenge-failure"),
+  );
+  const transport = createLiveFeedbackTransport({
+    getTurnstileToken: async () => "turnstile-token",
+    fetcher: async () =>
+      Response.json({ ok: false, code: "challenge_failed" }, { status: 403 }),
+  });
+
+  assert.deepEqual(await transport.send(report), {
+    ok: false,
+    code: "challenge_failed",
+  });
+});
+
 test("screenshot validation accepts only safe image types and bounded source size", () => {
   assert.equal(
     validateFeedbackScreenshotFile({ type: "image/png", size: 1024 }).valid,
