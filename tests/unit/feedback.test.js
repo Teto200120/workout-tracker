@@ -346,6 +346,27 @@ test("a failed send keeps the queued report and a successful retry removes it", 
   assert.equal(transport.calls.length, 2);
 });
 
+test("a safe receiver failure code remains saved with the pending report", async () => {
+  const outbox = createFeedbackOutbox(new MemoryStorage());
+  const service = createFeedbackService({
+    outbox,
+    transport: {
+      async send() {
+        return { ok: false, code: "challenge_failed" };
+      },
+    },
+    ...reportOptions("challenge-failure"),
+  });
+
+  const result = await service.submit(reportDraft());
+  assert.equal(result.sent, false);
+  assert.equal(result.code, "challenge_failed");
+  assert.equal(
+    outbox.get("challenge-failure")?.lastFailure,
+    "challenge_failed",
+  );
+});
+
 test("the report is committed before transport receives it", async () => {
   const storage = new MemoryStorage();
   const outbox = createFeedbackOutbox(storage);

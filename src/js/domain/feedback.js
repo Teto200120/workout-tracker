@@ -389,7 +389,15 @@ export function isFeedbackReport(report) {
     typeof report.updatedAt !== "string" ||
     (report.lastAttemptAt !== null && typeof report.lastAttemptAt !== "string") ||
     (report.lastFailure !== null &&
-      !["unavailable", "temporary_failure", "invalid_response"].includes(
+      ![
+        "challenge_failed",
+        "invalid_request",
+        "origin_not_allowed",
+        "rate_limited",
+        "unavailable",
+        "temporary_failure",
+        "invalid_response",
+      ].includes(
         report.lastFailure,
       )) ||
     !validScreenshot(report.screenshot)
