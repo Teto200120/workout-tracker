@@ -76,6 +76,9 @@ function loadTurnstile() {
     script.onerror = () => reject(new Error("Verification could not start."));
     document.head.append(script);
   });
+  turnstileLoad.catch(() => {
+    turnstileLoad = null;
+  });
   return turnstileLoad;
 }
 

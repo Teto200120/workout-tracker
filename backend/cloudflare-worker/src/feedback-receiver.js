@@ -146,6 +146,34 @@ function screenshotKey(id, mimeType) {
   return `feedback/${id}/screenshot.${extension}`;
 }
 
+async function readBoundedBody(request) {
+  if (!request.body) return new Uint8Array();
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_REQUEST_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+}
+
 export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date().toISOString() } = {}) {
   return {
     async fetch(request, env) {
@@ -170,8 +198,8 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
       let body;
       let screenshotObjectKey = null;
       try {
-        const bodyBytes = await request.arrayBuffer();
-        if (bodyBytes.byteLength > MAX_REQUEST_BYTES) {
+        const bodyBytes = await readBoundedBody(request);
+        if (!bodyBytes) {
           return json({ ok: false, code: "invalid_request" }, 413, origin);
         }
         body = JSON.parse(new TextDecoder().decode(bodyBytes));
@@ -197,6 +225,15 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
           .bind(report.id)
           .first();
         if (existing) return json({ ok: true, duplicate: true }, 200, origin);
+
+        const claim = await env.FEEDBACK_DB.prepare(
+          "INSERT OR IGNORE INTO feedback_report_claims (id) VALUES (?)",
+        )
+          .bind(report.id)
+          .run();
+        if (!claim.meta.changes) {
+          return json({ ok: false, code: "temporary_failure" }, 503, origin);
+        }
 
         const screenshotBytes = decodeScreenshot(report.screenshot);
         if (screenshotBytes) {
@@ -232,6 +269,11 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
             // A later retry safely overwrites this private deterministic key.
           }
         }
+        await env.FEEDBACK_DB.prepare(
+          "DELETE FROM feedback_report_claims WHERE id = ? AND NOT EXISTS (SELECT 1 FROM feedback_reports WHERE id = ?)",
+        )
+          .bind(report.id, report.id)
+          .run();
         return json({ ok: false, code: "temporary_failure" }, 503, origin);
       }
       return json({ ok: true }, 201, origin);
