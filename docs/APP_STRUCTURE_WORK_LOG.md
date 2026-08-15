@@ -24,6 +24,7 @@ This is the current handoff for the app-structure touch-up branch. Inspect the r
 - Routine identity correction: the active workout captures the originating routine ID when its template loads, carries that optional compatible metadata through drafts and completed workouts, restores it before a resumed draft renders, and resolves the optional routine update by ID rather than display name. This prevents a routine rename or same-name replacement from suppressing or redirecting a confirmed update. The service-worker cache was bumped to `hector-workout-tracker-pwa-v33`.
 - Beta feedback client: Profile now exposes an accessible, user-facing feedback form with an explicit safe diagnostics allowlist, local screenshot validation and metadata-stripping compression, and this browser's pending-report outbox. Reports are committed before each mocked transport attempt, retained on failure or uncertain cleanup, removed only after confirmed delivery or explicit deletion, excluded from workout backups, and preserved by workout/profile data clearing. The transport has no live endpoint and is replaceable by the separately deployed receiver planned for the next phase. The service-worker cache was bumped to `hector-workout-tracker-pwa-v34`.
 - Mobile feedback ID compatibility: report IDs now prefer native `crypto.randomUUID()` but safely fall back to `crypto.getRandomValues()` when `randomUUID` is missing or rejected, with a valid collision-resistant portable last resort for older browser contexts. The service-worker cache was bumped to `hector-workout-tracker-pwa-v35`.
+- Screenshot decode boundary: PNG, JPEG, and WebP dimensions are now read from at most 256 KB of metadata before `createImageBitmap` can allocate the decoded image. Headers exceeding the existing 24-million-pixel limit are rejected before full decode, while the source-size rules and valid local compression flow remain unchanged. The service-worker cache was bumped to `hector-workout-tracker-pwa-v36`.
 
 Relevant files: `index.html`, `src/js/router.js`, `src/js/application/routine-seeding.js`, `src/js/application/feedback.js`, `src/js/catalog/starter-routines.js`, `src/js/screens/today.js`, `src/js/screens/active-workout.js`, `src/js/screens/progress.js`, `src/js/screens/backup.js`, `src/js/screens/feedback.js`, `src/js/storage/feedback-outbox.js`, `src/js/components/coach-mark.js`, `src/js/domain/routine-draft.js`, `src/js/domain/feedback.js`, `src/js/schema/normalize.js`, `src/js/schema/validators.js`, `src/styles/today.css`, `src/styles/screens.css`, `src/styles/education.css`, `service-worker.js`, and the related unit and browser tests.
 
@@ -73,11 +74,12 @@ No additional commit or push was created for the follow-up fix.
 
 - `npm.cmd run lint`
 - `npm.cmd run format:check`
-- `npm.cmd run test:unit` - 172 passing
-- `tests/e2e/feedback.spec.js` at the configured 412 x 915 mobile viewport - 6 passing
+- `npm.cmd run test:unit` - 174 passing
+- `tests/e2e/feedback.spec.js` at the configured 412 x 915 mobile viewport - 7 passing
 - Related Profile navigation, Settings, Backup, and offline browser regressions - 7 passing
 - Focused browser coverage confirmed Profile discoverability, no horizontal overflow, explicit diagnostics disclosure, no request from the mocked transport, failed-report reload persistence, mocked successful retry cleanup, screenshot rejection/compression feedback, confirmed deletion, backup exclusion, and preservation across workout/profile data clearing.
 - Mobile compatibility coverage confirmed report saving and valid UUID-v4 generation when `crypto.randomUUID` is unavailable, plus unit coverage for throwing native APIs, `getRandomValues`, and the portable uniqueness fallback.
+- Screenshot security coverage confirmed a 10000 x 10000 PNG header under 100 bytes is rejected with zero `createImageBitmap` calls, equivalent oversized JPEG and WebP headers fail the same pixel-limit check, and a normal PNG still compresses and previews successfully.
 - `node --check` on the added feedback modules and touched router, backup, and service-worker JavaScript.
 
 No commit, push, pull request, dependency installation, backend, endpoint, telemetry, deployment workflow, hosted credential, or admin interface was created for this slice.

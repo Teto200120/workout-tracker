@@ -6,13 +6,15 @@ import {
 import {
   collectFeedbackDiagnostics,
   FEEDBACK_MESSAGE_MAX_LENGTH,
+  FEEDBACK_SCREENSHOT_MAX_DECODED_PIXELS,
   FEEDBACK_SCREENSHOT_MAX_OUTPUT_BYTES,
+  readFeedbackScreenshotDimensions,
   validateFeedbackDraft,
+  validateFeedbackScreenshotDimensions,
   validateFeedbackScreenshotFile,
 } from "../domain/feedback.js";
 import { createFeedbackOutbox } from "../storage/feedback-outbox.js";
 
-const MAX_DECODED_PIXELS = 24_000_000;
 const MAX_SCREENSHOT_EDGE = 1280;
 const outbox = createFeedbackOutbox();
 let transport = createUnavailableFeedbackTransport();
@@ -93,6 +95,10 @@ async function compressScreenshot(file) {
   const validation = validateFeedbackScreenshotFile(file);
   if (!validation.valid) throw new Error(validation.message);
 
+  const headerDimensions = await readFeedbackScreenshotDimensions(file);
+  const headerValidation = validateFeedbackScreenshotDimensions(headerDimensions);
+  if (!headerValidation.valid) throw new Error(headerValidation.message);
+
   let bitmap;
   try {
     bitmap = await createImageBitmap(file);
@@ -104,7 +110,8 @@ async function compressScreenshot(file) {
     if (
       bitmap.width <= 0 ||
       bitmap.height <= 0 ||
-      bitmap.width * bitmap.height > MAX_DECODED_PIXELS
+      bitmap.height >
+        Math.floor(FEEDBACK_SCREENSHOT_MAX_DECODED_PIXELS / bitmap.width)
     ) {
       throw new Error("That screenshot has unsupported dimensions.");
     }

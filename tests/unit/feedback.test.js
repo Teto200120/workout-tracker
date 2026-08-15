@@ -10,6 +10,8 @@ import {
   createFeedbackReport,
   createFeedbackReportId,
   FEEDBACK_DIAGNOSTIC_ALLOWLIST,
+  readFeedbackScreenshotDimensions,
+  validateFeedbackScreenshotDimensions,
   validateFeedbackScreenshotFile,
 } from "../../src/js/domain/feedback.js";
 import {
@@ -183,6 +185,74 @@ test("screenshot validation accepts only safe image types and bounded source siz
     }).valid,
     false,
   );
+});
+
+function pngHeader(width, height) {
+  const header = Buffer.alloc(24);
+  Buffer.from("89504e470d0a1a0a", "hex").copy(header, 0);
+  header.writeUInt32BE(13, 8);
+  header.write("IHDR", 12, "ascii");
+  header.writeUInt32BE(width, 16);
+  header.writeUInt32BE(height, 20);
+  return new Blob([header], { type: "image/png" });
+}
+
+function jpegHeader(width, height) {
+  const header = Buffer.alloc(23);
+  Buffer.from([0xff, 0xd8, 0xff, 0xc0, 0x00, 0x11, 0x08]).copy(header, 0);
+  header.writeUInt16BE(height, 7);
+  header.writeUInt16BE(width, 9);
+  return new Blob([header], { type: "image/jpeg" });
+}
+
+function webpExtendedHeader(width, height) {
+  const header = Buffer.alloc(30);
+  header.write("RIFF", 0, "ascii");
+  header.writeUInt32LE(22, 4);
+  header.write("WEBP", 8, "ascii");
+  header.write("VP8X", 12, "ascii");
+  header.writeUInt32LE(10, 16);
+  header.writeUIntLE(width - 1, 24, 3);
+  header.writeUIntLE(height - 1, 27, 3);
+  return new Blob([header], { type: "image/webp" });
+}
+
+test("bounded screenshot headers expose PNG, JPEG, and WebP dimensions", async () => {
+  assert.deepEqual(
+    await readFeedbackScreenshotDimensions(pngHeader(192, 192)),
+    {
+      width: 192,
+      height: 192,
+    },
+  );
+  assert.deepEqual(
+    await readFeedbackScreenshotDimensions(jpegHeader(640, 480)),
+    {
+      width: 640,
+      height: 480,
+    },
+  );
+  assert.deepEqual(
+    await readFeedbackScreenshotDimensions(webpExtendedHeader(800, 600)),
+    { width: 800, height: 600 },
+  );
+});
+
+test("oversized decoded dimensions are rejected from small accepted image headers", async () => {
+  const images = [
+    pngHeader(10_000, 10_000),
+    jpegHeader(10_000, 10_000),
+    webpExtendedHeader(10_000, 10_000),
+  ];
+  for (const image of images) {
+    assert.ok(image.size < 100);
+    assert.deepEqual(
+      validateFeedbackScreenshotDimensions(
+        await readFeedbackScreenshotDimensions(image),
+      ),
+      { valid: false, message: "That screenshot has unsupported dimensions." },
+    );
+  }
 });
 
 test("a failed send keeps the queued report and a successful retry removes it", async () => {

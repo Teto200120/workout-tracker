@@ -125,6 +125,38 @@ test("screenshot validation rejects unsafe types and locally compresses an allow
   await expect(page.locator("#feedbackScreenshotPreview")).toBeVisible();
 });
 
+test("oversized screenshot dimensions are rejected before image decode", async ({
+  page,
+}) => {
+  await openFeedbackFromProfile(page);
+  await page.evaluate(() => {
+    globalThis.__feedbackDecodeCalls = 0;
+    globalThis.createImageBitmap = async () => {
+      globalThis.__feedbackDecodeCalls += 1;
+      throw new Error("Oversized image reached full decode");
+    };
+  });
+
+  const oversizedPngHeader = Buffer.alloc(24);
+  Buffer.from("89504e470d0a1a0a", "hex").copy(oversizedPngHeader, 0);
+  oversizedPngHeader.writeUInt32BE(13, 8);
+  oversizedPngHeader.write("IHDR", 12, "ascii");
+  oversizedPngHeader.writeUInt32BE(10_000, 16);
+  oversizedPngHeader.writeUInt32BE(10_000, 20);
+
+  await page.locator("#feedbackScreenshot").setInputFiles({
+    name: "oversized-dimensions.png",
+    mimeType: "image/png",
+    buffer: oversizedPngHeader,
+  });
+
+  await expect(page.locator("#feedbackScreenshotStatus")).toHaveText(
+    "That screenshot has unsupported dimensions.",
+  );
+  await expect(page.locator("#feedbackScreenshotPreview")).toBeHidden();
+  expect(await page.evaluate(() => globalThis.__feedbackDecodeCalls)).toBe(0);
+});
+
 test("deleting a pending report requires confirmation", async ({ page }) => {
   await openFeedbackFromProfile(page);
   await page

@@ -3,6 +3,8 @@ export const FEEDBACK_MESSAGE_MIN_LENGTH = 10;
 export const FEEDBACK_MESSAGE_MAX_LENGTH = 2000;
 export const FEEDBACK_SCREENSHOT_MAX_SOURCE_BYTES = 8 * 1024 * 1024;
 export const FEEDBACK_SCREENSHOT_MAX_OUTPUT_BYTES = 425 * 1024;
+export const FEEDBACK_SCREENSHOT_MAX_DECODED_PIXELS = 24_000_000;
+export const FEEDBACK_SCREENSHOT_MAX_HEADER_BYTES = 256 * 1024;
 export const FEEDBACK_SCREENSHOT_TYPES = Object.freeze([
   "image/jpeg",
   "image/png",
@@ -142,6 +144,169 @@ export function validateFeedbackScreenshotFile(file) {
     };
   }
   return { valid: true };
+}
+
+function bytesMatch(view, offset, expected) {
+  if (offset < 0 || offset + expected.length > view.byteLength) return false;
+  return expected.every((value, index) => view.getUint8(offset + index) === value);
+}
+
+function asciiAt(view, offset, length) {
+  if (offset < 0 || offset + length > view.byteLength) return "";
+  let value = "";
+  for (let index = 0; index < length; index += 1) {
+    value += String.fromCharCode(view.getUint8(offset + index));
+  }
+  return value;
+}
+
+function parsePngDimensions(view) {
+  if (
+    view.byteLength < 24 ||
+    !bytesMatch(view, 0, [137, 80, 78, 71, 13, 10, 26, 10]) ||
+    view.getUint32(8, false) < 13 ||
+    asciiAt(view, 12, 4) !== "IHDR"
+  ) {
+    return null;
+  }
+  return {
+    width: view.getUint32(16, false),
+    height: view.getUint32(20, false),
+  };
+}
+
+const JPEG_START_OF_FRAME_MARKERS = new Set([
+  0xc0,
+  0xc1,
+  0xc2,
+  0xc3,
+  0xc5,
+  0xc6,
+  0xc7,
+  0xc9,
+  0xca,
+  0xcb,
+  0xcd,
+  0xce,
+  0xcf,
+]);
+
+function parseJpegDimensions(view) {
+  if (view.byteLength < 4 || !bytesMatch(view, 0, [0xff, 0xd8])) return null;
+  let offset = 2;
+  while (offset < view.byteLength) {
+    while (offset < view.byteLength && view.getUint8(offset) === 0xff) {
+      offset += 1;
+    }
+    if (offset >= view.byteLength) return null;
+    const marker = view.getUint8(offset);
+    offset += 1;
+    if (marker === 0xd9 || marker === 0xda) return null;
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    if (offset + 2 > view.byteLength) return null;
+    const segmentLength = view.getUint16(offset, false);
+    if (segmentLength < 2 || offset + segmentLength > view.byteLength) {
+      return null;
+    }
+    if (JPEG_START_OF_FRAME_MARKERS.has(marker)) {
+      if (segmentLength < 7) return null;
+      return {
+        width: view.getUint16(offset + 5, false),
+        height: view.getUint16(offset + 3, false),
+      };
+    }
+    offset += segmentLength;
+  }
+  return null;
+}
+
+function readUint24LittleEndian(view, offset) {
+  if (offset < 0 || offset + 3 > view.byteLength) return null;
+  return (
+    view.getUint8(offset) |
+    (view.getUint8(offset + 1) << 8) |
+    (view.getUint8(offset + 2) << 16)
+  );
+}
+
+function parseWebpDimensions(view) {
+  if (
+    view.byteLength < 20 ||
+    asciiAt(view, 0, 4) !== "RIFF" ||
+    asciiAt(view, 8, 4) !== "WEBP"
+  ) {
+    return null;
+  }
+
+  const chunkType = asciiAt(view, 12, 4);
+  const chunkSize = view.getUint32(16, true);
+  const dataOffset = 20;
+  if (chunkType === "VP8X" && chunkSize >= 10 && dataOffset + 10 <= view.byteLength) {
+    const width = readUint24LittleEndian(view, dataOffset + 4);
+    const height = readUint24LittleEndian(view, dataOffset + 7);
+    return { width: width + 1, height: height + 1 };
+  }
+  if (
+    chunkType === "VP8L" &&
+    chunkSize >= 5 &&
+    dataOffset + 5 <= view.byteLength &&
+    view.getUint8(dataOffset) === 0x2f
+  ) {
+    const byte1 = view.getUint8(dataOffset + 1);
+    const byte2 = view.getUint8(dataOffset + 2);
+    const byte3 = view.getUint8(dataOffset + 3);
+    const byte4 = view.getUint8(dataOffset + 4);
+    return {
+      width: 1 + (byte1 | ((byte2 & 0x3f) << 8)),
+      height: 1 + ((byte2 >> 6) | (byte3 << 2) | ((byte4 & 0x0f) << 10)),
+    };
+  }
+  if (
+    chunkType === "VP8 " &&
+    chunkSize >= 10 &&
+    dataOffset + 10 <= view.byteLength &&
+    bytesMatch(view, dataOffset + 3, [0x9d, 0x01, 0x2a])
+  ) {
+    return {
+      width: view.getUint16(dataOffset + 6, true) & 0x3fff,
+      height: view.getUint16(dataOffset + 8, true) & 0x3fff,
+    };
+  }
+  return null;
+}
+
+export async function readFeedbackScreenshotDimensions(file) {
+  let header;
+  try {
+    header = await file
+      .slice(0, FEEDBACK_SCREENSHOT_MAX_HEADER_BYTES)
+      .arrayBuffer();
+  } catch {
+    throw new Error("That screenshot could not be decoded safely.");
+  }
+  const view = new DataView(header);
+  let dimensions = null;
+  if (file.type === "image/png") dimensions = parsePngDimensions(view);
+  else if (file.type === "image/jpeg") dimensions = parseJpegDimensions(view);
+  else if (file.type === "image/webp") dimensions = parseWebpDimensions(view);
+  if (!dimensions) {
+    throw new Error("That screenshot could not be decoded safely.");
+  }
+  return dimensions;
+}
+
+export function validateFeedbackScreenshotDimensions(dimensions) {
+  const width = Number(dimensions?.width);
+  const height = Number(dimensions?.height);
+  const valid =
+    Number.isInteger(width) &&
+    width > 0 &&
+    Number.isInteger(height) &&
+    height > 0 &&
+    height <= Math.floor(FEEDBACK_SCREENSHOT_MAX_DECODED_PIXELS / width);
+  return valid
+    ? { valid: true, width, height }
+    : { valid: false, message: "That screenshot has unsupported dimensions." };
 }
 
 function hasOnlyKeys(value, allowedKeys) {
