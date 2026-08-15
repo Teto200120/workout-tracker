@@ -1,4 +1,4 @@
-/* global Headers, Response, TextDecoder, URLSearchParams, atob, fetch */
+/* global Headers, Response, TextDecoder, URLSearchParams, atob, crypto, fetch */
 
 const CATEGORIES = new Set(["bug", "idea", "other"]);
 const SCREENSHOT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -13,6 +13,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 const MAX_SCREENSHOT_BYTES = 425 * 1024;
 const MAX_SCREENSHOT_EDGE = 1280;
 const MAX_REQUEST_BYTES = 600 * 1024;
+const CLAIM_LEASE_MS = 5 * 60 * 1000;
 const TURNSTILE_VERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
@@ -141,9 +142,9 @@ async function verifyTurnstile(token, secret, fetcher) {
   }
 }
 
-function screenshotKey(id, mimeType) {
+function screenshotKey(id, claimId, mimeType) {
   const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.slice(6);
-  return `feedback/${id}/screenshot.${extension}`;
+  return `feedback/${id}/${claimId}.${extension}`;
 }
 
 async function readBoundedBody(request) {
@@ -174,7 +175,11 @@ async function readBoundedBody(request) {
   return bytes;
 }
 
-export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date().toISOString() } = {}) {
+export function createFeedbackReceiver({
+  fetcher = fetch,
+  now = () => new Date().toISOString(),
+  nowMs = () => Date.now(),
+} = {}) {
   return {
     async fetch(request, env) {
       const origin = request.headers.get("origin");
@@ -226,10 +231,12 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
           .first();
         if (existing) return json({ ok: true, duplicate: true }, 200, origin);
 
+        const claimId = crypto.randomUUID();
+        const claimedAt = nowMs();
         const claim = await env.FEEDBACK_DB.prepare(
-          "INSERT OR IGNORE INTO feedback_report_claims (id) VALUES (?)",
+          "INSERT INTO feedback_report_claims (id, claimed_at) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET claimed_at = excluded.claimed_at WHERE feedback_report_claims.claimed_at <= ?",
         )
-          .bind(report.id)
+          .bind(report.id, claimedAt, claimedAt - CLAIM_LEASE_MS)
           .run();
         if (!claim.meta.changes) {
           return json({ ok: false, code: "temporary_failure" }, 503, origin);
@@ -237,7 +244,11 @@ export function createFeedbackReceiver({ fetcher = fetch, now = () => new Date()
 
         const screenshotBytes = decodeScreenshot(report.screenshot);
         if (screenshotBytes) {
-          screenshotObjectKey = screenshotKey(report.id, report.screenshot.mimeType);
+          screenshotObjectKey = screenshotKey(
+            report.id,
+            claimId,
+            report.screenshot.mimeType,
+          );
           await env.FEEDBACK_SCREENSHOTS.put(screenshotObjectKey, screenshotBytes, {
             httpMetadata: { contentType: report.screenshot.mimeType },
           });

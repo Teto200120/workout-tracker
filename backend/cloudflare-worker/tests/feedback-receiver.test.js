@@ -23,7 +23,7 @@ const REPORT = Object.freeze({
 
 function createEnvironment({ limited = false } = {}) {
   const rows = new Map();
-  const claims = new Set();
+  const claims = new Map();
   const objects = new Map();
   let deletedObjectKey = null;
   return {
@@ -53,9 +53,12 @@ function createEnvironment({ limited = false } = {}) {
               },
               async run() {
                 const [id] = values;
-                if (query.startsWith("INSERT OR IGNORE INTO feedback_report_claims")) {
-                  if (claims.has(id)) return { success: true, meta: { changes: 0 } };
-                  claims.add(id);
+                if (query.startsWith("INSERT INTO feedback_report_claims")) {
+                  const [, claimedAt, reclaimBefore] = values;
+                  if (claims.has(id) && claims.get(id) > reclaimBefore) {
+                    return { success: true, meta: { changes: 0 } };
+                  }
+                  claims.set(id, claimedAt);
                   return { success: true, meta: { changes: 1 } };
                 }
                 if (query.startsWith("DELETE FROM feedback_report_claims")) {
@@ -93,9 +96,10 @@ function request(body, options = {}) {
   });
 }
 
-function receiver({ verified = true } = {}) {
+function receiver({ verified = true, nowMs } = {}) {
   return createFeedbackReceiver({
     now: () => "2026-08-15T12:05:00.000Z",
+    ...(nowMs ? { nowMs } : {}),
     async fetcher() {
       return Response.json({ success: verified });
     },
@@ -248,10 +252,8 @@ test("an optional screenshot is decoded into private R2 and duplicate retries st
 
   const first = await receiver().fetch(request(body), env);
   assert.equal(first.status, 201);
-  assert.equal(
-    env.objects.get(`feedback/${REPORT.id}/screenshot.png`).value.byteLength,
-    3,
-  );
+  assert.equal(env.objects.size, 1);
+  assert.equal([...env.objects.values()][0].value.byteLength, 3);
   const retried = await receiver().fetch(request(body), env);
   assert.equal(retried.status, 200);
   assert.deepEqual(await retried.json(), { ok: true, duplicate: true });
@@ -262,7 +264,7 @@ test("a storage failure compensates a screenshot write and is not acknowledged",
   const env = createEnvironment();
   const prepare = env.FEEDBACK_DB.prepare;
   env.FEEDBACK_DB.prepare = (query) => {
-    if (!query.startsWith("INSERT")) return prepare(query);
+    if (!query.startsWith("INSERT INTO feedback_reports")) return prepare(query);
     return {
       bind() {
         return {
@@ -329,5 +331,23 @@ test("a concurrent duplicate cannot delete the winning screenshot", async () => 
   allowPut();
   const accepted = await winner;
   assert.equal(accepted.status, 201);
-  assert.equal(env.objects.has(`feedback/${REPORT.id}/screenshot.png`), true);
+  assert.equal(env.objects.size, 1);
+  assert.equal(
+    [...env.objects.keys()].some((key) => key.startsWith(`feedback/${REPORT.id}/`)),
+    true,
+  );
+});
+
+test("reclaims an abandoned claim after its bounded lease expires", async () => {
+  const env = createEnvironment();
+  const nowMs = 1_000_000;
+  env.claims.set(REPORT.id, nowMs - 5 * 60 * 1000);
+  const response = await receiver({ nowMs: () => nowMs }).fetch(
+    request({ report: REPORT, turnstileToken: "token" }),
+    env,
+  );
+
+  assert.equal(response.status, 201);
+  assert.equal(env.rows.size, 1);
+  assert.equal(env.claims.get(REPORT.id), nowMs);
 });
