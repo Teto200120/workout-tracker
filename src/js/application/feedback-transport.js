@@ -4,6 +4,14 @@ export const FEEDBACK_RECEIVER_URL =
   "https://workout-tracker-beta-feedback.hector-workout-tracker.workers.dev";
 export const FEEDBACK_TURNSTILE_SITE_KEY = "0x4AAAAAAERByALEgaItb07n";
 
+const RECEIVER_FAILURE_CODES = new Set([
+  "challenge_failed",
+  "invalid_request",
+  "origin_not_allowed",
+  "rate_limited",
+  "temporary_failure",
+]);
+
 export function createLiveFeedbackTransport({
   getTurnstileToken,
   fetcher = globalThis.fetch,
@@ -28,9 +36,13 @@ export function createLiveFeedbackTransport({
       });
       try {
         const result = await response.json();
-        return response.ok && result?.ok === true
-          ? { ok: true }
-          : { ok: false, code: "temporary_failure" };
+        if (response.ok && result?.ok === true) return { ok: true };
+        return {
+          ok: false,
+          code: RECEIVER_FAILURE_CODES.has(result?.code)
+            ? result.code
+            : "temporary_failure",
+        };
       } catch {
         return { ok: false, code: "invalid_response" };
       }

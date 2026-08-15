@@ -55,6 +55,18 @@ function formatReportDate(value) {
 }
 
 function failureText(code) {
+  if (code === "challenge_failed") {
+    return "Verification was not accepted. Your report is still saved.";
+  }
+  if (code === "rate_limited") {
+    return "Please wait a minute before retrying. Your report is still saved.";
+  }
+  if (code === "origin_not_allowed") {
+    return "This app address is not authorized to send feedback. Your report is still saved.";
+  }
+  if (code === "invalid_request") {
+    return "The receiver could not validate this report. Your report is still saved.";
+  }
   if (code === "temporary_failure") return "The last send attempt failed. Your report is still saved.";
   if (code === "invalid_response") return "The receiver did not confirm delivery. Your report is still saved.";
   return "Saved on this device and ready to retry.";

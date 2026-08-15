@@ -1,6 +1,10 @@
 import { createFeedbackReport, isFeedbackReport } from "../domain/feedback.js";
 
 const TRANSPORT_FAILURES = new Set([
+  "challenge_failed",
+  "invalid_request",
+  "origin_not_allowed",
+  "rate_limited",
   "unavailable",
   "temporary_failure",
   "invalid_response",
