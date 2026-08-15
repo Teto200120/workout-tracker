@@ -619,6 +619,17 @@
             <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
           </button>
 
+          <button class="profile-shortcut-card" type="button" data-profile-target="feedback">
+            <span class="profile-shortcut-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8"/><path d="M8 12h5"/></svg>
+            </span>
+            <span>
+              <strong>Beta Feedback</strong>
+              <small id="profileFeedbackSummary">Send feedback or manage pending reports</small>
+            </span>
+            <svg class="profile-shortcut-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
           <button class="profile-shortcut-card" type="button" data-profile-target="backup" data-profile-focus="appInfoTool">
             <span class="profile-shortcut-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -756,7 +767,7 @@
           <div class="card backup-tool-card data-management-card" id="dataManagementTool">
             <span class="backup-tool-label">Data Management</span>
             <h3>Local device data</h3>
-            <p class="muted small">This only affects workout data stored in this browser on this device.</p>
+            <p class="muted small">This clears workout and profile data stored in this browser. Pending feedback stays until delivery succeeds or you delete it from Beta Feedback.</p>
             <button class="danger" id="clearData" type="button">Clear All Local Data</button>
           </div>
         </div>
@@ -764,10 +775,103 @@
         <div class="card backup-info-card" id="appInfoTool">
           <span class="backup-tool-label">App Info</span>
           <div class="backup-info-list">
-            <p class="small"><strong>Storage:</strong> IndexedDB stores workout history and routines. LocalStorage stores training goals, settings, backup metadata, and workout drafts.</p>
+            <p class="small"><strong>Storage:</strong> IndexedDB stores workout history and routines. LocalStorage stores training goals, settings, backup metadata, workout drafts, and the separate feedback outbox.</p>
+            <p class="small"><strong>Feedback:</strong> Pending feedback is not included in app backups or removed by the workout-data clearing action.</p>
             <p class="small"><strong>Reminder:</strong> Export backups before clearing browser data or moving to another phone.</p>
           </div>
         </div>
+      </section>
+
+      <section id="feedback" class="screen profile-subpage-screen feedback-screen">
+        <div class="profile-subpage-header">
+          <button class="profile-subpage-back" type="button" data-profile-back aria-label="Back to Profile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/><path d="M10 12h10"/></svg>
+            <span>Profile</span>
+          </button>
+          <div class="profile-subpage-title">
+            <span>Beta Program</span>
+            <h2>Send Feedback</h2>
+            <p>Save a report on this device and retry it safely when sending is available.</p>
+          </div>
+          <span class="profile-subpage-spacer" aria-hidden="true"></span>
+        </div>
+
+        <form class="card feedback-form-card" id="feedbackForm" novalidate>
+          <div class="feedback-form-intro">
+            <div>
+              <span class="feedback-eyebrow">Your report</span>
+              <h3>What should we know?</h3>
+            </div>
+            <span class="feedback-local-pill">Local first</span>
+          </div>
+
+          <div class="feedback-field-grid">
+            <div>
+              <label for="feedbackCategory">Feedback type</label>
+              <select id="feedbackCategory" required aria-describedby="feedbackCategoryError">
+                <option value="bug">Something is broken</option>
+                <option value="idea">Idea or improvement</option>
+                <option value="other">Other feedback</option>
+              </select>
+              <p class="field-validation" id="feedbackCategoryError" role="alert" aria-live="polite"></p>
+            </div>
+            <div class="feedback-message-field">
+              <label for="feedbackMessage">Details</label>
+              <textarea id="feedbackMessage" rows="6" maxlength="2000" required placeholder="What happened, what did you expect, and how can we reproduce it?" aria-describedby="feedbackMessageHint feedbackMessageError"></textarea>
+              <div class="feedback-field-meta">
+                <p class="field-hint" id="feedbackMessageHint">10-2000 characters. Do not include passwords, access codes, or financial information.</p>
+                <span id="feedbackCharacterCount" aria-live="polite">0/2000</span>
+              </div>
+              <p class="field-validation" id="feedbackMessageError" role="alert" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <fieldset class="feedback-diagnostics">
+            <legend>Optional diagnostics</legend>
+            <label class="feedback-check-row" for="feedbackIncludeDiagnostics">
+              <input id="feedbackIncludeDiagnostics" type="checkbox" checked />
+              <span>
+                <strong>Include the safe diagnostics listed below</strong>
+                <small>No workout history, routines, names, URLs, browser storage, device identifiers, or secrets are collected.</small>
+              </span>
+            </label>
+            <ul id="feedbackDiagnosticsList">
+              <li>App version</li>
+              <li>Screen size</li>
+              <li>Browser or installed-app mode</li>
+              <li>Online or offline state at save time</li>
+              <li>The Feedback screen name</li>
+            </ul>
+          </fieldset>
+
+          <div class="feedback-screenshot-field">
+            <label for="feedbackScreenshot">Screenshot (optional)</label>
+            <p class="field-hint" id="feedbackScreenshotHint">PNG, JPEG, or WebP up to 8 MB. The image is validated and compressed on this device before it is saved. Review it for personal information.</p>
+            <input id="feedbackScreenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="feedbackScreenshotHint feedbackScreenshotStatus" />
+            <div class="feedback-screenshot-preview hidden" id="feedbackScreenshotPreview">
+              <img id="feedbackScreenshotImage" alt="Preview of the selected feedback screenshot" />
+              <button class="ghost" id="feedbackRemoveScreenshot" type="button">Remove screenshot</button>
+            </div>
+            <p class="feedback-file-status" id="feedbackScreenshotStatus" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="feedback-submit-row">
+            <button class="primary" id="feedbackSubmit" type="submit">Save report</button>
+            <p id="feedbackFormStatus" role="status" aria-live="polite">Reports are kept on this device until sending succeeds or you delete them.</p>
+          </div>
+        </form>
+
+        <section class="card feedback-outbox-card" aria-labelledby="feedbackOutboxTitle">
+          <div class="feedback-outbox-heading">
+            <div>
+              <span class="feedback-eyebrow">This device only</span>
+              <h3 id="feedbackOutboxTitle">Pending Reports</h3>
+            </div>
+            <span class="feedback-count-pill" id="feedbackPendingCount">0 pending</span>
+          </div>
+          <p class="muted small">Only reports created in this browser appear here. This app has no operator viewer or submission-management access.</p>
+          <div class="feedback-outbox-list" id="feedbackOutboxList"></div>
+        </section>
       </section>
 
       <section id="settings" class="screen settings-screen">

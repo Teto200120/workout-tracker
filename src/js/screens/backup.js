@@ -152,7 +152,12 @@ export async function clearAllData() {
   return clearCoordinator.run(async () => {
     setBackupActionPending("clear", true);
     try {
-      if (!confirm("Clear all local app data from this browser?")) return;
+      if (
+        !confirm(
+          "Clear workout and profile data from this browser? Pending feedback reports will stay until delivered or deleted from Beta Feedback.",
+        )
+      )
+        return;
       await clearApplicationData();
       stopSessionElapsedTimer();
       stopTodayActiveElapsedTimer();
@@ -161,7 +166,7 @@ export async function clearAllData() {
       await loadWorkoutTemplate();
       await renderAll();
       showOnboarding({ resetInput: true });
-      toast("All local data cleared.");
+      toast("Workout and profile data cleared. Pending feedback was left unchanged.");
     } catch (error) {
       console.info("Local data clear failed.", error);
       toast("Could not clear local data. Existing data was left in place where possible.");
