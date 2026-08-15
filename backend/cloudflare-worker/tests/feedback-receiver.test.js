@@ -1,4 +1,4 @@
-/* global Request, Response */
+/* global ReadableStream, Request, Response */
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -23,6 +23,7 @@ const REPORT = Object.freeze({
 
 function createEnvironment({ limited = false } = {}) {
   const rows = new Map();
+  const claims = new Set();
   const objects = new Map();
   let deletedObjectKey = null;
   return {
@@ -51,7 +52,19 @@ function createEnvironment({ limited = false } = {}) {
                 return rows.get(values[0]) || null;
               },
               async run() {
-                rows.set(values[0], { id: values[0], values, query });
+                const [id] = values;
+                if (query.startsWith("INSERT OR IGNORE INTO feedback_report_claims")) {
+                  if (claims.has(id)) return { success: true, meta: { changes: 0 } };
+                  claims.add(id);
+                  return { success: true, meta: { changes: 1 } };
+                }
+                if (query.startsWith("DELETE FROM feedback_report_claims")) {
+                  if (!rows.has(id)) claims.delete(id);
+                  return { success: true, meta: { changes: 1 } };
+                }
+                if (query.startsWith("INSERT INTO feedback_reports")) {
+                  rows.set(id, { id, values, query });
+                }
                 return { success: true, meta: { changes: 1 } };
               },
             };
@@ -60,6 +73,7 @@ function createEnvironment({ limited = false } = {}) {
       },
     },
     rows,
+    claims,
     objects,
     get deletedObjectKey() {
       return deletedObjectKey;
@@ -198,6 +212,29 @@ test("rejects oversized request bodies before challenge or storage work", async 
   assert.equal(env.rows.size, 0);
 });
 
+test("stops a chunked oversized body before challenge or storage work", async () => {
+  const env = createEnvironment();
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(400 * 1024));
+      controller.enqueue(new Uint8Array(201 * 1024));
+      controller.close();
+    },
+  });
+  const response = await receiver().fetch(
+    new Request("https://receiver.example.test/feedback", {
+      method: "POST",
+      headers: { origin: ORIGIN, "content-type": "application/json" },
+      body: stream,
+      duplex: "half",
+    }),
+    env,
+  );
+
+  assert.equal(response.status, 413);
+  assert.equal(env.rows.size, 0);
+});
+
 test("an optional screenshot is decoded into private R2 and duplicate retries stay idempotent", async () => {
   const env = createEnvironment();
   const screenshot = {
@@ -253,4 +290,44 @@ test("a storage failure compensates a screenshot write and is not acknowledged",
     ok: false,
     code: "temporary_failure",
   });
+  assert.equal(env.objects.size, 0);
+  assert.equal(env.claims.has(REPORT.id), false);
+});
+
+test("a concurrent duplicate cannot delete the winning screenshot", async () => {
+  const env = createEnvironment();
+  const screenshot = {
+    dataUrl: "data:image/png;base64,AQID",
+    mimeType: "image/png",
+    width: 1,
+    height: 1,
+    size: 3,
+  };
+  const body = { report: { ...REPORT, screenshot }, turnstileToken: "token" };
+  const originalPut = env.FEEDBACK_SCREENSHOTS.put;
+  let signalPutStarted;
+  let allowPut;
+  const putStarted = new Promise((resolve) => {
+    signalPutStarted = resolve;
+  });
+  const putAllowed = new Promise((resolve) => {
+    allowPut = resolve;
+  });
+  env.FEEDBACK_SCREENSHOTS.put = async (...args) => {
+    signalPutStarted();
+    await putAllowed;
+    return originalPut(...args);
+  };
+
+  const winner = receiver().fetch(request(body), env);
+  await putStarted;
+  const duplicate = await receiver().fetch(request(body), env);
+  assert.equal(duplicate.status, 503);
+  assert.deepEqual(await duplicate.json(), { ok: false, code: "temporary_failure" });
+  assert.equal(env.deletedObjectKey, null);
+
+  allowPut();
+  const accepted = await winner;
+  assert.equal(accepted.status, 201);
+  assert.equal(env.objects.has(`feedback/${REPORT.id}/screenshot.png`), true);
 });
