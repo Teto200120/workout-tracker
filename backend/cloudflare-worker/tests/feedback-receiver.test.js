@@ -11,7 +11,7 @@ const REPORT = Object.freeze({
   category: "bug",
   message: "The save button did not respond.",
   diagnostics: {
-    appVersion: "1.0.0",
+    appVersion: "0.4.0",
     viewport: "412x915",
     displayMode: "browser",
     connection: "online",
@@ -125,6 +125,22 @@ test("stores only a validated, Turnstile-verified report in D1", async () => {
   assert.equal(env.objects.size, 0);
 });
 
+test("accepts a queued legacy diagnostic version without relabeling it", async () => {
+  const env = createEnvironment();
+  const report = {
+    ...REPORT,
+    id: "123e4567-e89b-42d3-a456-426614174001",
+    diagnostics: { ...REPORT.diagnostics, appVersion: "1.0.0" },
+  };
+  const response = await receiver().fetch(
+    request({ report, turnstileToken: "token" }),
+    env,
+  );
+
+  assert.equal(response.status, 201);
+  assert.equal(env.rows.get(report.id).values[3], JSON.stringify(report.diagnostics));
+});
+
 test("rejects an origin mismatch before request parsing or persistence", async () => {
   const env = createEnvironment();
   const response = await receiver().fetch(
@@ -196,6 +212,20 @@ test("rate limiting and malformed payloads do not persist data", async () => {
   );
   assert.equal(badResponse.status, 400);
   assert.equal(malformed.rows.size, 0);
+
+  const unknownRelease = createEnvironment();
+  const unknownReleaseResponse = await receiver().fetch(
+    request({
+      report: {
+        ...REPORT,
+        diagnostics: { ...REPORT.diagnostics, appVersion: "0.3.9" },
+      },
+      turnstileToken: "token",
+    }),
+    unknownRelease,
+  );
+  assert.equal(unknownReleaseResponse.status, 400);
+  assert.equal(unknownRelease.rows.size, 0);
 });
 
 test("rejects oversized request bodies before challenge or storage work", async () => {

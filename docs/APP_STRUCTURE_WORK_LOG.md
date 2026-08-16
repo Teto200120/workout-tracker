@@ -95,4 +95,4 @@ No commit, push, pull request, dependency installation, backend, endpoint, telem
 ## Release marker convention
 
 - Profile shows `Build 0.4.0`, sourced from `src/js/core/release.js`, so an installed or offline user can identify the shipped app release without relying on a timestamp or commit hash.
-- Bump that pre-1.0 semantic version with each production release (patch for fixes, minor for user-visible features) and bump the matching service-worker cache name in the same change. Reserve `1.0.0` for an explicit stability decision.
+- Bump that pre-1.0 semantic version with each production release (patch for fixes, minor for user-visible features), the matching service-worker cache name, and the receiver's explicit diagnostic-version allowlist in the same change. Keep prior released values there so queued reports can still retry. Reserve `1.0.0` for an explicit stability decision.

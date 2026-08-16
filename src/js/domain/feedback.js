@@ -1,3 +1,5 @@
+import { APP_RELEASE } from "../core/release.js";
+
 export const FEEDBACK_CATEGORIES = Object.freeze(["bug", "idea", "other"]);
 export const FEEDBACK_MESSAGE_MIN_LENGTH = 10;
 export const FEEDBACK_MESSAGE_MAX_LENGTH = 2000;
@@ -23,6 +25,7 @@ const FEEDBACK_DIAGNOSTIC_KEYS = Object.freeze(
   Object.keys(FEEDBACK_DIAGNOSTIC_ALLOWLIST),
 );
 const FEEDBACK_SCREENS = new Set(["feedback"]);
+const FEEDBACK_DIAGNOSTIC_APP_VERSIONS = new Set(["1.0.0", APP_RELEASE]);
 const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 let fallbackIdSequence = 0;
@@ -95,7 +98,7 @@ export function collectFeedbackDiagnostics(context = {}) {
   const width = finiteDimension(context.viewportWidth);
   const height = finiteDimension(context.viewportHeight);
   return Object.freeze({
-    appVersion: "1.0.0",
+    appVersion: APP_RELEASE,
     viewport: width && height ? `${width}x${height}` : "unknown",
     displayMode: context.standalone === true ? "installed" : "browser",
     connection: context.online === false ? "offline" : "online",
@@ -353,7 +356,7 @@ const MAX_SCREENSHOT_STORED_EDGE = 1280;
 function validDiagnostics(diagnostics) {
   if (!hasOnlyKeys(diagnostics, FEEDBACK_DIAGNOSTIC_KEYS)) return false;
   return (
-    diagnostics.appVersion === "1.0.0" &&
+    FEEDBACK_DIAGNOSTIC_APP_VERSIONS.has(diagnostics.appVersion) &&
     (/^\d{1,5}x\d{1,5}$/u.test(diagnostics.viewport) ||
       diagnostics.viewport === "unknown") &&
     ["browser", "installed"].includes(diagnostics.displayMode) &&
