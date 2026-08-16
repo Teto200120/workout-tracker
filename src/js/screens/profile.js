@@ -9,6 +9,7 @@ import {
 } from "../domain/input-guardrails.js";
 import { getRoutines, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
 import { getBackupMeta, getGoals } from "../storage/local.js";
+import { APP_RELEASE } from "../core/release.js";
 
 let displayNameSavedHandler = null;
 let displayNameActionsBound = false;
@@ -156,6 +157,7 @@ export async function renderProfile() {
   setProfileText("profileRoutineSummary", `${templates.length} ${routineLabel}`);
   setProfileText("profileBackupSummary", getProfileBackupSummary());
   setProfileText("profileDataSummary", `${workouts.length} ${workoutLabel} on this device`);
+  setProfileText("profileReleaseIndicator", `Build ${APP_RELEASE}`);
 
   const fill = $("profileGoalMeterFill");
   if (fill) fill.style.width = `${weeklyPercent}%`;
