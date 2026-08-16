@@ -1,4 +1,5 @@
 /* global Headers, Response, TextDecoder, URLSearchParams, atob, console, crypto, fetch */
+import { runFeedbackDigest } from "./feedback-digest.js";
 
 const CATEGORIES = new Set(["bug", "idea", "other"]);
 const SCREENSHOT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -314,4 +315,5 @@ export function createFeedbackReceiver({
   };
 }
 
-export default createFeedbackReceiver();
+const receiver = createFeedbackReceiver();
+export default { ...receiver, async scheduled(_event, env, ctx) { ctx.waitUntil(runFeedbackDigest(env)); } };
