@@ -22,6 +22,7 @@ import {
   createFeedbackOutbox,
   FEEDBACK_OUTBOX_KEY,
 } from "../../src/js/storage/feedback-outbox.js";
+import { APP_RELEASE } from "../../src/js/core/release.js";
 
 class MemoryStorage {
   values = new Map();
@@ -128,7 +129,7 @@ test("diagnostics use only the explicit safe allowlist", () => {
     Object.keys(FEEDBACK_DIAGNOSTIC_ALLOWLIST),
   );
   assert.deepEqual(diagnostics, {
-    appVersion: "1.0.0",
+    appVersion: APP_RELEASE,
     viewport: "412x915",
     displayMode: "installed",
     connection: "offline",
@@ -145,6 +146,30 @@ test("reports reject diagnostics outside the allowlist", () => {
           diagnostics: {
             ...collectFeedbackDiagnostics({}),
             arbitraryStorage: "no",
+          },
+        }),
+        reportOptions(),
+      ),
+    /unsupported data/u,
+  );
+});
+
+test("reports retain known legacy diagnostic releases but reject unknown ones", () => {
+  const legacy = createFeedbackReport(
+    reportDraft({
+      diagnostics: { ...collectFeedbackDiagnostics({}), appVersion: "1.0.0" },
+    }),
+    reportOptions(),
+  );
+  assert.equal(legacy.diagnostics.appVersion, "1.0.0");
+
+  assert.throws(
+    () =>
+      createFeedbackReport(
+        reportDraft({
+          diagnostics: {
+            ...collectFeedbackDiagnostics({}),
+            appVersion: "0.3.9",
           },
         }),
         reportOptions(),

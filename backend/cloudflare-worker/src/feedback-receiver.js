@@ -9,6 +9,9 @@ const DIAGNOSTIC_KEYS = [
   "connection",
   "currentScreen",
 ];
+// Preserve delivery for already queued reports while each new published app
+// release is explicitly added alongside its client marker.
+const DIAGNOSTIC_APP_VERSIONS = new Set(["1.0.0", "0.4.0"]);
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_SCREENSHOT_BYTES = 425 * 1024;
 const MAX_SCREENSHOT_EDGE = 1280;
@@ -52,7 +55,7 @@ function validDiagnostics(diagnostics) {
   return (
     hasOnlyKeys(diagnostics, DIAGNOSTIC_KEYS) &&
     DIAGNOSTIC_KEYS.every((key) => key in diagnostics) &&
-    diagnostics.appVersion === "1.0.0" &&
+    DIAGNOSTIC_APP_VERSIONS.has(diagnostics.appVersion) &&
     (/^\d{1,5}x\d{1,5}$/u.test(diagnostics.viewport) ||
       diagnostics.viewport === "unknown") &&
     ["browser", "installed"].includes(diagnostics.displayMode) &&

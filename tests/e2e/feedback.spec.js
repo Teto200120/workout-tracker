@@ -22,6 +22,11 @@ test("Profile exposes the user-facing feedback form and explicit diagnostics all
   await expect(
     page.getByRole("heading", { name: "Send Feedback" }),
   ).toBeVisible();
+  await openPrimary(page, "profile");
+  await expect(page.locator("#profileReleaseIndicator")).toHaveText(
+    "Build 0.4.0",
+  );
+  await openFeedbackFromProfile(page);
   await expect(page.getByLabel("Feedback type")).toBeVisible();
   await expect(page.getByLabel("Details")).toBeVisible();
   await expect(page.getByLabel("Screenshot (optional)")).toBeVisible();

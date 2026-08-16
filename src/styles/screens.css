@@ -2982,3 +2982,10 @@ body:has(.stats-screen.active) .toast.show {
     padding: 14px;
   }
 }
+.profile-release-indicator {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-align: right;
+}
