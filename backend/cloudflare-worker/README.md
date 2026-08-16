@@ -72,3 +72,20 @@ and a private R2 bucket named `workout-tracker-beta-feedback-screenshots`. The
 Turnstile secret must be set through `wrangler secret put TURNSTILE_SECRET`,
 never committed. Do not create R2 lifecycle rules: reports require explicit
 operator deletion.
+
+## Daily digest
+
+Cron windows run at 23:00 and 00:00 UTC; the handler checks
+`America/New_York` and sends only at local 7 PM, including DST changes. Set
+`RESEND_FROM`, `DIGEST_RECIPIENT`, `D1_REVIEW_URL`, and `R2_REVIEW_URL` as
+Worker vars; set `RESEND_API_KEY` only as a Worker secret. Resend sender
+verification is user-owned. The digest contains only counts, category totals,
+screenshot count, and configured private review links. It never includes
+report content, IDs, diagnostics, screenshots, or object keys. Delivery state
+is written only after a successful provider response.
+
+For one controlled immediate test after configuration, use `wrangler dev --test-scheduled`
+against a staging/controlled Worker and invoke the scheduled handler once; it
+uses the same logic and durable delivery markers, so repeating it cannot email
+already delivered reports. Do not run this against production or send mail
+until the user confirms the final test.
