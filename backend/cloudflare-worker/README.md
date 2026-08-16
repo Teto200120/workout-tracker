@@ -66,6 +66,10 @@ secrets and bindings remain deployment-only configuration.
 
 ## Deployment boundary
 
+`keep_vars: true` preserves Dashboard-managed non-secret Worker variables when
+Wrangler deploys this source-controlled configuration. Keep private review
+links, sender, and recipient in the Dashboard rather than this repository.
+
 The selected deployment uses the account's default `workers.dev` hostname,
 automatic Cloudflare placement, a D1 database named `workout-tracker-beta-feedback`,
 and a private R2 bucket named `workout-tracker-beta-feedback-screenshots`. The

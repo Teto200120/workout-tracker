@@ -3,6 +3,7 @@
   "main": "src/feedback-receiver.js",
   "compatibility_date": "2026-08-15",
   "workers_dev": true,
+  "keep_vars": true,
   "triggers": { "crons": ["0 23 * * *", "0 0 * * *"] },
   "vars": {
     "ALLOWED_ORIGIN": "https://teto200120.github.io",
