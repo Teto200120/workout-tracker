@@ -278,6 +278,19 @@ export function createFeedbackReceiver({
             now(),
           )
           .run();
+        // Once D1 has the report, the durable row is the idempotency record.
+        // The temporary lease must not accumulate after accepted submissions.
+        try {
+          await env.FEEDBACK_DB.prepare(
+            "DELETE FROM feedback_report_claims WHERE id = ?",
+          )
+            .bind(report.id)
+            .run();
+        } catch {
+          // Never turn a persisted, acknowledged report into a failed delivery.
+          // A duplicate retry is still safe because the report row is durable.
+          log("feedback_delivery_failure", "claim_cleanup");
+        }
       } catch {
         log("feedback_delivery_failure", persistenceStage);
         // A failed cross-store write is not delivery. The client keeps its local
