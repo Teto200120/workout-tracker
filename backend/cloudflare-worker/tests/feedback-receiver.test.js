@@ -62,7 +62,12 @@ function createEnvironment({ limited = false } = {}) {
                   return { success: true, meta: { changes: 1 } };
                 }
                 if (query.startsWith("DELETE FROM feedback_report_claims")) {
-                  if (!rows.has(id)) claims.delete(id);
+                  if (
+                    !query.includes("AND NOT EXISTS") ||
+                    !rows.has(id)
+                  ) {
+                    claims.delete(id);
+                  }
                   return { success: true, meta: { changes: 1 } };
                 }
                 if (query.startsWith("INSERT INTO feedback_reports")) {
@@ -123,6 +128,7 @@ test("stores only a validated, Turnstile-verified report in D1", async () => {
     "2026-08-15T12:05:00.000Z",
   );
   assert.equal(env.objects.size, 0);
+  assert.equal(env.claims.has(REPORT.id), false);
 });
 
 test("accepts a queued legacy diagnostic version without relabeling it", async () => {
@@ -139,6 +145,7 @@ test("accepts a queued legacy diagnostic version without relabeling it", async (
 
   assert.equal(response.status, 201);
   assert.equal(env.rows.get(report.id).values[3], JSON.stringify(report.diagnostics));
+  assert.equal(env.claims.has(report.id), false);
 });
 
 test("rejects an origin mismatch before request parsing or persistence", async () => {
@@ -328,6 +335,14 @@ test("a storage failure compensates a screenshot write and is not acknowledged",
   assert.equal(env.objects.size, 0);
   assert.equal(env.claims.has(REPORT.id), false);
   assert.deepEqual(logs, [["feedback_delivery_failure", "report"]]);
+
+  env.FEEDBACK_DB.prepare = prepare;
+  const retried = await receiver().fetch(
+    request({ report: { ...REPORT, screenshot }, turnstileToken: "token" }),
+    env,
+  );
+  assert.equal(retried.status, 201);
+  assert.equal(env.claims.has(REPORT.id), false);
 });
 
 test("a concurrent duplicate cannot delete the winning screenshot", async () => {
@@ -375,6 +390,7 @@ test("a concurrent duplicate cannot delete the winning screenshot", async () => 
     ),
     true,
   );
+  assert.equal(env.claims.has(REPORT.id), false);
 });
 
 test("reclaims an abandoned claim after its bounded lease expires", async () => {
@@ -388,5 +404,5 @@ test("reclaims an abandoned claim after its bounded lease expires", async () => 
 
   assert.equal(response.status, 201);
   assert.equal(env.rows.size, 1);
-  assert.equal(env.claims.get(REPORT.id), nowMs);
+  assert.equal(env.claims.has(REPORT.id), false);
 });
