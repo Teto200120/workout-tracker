@@ -22,6 +22,23 @@ function normalizeList(value, { deduplicate = true } = {}) {
   return result;
 }
 
+function normalizeImageReferences(value) {
+  return normalizeList(value).filter((reference) => {
+    try {
+      const url = new URL(reference);
+      return (
+        url.protocol === "https:" &&
+        url.hostname === "raw.githubusercontent.com" &&
+        /^\/yuhonas\/free-exercise-db\/[a-f0-9]+\/exercises\//i.test(
+          url.pathname,
+        )
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
 export function createCatalogAttribution(exercise) {
   const sourceLabel =
     normalizeText(exercise?.attribution?.label) ||
@@ -51,6 +68,7 @@ export function adaptCatalogExerciseToGuide(exercise) {
     difficulty: normalizeText(exercise.difficulty),
     category: normalizeText(exercise.category),
     steps,
+    imageReferences: normalizeImageReferences(exercise.imageReferences),
     reminders: [...APP_REMINDERS],
     attribution: createCatalogAttribution(exercise),
   };

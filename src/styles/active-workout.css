@@ -1084,6 +1084,96 @@ body:has(#sessionView:not(.hidden)) #log {
   line-height: 1.45;
 }
 
+.exercise-guide-image-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.exercise-guide-image {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(153, 177, 205, 0.22);
+  border-radius: 20px;
+  background: rgba(38, 59, 87, 0.88);
+}
+
+.exercise-guide-image-button {
+  display: block;
+  width: 100%;
+  aspect-ratio: 850 / 567;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.exercise-guide-image-button:focus-visible {
+  outline: 3px solid var(--live-coral);
+  outline-offset: -3px;
+}
+
+.exercise-guide-image-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exercise-image-viewer {
+  width: min(100vw - 24px, 1024px);
+  max-width: none;
+  height: min(100dvh - 24px, 900px);
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(153, 177, 205, 0.3);
+  border-radius: 24px;
+  background: #101b2a;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.exercise-image-viewer::backdrop {
+  background: rgba(4, 10, 18, 0.88);
+}
+
+.exercise-image-viewer-content {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  gap: 12px;
+  padding: 12px;
+}
+
+.exercise-image-viewer-close {
+  justify-self: end;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(38, 59, 87, 0.96);
+  font-weight: 900;
+}
+
+.exercise-image-viewer-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  background: #101b2a;
+}
+
+.exercise-guide-image-notice {
+  margin: -10px 4px 0;
+  color: var(--live-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .exercise-guide-overview {
   display: grid;
   gap: 7px;
@@ -2025,5 +2115,15 @@ body:has(.exercise-picker[open]) {
 
   .guide-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .exercise-image-viewer {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .exercise-image-viewer-content {
+    padding: 10px;
   }
 }

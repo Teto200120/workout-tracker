@@ -101,6 +101,27 @@ test("missing optional provider fields normalize explicitly", () => {
   assert.deepEqual(normalized.value.instructions, []);
 });
 
+test("provider image paths become pinned source URLs when an image base is supplied", () => {
+  const normalized = normalizeFreeExerciseDbRecord(
+    providerRecord({
+      images: [
+        "Barbell_Bench_Press/0.jpg",
+        " Barbell_Bench_Press/1.jpg ",
+        "../bad.jpg",
+      ],
+    }),
+    {
+      imageBaseUrl:
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/revision/exercises",
+    },
+  );
+  assert.equal(normalized.ok, true);
+  assert.deepEqual(normalized.value.imageReferences, [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/revision/exercises/Barbell_Bench_Press/0.jpg",
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/revision/exercises/Barbell_Bench_Press/1.jpg",
+  ]);
+});
+
 test("malformed provider records are skipped and reported", () => {
   const result = adaptFreeExerciseDbRecords([
     providerRecord(),

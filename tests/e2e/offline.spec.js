@@ -53,6 +53,18 @@ test("the current app shell starts from the service-worker cache offline", async
   ).toBeVisible();
   await page.locator(".exercise-picker-cancel").click();
 
+  const photoRequests = [];
+  page.on("request", (request) => {
+    if (
+      request
+        .url()
+        .startsWith(
+          "https://raw.githubusercontent.com/yuhonas/free-exercise-db/",
+        )
+    ) {
+      photoRequests.push(request.url());
+    }
+  });
   await context.setOffline(true);
   try {
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -78,6 +90,8 @@ test("the current app shell starts from the service-worker cache offline", async
     await expect(page.locator("#exerciseDetailTitle")).toHaveText(
       expectedGuideTitle,
     );
+    await expect(page.locator(".exercise-guide-image img")).toHaveCount(0);
+    await expect(page.locator("ol.guide-list li").first()).toBeVisible();
     await page.locator("#exerciseDetailBack").click();
     await page.locator(".set-done").evaluateAll((inputs) => {
       inputs.forEach((input) => {
@@ -105,6 +119,7 @@ test("the current app shell starts from the service-worker cache offline", async
     await expect(page).toHaveTitle("Workout Tracker");
     await expect(page.locator("#todayGreeting")).not.toContainText("Loading");
     expect(await readStore(page, "workouts")).toHaveLength(1);
+    expect(photoRequests).toEqual([]);
     assertNoRuntimeErrors();
   } finally {
     await context.setOffline(false);

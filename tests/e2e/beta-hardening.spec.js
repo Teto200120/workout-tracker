@@ -473,3 +473,37 @@ test("empty date is blocked and an overnight historical workout remains valid", 
   });
   assertNoRuntimeErrors();
 });
+
+test("dashboard refresh preserves an unsaved weekly goal until save", async ({
+  page,
+}) => {
+  const assertNoRuntimeErrors = monitorRuntime(page);
+  await loadApp(page);
+  await openPrimary(page, "stats");
+  await page.locator('[data-stats-detail="statsGoals"]').click();
+  const goal = page.locator("#weeklyGoal");
+  await expect(goal).toHaveValue("4");
+  await goal.fill("300000");
+  await page.locator("#saveGoals").click();
+  await expect(page.locator("#weeklyGoalError")).toContainText("100 or less");
+  await goal.fill("5");
+  await goal.blur();
+  await page.evaluate(async () => {
+    const { renderDashboard } = await import("/src/js/screens/progress.js");
+    await renderDashboard();
+  });
+  await expect(goal).toHaveValue("5");
+  await page.locator("#saveGoals").click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(localStorage.getItem("hector_workout_goals_v1")),
+      ),
+    )
+    .toMatchObject({ weeklyGoal: 5 });
+  await page.reload();
+  await openPrimary(page, "stats");
+  await page.locator('[data-stats-detail="statsGoals"]').click();
+  await expect(goal).toHaveValue("5");
+  assertNoRuntimeErrors();
+});

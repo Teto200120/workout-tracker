@@ -362,7 +362,10 @@ test("routine builder uses one picker for local, catalog, custom, cancel, duplic
   await expect(card).toContainText("Air Bike");
   await expect(card).toContainText("Custom Arc 🧭");
   await card.locator('[data-routine-action="edit"]').click();
-  expect(await draftExerciseNames(page)).toEqual(saved.exercises);
+  await expect(page.locator("#templateName")).toHaveValue(saved.name);
+  await expect(
+    page.locator("#templateDraftList .routine-draft-name"),
+  ).toHaveText(saved.exercises);
   assertNoRuntimeErrors();
 });
 

@@ -83,6 +83,8 @@ let exerciseDragState = null;
 let activeExerciseDetailEl = null;
 let exerciseDetailTab = "log";
 let exerciseDetailRenderToken = 0;
+let exerciseImageViewer = null;
+let exerciseImageViewerTrigger = null;
 let exerciseFocusScrollToken = 0;
 let editingWorkoutId = null;
 let originRoutineId = null;
@@ -1321,6 +1323,49 @@ function createCatalogGuideContent(savedName, guide, resolution) {
   }
   content.appendChild(overview);
 
+  if (guide.imageReferences.length && navigator.onLine !== false) {
+    const gallery = document.createElement("section");
+    gallery.className = "exercise-guide-image-gallery";
+    gallery.setAttribute("aria-label", `${savedName} demonstration images`);
+    let failedImages = 0;
+    guide.imageReferences.slice(0, 2).forEach((reference, index) => {
+      const figure = document.createElement("figure");
+      figure.className = "exercise-guide-image";
+      const imageButton = document.createElement("button");
+      imageButton.className = "exercise-guide-image-button";
+      imageButton.type = "button";
+      imageButton.setAttribute(
+        "aria-label",
+        `View ${savedName} demonstration ${index + 1} full screen`,
+      );
+      const image = document.createElement("img");
+      image.src = reference;
+      image.loading = "lazy";
+      image.decoding = "async";
+      image.alt = `${savedName} demonstration ${index + 1}`;
+      image.addEventListener("error", () => {
+        figure.remove();
+        failedImages += 1;
+        if (failedImages === Math.min(guide.imageReferences.length, 2)) {
+          gallery.remove();
+        }
+      });
+      imageButton.addEventListener("click", () => {
+        openExerciseImageViewer(reference, image.alt, imageButton);
+      });
+      imageButton.appendChild(image);
+      figure.appendChild(imageButton);
+      gallery.appendChild(figure);
+    });
+    content.appendChild(gallery);
+
+    const imageNotice = document.createElement("p");
+    imageNotice.className = "exercise-guide-image-notice";
+    imageNotice.textContent =
+      "Source photos are shown as provided; reuse rights are unverified.";
+    content.appendChild(imageNotice);
+  }
+
   const infoGrid = createGuideInfoGrid([
     ["Equipment", guide.equipment],
     ["Primary Muscles", guide.primaryMuscles],
@@ -1367,6 +1412,50 @@ function createCatalogGuideContent(savedName, guide, resolution) {
   }
   content.appendChild(attribution);
   return content;
+}
+
+function getExerciseImageViewer() {
+  if (exerciseImageViewer) return exerciseImageViewer;
+
+  const dialog = document.createElement("dialog");
+  dialog.className = "exercise-image-viewer";
+  dialog.setAttribute("aria-label", "Exercise demonstration image");
+
+  const content = document.createElement("div");
+  content.className = "exercise-image-viewer-content";
+  const closeButton = document.createElement("button");
+  closeButton.className = "exercise-image-viewer-close";
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close full-screen image");
+  closeButton.textContent = "Close";
+  const image = document.createElement("img");
+  image.className = "exercise-image-viewer-image";
+  image.decoding = "async";
+  image.addEventListener("error", () => dialog.close());
+
+  closeButton.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener("close", () => {
+    exerciseImageViewerTrigger?.focus();
+    exerciseImageViewerTrigger = null;
+  });
+
+  content.append(closeButton, image);
+  dialog.appendChild(content);
+  document.body.appendChild(dialog);
+  exerciseImageViewer = { dialog, image, closeButton };
+  return exerciseImageViewer;
+}
+
+function openExerciseImageViewer(reference, alt, trigger) {
+  const viewer = getExerciseImageViewer();
+  exerciseImageViewerTrigger = trigger;
+  viewer.image.src = reference;
+  viewer.image.alt = alt;
+  if (!viewer.dialog.open) viewer.dialog.showModal();
+  viewer.closeButton.focus();
 }
 
 async function renderExerciseGuideContent(exerciseEl) {
