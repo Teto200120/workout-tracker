@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-v44";
+const CACHE_NAME = "hector-workout-tracker-pwa-v46";
 const APP_SHELL = [
   "./",
   "./index.html",

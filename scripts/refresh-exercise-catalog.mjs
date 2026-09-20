@@ -24,7 +24,14 @@ async function fetchJson(url) {
 }
 
 async function main() {
-  const commit = await fetchJson(commitApiUrl);
+  const requestedRevision = String(
+    process.env.EXERCISE_CATALOG_SOURCE_REVISION || "",
+  ).trim();
+  const commit = await fetchJson(
+    requestedRevision
+      ? `https://api.github.com/repos/yuhonas/free-exercise-db/commits/${requestedRevision}`
+      : commitApiUrl,
+  );
   const revision = String(commit?.sha || "").trim();
   const sourceCommitDate = String(commit?.commit?.committer?.date || "").trim();
   if (!revision || !sourceCommitDate) {
@@ -34,7 +41,12 @@ async function main() {
   const sourceDataUrl = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${revision}/dist/exercises.json`;
   const sourceSchemaUrl = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${revision}/schema.json`;
   const providerRecords = await fetchJson(sourceDataUrl);
-  const adapted = adaptFreeExerciseDbRecords(providerRecords);
+  const adapted = adaptFreeExerciseDbRecords(providerRecords, {
+    label: "Free Exercise DB",
+    url: repositoryUrl,
+    license: "Unlicense",
+    imageBaseUrl: `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${revision}/exercises`,
+  });
   if (!adapted.exercises.length)
     throw new Error("No usable provider records were found.");
 
@@ -52,8 +64,9 @@ async function main() {
       license: "Unlicense",
       attribution: "Free Exercise DB by yuhonas and contributors",
       exerciseCount: adapted.exercises.length,
-      imagesIncluded: false,
-      imageDecision: "Excluded pending separate provenance and reuse review.",
+      imagesIncluded: true,
+      imageDecision:
+        "Source-provided remote image paths included at user direction; upstream photograph reuse rights are unverified.",
     },
     exercises: adapted.exercises,
   };

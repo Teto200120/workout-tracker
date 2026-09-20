@@ -15,6 +15,20 @@ const DEFAULT_SOURCE_METADATA = {
   license: "Unlicense",
 };
 
+function imageReferences(images, imageBaseUrl = "") {
+  const baseUrl = normalizeCatalogText(imageBaseUrl).replace(/\/+$/, "");
+  if (!baseUrl || !Array.isArray(images)) return [];
+  return normalizeCatalogList(
+    images
+      .filter((image) =>
+        /^[A-Za-z0-9_/-]+\.(?:jpe?g|png|webp)$/i.test(
+          normalizeCatalogText(image),
+        ),
+      )
+      .map((image) => `${baseUrl}/${normalizeCatalogText(image)}`),
+  );
+}
+
 function scalarList(value) {
   const text = normalizeCatalogText(value);
   return text ? [text] : [];
@@ -48,7 +62,7 @@ export function normalizeFreeExerciseDbRecord(
     primaryMuscles: normalizeCatalogList(record.primaryMuscles),
     secondaryMuscles: normalizeCatalogList(record.secondaryMuscles),
     instructions: normalizeCatalogList(record.instructions),
-    imageReferences: [],
+    imageReferences: imageReferences(record.images, sourceMetadata.imageBaseUrl),
     attribution: {
       label: normalizeCatalogText(sourceMetadata.label),
       url: normalizeCatalogText(sourceMetadata.url),

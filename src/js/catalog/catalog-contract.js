@@ -229,8 +229,8 @@ export function validateCatalogMetadata(metadata) {
   if (!Number.isInteger(metadata.normalizerVersion) || metadata.normalizerVersion < 1) {
     errors.push("normalizerVersion must be a positive integer");
   }
-  if (metadata.imagesIncluded !== false) {
-    errors.push("imagesIncluded must be false for this catalog format");
+  if (typeof metadata.imagesIncluded !== "boolean") {
+    errors.push("imagesIncluded must be a boolean");
   }
 
   return { ok: errors.length === 0, errors };

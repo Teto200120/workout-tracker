@@ -56,6 +56,21 @@ test("guide adaptation normalizes equipment and muscle values", () => {
   assert.equal(guide.category, "strength");
 });
 
+test("guide adaptation only exposes pinned Free Exercise DB image URLs", () => {
+  const guide = adaptCatalogExerciseToGuide(
+    exercise({
+      imageReferences: [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/b0eed061e1c832b3ed815fbaa4b45b3cdc14df49/exercises/Standing_Calf_Raises/0.jpg",
+        "https://example.com/untrusted.jpg",
+        "not a URL",
+      ],
+    }),
+  );
+  assert.deepEqual(guide.imageReferences, [
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/b0eed061e1c832b3ed815fbaa4b45b3cdc14df49/exercises/Standing_Calf_Raises/0.jpg",
+  ]);
+});
+
 test("missing instructions use the generic-guide fallback signal", () => {
   assert.equal(
     adaptCatalogExerciseToGuide(exercise({ instructions: [] })),

@@ -161,6 +161,15 @@ test("catalog-backed local options save only the canonical exercise name", async
 
   await exercises.last().locator(".guide-row").click();
   await expect(page.locator("#exerciseDetailNotes")).toHaveValue("");
+  await page.route(
+    "https://raw.githubusercontent.com/yuhonas/free-exercise-db/**",
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="180"></svg>',
+      }),
+  );
   await page.locator("#exerciseDetailGuideTab").click();
   const catalogGuide = page.locator('[data-guide-source="catalog"]');
   await expect(catalogGuide).toBeVisible();
@@ -174,6 +183,33 @@ test("catalog-backed local options save only the canonical exercise name", async
   await expect(
     catalogGuide.locator(".exercise-guide-attribution"),
   ).toContainText("Exercise information from Free Exercise DB");
+  await expect(catalogGuide.locator(".exercise-guide-image img")).toHaveCount(
+    2,
+  );
+  await expect(
+    catalogGuide.locator(".exercise-guide-image img").first(),
+  ).toHaveAttribute("loading", "lazy");
+  const guideImageButton = catalogGuide.getByRole("button", {
+    name: "View Air Bike demonstration 1 full screen",
+  });
+  await expect(guideImageButton).toBeVisible();
+  await expect(guideImageButton).toHaveCSS("aspect-ratio", "850 / 567");
+  await guideImageButton.click();
+  const imageViewer = page.locator(".exercise-image-viewer");
+  await expect(imageViewer).toBeVisible();
+  await expect(imageViewer.locator("img")).toHaveAttribute(
+    "alt",
+    "Air Bike demonstration 1",
+  );
+  await expect(
+    imageViewer.getByRole("button", { name: "Close full-screen image" }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(imageViewer).toBeHidden();
+  await expect(guideImageButton).toBeFocused();
+  await expect(
+    catalogGuide.locator(".exercise-guide-image-notice"),
+  ).toContainText("reuse rights are unverified");
   await expect(page.locator("#exerciseDetailNotes")).toHaveCount(0);
   await page.locator("#exerciseDetailLogTab").click();
   await expect(page.locator("#exerciseDetailNotes")).toHaveValue("");
@@ -185,9 +221,15 @@ test("catalog-backed local options save only the canonical exercise name", async
   );
   await page.locator("#todayStartWorkout").click({ force: true });
   await expect(page.locator(".exercise-name").last()).toHaveValue("Air Bike");
-  expect(requests.every((url) => url.startsWith("http://127.0.0.1:4175"))).toBe(
-    true,
-  );
+  expect(
+    requests.every(
+      (url) =>
+        url.startsWith("http://127.0.0.1:4175") ||
+        url.startsWith(
+          "https://raw.githubusercontent.com/yuhonas/free-exercise-db/",
+        ),
+    ),
+  ).toBe(true);
   assertNoRuntimeErrors();
 });
 
