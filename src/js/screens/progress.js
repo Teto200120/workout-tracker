@@ -257,7 +257,12 @@ function renderRecentSessionsPreview(workouts) {
 function renderGoals(workouts) {
   const goals = getGoals();
   const weeklyGoalInput = $("weeklyGoal");
-  if (weeklyGoalInput) weeklyGoalInput.value = goals.weeklyGoal || 4;
+  const savedGoal = String(goals.weeklyGoal || 4);
+  // Background navigation renders must not replace an unsaved edit.
+  if (weeklyGoalInput && weeklyGoalInput.dataset.savedGoal !== savedGoal) {
+    weeklyGoalInput.value = savedGoal;
+    weeklyGoalInput.dataset.savedGoal = savedGoal;
+  }
 
   const workoutsThisWeek = countRecentWorkouts(workouts, new Date());
   const weeklyGoal = Math.max(1, Number(goals.weeklyGoal || 4));
@@ -420,6 +425,7 @@ export function saveGoalsToStorage() {
       }
       const weeklyGoal = Number(validation.normalized);
       setGoals({ ...getGoals(), weeklyGoal });
+      input.value = String(weeklyGoal);
       toast("Goals saved.");
       await renderAll();
       return true;

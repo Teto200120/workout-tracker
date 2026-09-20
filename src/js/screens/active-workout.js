@@ -1323,7 +1323,7 @@ function createCatalogGuideContent(savedName, guide, resolution) {
   }
   content.appendChild(overview);
 
-  if (guide.imageReferences.length) {
+  if (guide.imageReferences.length && navigator.onLine !== false) {
     const gallery = document.createElement("section");
     gallery.className = "exercise-guide-image-gallery";
     gallery.setAttribute("aria-label", `${savedName} demonstration images`);
