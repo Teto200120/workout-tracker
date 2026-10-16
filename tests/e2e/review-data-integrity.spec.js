@@ -122,8 +122,8 @@ test("late IndexedDB abort rejects a workout save and retains its draft", async 
       savedAt: workout.createdAt,
     };
     local.setDraft(draft);
-    const put = IDBObjectStore.prototype.put;
-    IDBObjectStore.prototype.put = function (...args) {
+    const put = globalThis.IDBObjectStore.prototype.put;
+    globalThis.IDBObjectStore.prototype.put = function (...args) {
       const request = put.apply(this, args);
       if (this.name === "workouts")
         request.addEventListener("success", () => this.transaction.abort());
@@ -142,7 +142,7 @@ test("late IndexedDB abort rejects a workout save and retains its draft", async 
         draft: local.getDraft(),
       };
     } finally {
-      IDBObjectStore.prototype.put = put;
+      globalThis.IDBObjectStore.prototype.put = put;
     }
   }, workoutFixture(0));
   expect(result.rejected).toBe(true);
