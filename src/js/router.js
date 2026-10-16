@@ -342,7 +342,7 @@ function bindEvents() {
   });
   $("workoutType").addEventListener("change", updateSessionTitle);
   $("loadTemplate").addEventListener("click", async () => {
-    if (getEditingWorkoutId() && !confirm("You are editing a saved workout. Loading a template will replace the visible exercises. Continue?")) return;
+    if (getEditingWorkoutId() !== null && !confirm("You are editing a saved workout. Loading a template will replace the visible exercises. Continue?")) return;
     await loadWorkoutTemplate();
     saveDraftSilently();
   });

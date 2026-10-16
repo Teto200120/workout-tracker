@@ -1,4 +1,5 @@
 import "../core/globals.js";
+import { decodeRecordId } from "../domain/record-id.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { seedDefaultTemplates } from "../application/routine-seeding.js";
 import {
@@ -274,7 +275,7 @@ async function saveTemplate() {
       setRoutineFieldFeedback("templateName", "templateNameError", nameResult);
       const name = nameResult.normalized;
       const template = {
-        id: editingTemplateId || id(),
+        id: editingTemplateId ?? id(),
         name,
         exercises: [...templateDraftExercises],
         createdAt: new Date().toISOString(),
@@ -300,22 +301,22 @@ async function saveTemplate() {
       const existing = routines.find(
         (item) => nameComparisonKey(item.name) === nameComparisonKey(name),
       );
-      if (!editingTemplateId && !existing && routines.length >= INPUT_LIMITS.routines) {
+      if (editingTemplateId === null && !existing && routines.length >= INPUT_LIMITS.routines) {
         toast(`The app is limited to ${INPUT_LIMITS.routines} saved routines.`);
         return false;
       }
-      if (editingTemplateId && existing && existing.id !== editingTemplateId) {
+      if (editingTemplateId !== null && existing && existing.id !== editingTemplateId) {
         const message = "Another routine already uses this name.";
         $("templateNameError").textContent = message;
         $("templateName").focus();
         toast(message);
         return false;
       }
-      if (!editingTemplateId && existing) {
+      if (editingTemplateId === null && existing) {
         if (!confirm(`Replace the existing ${existing.name} routine?`)) return false;
         template.id = existing.id;
         template.createdAt = existing.createdAt;
-      } else if (editingTemplateId) {
+      } else if (editingTemplateId !== null) {
         const edited = routines.find((item) => item.id === editingTemplateId);
         template.createdAt = edited?.createdAt || template.createdAt;
       }
@@ -442,9 +443,9 @@ export async function renderTemplates() {
           </div>
         </div>
         <div class="routine-actions">
-          <button class="primary routine-start-action" type="button" data-routine-action="start" data-template-id="${cleanText(template.id)}">Start</button>
-          <button class="ghost routine-edit-action" type="button" data-routine-action="edit" data-template-id="${cleanText(template.id)}">Edit</button>
-          <button class="danger routine-delete-action" type="button" data-routine-action="delete" data-template-id="${cleanText(template.id)}">Delete</button>
+          <button class="primary routine-start-action" type="button" data-routine-action="start" data-template-id="${cleanText(template.id)}" data-template-id-type="${typeof template.id}">Start</button>
+          <button class="ghost routine-edit-action" type="button" data-routine-action="edit" data-template-id="${cleanText(template.id)}" data-template-id-type="${typeof template.id}">Edit</button>
+          <button class="danger routine-delete-action" type="button" data-routine-action="delete" data-template-id="${cleanText(template.id)}" data-template-id-type="${typeof template.id}">Delete</button>
         </div>
       </article>
     `;
@@ -469,9 +470,9 @@ export function bindRoutineActions() {
   $("savedTemplates").addEventListener("click", (event) => {
     const button = event.target.closest("[data-routine-action]");
     if (!button) return;
-    if (button.dataset.routineAction === "start") startRoutine(button.dataset.templateId);
-    if (button.dataset.routineAction === "edit") editTemplate(button.dataset.templateId);
-    if (button.dataset.routineAction === "delete") deleteTemplate(button.dataset.templateId);
+    if (button.dataset.routineAction === "start") startRoutine(decodeRecordId(button.dataset.templateId, button.dataset.templateIdType));
+    if (button.dataset.routineAction === "edit") editTemplate(decodeRecordId(button.dataset.templateId, button.dataset.templateIdType));
+    if (button.dataset.routineAction === "delete") deleteTemplate(decodeRecordId(button.dataset.templateId, button.dataset.templateIdType));
   });
 }
 

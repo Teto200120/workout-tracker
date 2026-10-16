@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-v47";
+const CACHE_NAME = "hector-workout-tracker-pwa-v48";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -34,6 +34,8 @@ const APP_SHELL = [
   "./src/js/storage/local.js",
   "./src/js/storage/feedback-outbox.js",
   "./src/js/storage/indexed-db.js",
+  "./src/js/storage/transaction.js",
+  "./src/js/domain/record-id.js",
   "./src/js/components/icons.js",
   "./src/js/components/exercise-picker.js",
   "./src/js/components/coach-mark.js",

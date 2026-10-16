@@ -78,3 +78,11 @@ test("streak and recent-workout rules are deterministic at date boundaries", () 
   assert.equal(countRecentWorkouts(workouts, currentDate), 3);
   assert.equal(getWorkoutStreak([], currentDate), 0);
 });
+
+test("recent activity is exactly seven local dates, excluding future records", () => {
+  const current = new Date(2026, 9, 16, 23, 30);
+  const records = ["2026-10-09", "2026-10-10", "2026-10-16", "2026-10-17"].map(
+    (date) => ({ date }),
+  );
+  assert.equal(countRecentWorkouts(records, current), 2);
+});

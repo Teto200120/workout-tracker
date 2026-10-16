@@ -1,4 +1,5 @@
 import "../core/globals.js";
+import { decodeRecordId } from "../domain/record-id.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { cleanText, dateLabel, toast } from "../core/utils.js";
@@ -9,6 +10,7 @@ import {
   collapseAllButFirstExercise,
   makeExercise,
   setEditingWorkoutId,
+  setEditingWorkoutRecord,
   showSessionView,
   updateAllExerciseHints
 } from "./active-workout.js";
@@ -82,15 +84,15 @@ function renderWorkoutCard(workout) {
         </details>
       </div>
       <div class="stack stats-session-actions">
-        <button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}">Edit</button>
-        <button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}">Delete</button>
+        <button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}" data-workout-id-type="${typeof workout.id}">Edit</button>
+        <button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}" data-workout-id-type="${typeof workout.id}">Delete</button>
       </div>
     </article>
   `;
 }
 
 export function renderWorkout(workout) {
-  return `<article class="list-item"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(workout.type)}</h3><p class="muted small" style="margin-bottom:8px;">${dateLabel(workout.date)} · ${workout.exercises.length} exercises · ${completedSets(workout)} done / ${totalSets(workout)} work sets · ${Math.round(workoutVolume(workout)).toLocaleString()} volume · ${durationLabel(workoutDurationMinutes(workout))}</p>${workout.notes ? `<p class="small">${cleanText(workout.notes)}</p>` : ""}${renderWorkoutTags(workout)}<div>${workout.exercises.map((exercise) => `<span class="pill">${cleanText(exercise.name || "Unnamed")} · ${exercise.sets.length}</span>`).join("")}</div><details class="detail"><summary><strong>Full workout</strong></summary>${workout.exercises.map(renderExerciseDetails).join("")}</details></div><div class="stack" style="max-width:130px;"><button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}">Edit</button><button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}">Delete</button></div></div></article>`;
+  return `<article class="list-item"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(workout.type)}</h3><p class="muted small" style="margin-bottom:8px;">${dateLabel(workout.date)} · ${workout.exercises.length} exercises · ${completedSets(workout)} done / ${totalSets(workout)} work sets · ${Math.round(workoutVolume(workout)).toLocaleString()} volume · ${durationLabel(workoutDurationMinutes(workout))}</p>${workout.notes ? `<p class="small">${cleanText(workout.notes)}</p>` : ""}${renderWorkoutTags(workout)}<div>${workout.exercises.map((exercise) => `<span class="pill">${cleanText(exercise.name || "Unnamed")} · ${exercise.sets.length}</span>`).join("")}</div><details class="detail"><summary><strong>Full workout</strong></summary>${workout.exercises.map(renderExerciseDetails).join("")}</details></div><div class="stack" style="max-width:130px;"><button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}" data-workout-id-type="${typeof workout.id}">Edit</button><button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}" data-workout-id-type="${typeof workout.id}">Delete</button></div></div></article>`;
 }
 
 function renderExerciseDetails(exercise) {
@@ -104,6 +106,7 @@ async function editWorkout(workoutId) {
       if (!workout) return false;
 
       setEditingWorkoutId(workout.id);
+      setEditingWorkoutRecord(workout);
       $("workoutDate").value = workout.date;
       $("startTime").value = workout.startTime || "";
       $("endTime").value = workout.endTime || "";
@@ -149,7 +152,7 @@ export function bindHistoryActions() {
   $("historyList").addEventListener("click", (event) => {
     const button = event.target.closest("[data-history-action]");
     if (!button) return;
-    if (button.dataset.historyAction === "edit") editWorkout(button.dataset.workoutId);
-    if (button.dataset.historyAction === "delete") deleteWorkout(button.dataset.workoutId);
+    if (button.dataset.historyAction === "edit") editWorkout(decodeRecordId(button.dataset.workoutId, button.dataset.workoutIdType));
+    if (button.dataset.historyAction === "delete") deleteWorkout(decodeRecordId(button.dataset.workoutId, button.dataset.workoutIdType));
   });
 }

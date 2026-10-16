@@ -2,7 +2,7 @@ import "../core/globals.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { getWeeklyActivityData as buildWeeklyActivityData } from "../application/schedule.js";
 import { cleanText, dateLabel, toast } from "../core/utils.js";
-import { countRecentWorkouts, getWorkoutStreak as calculateWorkoutStreak } from "../domain/schedule.js";
+import { dateKeyFromDate, countRecentWorkouts, getWorkoutStreak as calculateWorkoutStreak } from "../domain/schedule.js";
 import {
   firstValidationMessage,
   validateWeeklyGoal
@@ -58,7 +58,7 @@ function getExerciseTrendInsight(exercise, metric = "bestWeight") {
 function getRecentPrInsights(exerciseStats, limit = 3) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 60);
-  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  const cutoffKey = dateKeyFromDate(cutoff);
   const insights = [];
 
   exerciseStats.forEach((exercise) => {

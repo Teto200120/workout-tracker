@@ -8,6 +8,12 @@ export async function refreshTemplateDropdowns(selected = null) {
   const currentHistory = $("historyFilter").value || "All";
 
   $("workoutType").innerHTML = templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");
+  if (selected && !templates.some((template) => template.name === selected)) {
+    const option = document.createElement("option");
+    option.value = selected;
+    option.textContent = selected;
+    $("workoutType").append(option);
+  }
   if (Array.from($("workoutType").options).some((option) => option.value === currentWorkout)) $("workoutType").value = currentWorkout;
 
   $("historyFilter").innerHTML = `<option value="All">All</option>` + templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");

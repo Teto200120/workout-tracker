@@ -48,6 +48,7 @@ import {
   makeExercise,
   saveDraftSilently,
   setEditingWorkoutId,
+  setEditingWorkoutRecord,
   setOriginRoutineId,
   showSessionView,
   stopSessionElapsedTimer,
@@ -547,7 +548,8 @@ export async function restoreDraftFromStorage() {
     return false;
   }
 
-  setEditingWorkoutId(draft.editingWorkoutId || null);
+  setEditingWorkoutId(draft.editingWorkoutId ?? null);
+  setEditingWorkoutRecord(draft);
   setOriginRoutineId(draft.originRoutineId);
   $("workoutDate").value = draft.date || today();
   await refreshTemplateDropdowns(draft.type);
@@ -555,7 +557,7 @@ export async function restoreDraftFromStorage() {
   $("startTime").value = draft.startTime || "";
   $("endTime").value = draft.endTime || "";
   $("workoutNotes").value = draft.notes || "";
-  $("saveWorkout").textContent = draft.editingWorkoutId ? "Update Workout" : "Save Workout";
+  $("saveWorkout").textContent = draft.editingWorkoutId != null ? "Update Workout" : "Save Workout";
 
   const list = $("exerciseList");
   list.innerHTML = "";

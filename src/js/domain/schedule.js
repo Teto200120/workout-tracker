@@ -13,7 +13,7 @@ export function mondayFirstWeekDates(baseDate) {
 }
 
 export function dateKeyFromDate(date) {
-  return date.toISOString().slice(0, 10);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 export function resolveWorkoutDay(date, settings, defaultSchedule, defaultSettings, dayLabels) {
@@ -62,7 +62,7 @@ export function getWorkoutStreak(workouts, currentDate) {
   let streak = 0;
   const cursor = new Date(currentDate);
   while (true) {
-    const key = cursor.toISOString().slice(0, 10);
+    const key = dateKeyFromDate(cursor);
     if (!workoutDates.has(key)) break;
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
@@ -72,7 +72,8 @@ export function getWorkoutStreak(workouts, currentDate) {
 
 export function countRecentWorkouts(workouts, currentDate, days = 7) {
   const cutoff = new Date(currentDate);
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffKey = cutoff.toISOString().slice(0, 10);
-  return workouts.filter((workout) => workout.date >= cutoffKey).length;
+  cutoff.setDate(cutoff.getDate() - (days - 1));
+  const cutoffKey = dateKeyFromDate(cutoff);
+  const todayKey = dateKeyFromDate(currentDate);
+  return workouts.filter((workout) => workout.date >= cutoffKey && workout.date <= todayKey).length;
 }

@@ -10,6 +10,8 @@ import {
   assertValidWorkout
 } from "../schema/validators.js";
 
+import { runStoreMutation } from "./transaction.js";
+
 let database = null;
 
 export function isDatabaseOpen() {
@@ -51,11 +53,7 @@ function objectStore(name, mode = "readonly") {
 }
 
 function putItem(storeName, item) {
-  return new Promise((resolve, reject) => {
-    const request = objectStore(storeName, "readwrite").put(item);
-    request.onsuccess = () => resolve(item);
-    request.onerror = () => reject(request.error);
-  });
+  return runStoreMutation(database, storeName, (store) => store.put(item), item);
 }
 
 function getAllItems(storeName) {
@@ -67,19 +65,11 @@ function getAllItems(storeName) {
 }
 
 function deleteStoredItem(storeName, itemId) {
-  return new Promise((resolve, reject) => {
-    const request = objectStore(storeName, "readwrite").delete(itemId);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  return runStoreMutation(database, storeName, (store) => store.delete(itemId));
 }
 
 function clearStoredItems(storeName) {
-  return new Promise((resolve, reject) => {
-    const request = objectStore(storeName, "readwrite").clear();
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  return runStoreMutation(database, storeName, (store) => store.clear());
 }
 
 export function getWorkouts() {

@@ -87,6 +87,10 @@ let exerciseImageViewer = null;
 let exerciseImageViewerTrigger = null;
 let exerciseFocusScrollToken = 0;
 let editingWorkoutId = null;
+let editingWorkoutRecord = null;
+let sessionRecordId = null;
+const exerciseRecords = new WeakMap();
+const setRecords = new WeakMap();
 let originRoutineId = null;
 let completionWorkout = null;
 const completionSelectedTags = new Set();
@@ -253,7 +257,18 @@ export function getEditingWorkoutId() {
 }
 
 export function setEditingWorkoutId(workoutId) {
-  editingWorkoutId = workoutId || null;
+  editingWorkoutId = workoutId ?? null;
+  editingWorkoutRecord = null;
+  sessionRecordId = editingWorkoutId;
+}
+
+export function setEditingWorkoutRecord(record) {
+  editingWorkoutRecord = structuredClone(record);
+  delete editingWorkoutRecord.editingWorkoutId;
+  delete editingWorkoutRecord.activeExerciseIndex;
+  delete editingWorkoutRecord.savedAt;
+  sessionRecordId = record.id;
+  setOriginRoutineId(record.originRoutineId);
 }
 
 const DEFAULT_WORKOUT_TAGS = [
@@ -2020,6 +2035,7 @@ function updateExerciseFlowButtons() {
 function makeSetRow(set = {}) {
   const row = document.createElement("div");
   row.className = "set-row";
+  setRecords.set(row, structuredClone(set));
   row.innerHTML = `
     <div class="set-index">1</div>
     <div><label>Weight</label><input class="set-weight" type="text" inputmode="decimal" autocomplete="off" placeholder="lb" value="${cleanText(set.weight || "")}" /></div>
@@ -2055,6 +2071,7 @@ function makeExercise(data = {}) {
   const exercise = document.createElement("div");
   exercise.className = "exercise";
   exercise.dataset.educationTarget = "active-exercise-card";
+  exerciseRecords.set(exercise, structuredClone(data));
   exercise.innerHTML = `
     <div class="exercise-top">
       <div class="exercise-summary">
@@ -2452,6 +2469,7 @@ function renderCompletionTags() {
 function showCompletionPopup(workout, summary) {
   completionWorkout = { ...workout };
   completionSelectedTags.clear();
+  (workout.tags || []).forEach((tag) => completionSelectedTags.add(tag));
   const modal = $("completionModal");
   if (!modal) return;
 
@@ -2595,6 +2613,7 @@ function collectWorkout(options = {}) {
   const includeEmptySets = Boolean(options.includeEmptySets);
   const exercises = all(".exercise").map((exercise) => {
     const sets = Array.from(exercise.querySelectorAll(".set-row")).map((row) => ({
+      ...structuredClone(setRecords.get(row) || {}),
       weight: row.querySelector(".set-weight").value.trim(),
       reps: row.querySelector(".set-reps").value.trim(),
       rpe: row.querySelector(".set-rpe").value.trim(),
@@ -2603,6 +2622,7 @@ function collectWorkout(options = {}) {
     })).filter((set) => includeEmptySets || set.weight || set.reps || set.rpe);
 
     return {
+      ...structuredClone(exerciseRecords.get(exercise) || {}),
       name: exercise.querySelector(".exercise-name").value.trim(),
       notes: exercise.querySelector(".exercise-notes").value.trim(),
       sets
@@ -2613,17 +2633,23 @@ function collectWorkout(options = {}) {
   const endTime = options.endTimeOverride ?? $("endTime").value;
   const tempWorkout = { startTime, endTime };
 
+  sessionRecordId ??= editingWorkoutId ?? id();
+  const original = editingWorkoutRecord;
+  const preserveDuration = original && original.startTime === startTime && original.endTime === endTime;
   return {
-    id: editingWorkoutId || id(),
+    ...structuredClone(original || {}),
+    id: sessionRecordId,
     date: $("workoutDate").value,
     type: $("workoutType").value,
     startTime,
     endTime,
-    durationMinutes: workoutDurationMinutes(tempWorkout),
+    ...(preserveDuration
+      ? original.durationMinutes === undefined ? {} : { durationMinutes: original.durationMinutes }
+      : { durationMinutes: workoutDurationMinutes(tempWorkout) }),
     notes: $("workoutNotes").value.trim(),
-    tags: [],
+    tags: [...(original?.tags || [])],
     exercises,
-    createdAt: new Date().toISOString(),
+    createdAt: original?.createdAt ?? new Date().toISOString(),
     ...(originRoutineId === null ? {} : { originRoutineId })
   };
 }
@@ -2807,7 +2833,7 @@ async function offerRoutineExerciseAdditions(workout) {
 
 async function performWorkoutSave() {
   const currentEndTime = $("endTime").value;
-  const endTime = !currentEndTime && $("startTime").value
+  const endTime = editingWorkoutId === null && !currentEndTime && $("startTime").value
     ? timeNow()
     : currentEndTime;
   const workout = collectWorkout({ endTimeOverride: endTime });
@@ -2854,7 +2880,7 @@ async function performWorkoutSave() {
   await saveWorkoutRecord(workout);
   const routineUpdate = await offerRoutineExerciseAdditions(workout);
   clearDraftStorage(false);
-  editingWorkoutId = null;
+  setEditingWorkoutId(null);
   $("saveWorkout").textContent = "Save Workout";
   $("workoutNotes").value = "";
   $("startTime").value = "";
