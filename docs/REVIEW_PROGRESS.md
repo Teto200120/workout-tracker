@@ -26,7 +26,7 @@ F08 still includes truthful post-commit UI failure handling. F10 still includes 
 
 - F10, partial: blocked opens fail promptly with instructions to close other tracker tabs and reload. An abandoned request aborts a late upgrade or closes a late connection. Version changes close the active connection and require reload; unexpected connection closure also invalidates the handle. Concurrent opens in one module share a promise. Read-only rescue export remains pending.
 - F15, partial: `npm run check` now includes the catalog validator and all Cloudflare Worker tests, so the normal main/PR workflow covers them. Broad source-formatting coverage remains pending.
-- Local validation: 204 unit tests, 15 Worker tests, lint, formatting and catalog validation pass. Added browser coverage for connection invalidation and reload; browser validation is pending CI.
+- Validation: 204 unit tests, 76 browser tests and 15 Worker tests passed in CI, along with lint, formatting and catalog validation. Browser coverage includes connection invalidation and reload.
 
 The concurrency and durable-journal boundaries above remain open. This pass does not make cross-storage operations crash atomic.
 
@@ -34,4 +34,4 @@ The concurrency and durable-journal boundaries above remain open. This pass does
 
 - F05: maximum load, set volume and estimated 1RM now select independently and retain their own source sets and dates. Progress rows and recent estimated-1RM PRs use the matching source set. Ties retain the first encountered source; warm-ups and invalid/nonpositive loaded sets are excluded. Stored workouts are unchanged.
 - F06 semantics (including unchecked saved sets, exercise identity and session counting) remain unchanged pending an explicit analytics contract.
-- Local validation: 206 unit tests pass. Added a browser regression for all three metric/source-set pairings; browser validation is pending CI.
+- Validation: 206 unit tests, 77 browser tests and 15 Worker tests passed in CI at `c7aa920`, along with lint, formatting and catalog validation. Browser coverage verifies all three metric/source-set pairings.
