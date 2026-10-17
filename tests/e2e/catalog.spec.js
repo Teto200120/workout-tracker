@@ -148,6 +148,16 @@ test("catalog-backed local options save only the canonical exercise name", async
   await expect(exercises.last().locator(".exercise-name")).toHaveValue(
     "Air Bike",
   );
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const draft = JSON.parse(
+          localStorage.getItem("hector_workout_draft_v1"),
+        );
+        return draft?.exercises?.at(-1)?.name;
+      }),
+    )
+    .toBe("Air Bike");
   const persistedExercise = await page.evaluate(() => {
     const draft = JSON.parse(localStorage.getItem("hector_workout_draft_v1"));
     return draft.exercises.at(-1);

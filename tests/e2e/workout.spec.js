@@ -481,6 +481,8 @@ test("a renamed originating routine is updated by ID after a draft is resumed", 
     "Resume",
   );
   await page.locator("#todayStartWorkout").click({ force: true });
+  await expect(page.locator("#sessionView")).toBeVisible();
+  await expect(page.locator(".exercise-name").last()).toHaveValue(exerciseName);
   await completeEveryWorkoutSet(page);
   const prompt = new Promise((resolve) => {
     page.once("dialog", async (dialog) => {
