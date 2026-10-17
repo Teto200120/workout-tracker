@@ -169,7 +169,7 @@ export async function clearAllData() {
       toast("Workout and profile data cleared. Pending feedback was left unchanged.");
     } catch (error) {
       console.info("Local data clear failed.", error);
-      toast("Could not clear local data. Existing data was left in place where possible.");
+      toast(backupFailureMessage(error));
     } finally {
       setBackupActionPending("clear", false);
     }

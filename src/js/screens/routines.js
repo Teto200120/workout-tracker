@@ -1,7 +1,7 @@
 import "../core/globals.js";
 import { decodeRecordId } from "../domain/record-id.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
-import { seedDefaultTemplates } from "../application/routine-seeding.js";
+import { resetDefaultTemplates } from "../application/routine-seeding.js";
 import {
   consumeEducationReplay,
   getEducationExperience,
@@ -28,7 +28,7 @@ import {
   applyRoutineExerciseSelection,
   hasRoutineExerciseDuplicate,
 } from "../domain/routine-draft.js";
-import { clearRoutines, deleteRoutine, getRoutines, saveRoutine } from "../storage/indexed-db.js";
+import { deleteRoutine, getRoutines, saveRoutine } from "../storage/indexed-db.js";
 import { loadWorkoutTemplate, showSessionView } from "./active-workout.js";
 
 let templateDraftExercises = [];
@@ -396,8 +396,7 @@ async function resetTemplates() {
     if (button) button.disabled = true;
     try {
       if (!confirm("Reset routines to defaults? Workout history will stay.")) return false;
-      await clearRoutines();
-      await seedDefaultTemplates();
+      await resetDefaultTemplates();
       await refreshTemplateDropdowns();
       clearTemplateDraft(false);
       await renderAll();
@@ -405,7 +404,7 @@ async function resetTemplates() {
       return true;
     } catch (error) {
       console.info("Routine reset failed.", error);
-      toast("Could not reset routines. Existing routines were left in place where possible.");
+      toast("Could not reset routines. If the update committed, reload to see it; otherwise existing routines are unchanged.");
       return false;
     } finally {
       if (button) button.disabled = false;

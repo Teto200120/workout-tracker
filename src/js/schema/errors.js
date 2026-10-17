@@ -24,6 +24,9 @@ export function createValidationError(errors, options = {}) {
 }
 
 export function startupFailureMessage(error) {
+  if (error?.rollbackErrors?.length) {
+    return "Recovery could not finish. Some data may have changed. Keep this browser's data and your backups; do not clear storage.";
+  }
   if (error?.code === "future_application_schema_version") {
     return "Stored data was created by a newer app version. Update the tracker before continuing.";
   }
@@ -34,6 +37,12 @@ export function startupFailureMessage(error) {
 }
 
 export function backupFailureMessage(error) {
+  if (error?.rollbackErrors?.length) {
+    return "Recovery could not finish. Some data may have changed. Keep this browser's data and your backups; do not clear storage.";
+  }
+  if (error?.code === "data_clear_failed") {
+    return "Could not clear local data. The previous data was restored.";
+  }
   if (error?.code === "future_backup_file_version" || error?.code === "future_application_schema_version") {
     return "Could not import backup. It was created by a newer app version.";
   }

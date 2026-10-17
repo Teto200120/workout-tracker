@@ -10,6 +10,7 @@ import {
   assertValidWorkout
 } from "../schema/validators.js";
 
+import { planRoutineSeed } from "../domain/routine-seeding.js";
 import { runStoreMutation } from "./transaction.js";
 
 let database = null;
@@ -132,12 +133,18 @@ export async function clearApplicationStores() {
 }
 
 export async function getAllApplicationRecords() {
-  const [workouts, legacyWeights, routines] = await Promise.all([
-    getAllItems("workouts"),
-    getAllItems("weights"),
-    getAllItems("templates")
-  ]);
-  return { workouts, legacyWeights, routines };
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(STORES, "readonly");
+    const records = {};
+    let failure = null;
+    transaction.oncomplete = () => resolve(records);
+    transaction.onerror = (event) => { failure ||= event.target?.error || transaction.error; };
+    transaction.onabort = () => reject(failure || transaction.error || new Error("Snapshot aborted."));
+    for (const [store, field] of [["workouts", "workouts"], ["weights", "legacyWeights"], ["templates", "routines"]]) {
+      const request = transaction.objectStore(store).getAll();
+      request.onsuccess = () => { records[field] = request.result || []; };
+    }
+  });
 }
 
 function assertRecordCollections({ workouts, legacyWeights, routines }, options = {}) {
@@ -208,5 +215,37 @@ export function replaceApplicationRecords(records, options = {}) {
   return runApplicationRecordTransaction(records, {
     ...options,
     replace: true
+  });
+}
+
+
+export function commitRoutineLibrary(routines, { seed = false, ready = true } = {}) {
+  const validate = (items) => items.forEach((routine) => {
+    assertValidRoutine(routine, { source: "application", path: "routine" });
+    const result = validateRoutineInput(routine);
+    if (!result.valid) throw createValidationError(result.errors);
+  });
+  validate(routines);
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction("templates", "readwrite");
+    const store = transaction.objectStore("templates");
+    let failure = null;
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = (event) => { failure ||= event.target?.error || transaction.error; };
+    transaction.onabort = () => reject(failure || transaction.error || new Error("Routine update aborted."));
+    const read = store.getAll();
+    read.onsuccess = () => {
+      try {
+        const replacement = seed ? planRoutineSeed(read.result, routines, ready) : routines;
+        if (replacement === null) return;
+        validate(replacement);
+        // Keep the read/decision/write in the same transaction, including concurrent tabs.
+        store.clear();
+        replacement.forEach((routine) => store.put(routine));
+      } catch (error) {
+        failure = error;
+        transaction.abort();
+      }
+    };
   });
 }

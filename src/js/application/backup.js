@@ -1,6 +1,7 @@
+import { runMaintenanceOperation } from "./maintenance.js";
 import { DB_NAME } from "../core/constants.js";
 import { forgetEducationState } from "./education.js";
-import { seedDefaultTemplates } from "./routine-seeding.js";
+import { prepareDefaultTemplates, seedDefaultTemplates } from "./routine-seeding.js";
 import {
   validateBackupComplexity,
   validateImportedApplicationData
@@ -14,11 +15,7 @@ import {
 } from "../schema/versions.js";
 import { assertValidApplicationData } from "../schema/validators.js";
 import {
-  clearApplicationStores,
   getAllApplicationRecords,
-  getLegacyWeights,
-  getRoutines,
-  getWorkouts,
   importBackupRecords,
   replaceApplicationRecords
 } from "../storage/indexed-db.js";
@@ -28,6 +25,8 @@ import {
   getAppSettings,
   getBackupMeta,
   getGoals,
+  getRawEducationRecord,
+  restoreRawEducationRecord,
   restoreApplicationLocalStorage,
   setAppSettings,
   setApplicationSchemaVersionMarker,
@@ -63,11 +62,13 @@ export function validateBackupStructure(data) {
   };
 }
 
-export async function buildBackup(exportedAt) {
+export function buildBackup(exportedAt) {
+  return runMaintenanceOperation(() => performBuildBackup(exportedAt));
+}
+
+async function performBuildBackup(exportedAt) {
   const applicationData = normalizeApplicationData({
-    workouts: await getWorkouts(),
-    legacyWeights: await getLegacyWeights(),
-    routines: await getRoutines(),
+    ...await getAllApplicationRecords(),
     goals: getGoals(),
     settings: getAppSettings(),
     draft: null,
@@ -89,7 +90,11 @@ export async function buildBackup(exportedAt) {
   };
 }
 
-export async function restoreBackup(data) {
+export function restoreBackup(data) {
+  return runMaintenanceOperation(() => performRestoreBackup(data));
+}
+
+async function performRestoreBackup(data) {
   const prepared = prepareValidatedBackup(data);
   const originalRecords = await getAllApplicationRecords();
   const localSnapshot = captureApplicationLocalStorage();
@@ -130,12 +135,36 @@ export async function restoreBackup(data) {
   }
 }
 
-export async function clearApplicationData() {
-  await clearApplicationStores();
-  clearApplicationLocalStorage();
-  forgetEducationState();
-  await seedDefaultTemplates();
-  setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+export function clearApplicationData() {
+  return runMaintenanceOperation(() => performClearApplicationData());
+}
+
+async function performClearApplicationData() {
+  const prepared = await prepareDefaultTemplates();
+  const originalRecords = await getAllApplicationRecords();
+  const localSnapshot = captureApplicationLocalStorage();
+  const educationSnapshot = getRawEducationRecord();
+  let committed = false;
+  try {
+    await replaceApplicationRecords({ workouts: [], legacyWeights: [], routines: prepared.routines });
+    committed = true;
+    clearApplicationLocalStorage();
+    setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+    forgetEducationState();
+  } catch (cause) {
+    const rollbackErrors = [];
+    if (committed) {
+      try { await replaceApplicationRecords(originalRecords, { validate: false }); }
+      catch (error) { rollbackErrors.push(error); }
+    }
+    try { restoreApplicationLocalStorage(localSnapshot); }
+    catch (error) { rollbackErrors.push(error); }
+    try { restoreRawEducationRecord(educationSnapshot); }
+    catch (error) { rollbackErrors.push(error); }
+    throw new DataSchemaError("Local data clear failed.", {
+      cause, code: "data_clear_failed", rollbackErrors,
+    });
+  }
 }
 
 export function daysSinceBackup(lastExportedAt, now = new Date()) {
