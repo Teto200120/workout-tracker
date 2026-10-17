@@ -1,3 +1,4 @@
+import { beginRecoverySnapshot, finishRecoverySnapshot } from "./recovery.js";
 import { runMaintenanceOperation } from "./maintenance.js";
 import { DataSchemaError } from "../schema/errors.js";
 import { migrateApplicationData } from "../schema/migrations.js";
@@ -12,6 +13,7 @@ import {
 import {
   captureApplicationLocalStorage,
   getApplicationSchemaVersionMarker,
+  getRawEducationRecord,
   readPersistedApplicationLocalData,
   restoreApplicationLocalStorage,
   setApplicationSchemaVersionMarker,
@@ -40,11 +42,13 @@ export async function coordinateApplicationSchemaMigration(options) {
   }
 
   let indexedDbCommitted = false;
+  await options.prepareRecovery?.();
   try {
     await options.replaceRecords(applicationRecords(migratedData));
     indexedDbCommitted = true;
-    options.writeLocalData(migratedData);
-    options.writeMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+    await options.writeLocalData(migratedData);
+    await options.writeMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+    await options.finishRecovery?.();
   } catch (cause) {
     const rollbackErrors = [];
     if (indexedDbCommitted) {
@@ -55,9 +59,13 @@ export async function coordinateApplicationSchemaMigration(options) {
       }
     }
     try {
-      options.restoreLocalSnapshot(options.localSnapshot);
+      await options.restoreLocalSnapshot(options.localSnapshot);
     } catch (error) {
       rollbackErrors.push(error);
+    }
+    if (!rollbackErrors.length) {
+      try { await options.finishRecovery?.(); }
+      catch (error) { rollbackErrors.push(error); }
     }
     throw new DataSchemaError("Application data migration could not be persisted.", {
       cause,
@@ -93,9 +101,11 @@ async function performEnsureCurrentApplicationSchema(operation) {
     sourceVersion,
     sourceData,
     localSnapshot,
+    prepareRecovery: () => beginRecoverySnapshot({ records, localSnapshot, education: getRawEducationRecord(), kind: "migration" }, operation),
+    finishRecovery: () => finishRecoverySnapshot(operation),
     replaceRecords: (records, options) => replaceApplicationRecords(records, { ...options, operation }),
-    writeLocalData: writePersistedApplicationLocalData,
-    writeMarker: setApplicationSchemaVersionMarker,
-    restoreLocalSnapshot: restoreApplicationLocalStorage
+    writeLocalData: (data) => writePersistedApplicationLocalData(data, { operation }),
+    writeMarker: (version) => setApplicationSchemaVersionMarker(version, { operation }),
+    restoreLocalSnapshot: (snapshot) => restoreApplicationLocalStorage(snapshot, { operation })
   });
 }

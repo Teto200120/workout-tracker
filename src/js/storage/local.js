@@ -1,3 +1,4 @@
+import { runDataOperation } from "./operation.js";
 import {
   APPLICATION_SCHEMA_VERSION_KEY,
   BACKUP_META_KEY,
@@ -58,7 +59,7 @@ export function getAppSettings() {
   }
 }
 
-export function setAppSettings(settings) {
+function rawSetAppSettings(settings) {
   assertValidSettings(settings, { path: "settings", source: "application" });
   const guardrails = validateSettingsInput(settings);
   if (!guardrails.valid) {
@@ -70,7 +71,7 @@ export function setAppSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-export function removeAppSettings() {
+function rawRemoveAppSettings() {
   localStorage.removeItem(SETTINGS_KEY);
 }
 
@@ -82,7 +83,7 @@ export function getGoals() {
   }
 }
 
-export function setGoals(goals) {
+function rawSetGoals(goals) {
   assertValidGoals(goals, { path: "goals", source: "application" });
   const guardrails = validateWeeklyGoal(goals.weeklyGoal);
   if (!guardrails.valid) {
@@ -105,12 +106,12 @@ export function getDraft() {
   }
 }
 
-export function setDraft(draft) {
+function rawSetDraft(draft) {
   assertValidDraft(draft, { path: "draft", source: "application" });
   localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
 }
 
-export function removeDraft() {
+function rawRemoveDraft() {
   localStorage.removeItem(DRAFT_KEY);
 }
 
@@ -122,7 +123,7 @@ export function getBackupMeta() {
   }
 }
 
-export function setBackupMeta(meta) {
+function rawSetBackupMeta(meta) {
   const value = meta || {};
   assertValidBackupMeta(value, { path: "backupMeta", source: "application" });
   localStorage.setItem(BACKUP_META_KEY, JSON.stringify(value));
@@ -138,7 +139,7 @@ export function getEducationRecord() {
   }
 }
 
-export function setEducationRecord(record) {
+function rawSetEducationRecord(record) {
   localStorage.setItem(EDUCATION_KEY, JSON.stringify(record));
 }
 
@@ -146,7 +147,7 @@ export function getRawEducationRecord() {
   return localStorage.getItem(EDUCATION_KEY);
 }
 
-export function restoreRawEducationRecord(rawValue) {
+function rawRestoreRawEducationRecord(rawValue) {
   if (rawValue === null || rawValue === undefined) {
     localStorage.removeItem(EDUCATION_KEY);
   } else {
@@ -154,7 +155,7 @@ export function restoreRawEducationRecord(rawValue) {
   }
 }
 
-export function removeEducationRecord() {
+function rawRemoveEducationRecord() {
   localStorage.removeItem(EDUCATION_KEY);
 }
 
@@ -162,7 +163,7 @@ export function captureApplicationLocalStorage() {
   return Object.fromEntries(Object.entries(LOCAL_STORAGE_FIELDS).map(([field, key]) => [field, localStorage.getItem(key)]));
 }
 
-export function restoreApplicationLocalStorage(snapshot) {
+function rawRestoreApplicationLocalStorage(snapshot) {
   Object.entries(LOCAL_STORAGE_FIELDS).forEach(([field, key]) => {
     const rawValue = snapshot[field];
     if (rawValue === null || rawValue === undefined) localStorage.removeItem(key);
@@ -179,34 +180,99 @@ export function readPersistedApplicationLocalData(snapshot = captureApplicationL
   };
 }
 
-export function writePersistedApplicationLocalData(data) {
-  if (data.settings === null) removeAppSettings();
-  else setAppSettings(data.settings);
+function rawWritePersistedApplicationLocalData(data) {
+  if (data.settings === null) rawRemoveAppSettings();
+  else rawSetAppSettings(data.settings);
   if (data.goals === null) localStorage.removeItem(GOALS_KEY);
-  else setGoals(data.goals);
-  if (data.draft === null) removeDraft();
-  else setDraft(data.draft);
+  else rawSetGoals(data.goals);
+  if (data.draft === null) rawRemoveDraft();
+  else rawSetDraft(data.draft);
   if (data.backupMeta === null) localStorage.removeItem(BACKUP_META_KEY);
-  else setBackupMeta(data.backupMeta);
+  else rawSetBackupMeta(data.backupMeta);
 }
 
 export function getApplicationSchemaVersionMarker() {
   return localStorage.getItem(APPLICATION_SCHEMA_VERSION_KEY);
 }
 
-export function setApplicationSchemaVersionMarker(version) {
+function rawSetApplicationSchemaVersionMarker(version) {
   localStorage.setItem(APPLICATION_SCHEMA_VERSION_KEY, String(version));
 }
 
-export function removeApplicationSchemaVersionMarker() {
+function rawRemoveApplicationSchemaVersionMarker() {
   localStorage.removeItem(APPLICATION_SCHEMA_VERSION_KEY);
 }
 
-export function clearApplicationLocalStorage() {
+function rawClearApplicationLocalStorage() {
   localStorage.removeItem(BACKUP_META_KEY);
   localStorage.removeItem(GOALS_KEY);
   localStorage.removeItem(DRAFT_KEY);
   localStorage.removeItem(SETTINGS_KEY);
   localStorage.removeItem(EDUCATION_KEY);
   localStorage.removeItem(APPLICATION_SCHEMA_VERSION_KEY);
+}
+
+export function setAppSettings(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawSetAppSettings(snapshot), options.operation);
+}
+
+export function removeAppSettings(options = {}) {
+  return runDataOperation(() => rawRemoveAppSettings(), options.operation);
+}
+
+export function setGoals(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawSetGoals(snapshot), options.operation);
+}
+
+export function setDraft(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawSetDraft(snapshot), options.operation);
+}
+
+export function removeDraft(options = {}) {
+  return runDataOperation(() => rawRemoveDraft(), options.operation);
+}
+
+export function setBackupMeta(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawSetBackupMeta(snapshot), options.operation);
+}
+
+export function setEducationRecord(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawSetEducationRecord(snapshot), options.operation);
+}
+
+export function restoreRawEducationRecord(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawRestoreRawEducationRecord(snapshot), options.operation);
+}
+
+export function removeEducationRecord(options = {}) {
+  return runDataOperation(() => rawRemoveEducationRecord(), options.operation);
+}
+
+export function restoreApplicationLocalStorage(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawRestoreApplicationLocalStorage(snapshot), options.operation);
+}
+
+export function writePersistedApplicationLocalData(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawWritePersistedApplicationLocalData(snapshot), options.operation);
+}
+
+export function setApplicationSchemaVersionMarker(value, options = {}) {
+  const snapshot = structuredClone(value);
+  return runDataOperation(() => rawSetApplicationSchemaVersionMarker(snapshot), options.operation);
+}
+
+export function removeApplicationSchemaVersionMarker(options = {}) {
+  return runDataOperation(() => rawRemoveApplicationSchemaVersionMarker(), options.operation);
+}
+
+export function clearApplicationLocalStorage(options = {}) {
+  return runDataOperation(() => rawClearApplicationLocalStorage(), options.operation);
 }

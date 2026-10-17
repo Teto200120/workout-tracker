@@ -56,8 +56,8 @@ function numericFormValue(value) {
   return Number(String(value).trim().replace(",", "."));
 }
 
-export function setAppSettings(settings) {
-  persistAppSettings(settings);
+export async function setAppSettings(settings) {
+  await persistAppSettings(settings);
   applyAppSettings();
 }
 
@@ -158,7 +158,7 @@ export async function saveSettingsFromForm() {
         return false;
       }
       clearSettingsValidation();
-      setAppSettings({
+      await setAppSettings({
         displayName: getAppSettings().displayName,
         schedule,
         defaultWeightJump: numericFormValue(rawSettings.defaultWeightJump),
@@ -193,7 +193,7 @@ export async function resetAppSettings() {
     try {
       if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return false;
       const displayName = getAppSettings().displayName;
-      setAppSettings({ ...cloneDefaultSettings(), displayName });
+      await setAppSettings({ ...cloneDefaultSettings(), displayName });
       applyAppSettings();
       await renderSettings();
       toast("Settings reset.");

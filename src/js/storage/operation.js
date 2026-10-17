@@ -1,7 +1,7 @@
 // All cooperating database writers share this boundary with maintenance. An
 // explicit, short-lived token permits nested writes without granting unrelated
 // work permission to bypass the queue while an async operation is suspended.
-export function createDataCoordinator(lockManager = globalThis.navigator?.locks) {
+export function createDataCoordinator(lockManager = globalThis.navigator?.locks, beforeOperation = () => {}) {
   let tail = Promise.resolve();
   const active = new WeakSet();
   return (action, operation) => {
@@ -17,7 +17,11 @@ export function createDataCoordinator(lockManager = globalThis.navigator?.locks)
     const execute = async () => {
       const token = Object.freeze({});
       active.add(token);
-      try { return await action(token); }
+      try {
+        const recovery = beforeOperation(token);
+        if (recovery) await recovery;
+        return await action(token);
+      }
       finally { active.delete(token); }
     };
     const result = tail.then(() => lockManager?.request
@@ -28,4 +32,10 @@ export function createDataCoordinator(lockManager = globalThis.navigator?.locks)
   };
 }
 
-export const runDataOperation = createDataCoordinator();
+let recoveryHandler = null;
+
+export function setDataRecoveryHandler(handler) {
+  recoveryHandler = handler;
+}
+
+export const runDataOperation = createDataCoordinator(undefined, (operation) => recoveryHandler?.(operation));

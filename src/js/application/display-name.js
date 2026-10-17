@@ -1,3 +1,4 @@
+import { runDataOperation } from "../storage/operation.js";
 import { createActionCoordinator } from "./action-coordinator.js";
 import { ensureEducationState, forgetEducationState } from "./education.js";
 import {
@@ -28,7 +29,7 @@ export function isOnboardingRequired(settings = getAppSettings()) {
 }
 
 export function saveDisplayName(value) {
-  return displayNameCoordinator.run(() => {
+  return displayNameCoordinator.run(() => runDataOperation(async (operation) => {
     const validation = validateDisplayName(value);
     if (!validation.valid) {
       return {
@@ -39,18 +40,18 @@ export function saveDisplayName(value) {
       };
     }
     const settings = getAppSettings();
-    setAppSettings({ ...settings, displayName: validation.normalized });
+    await setAppSettings({ ...settings, displayName: validation.normalized }, { operation });
     return {
       saved: true,
       displayName: validation.normalized,
       validation,
       message: "",
     };
-  });
+  }));
 }
 
 export function completeOnboarding(value, rpeAware = true) {
-  return displayNameCoordinator.run(() => {
+  return displayNameCoordinator.run(() => runDataOperation(async (operation) => {
     const validation = validateDisplayName(value);
     if (!validation.valid) {
       return {
@@ -65,23 +66,23 @@ export function completeOnboarding(value, rpeAware = true) {
     const educationSnapshot = getRawEducationRecord();
     try {
       const settings = getAppSettings();
-      setAppSettings({
+      await setAppSettings({
         ...settings,
         displayName: validation.normalized,
         rpeAware: Boolean(rpeAware),
-      });
-      const educationResult = ensureEducationState();
+      }, { operation });
+      const educationResult = await ensureEducationState({ operation });
       if (!educationResult.saved) throw educationResult.error;
-      setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+      await setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION, { operation });
     } catch (cause) {
       const rollbackErrors = [];
       try {
-        restoreApplicationLocalStorage(localSnapshot);
+        await restoreApplicationLocalStorage(localSnapshot, { operation });
       } catch (error) {
         rollbackErrors.push(error);
       }
       try {
-        restoreRawEducationRecord(educationSnapshot);
+        await restoreRawEducationRecord(educationSnapshot, { operation });
       } catch (error) {
         rollbackErrors.push(error);
       }
@@ -101,5 +102,5 @@ export function completeOnboarding(value, rpeAware = true) {
       validation,
       message: "",
     };
-  });
+  }));
 }

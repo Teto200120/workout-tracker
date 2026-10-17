@@ -90,7 +90,8 @@ const HOME_TOUR_STEPS = Object.freeze([
   },
 ]);
 
-function educationSaveFeedback(result) {
+async function educationSaveFeedback(pending) {
+  const result = await pending;
   if (!result?.saved) {
     toast("Guidance progress could not be saved. The rest of the app is still available.");
   }

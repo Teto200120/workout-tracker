@@ -24,6 +24,10 @@ export function createValidationError(errors, options = {}) {
 }
 
 export function startupFailureMessage(error) {
+  if (error?.code === "recovery_prepare_failed") return "Could not save the recovery snapshot needed for this update. Existing application data was left unchanged. Download recovery data before freeing device storage.";
+  if (error?.code === "recovery_lock_unavailable") {
+    return "This browser cannot safely coordinate data recovery. Use an updated browser with Web Locks support. Keep this browser’s storage and download recovery data if needed.";
+  }
   if (error?.code === "database_upgrade_blocked") {
     return "Close other tracker tabs or windows, then reload to finish updating the database. Do not clear browser storage.";
   }
@@ -40,6 +44,8 @@ export function startupFailureMessage(error) {
 }
 
 export function backupFailureMessage(error) {
+  if (error?.code === "recovery_prepare_failed") return "Could not start the data change because its recovery snapshot could not be saved. Existing data was left unchanged.";
+  if (error?.code === "recovery_lock_unavailable") return "This browser cannot safely coordinate import or clear. Use an updated browser with Web Locks support.";
   if (error?.rollbackErrors?.length) {
     return "Recovery could not finish. Some data may have changed. Keep this browser's data and your backups; do not clear storage.";
   }

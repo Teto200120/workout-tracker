@@ -106,7 +106,7 @@ export async function exportData() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setBackupMeta({ ...getBackupMeta(), lastExportedAt: exportedAt });
+      await setBackupMeta({ ...getBackupMeta(), lastExportedAt: exportedAt });
       await renderBackupStatus();
       toast("Backup exported.");
     } catch (error) {

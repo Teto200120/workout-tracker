@@ -18,8 +18,9 @@ Validation covers pure bootstrap decisions, FIFO failure recovery, rollback mess
 
 ## Remaining boundaries
 
-Maintenance locks now cover ordinary IndexedDB mutations (see pass 5). Synchronous preference, education and draft writes are not yet inside that boundary. Read/modify/write sequences in ordinary editors also need application-level coordination to prevent stale edits. Full concurrent-writer protection and a durable journal for process termination between IndexedDB and localStorage remain open under F09. Caught-error rollback is not crash atomicity.
+The shared operation boundary now covers application local-storage mutations as well as IndexedDB writers (pass 7). Import, clear and startup migration use durable undo snapshots. Recovery runs before the next outer operation, including another tab's write. Cross-tab guarantees require Web Locks; destructive cross-storage operations fail before mutation if that facility is unavailable. Earlier app versions that bypass the boundary cannot participate.
 
+Read/modify/write sequences in ordinary editors can still apply stale UI state; serialized writes are not optimistic conflict detection. That remains part of F09.
 F08 still includes truthful post-commit UI failure handling. F10 database lifecycle and read-only rescue are delivered in passes 3 and 5. Metric semantics (F06), render/session boundaries (F11–F12), stylesheet cleanup (F13), service-worker consistency (F14), quality/release tooling (F15/F18), feedback delivery (F16–F17), and remaining clutter (F19) are pending. The Android contract/design and native implementation phases remain pending.
 
 ## Pass 3: database lifecycle and continuous checks
@@ -51,3 +52,14 @@ Full cross-storage crash atomicity remains unfinished: synchronous local writes 
 - Browser regressions inject refresh failures after commits and check persisted results, messages and duplicate-retry prevention. Also corrected numeric fixture inputs in the new concurrency/rescue regressions before final browser validation.
 - These changes complete the reviewed workout/routine action messages; exported-backup status/render failures and settings view errors still require review before treating F08 as fully closed.
 - Final validation at `59f38d3`: all 83 browser tests passed without retries, including the backup timing regression and new recovery/concurrency/post-commit tests. All 208 unit tests, 15 Worker tests, lint, formatting and catalog validation passed. The backup test explicitly waits for clear completion before inspecting storage.
+
+## Pass 7: coordinated local writes and durable undo recovery
+
+- Preference, goal, draft, backup-metadata, schema-marker and education writes now return promises and share the database/maintenance coordinator. Callers await persistence before reporting success; education keeps immediate in-memory transitions and resolves its persistence outcome asynchronously. Submitted values are copied before queuing. Draft saves track pending persistence and request browser unload confirmation while a draft write remains pending.
+- Physical database version 3 adds a dedicated `recovery` store. Application-schema and backup-file versions are unchanged. Import, clear and startup migration commit an exact original snapshot before changing application records or local strings. They acknowledge completion only after all effects finish and the journal entry is removed.
+- Every outer coordinated operation checks the journal under the shared Web Lock. An interrupted operation restores original records, exact local strings and education data before the waiting action can write. Recovery can repeat after another interruption. Failed/unsupported recovery retains the journal and blocks the waiting write, with rescue export available on startup failure. A failed snapshot write prevents the destructive operation from beginning.
+- Caught-error compensation removes the journal only after rollback succeeds. Failure to finish rollback or journal cleanup keeps the snapshot for recovery. Browsers without Web Locks may continue ordinary writes when no recovery is pending; import, clear and migrations requiring a snapshot fail before mutation rather than promise cross-tab safety without a lock.
+- Tests cover local write ordering/value capture, asynchronous failures, recovery-before-write and fail-closed retries, actual tab termination after database replacement and during local rollback, recovery retry, failed snapshot persistence, and queued cross-tab preference/draft writes.
+- Local validation: 214 unit tests, 15 Worker tests, catalog validation, lint and formatting pass. Full browser verification is pending CI.
+
+The durable snapshot covers the reviewed cross-storage maintenance operations. This does not add stale-editor conflict detection or change historical metric semantics. The feedback outbox remains separate from application-data clear/backup, as before.

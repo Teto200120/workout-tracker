@@ -99,6 +99,7 @@ const completionCoordinator = createActionCoordinator();
 let workoutSavePending = false;
 let workoutSaveRequiresReload = false;
 let draftStorageFailureShown = false;
+let draftWritesPending = 0;
 let completionPreviousFocus = null;
 let sessionEducationExercise = null;
 let sessionEducationAttempted = false;
@@ -132,7 +133,8 @@ const RPE_EDUCATION_STEPS = Object.freeze([
   },
 ]);
 
-function educationSaveFeedback(result) {
+async function educationSaveFeedback(pending) {
+  const result = await pending;
   if (!result?.saved) {
     toast("Guidance progress could not be saved. Your workout is still available.");
   }
@@ -2497,7 +2499,11 @@ function showCompletionPopup(workout, summary) {
   haptic(45);
 }
 
-export function saveDraftSilently() {
+export function hasPendingDraftWrites() {
+  return draftWritesPending > 0;
+}
+
+export async function saveDraftSilently() {
   if (!isDatabaseOpen()) return;
   const draft = collectWorkout({ includeEmptySets: true });
   draft.editingWorkoutId = editingWorkoutId;
@@ -2509,8 +2515,9 @@ export function saveDraftSilently() {
     todayValue: today(),
   });
   if (!validation.valid) return false;
+  draftWritesPending++;
   try {
-    setDraft(draft);
+    await setDraft(draft);
     draftStorageFailureShown = false;
     return true;
   } catch (error) {
@@ -2520,12 +2527,14 @@ export function saveDraftSilently() {
       draftStorageFailureShown = true;
     }
     return false;
+  } finally {
+    draftWritesPending--;
   }
 }
 
-export function clearDraftStorage(showMessage = true) {
+export async function clearDraftStorage(showMessage = true) {
   try {
-    removeDraft();
+    await removeDraft();
     stopTodayActiveElapsedTimer();
     if (showMessage) toast("Draft cleared.");
     return true;
@@ -2881,7 +2890,7 @@ async function performWorkoutSave(onCommitted) {
   await saveWorkoutRecord(workout);
   onCommitted();
   const routineUpdate = await offerRoutineExerciseAdditions(workout);
-  clearDraftStorage(false);
+  await clearDraftStorage(false);
   setEditingWorkoutId(null);
   $("saveWorkout").textContent = "Save Workout";
   $("workoutNotes").value = "";

@@ -226,16 +226,16 @@ test("malformed education JSON and read failures use in-memory defaults", () => 
   assert.deepEqual(getEducationState(), createDefaultEducationState());
 });
 
-test("education write failure preserves the in-memory transition", () => {
+test("education write failure preserves the in-memory transition", async () => {
   installStorage({ failWrites: true });
-  const result = updateEducationExperience("homeTour", "skipped");
+  const result = await updateEducationExperience("homeTour", "skipped");
   assert.equal(result.saved, false);
   assert.equal(getEducationState().experiences.homeTour.status, "skipped");
 });
 
-test("application reset persists every known experience as unseen", () => {
+test("application reset persists every known experience as unseen", async () => {
   const values = installStorage({ raw: JSON.stringify(completedHomeState()) });
-  const result = resetAllGuidance();
+  const result = await resetAllGuidance();
   assert.equal(result.saved, true);
   const persisted = JSON.parse(values.get("hector_workout_education_v1"));
   assert.equal(persisted.experiences.homeTour.status, "unseen");

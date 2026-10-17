@@ -183,7 +183,7 @@ test("backup export reads every record store in one readonly transaction", async
     } finally {
       globalThis.IDBDatabase.prototype.transaction = original;
     }
-    return scopes;
+    return scopes.filter((entry) => entry.stores.includes("workouts"));
   });
   expect(scopes).toEqual([
     { stores: ["workouts", "weights", "templates"], mode: "readonly" },

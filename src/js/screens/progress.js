@@ -424,7 +424,7 @@ export function saveGoalsToStorage() {
         return false;
       }
       const weeklyGoal = Number(validation.normalized);
-      setGoals({ ...getGoals(), weeklyGoal });
+      await setGoals({ ...getGoals(), weeklyGoal });
       input.value = String(weeklyGoal);
       toast("Goals saved.");
       await renderAll();

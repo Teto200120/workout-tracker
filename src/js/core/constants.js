@@ -1,5 +1,6 @@
 export const DB_NAME = "hector_workout_tracker_fresh_v1";
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
+export const RECOVERY_STORE = "recovery";
 export const STORES = ["workouts", "weights", "templates"];
 
 export const DEFAULT_SCHEDULE = {

@@ -33,7 +33,9 @@ async function completeEducationForRegression(page) {
       "statsBasics",
       "exerciseGuideBasics",
     ]) {
-      updateEducationExperience(experienceId, "completed", { lastStep: 0 });
+      await updateEducationExperience(experienceId, "completed", {
+        lastStep: 0,
+      });
     }
     globalThis.document
       .querySelector("#homeEducationOffer")
@@ -132,7 +134,7 @@ export async function seedRawApplicationData(page, data) {
   await page.evaluate(async (seed) => {
     const request = globalThis.indexedDB.open(
       "hector_workout_tracker_fresh_v1",
-      2,
+      3,
     );
     const database = await new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);

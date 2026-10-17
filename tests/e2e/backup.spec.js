@@ -53,7 +53,7 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
     );
     const { cloneDefaultSettings, getAppSettings, setAppSettings } =
       await import("/src/js/core/settings.js");
-    setAppSettings({
+    await setAppSettings({
       ...cloneDefaultSettings(),
       displayName: getAppSettings().displayName,
       animations: false,

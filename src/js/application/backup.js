@@ -1,3 +1,4 @@
+import { beginRecoverySnapshot, finishRecoverySnapshot } from "./recovery.js";
 import { runMaintenanceOperation } from "./maintenance.js";
 import { DB_NAME } from "../core/constants.js";
 import { forgetEducationState } from "./education.js";
@@ -99,6 +100,7 @@ async function performRestoreBackup(data, operation) {
   const originalRecords = await getAllApplicationRecords();
   const localSnapshot = captureApplicationLocalStorage();
   let indexedDbCommitted = false;
+  await beginRecoverySnapshot({ records: originalRecords, localSnapshot, education: getRawEducationRecord(), kind: "import" }, operation);
   try {
     await importBackupRecords({
       workouts: prepared.data.workouts,
@@ -107,11 +109,12 @@ async function performRestoreBackup(data, operation) {
     }, { operation });
     indexedDbCommitted = true;
     await seedDefaultTemplates({ operation });
-    if (prepared.presence.goals) setGoals(prepared.data.goals);
-    if (prepared.presence.settings) setAppSettings(prepared.data.settings);
-    else setAppSettings({ ...getAppSettings(), displayName: null });
-    if (prepared.presence.backupMeta) setBackupMeta(prepared.data.backupMeta);
-    setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+    if (prepared.presence.goals) await setGoals(prepared.data.goals, { operation });
+    if (prepared.presence.settings) await setAppSettings(prepared.data.settings, { operation });
+    else await setAppSettings({ ...getAppSettings(), displayName: null }, { operation });
+    if (prepared.presence.backupMeta) await setBackupMeta(prepared.data.backupMeta, { operation });
+    await setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION, { operation });
+    await finishRecoverySnapshot(operation);
   } catch (cause) {
     const rollbackErrors = [];
     if (indexedDbCommitted) {
@@ -122,9 +125,13 @@ async function performRestoreBackup(data, operation) {
       }
     }
     try {
-      restoreApplicationLocalStorage(localSnapshot);
+      await restoreApplicationLocalStorage(localSnapshot, { operation });
     } catch (error) {
       rollbackErrors.push(error);
+    }
+    if (!rollbackErrors.length) {
+      try { await finishRecoverySnapshot(operation); }
+      catch (error) { rollbackErrors.push(error); }
     }
     throw new DataSchemaError("Backup restoration failed.", {
       cause,
@@ -145,22 +152,28 @@ async function performClearApplicationData(operation) {
   const localSnapshot = captureApplicationLocalStorage();
   const educationSnapshot = getRawEducationRecord();
   let committed = false;
+  await beginRecoverySnapshot({ records: originalRecords, localSnapshot, education: educationSnapshot, kind: "clear" }, operation);
   try {
     await replaceApplicationRecords({ workouts: [], legacyWeights: [], routines: prepared.routines }, { operation });
     committed = true;
-    clearApplicationLocalStorage();
-    setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
+    await clearApplicationLocalStorage({ operation });
+    await setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION, { operation });
     forgetEducationState();
+    await finishRecoverySnapshot(operation);
   } catch (cause) {
     const rollbackErrors = [];
     if (committed) {
       try { await replaceApplicationRecords(originalRecords, { validate: false, operation }); }
       catch (error) { rollbackErrors.push(error); }
     }
-    try { restoreApplicationLocalStorage(localSnapshot); }
+    try { await restoreApplicationLocalStorage(localSnapshot, { operation }); }
     catch (error) { rollbackErrors.push(error); }
-    try { restoreRawEducationRecord(educationSnapshot); }
+    try { await restoreRawEducationRecord(educationSnapshot, { operation }); }
     catch (error) { rollbackErrors.push(error); }
+    if (!rollbackErrors.length) {
+      try { await finishRecoverySnapshot(operation); }
+      catch (error) { rollbackErrors.push(error); }
+    }
     throw new DataSchemaError("Local data clear failed.", {
       cause, code: "data_clear_failed", rollbackErrors,
     });

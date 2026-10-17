@@ -89,3 +89,41 @@ test("failed maintenance releases queued ordinary writers", async () => {
   await assert.rejects(failure, /compensation finished/);
   assert.equal(await writer, "saved afterwards");
 });
+
+test("recovery completes under the operation token before an ordinary write starts", async () => {
+  const calls = [];
+  let release;
+  let started;
+  const ready = new Promise((resolve) => {
+    started = resolve;
+  });
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const run = createMaintenanceCoordinator(null, async (operation) => {
+    started();
+    await gate;
+    await run(() => calls.push("recover"), operation);
+  });
+  const writer = run(() => calls.push("write"));
+  await ready;
+  assert.deepEqual(calls, []);
+  release();
+  await writer;
+  assert.deepEqual(calls, ["recover", "write"]);
+});
+
+test("failed recovery blocks a write and permits a later recovery retry", async () => {
+  let attempts = 0;
+  const run = createMaintenanceCoordinator(null, () => {
+    if (++attempts === 1) throw new Error("recovery blocked");
+  });
+  let writes = 0;
+  await assert.rejects(
+    run(() => writes++),
+    /recovery blocked/,
+  );
+  assert.equal(writes, 0);
+  await run(() => writes++);
+  assert.equal(writes, 1);
+});

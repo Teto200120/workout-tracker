@@ -55,7 +55,8 @@ const ROUTINE_EDUCATION_STEPS = Object.freeze([
   },
 ]);
 
-function routineEducationFeedback(result) {
+async function routineEducationFeedback(pending) {
+  const result = await pending;
   if (!result?.saved) {
     toast("Guidance progress could not be saved. Your routine draft is unchanged.");
   }

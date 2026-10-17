@@ -1,3 +1,4 @@
+import { enableDataRecovery } from "./application/recovery.js";
 import "./core/globals.js";
 import { ensureCurrentApplicationSchema } from "./application/data-schema.js";
 import { isOnboardingRequired } from "./application/display-name.js";
@@ -22,6 +23,7 @@ import { getWorkouts, openDatabase } from "./storage/indexed-db.js";
 import { getDraft } from "./storage/local.js";
 import {
   clearDraftStorage,
+  hasPendingDraftWrites,
   closeExerciseDetail,
   completeActiveExerciseDetailSet,
   addExerciseToWorkout,
@@ -113,7 +115,8 @@ function settleScreenLayout() {
   });
 }
 
-function educationActionFeedback(result) {
+async function educationActionFeedback(pending) {
+  const result = await pending;
   if (!result?.saved) {
     toast("Guidance progress could not be saved. You can keep using the app.");
   }
@@ -210,7 +213,7 @@ async function handleEducationAction(event) {
   const launcher = event.currentTarget;
   if (action === "reset-all") {
     if (!confirm("Reset all guidance? Contextual tips will reappear when you reach them.")) return;
-    const result = resetAllGuidance();
+    const result = await resetAllGuidance();
     educationActionFeedback(result);
     $("statsEducationTip")?.classList.add("hidden");
     $("historyEducationTip")?.classList.add("hidden");
@@ -233,7 +236,7 @@ async function handleEducationAction(event) {
   };
   const experienceId = replayMap[action];
   if (!experienceId) return;
-  const replayResult = requestEducationReplay(experienceId);
+  const replayResult = await requestEducationReplay(experienceId);
   educationActionFeedback(replayResult);
 
   if (action === "replay-home") {
@@ -400,6 +403,11 @@ function bindEvents() {
   });
 
   $("sessionView").addEventListener("input", () => saveDraftSilently());
+  window.addEventListener("beforeunload", (event) => {
+    if (!hasPendingDraftWrites()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
   $("saveGoals").addEventListener("click", saveGoalsToStorage);
   bindHistoryActions();
   bindRoutineActions();
@@ -424,6 +432,7 @@ export async function renderAll() {
 
 export async function init() {
   await openDatabase();
+  enableDataRecovery();
   await ensureCurrentApplicationSchema();
   applyAppSettings();
   bindOnboarding({ onComplete: activateApplication });

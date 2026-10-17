@@ -124,7 +124,7 @@ test("late IndexedDB abort rejects a workout save and retains its draft", async 
       activeExerciseIndex: 0,
       savedAt: workout.createdAt,
     };
-    local.setDraft(draft);
+    await local.setDraft(draft);
     const put = globalThis.IDBObjectStore.prototype.put;
     globalThis.IDBObjectStore.prototype.put = function (...args) {
       const request = put.apply(this, args);

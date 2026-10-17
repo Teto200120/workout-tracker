@@ -1,4 +1,4 @@
-import { DB_NAME, DB_VERSION, STORES } from "../core/constants.js";
+import { DB_NAME, DB_VERSION, RECOVERY_STORE, STORES } from "../core/constants.js";
 import {
   validateRoutineInput,
   validateWorkoutInput
@@ -32,6 +32,9 @@ export function openDatabase() {
     version: DB_VERSION,
     upgrade(event) {
       const openedDatabase = event.target.result;
+      if (!openedDatabase.objectStoreNames.contains(RECOVERY_STORE)) {
+        openedDatabase.createObjectStore(RECOVERY_STORE, { keyPath: "id" });
+      }
       if (!openedDatabase.objectStoreNames.contains("workouts")) {
         const store = openedDatabase.createObjectStore("workouts", { keyPath: "id" });
         store.createIndex("date", "date", { unique: false });
@@ -262,4 +265,20 @@ function performRoutineLibraryCommit(routines, { seed = false, ready = true } = 
       }
     };
   });
+}
+
+
+export function readRecoverySnapshot() {
+  return getAllItems(RECOVERY_STORE).then((entries) => {
+    if (entries.length > 1) throw new Error("Unexpected recovery records.");
+    return entries[0] || null;
+  });
+}
+
+export function writeRecoverySnapshot(snapshot, { operation } = {}) {
+  return putItem(RECOVERY_STORE, snapshot, operation);
+}
+
+export function removeRecoverySnapshot({ operation } = {}) {
+  return runDataOperation(() => runStoreMutation(database, RECOVERY_STORE, (store) => store.delete("application")), operation);
 }

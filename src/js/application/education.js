@@ -27,18 +27,13 @@ function readState() {
   return cachedState;
 }
 
-function persistState(nextState) {
+function persistState(nextState, options = {}) {
   cachedState = normalizeEducationState(nextState);
-  try {
-    setEducationRecord(cachedState);
-    return { saved: true, state: normalizeEducationState(cachedState) };
-  } catch (error) {
-    return {
-      saved: false,
-      error,
-      state: normalizeEducationState(cachedState),
-    };
-  }
+  const state = normalizeEducationState(cachedState);
+  return setEducationRecord(state, options).then(
+    () => ({ saved: true, state }),
+    (error) => ({ saved: false, error, state }),
+  );
 }
 
 export function getEducationState() {
@@ -49,8 +44,8 @@ export function getEducationExperience(experienceId) {
   return getEducationState().experiences[experienceId] || null;
 }
 
-export function ensureEducationState() {
-  return persistState(readState());
+export function ensureEducationState(options = {}) {
+  return persistState(readState(), options);
 }
 
 export function updateEducationExperience(
@@ -67,7 +62,7 @@ export function updateEducationExperience(
       now: options.now || currentTimestamp(),
     },
   );
-  return persistState(nextState);
+  return persistState(nextState, { operation: options.operation });
 }
 
 export function claimEducationOffer(experienceId) {
@@ -80,7 +75,7 @@ export function claimEducationOffer(experienceId) {
   }
   const result = updateEducationExperience(experienceId, "offered");
   visibleOffers.add(experienceId);
-  return { ...result, visible: true };
+  return result.then((outcome) => ({ ...outcome, visible: true }));
 }
 
 export function hideEducationOffer(experienceId) {

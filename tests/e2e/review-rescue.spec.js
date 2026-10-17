@@ -54,7 +54,7 @@ test("rescue reads a newer database version and unknown stores without downgradi
     await new Promise((resolve, reject) => {
       const request = globalThis.indexedDB.open(
         "hector_workout_tracker_fresh_v1",
-        3,
+        4,
       );
       request.onupgradeneeded = () => {
         request.result
@@ -73,7 +73,7 @@ test("rescue reads a newer database version and unknown stores without downgradi
     page.getByRole("button", { name: "Download recovery data" }),
   ).toBeVisible();
   const rescue = await downloadRescue(page);
-  expect(rescue.database.version).toBe(3);
+  expect(rescue.database.version).toBe(4);
   expect(rescue.database.stores.futureRecords).toEqual({
     keys: ["future-key"],
     values: [{ extra: "preserve" }],
