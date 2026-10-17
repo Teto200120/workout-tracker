@@ -29,3 +29,9 @@ F08 still includes truthful post-commit UI failure handling. F10 still includes 
 - Local validation: 204 unit tests, 15 Worker tests, lint, formatting and catalog validation pass. Added browser coverage for connection invalidation and reload; browser validation is pending CI.
 
 The concurrency and durable-journal boundaries above remain open. This pass does not make cross-storage operations crash atomic.
+
+## Pass 4: independent exercise records
+
+- F05: maximum load, set volume and estimated 1RM now select independently and retain their own source sets and dates. Progress rows and recent estimated-1RM PRs use the matching source set. Ties retain the first encountered source; warm-ups and invalid/nonpositive loaded sets are excluded. Stored workouts are unchanged.
+- F06 semantics (including unchecked saved sets, exercise identity and session counting) remain unchanged pending an explicit analytics contract.
+- Local validation: 206 unit tests pass. Added a browser regression for all three metric/source-set pairings; browser validation is pending CI.

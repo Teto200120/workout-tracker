@@ -73,7 +73,7 @@ function getRecentPrInsights(exerciseStats, limit = 3) {
           date: entry.date,
           score: value,
           title: `New PR: ${exercise.name}`,
-          meta: `${entry.bestWeight} × ${entry.reps} · ${value.toFixed(1)} est. 1RM · ${dateLabel(entry.date)}`
+          meta: `${entry.records.estimated1rm.weight} × ${entry.records.estimated1rm.reps} · ${value.toFixed(1)} est. 1RM · ${dateLabel(entry.date)}`
         });
       }
     });
@@ -378,7 +378,7 @@ export function renderExerciseProgress(exerciseStats) {
     const isPr = value > runningBest;
     runningBest = Math.max(runningBest, value);
     const width = Math.max(4, Math.round((value / max) * 100));
-    return `<div class="record-card"><div class="row" style="align-items:flex-start;"><div><strong>${dateLabel(entry.date)} ${isPr ? `<span class="pill">PR</span>` : ""}</strong><p class="muted small" style="margin:4px 0 0;">${cleanText(entry.type)} · ${label}: ${value.toFixed(metric === "bestVolume" ? 0 : 1)}${unit} · ${entry.bestWeight} × ${entry.reps}</p><div class="progress-bar"><div class="progress-fill" style="width:${width}%"></div></div></div></div></div>`;
+    return `<div class="record-card"><div class="row" style="align-items:flex-start;"><div><strong>${dateLabel(entry.date)} ${isPr ? `<span class="pill">PR</span>` : ""}</strong><p class="muted small" style="margin:4px 0 0;">${cleanText(entry.type)} · ${label}: ${value.toFixed(metric === "bestVolume" ? 0 : 1)}${unit} · ${entry.records[metric].weight} × ${entry.records[metric].reps}</p><div class="progress-bar"><div class="progress-fill" style="width:${width}%"></div></div></div></div></div>`;
   }).join("");
 
   target.innerHTML = `

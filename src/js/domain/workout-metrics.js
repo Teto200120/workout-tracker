@@ -45,19 +45,24 @@ export function durationLabel(minutes) {
   return `${hours}h ${remainingMinutes}m`;
 }
 
-export function getBestSet(exercise = {}) {
-  let best = null;
+export function getExerciseRecords(exercise = {}) {
+  const records = { bestWeight: null, bestVolume: null, estimated1rm: null };
   for (const set of exercise.sets || []) {
     if (set.warmup) continue;
     const weight = Number(set.weight || 0);
     const reps = Number(set.reps || 0);
-    if (!weight || !reps) continue;
-    const estimated1rm = estimatedOneRepMax(weight, reps);
-    const volume = weight * reps;
-    const candidate = { weight, reps, estimated1rm, volume, rpe: set.rpe || "" };
-    if (!best || candidate.estimated1rm > best.estimated1rm) best = candidate;
+    if (!Number.isFinite(weight) || !Number.isFinite(reps) || weight <= 0 || reps <= 0) continue;
+    const candidate = { weight, reps, estimated1rm: estimatedOneRepMax(weight, reps), volume: weight * reps, rpe: set.rpe || "" };
+    for (const [metric, field] of [["bestWeight", "weight"], ["bestVolume", "volume"], ["estimated1rm", "estimated1rm"]]) {
+      // Keep the first source set on a tie, independently for each metric.
+      if (!records[metric] || candidate[field] > records[metric][field]) records[metric] = candidate;
+    }
   }
-  return best;
+  return records;
+}
+
+export function getBestSet(exercise = {}) {
+  return getExerciseRecords(exercise).estimated1rm;
 }
 
 export function buildExerciseStats(workouts = []) {
@@ -67,20 +72,26 @@ export function buildExerciseStats(workouts = []) {
       const name = exercise.name?.trim();
       if (!name) return;
       if (!stats.has(name)) {
-        stats.set(name, { name, sessions: 0, sets: 0, bestWeight: 0, bestVolume: 0, bestEstimated1rm: 0, bestDate: "", history: [] });
+        stats.set(name, { name, sessions: 0, sets: 0, bestWeight: 0, bestVolume: 0, bestEstimated1rm: 0, bestDate: "", records: {}, history: [] });
       }
       const item = stats.get(name);
       item.sessions += 1;
       item.sets += (exercise.sets || []).length;
-      const bestSet = getBestSet(exercise);
+      const records = getExerciseRecords(exercise);
+      const bestSet = records.estimated1rm;
       if (bestSet) {
-        item.bestWeight = Math.max(item.bestWeight, bestSet.weight);
-        item.bestVolume = Math.max(item.bestVolume, bestSet.volume);
+        for (const [metric, field] of [["bestWeight", "weight"], ["bestVolume", "volume"], ["estimated1rm", "estimated1rm"]]) {
+          if (!item.records[metric] || records[metric][field] > item.records[metric][field]) {
+            item.records[metric] = { ...records[metric], date: workout.date };
+          }
+        }
+        item.bestWeight = item.records.bestWeight.weight;
+        item.bestVolume = item.records.bestVolume.volume;
         if (bestSet.estimated1rm > item.bestEstimated1rm) {
           item.bestEstimated1rm = bestSet.estimated1rm;
           item.bestDate = workout.date;
         }
-        item.history.push({ date: workout.date, type: workout.type, bestWeight: bestSet.weight, bestVolume: bestSet.volume, estimated1rm: bestSet.estimated1rm, reps: bestSet.reps });
+        item.history.push({ date: workout.date, type: workout.type, bestWeight: records.bestWeight.weight, bestVolume: records.bestVolume.volume, estimated1rm: bestSet.estimated1rm, reps: bestSet.reps, records });
       }
     });
   });

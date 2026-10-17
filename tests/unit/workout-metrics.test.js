@@ -175,3 +175,66 @@ test("saveability matches the existing exercise-presence rule", () => {
     true,
   );
 });
+
+test("load, volume and estimated-1RM records retain independent source sets and dates", () => {
+  const input = [
+    workout({
+      exercises: [
+        {
+          name: "Bench",
+          sets: [
+            { weight: 200, reps: 1 },
+            { weight: 180, reps: 5 },
+            { weight: 100, reps: 20 },
+            { weight: 999, reps: 99, warmup: true },
+          ],
+        },
+      ],
+    }),
+  ];
+  const before = structuredClone(input);
+  const [stats] = buildExerciseStats(input);
+  assert.equal(stats.bestWeight, 200);
+  assert.equal(stats.bestVolume, 2000);
+  assert.equal(stats.bestEstimated1rm, 210);
+  const entry = stats.history[0];
+  assert.equal(entry.bestWeight, 200);
+  assert.equal(entry.bestVolume, 2000);
+  assert.equal(entry.records.bestWeight.reps, 1);
+  assert.equal(entry.records.bestVolume.reps, 20);
+  assert.equal(entry.records.estimated1rm.reps, 5);
+  assert.equal(stats.records.bestWeight.date, input[0].date);
+  assert.deepEqual(input, before);
+});
+
+test("metric ties retain the first source while later independent improvements update dates", () => {
+  const [stats] = buildExerciseStats([
+    workout({
+      date: "2026-07-01",
+      exercises: [{ name: "Bench", sets: [{ weight: 200, reps: 1 }] }],
+    }),
+    workout({
+      date: "2026-07-02",
+      exercises: [
+        {
+          name: "Bench",
+          sets: [
+            { weight: 200, reps: 1 },
+            { weight: 100, reps: 20 },
+          ],
+        },
+      ],
+    }),
+  ]);
+  assert.equal(stats.records.bestWeight.date, "2026-07-01");
+  assert.equal(stats.records.bestVolume.date, "2026-07-02");
+  assert.equal(
+    getBestSet({
+      sets: [
+        { weight: "invalid", reps: 2 },
+        { weight: -1, reps: 5 },
+      ],
+    }),
+    null,
+  );
+});
