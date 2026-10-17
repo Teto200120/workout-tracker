@@ -96,6 +96,9 @@ test("backup export, clear, restore, and invalid-import rollback", async ({
   });
   page.once("dialog", (dialog) => dialog.accept());
   await page.locator("#clearData").click();
+  await expect(page.locator("#toast")).toContainText(
+    "Workout and profile data cleared.",
+  );
   expect(await readStore(page, "workouts")).toEqual([]);
   expect(await readStore(page, "weights")).toEqual([]);
   expect(
