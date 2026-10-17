@@ -27,12 +27,13 @@ test("progress rows pair each metric with its own winning set", async ({
           ],
         },
       ]);
-      const exercise = document.getElementById("progressExercise");
-      exercise.replaceChildren(new Option("Bench", "Bench"));
+      const exercise = globalThis.document.getElementById("progressExercise");
+      exercise.replaceChildren(new globalThis.Option("Bench", "Bench"));
       exercise.value = "Bench";
-      document.getElementById("progressMetric").value = selectedMetric;
+      globalThis.document.getElementById("progressMetric").value =
+        selectedMetric;
       renderExerciseProgress(stats);
-      return document.getElementById("exerciseProgress").textContent;
+      return globalThis.document.getElementById("exerciseProgress").textContent;
     }, metric);
   expect(await render("bestWeight")).toContain("Best Load: 200.0 lb · 200 × 1");
   expect(await render("bestVolume")).toContain(
