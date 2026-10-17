@@ -259,7 +259,7 @@ export async function renderTodayView() {
     .filter((workout) => workout.date === today())
     .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
   const draft = getDraft();
-  const hasActiveDraft = Boolean(draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime);
+  const hasActiveDraft = Boolean(draft && Array.isArray(draft.exercises) && draft.exercises.length && (draft.editingWorkoutId != null || !draft.endTime));
   const completed = todaysWorkouts.length > 0 && !hasActiveDraft;
   const lastToday = todaysWorkouts[0] || null;
 
@@ -400,7 +400,7 @@ function todayReviewExerciseList(exercises = []) {
 
 async function openTodayWorkoutReview() {
   const draft = getDraft();
-  const hasActiveDraft = Boolean(draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime);
+  const hasActiveDraft = Boolean(draft && Array.isArray(draft.exercises) && draft.exercises.length && (draft.editingWorkoutId != null || !draft.endTime));
   if (hasActiveDraft) {
     await resumeWorkoutFromToday();
     return;
@@ -477,7 +477,7 @@ export async function handleTodayWorkoutCardClick(event) {
 async function performStartTodayWorkout(options = {}) {
   const forceNew = Boolean(options.forceNew);
   const draft = getDraft();
-  if (!forceNew && draft && Array.isArray(draft.exercises) && draft.exercises.length && !draft.endTime) {
+  if (!forceNew && draft && Array.isArray(draft.exercises) && draft.exercises.length && (draft.editingWorkoutId != null || !draft.endTime)) {
     await resumeWorkoutFromToday();
     return;
   }

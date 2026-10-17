@@ -89,6 +89,9 @@ test("numeric routine zero can start, edit and delete without touching its strin
   await openRoutines();
   await button("start").click();
   await expect(page.locator("#workoutType")).toHaveValue(routine.name);
+  await expect(page.locator("#sessionView")).toBeVisible();
+  await page.locator("#sessionBack").click();
+  await expect(page.locator("#todayView")).toBeVisible();
   await openRoutines();
   await button("edit").click();
   await expect(page.locator("#templateName")).toHaveValue(routine.name);
