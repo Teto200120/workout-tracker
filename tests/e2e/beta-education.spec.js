@@ -162,6 +162,8 @@ test("two-step onboarding keeps values, saves name and RPE together, and survive
   await page.locator("#onboardingContinue").click();
   await page.locator('label[for="onboardingRpeAware"]').click();
   await page.locator("#onboardingSubmit").click();
+  await expect(page.locator("#onboarding")).toBeHidden();
+  await expect(page.locator("#appShell")).toBeVisible();
 
   const stored = await page.evaluate(() => ({
     settings: JSON.parse(localStorage.getItem("hector_workout_settings_v1")),
@@ -455,7 +457,10 @@ test("active-workout guidance and first-detail RPE education preserve controls a
   await openSettings(page);
   await page.locator('label[for="settingsRpeAware"]').click();
   await page.locator("#saveSettings").click();
+  await expect(page.locator("#saveSettings")).toBeEnabled();
+  await expect(page.locator("#toast")).toContainText("Settings saved.");
   await openPrimary(page, "home");
+  await expect(page.locator("#todayStartWorkout")).toBeVisible();
   await page.locator("#todayStartWorkout").click({ force: true });
   await expect(page.locator(".live-rpe-row").first()).toBeHidden();
   await expect(page.locator(".set-rpe").first()).toHaveValue("9");
@@ -464,7 +469,10 @@ test("active-workout guidance and first-detail RPE education preserve controls a
   await openSettings(page);
   await page.locator('label[for="settingsRpeAware"]').click();
   await page.locator("#saveSettings").click();
+  await expect(page.locator("#saveSettings")).toBeEnabled();
+  await expect(page.locator("#toast")).toContainText("Settings saved.");
   await openPrimary(page, "home");
+  await expect(page.locator("#todayStartWorkout")).toBeVisible();
   await page.locator("#todayStartWorkout").click({ force: true });
   await expect(page.locator(".live-rpe-row").first()).toBeVisible();
   await expect(page.locator(".set-rpe").first()).toHaveValue("9");

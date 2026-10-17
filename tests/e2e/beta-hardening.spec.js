@@ -300,11 +300,13 @@ test("routine, settings, and goal actions reject bad values and remain single-fl
   await expect(page.locator("#weeklyGoalError")).toContainText("100 or less");
   await page.locator("#weeklyGoal").fill("5");
   await page.locator("#saveGoals").click();
-  expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("hector_workout_goals_v1")),
-    ),
-  ).toMatchObject({ weeklyGoal: 5 });
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(localStorage.getItem("hector_workout_goals_v1")),
+      ),
+    )
+    .toMatchObject({ weeklyGoal: 5 });
   assertNoRuntimeErrors();
 });
 

@@ -73,6 +73,24 @@ test("active workout draft restores values, notes, and active exercise", async (
   await page.locator("#workoutNotes").fill("Draft recovery test note");
   await page.locator(".exercise").nth(1).locator(".exercise-top").click();
   await expect(page.locator(".exercise").nth(1)).not.toHaveClass(/collapsed/);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("hector_workout_draft_v1"))
+            ?.activeExerciseIndex,
+      ),
+    )
+    .toBe(1);
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const { hasPendingDraftWrites } =
+          await import("/src/js/screens/active-workout.js");
+        return hasPendingDraftWrites();
+      }),
+    )
+    .toBe(false);
 
   await page.reload();
   await expect(page.locator("#todayStartWorkout")).toBeVisible();
