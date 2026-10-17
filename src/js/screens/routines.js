@@ -394,9 +394,11 @@ async function resetTemplates() {
   return routineMutationCoordinator.run(async () => {
     const button = $("resetTemplates");
     if (button) button.disabled = true;
+    let resetCommitted = false;
     try {
       if (!confirm("Reset routines to defaults? Workout history will stay.")) return false;
       await resetDefaultTemplates();
+      resetCommitted = true;
       await refreshTemplateDropdowns();
       clearTemplateDraft(false);
       await renderAll();
@@ -404,8 +406,10 @@ async function resetTemplates() {
       return true;
     } catch (error) {
       console.info("Routine reset failed.", error);
-      toast("Could not reset routines. If the update committed, reload to see it; otherwise existing routines are unchanged.");
-      return false;
+      toast(resetCommitted
+        ? "Default routines restored, but the view could not refresh. Reload the app."
+        : "Could not reset routines. Existing routines are unchanged.");
+      return resetCommitted;
     } finally {
       if (button) button.disabled = false;
     }

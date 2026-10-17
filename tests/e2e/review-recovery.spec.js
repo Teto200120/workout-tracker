@@ -230,3 +230,34 @@ test("maintenance waits for a cooperating tab and continues after it releases th
     await other.close();
   }
 });
+
+test("committed resets and clears report view failures truthfully", async ({
+  page,
+}) => {
+  await loadApp(page);
+  page.on("dialog", (dialog) => dialog.accept());
+  const messages = await page.evaluate(async () => {
+    const { resetTemplates } = await import("/src/js/screens/routines.js");
+    const { clearAllData } = await import("/src/js/screens/backup.js");
+    const original = globalThis.renderAll;
+    globalThis.renderAll = () => {
+      throw new Error("injected render failure");
+    };
+    try {
+      const reset = await resetTemplates();
+      const resetMessage =
+        globalThis.document.querySelector("#toast").textContent;
+      await clearAllData();
+      return {
+        reset,
+        resetMessage,
+        clearMessage: globalThis.document.querySelector("#toast").textContent,
+      };
+    } finally {
+      globalThis.renderAll = original;
+    }
+  });
+  expect(messages.reset).toBe(true);
+  expect(messages.resetMessage).toContain("Default routines restored, but");
+  expect(messages.clearMessage).toContain("Local data was cleared, but");
+});

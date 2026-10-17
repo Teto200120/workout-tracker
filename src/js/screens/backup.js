@@ -151,6 +151,7 @@ export async function importData(file) {
 export async function clearAllData() {
   return clearCoordinator.run(async () => {
     setBackupActionPending("clear", true);
+    let cleared = false;
     try {
       if (
         !confirm(
@@ -159,6 +160,7 @@ export async function clearAllData() {
       )
         return;
       await clearApplicationData();
+      cleared = true;
       stopSessionElapsedTimer();
       stopTodayActiveElapsedTimer();
       applyAppSettings();
@@ -169,7 +171,11 @@ export async function clearAllData() {
       toast("Workout and profile data cleared. Pending feedback was left unchanged.");
     } catch (error) {
       console.info("Local data clear failed.", error);
-      toast(backupFailureMessage(error));
+      toast(cleared
+        ? "Local data was cleared, but the view could not refresh. Reload the app."
+        : error?.code === "data_clear_failed"
+          ? backupFailureMessage(error)
+          : "Could not clear local data. No clear was committed.");
     } finally {
       setBackupActionPending("clear", false);
     }
