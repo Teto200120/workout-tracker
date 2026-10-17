@@ -24,6 +24,9 @@ export function createValidationError(errors, options = {}) {
 }
 
 export function startupFailureMessage(error) {
+  if (error?.code === "database_upgrade_blocked") {
+    return "Close other tracker tabs or windows, then reload to finish updating the database. Do not clear browser storage.";
+  }
   if (error?.rollbackErrors?.length) {
     return "Recovery could not finish. Some data may have changed. Keep this browser's data and your backups; do not clear storage.";
   }

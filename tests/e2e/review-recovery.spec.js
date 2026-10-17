@@ -261,3 +261,30 @@ test("committed resets and clears report view failures truthfully", async ({
   expect(messages.resetMessage).toContain("Default routines restored, but");
   expect(messages.clearMessage).toContain("Local data was cleared, but");
 });
+
+test("database version changes release the active handle and require reload", async ({
+  page,
+}) => {
+  await loadApp(page);
+  const result = await page.evaluate(async () => {
+    const storage = await import("/src/js/storage/indexed-db.js");
+    const connection = await storage.openDatabase();
+    connection.dispatchEvent(new Event("versionchange"));
+    return { open: storage.isDatabaseOpen() };
+  });
+  expect(result.open).toBe(false);
+  await expect(
+    page.getByText(
+      "The database connection closed. Reload the tracker to continue. Your saved data is still on this device.",
+    ),
+  ).toBeVisible();
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const storage = await import("/src/js/storage/indexed-db.js");
+        return storage.isDatabaseOpen();
+      }),
+    )
+    .toBe(true);
+});

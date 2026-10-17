@@ -21,3 +21,11 @@ Validation covers pure bootstrap decisions, FIFO failure recovery, rollback mess
 Maintenance locks do not yet cover ordinary workout, routine-edit, preference or draft writes. Full concurrent-writer protection and a durable journal for process termination between IndexedDB and localStorage remain open under F09. Caught-error rollback is not crash atomicity.
 
 F08 still includes truthful post-commit UI failure handling. F10 still includes blocked database upgrades and read-only rescue. Metric semantics/corrections (F05–F06), render/session boundaries (F11–F12), stylesheet cleanup (F13), service-worker consistency (F14), quality/release tooling (F15/F18), feedback delivery (F16–F17), and remaining clutter (F19) are pending. The Android contract/design and native implementation phases remain pending.
+
+## Pass 3: database lifecycle and continuous checks
+
+- F10, partial: blocked opens fail promptly with instructions to close other tracker tabs and reload. An abandoned request aborts a late upgrade or closes a late connection. Version changes close the active connection and require reload; unexpected connection closure also invalidates the handle. Concurrent opens in one module share a promise. Read-only rescue export remains pending.
+- F15, partial: `npm run check` now includes the catalog validator and all Cloudflare Worker tests, so the normal main/PR workflow covers them. Broad source-formatting coverage remains pending.
+- Local validation: 204 unit tests, 15 Worker tests, lint, formatting and catalog validation pass. Added browser coverage for connection invalidation and reload; browser validation is pending CI.
+
+The concurrency and durable-journal boundaries above remain open. This pass does not make cross-storage operations crash atomic.

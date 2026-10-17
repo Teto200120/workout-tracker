@@ -12,6 +12,7 @@ import {
 
 import { planRoutineSeed } from "../domain/routine-seeding.js";
 import { runStoreMutation } from "./transaction.js";
+import { openManagedDatabase } from "./connection.js";
 
 let database = null;
 
@@ -19,11 +20,16 @@ export function isDatabaseOpen() {
   return Boolean(database);
 }
 
-export function openDatabase() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+let opening = null;
 
-    request.onupgradeneeded = (event) => {
+export function openDatabase() {
+  if (database) return Promise.resolve(database);
+  if (opening) return opening;
+  opening = openManagedDatabase({
+    factory: indexedDB,
+    name: DB_NAME,
+    version: DB_VERSION,
+    upgrade(event) {
       const openedDatabase = event.target.result;
       if (!openedDatabase.objectStoreNames.contains("workouts")) {
         const store = openedDatabase.createObjectStore("workouts", { keyPath: "id" });
@@ -38,14 +44,17 @@ export function openDatabase() {
         const store = openedDatabase.createObjectStore("templates", { keyPath: "id" });
         store.createIndex("name", "name", { unique: false });
       }
-    };
-
-    request.onsuccess = () => {
-      database = request.result;
-      resolve(database);
-    };
-    request.onerror = () => reject(request.error);
-  });
+    },
+    onUnavailable(connection, reason) {
+      if (database !== connection) return;
+      database = null;
+      globalThis.dispatchEvent(new CustomEvent("tracker-storage-unavailable", { detail: reason }));
+    },
+  }).then((connection) => {
+    database = connection;
+    return connection;
+  }).finally(() => { opening = null; });
+  return opening;
 }
 
 function objectStore(name, mode = "readonly") {
