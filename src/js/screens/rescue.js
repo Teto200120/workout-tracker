@@ -5,6 +5,7 @@ export function offerRescueExport(container) {
   const button = document.createElement("button");
   button.id = "rescueExport";
   button.type = "button";
+  button.className = "onboarding-retry";
   button.textContent = "Download recovery data";
   const status = document.createElement("p");
   status.setAttribute("role", "status");

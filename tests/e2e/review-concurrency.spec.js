@@ -8,7 +8,7 @@ test("ordinary writes in another tab wait through maintenance compensation", asy
   await loadApp(page);
   const other = await context.newPage();
   await loadApp(other);
-  const workout = workoutFixture("queued-workout");
+  const workout = workoutFixture(0, { id: "queued-workout" });
   try {
     await page.evaluate(async () => {
       const { runMaintenanceOperation } =

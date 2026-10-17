@@ -44,3 +44,10 @@ The concurrency and durable-journal boundaries above remain open. This pass does
 - Local validation: lint, formatting, catalog validation, 208 unit tests and 15 Worker tests pass. Browser validation is pending CI.
 
 Full cross-storage crash atomicity remains unfinished: synchronous local writes still require a coordinated API before a durable journal can safely cover them. No durable journal has been added in this pass. Old app versions that do not participate in the shared lock cannot be coordinated by this release.
+
+## Pass 6: committed actions and view failures
+
+- F08: workout save, routine save, workout delete and routine delete now distinguish a database commit from a later UI failure. Committed operations return success and tell the user what was saved/deleted. A workout whose post-save UI failed requires reload before another save, preventing a retry from creating a duplicate while session state is partially reset.
+- Browser regressions inject refresh failures after commits and check persisted results, messages and duplicate-retry prevention. Also corrected numeric fixture inputs in the new concurrency/rescue regressions before final browser validation.
+- These changes complete the reviewed workout/routine action messages; exported-backup status/render failures and settings view errors still require review before treating F08 as fully closed.
+- Local lint and formatting pass; full browser validation is pending CI.

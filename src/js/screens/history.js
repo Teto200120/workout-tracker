@@ -134,16 +134,20 @@ async function editWorkout(workoutId) {
 
 async function deleteWorkout(workoutId) {
   return historyDeleteCoordinator.run(async () => {
+    let committed = false;
     try {
       if (!confirm("Delete this workout?")) return false;
       await deleteWorkoutRecord(workoutId);
+      committed = true;
       await renderAll();
       toast("Workout deleted.");
       return true;
     } catch (error) {
       console.info("Workout delete failed.", error);
-      toast("Could not delete the workout. Existing data is unchanged.");
-      return false;
+      toast(committed
+        ? "Workout deleted, but the screen could not refresh. Reload the tracker."
+        : "Could not delete the workout. Existing data is unchanged.");
+      return committed;
     }
   }).promise;
 }

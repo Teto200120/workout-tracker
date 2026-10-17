@@ -97,6 +97,7 @@ const completionSelectedTags = new Set();
 const workoutSaveCoordinator = createActionCoordinator();
 const completionCoordinator = createActionCoordinator();
 let workoutSavePending = false;
+let workoutSaveRequiresReload = false;
 let draftStorageFailureShown = false;
 let completionPreviousFocus = null;
 let sessionEducationExercise = null;
@@ -2831,7 +2832,7 @@ async function offerRoutineExerciseAdditions(workout) {
   }
 }
 
-async function performWorkoutSave() {
+async function performWorkoutSave(onCommitted) {
   const currentEndTime = $("endTime").value;
   const endTime = editingWorkoutId === null && !currentEndTime && $("startTime").value
     ? timeNow()
@@ -2878,6 +2879,7 @@ async function performWorkoutSave() {
   );
 
   await saveWorkoutRecord(workout);
+  onCommitted();
   const routineUpdate = await offerRoutineExerciseAdditions(workout);
   clearDraftStorage(false);
   setEditingWorkoutId(null);
@@ -2906,11 +2908,21 @@ async function performWorkoutSave() {
 
 async function saveWorkout() {
   return workoutSaveCoordinator.run(async () => {
+    if (workoutSaveRequiresReload) {
+      toast("Workout saved. Reload the tracker before saving another workout.");
+      return false;
+    }
+    let committed = false;
     setWorkoutSaveState(true);
     try {
-      return await performWorkoutSave();
+      return await performWorkoutSave(() => { committed = true; });
     } catch (error) {
       console.info("Workout save failed.", error);
+      if (committed) {
+        workoutSaveRequiresReload = true;
+        toast("Workout saved, but the screen could not refresh. Reload the tracker before saving another workout.");
+        return true;
+      }
       toast("Could not save workout. Your draft and visible entries are still available.");
       return false;
     } finally {

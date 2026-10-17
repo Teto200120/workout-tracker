@@ -270,6 +270,7 @@ async function saveTemplate() {
   return routineMutationCoordinator.run(async () => {
     const button = $("saveTemplate");
     if (button) button.disabled = true;
+    let committed = false;
     try {
       const nameResult = validateRoutineName($("templateName").value);
       setRoutineFieldFeedback("templateName", "templateNameError", nameResult);
@@ -327,6 +328,7 @@ async function saveTemplate() {
         return false;
       }
       await saveRoutine(template);
+      committed = true;
       clearTemplateDraft(false);
       await refreshTemplateDropdowns(name);
       await renderAll();
@@ -334,8 +336,10 @@ async function saveTemplate() {
       return true;
     } catch (error) {
       console.info("Routine save failed.", error);
-      toast("Could not save the routine. Your draft is still available.");
-      return false;
+      toast(committed
+        ? "Routine saved, but the screen could not refresh. Reload the tracker."
+        : "Could not save the routine. Your draft is still available.");
+      return committed;
     } finally {
       if (button) button.disabled = false;
     }
@@ -355,17 +359,21 @@ async function editTemplate(templateId) {
 
 async function deleteTemplate(templateId) {
   return routineMutationCoordinator.run(async () => {
+    let committed = false;
     try {
       if (!confirm("Delete this routine? Workout history will not be deleted.")) return false;
       await deleteRoutine(templateId);
+      committed = true;
       await refreshTemplateDropdowns();
       await renderAll();
       toast("Routine deleted.");
       return true;
     } catch (error) {
       console.info("Routine delete failed.", error);
-      toast("Could not delete the routine. Existing data is unchanged.");
-      return false;
+      toast(committed
+        ? "Routine deleted, but the screen could not refresh. Reload the tracker."
+        : "Could not delete the routine. Existing data is unchanged.");
+      return committed;
     }
   }).promise;
 }

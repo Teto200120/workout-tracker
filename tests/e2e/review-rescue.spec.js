@@ -18,7 +18,9 @@ test("startup rescue preserves malformed local JSON and raw records without migr
   page,
 }) => {
   await loadApp(page);
-  await seedStores(page, { workouts: [workoutFixture("rescue-record")] });
+  await seedStores(page, {
+    workouts: [workoutFixture(0, { id: "rescue-record" })],
+  });
   const before = await readStore(page, "workouts");
   await page.evaluate(() => {
     localStorage.setItem("hector_workout_settings_v1", "{broken JSON");
