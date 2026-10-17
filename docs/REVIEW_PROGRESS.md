@@ -18,9 +18,9 @@ Validation covers pure bootstrap decisions, FIFO failure recovery, rollback mess
 
 ## Remaining boundaries
 
-Maintenance locks do not yet cover ordinary workout, routine-edit, preference or draft writes. Full concurrent-writer protection and a durable journal for process termination between IndexedDB and localStorage remain open under F09. Caught-error rollback is not crash atomicity.
+Maintenance locks now cover ordinary IndexedDB mutations (see pass 5). Synchronous preference, education and draft writes are not yet inside that boundary. Read/modify/write sequences in ordinary editors also need application-level coordination to prevent stale edits. Full concurrent-writer protection and a durable journal for process termination between IndexedDB and localStorage remain open under F09. Caught-error rollback is not crash atomicity.
 
-F08 still includes truthful post-commit UI failure handling. F10 still includes blocked database upgrades and read-only rescue. Metric semantics/corrections (F05–F06), render/session boundaries (F11–F12), stylesheet cleanup (F13), service-worker consistency (F14), quality/release tooling (F15/F18), feedback delivery (F16–F17), and remaining clutter (F19) are pending. The Android contract/design and native implementation phases remain pending.
+F08 still includes truthful post-commit UI failure handling. F10 database lifecycle and read-only rescue are delivered in passes 3 and 5. Metric semantics (F06), render/session boundaries (F11–F12), stylesheet cleanup (F13), service-worker consistency (F14), quality/release tooling (F15/F18), feedback delivery (F16–F17), and remaining clutter (F19) are pending. The Android contract/design and native implementation phases remain pending.
 
 ## Pass 3: database lifecycle and continuous checks
 
@@ -35,3 +35,12 @@ The concurrency and durable-journal boundaries above remain open. This pass does
 - F05: maximum load, set volume and estimated 1RM now select independently and retain their own source sets and dates. Progress rows and recent estimated-1RM PRs use the matching source set. Ties retain the first encountered source; warm-ups and invalid/nonpositive loaded sets are excluded. Stored workouts are unchanged.
 - F06 semantics (including unchecked saved sets, exercise identity and session counting) remain unchanged pending an explicit analytics contract.
 - Validation: 206 unit tests, 77 browser tests and 15 Worker tests passed in CI at `c7aa920`, along with lint, formatting and catalog validation. Browser coverage verifies all three metric/source-set pairings.
+
+## Pass 5: shared database writer boundary and rescue export
+
+- F09, partial: ordinary IndexedDB puts, deletes, clears, routine-library changes and bulk writes share the maintenance queue/Web Lock. Startup schema migration also holds that boundary through compensation. Explicit, expiring operation tokens allow only the participating nested database writes to proceed; unrelated writes wait through rollback. There is no global maintenance bypass. Web Locks coordinate cooperating tabs; without them, protection remains limited to this module instance/tab.
+- F10: startup failures offer a separate raw recovery download. It reads the existing database without a requested version, using one readonly transaction across its stores; it does not validate, migrate or seed. It retains malformed local JSON as exact strings and includes guidance data. It can read newer database versions and unknown JSON record stores. An absent database creation is aborted. This recovery file is distinct from a normal importable backup; downloading it does not repair or modify persisted data.
+- Tests cover queued ordinary writes surviving cross-tab maintenance compensation, token expiration/forgery and failure release, malformed local-data rescue, and rescue of a newer database version.
+- Local validation: lint, formatting, catalog validation, 208 unit tests and 15 Worker tests pass. Browser validation is pending CI.
+
+Full cross-storage crash atomicity remains unfinished: synchronous local writes still require a coordinated API before a durable journal can safely cover them. No durable journal has been added in this pass. Old app versions that do not participate in the shared lock cannot be coordinated by this release.

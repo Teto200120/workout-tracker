@@ -11,6 +11,7 @@ import {
 } from "../schema/validators.js";
 
 import { planRoutineSeed } from "../domain/routine-seeding.js";
+import { runDataOperation } from "./operation.js";
 import { runStoreMutation } from "./transaction.js";
 import { openManagedDatabase } from "./connection.js";
 
@@ -62,8 +63,8 @@ function objectStore(name, mode = "readonly") {
   return database.transaction(name, mode).objectStore(name);
 }
 
-function putItem(storeName, item) {
-  return runStoreMutation(database, storeName, (store) => store.put(item), item);
+function putItem(storeName, item, operation) {
+  return runDataOperation(() => runStoreMutation(database, storeName, (store) => store.put(item), item), operation);
 }
 
 function getAllItems(storeName) {
@@ -75,11 +76,11 @@ function getAllItems(storeName) {
 }
 
 function deleteStoredItem(storeName, itemId) {
-  return runStoreMutation(database, storeName, (store) => store.delete(itemId));
+  return runDataOperation(() => runStoreMutation(database, storeName, (store) => store.delete(itemId)));
 }
 
 function clearStoredItems(storeName) {
-  return runStoreMutation(database, storeName, (store) => store.clear());
+  return runDataOperation(() => runStoreMutation(database, storeName, (store) => store.clear()));
 }
 
 export function getWorkouts() {
@@ -213,22 +214,26 @@ function runApplicationRecordTransaction(records, options = {}) {
   });
 }
 
-export function importBackupRecords(records) {
-  return runApplicationRecordTransaction(records, {
+export function importBackupRecords(records, { operation } = {}) {
+  return runDataOperation(() => runApplicationRecordTransaction(records, {
     source: "backup",
     deferIdConstraints: true
-  });
+  }), operation);
 }
 
 export function replaceApplicationRecords(records, options = {}) {
-  return runApplicationRecordTransaction(records, {
+  return runDataOperation(() => runApplicationRecordTransaction(records, {
     ...options,
     replace: true
-  });
+  }), options.operation);
 }
 
 
-export function commitRoutineLibrary(routines, { seed = false, ready = true } = {}) {
+export function commitRoutineLibrary(routines, options = {}) {
+  return runDataOperation(() => performRoutineLibraryCommit(routines, options), options.operation);
+}
+
+function performRoutineLibraryCommit(routines, { seed = false, ready = true } = {}) {
   const validate = (items) => items.forEach((routine) => {
     assertValidRoutine(routine, { source: "application", path: "routine" });
     const result = validateRoutineInput(routine);

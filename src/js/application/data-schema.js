@@ -1,3 +1,4 @@
+import { runMaintenanceOperation } from "./maintenance.js";
 import { DataSchemaError } from "../schema/errors.js";
 import { migrateApplicationData } from "../schema/migrations.js";
 import {
@@ -76,7 +77,11 @@ export async function coordinateApplicationSchemaMigration(options) {
   };
 }
 
-export async function ensureCurrentApplicationSchema() {
+export function ensureCurrentApplicationSchema() {
+  return runMaintenanceOperation((operation) => performEnsureCurrentApplicationSchema(operation));
+}
+
+async function performEnsureCurrentApplicationSchema(operation) {
   const sourceVersion = detectApplicationSchemaVersion(getApplicationSchemaVersionMarker());
   const localSnapshot = captureApplicationLocalStorage();
   const [records, localData] = await Promise.all([
@@ -88,7 +93,7 @@ export async function ensureCurrentApplicationSchema() {
     sourceVersion,
     sourceData,
     localSnapshot,
-    replaceRecords: replaceApplicationRecords,
+    replaceRecords: (records, options) => replaceApplicationRecords(records, { ...options, operation }),
     writeLocalData: writePersistedApplicationLocalData,
     writeMarker: setApplicationSchemaVersionMarker,
     restoreLocalSnapshot: restoreApplicationLocalStorage

@@ -1,3 +1,4 @@
+import { offerRescueExport } from "./rescue.js";
 import { completeOnboarding } from "../application/display-name.js";
 import {
   firstValidationMessage,
@@ -93,6 +94,7 @@ export function showStartupFailure(message) {
   if (root) root.hidden = false;
   if (form) form.hidden = true;
   if (startupError) startupError.textContent = message;
+  offerRescueExport(startupError?.parentElement);
   if (retry) {
     retry.classList.remove("hidden");
     retry.onclick = () => window.location.reload();

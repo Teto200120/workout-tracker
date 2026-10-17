@@ -91,10 +91,10 @@ async function performBuildBackup(exportedAt) {
 }
 
 export function restoreBackup(data) {
-  return runMaintenanceOperation(() => performRestoreBackup(data));
+  return runMaintenanceOperation((operation) => performRestoreBackup(data, operation));
 }
 
-async function performRestoreBackup(data) {
+async function performRestoreBackup(data, operation) {
   const prepared = prepareValidatedBackup(data);
   const originalRecords = await getAllApplicationRecords();
   const localSnapshot = captureApplicationLocalStorage();
@@ -104,9 +104,9 @@ async function performRestoreBackup(data) {
       workouts: prepared.data.workouts,
       legacyWeights: prepared.data.legacyWeights,
       routines: prepared.data.routines
-    });
+    }, { operation });
     indexedDbCommitted = true;
-    await seedDefaultTemplates();
+    await seedDefaultTemplates({ operation });
     if (prepared.presence.goals) setGoals(prepared.data.goals);
     if (prepared.presence.settings) setAppSettings(prepared.data.settings);
     else setAppSettings({ ...getAppSettings(), displayName: null });
@@ -116,7 +116,7 @@ async function performRestoreBackup(data) {
     const rollbackErrors = [];
     if (indexedDbCommitted) {
       try {
-        await replaceApplicationRecords(originalRecords, { validate: false });
+        await replaceApplicationRecords(originalRecords, { validate: false, operation });
       } catch (error) {
         rollbackErrors.push(error);
       }
@@ -136,17 +136,17 @@ async function performRestoreBackup(data) {
 }
 
 export function clearApplicationData() {
-  return runMaintenanceOperation(() => performClearApplicationData());
+  return runMaintenanceOperation((operation) => performClearApplicationData(operation));
 }
 
-async function performClearApplicationData() {
+async function performClearApplicationData(operation) {
   const prepared = await prepareDefaultTemplates();
   const originalRecords = await getAllApplicationRecords();
   const localSnapshot = captureApplicationLocalStorage();
   const educationSnapshot = getRawEducationRecord();
   let committed = false;
   try {
-    await replaceApplicationRecords({ workouts: [], legacyWeights: [], routines: prepared.routines });
+    await replaceApplicationRecords({ workouts: [], legacyWeights: [], routines: prepared.routines }, { operation });
     committed = true;
     clearApplicationLocalStorage();
     setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION);
@@ -154,7 +154,7 @@ async function performClearApplicationData() {
   } catch (cause) {
     const rollbackErrors = [];
     if (committed) {
-      try { await replaceApplicationRecords(originalRecords, { validate: false }); }
+      try { await replaceApplicationRecords(originalRecords, { validate: false, operation }); }
       catch (error) { rollbackErrors.push(error); }
     }
     try { restoreApplicationLocalStorage(localSnapshot); }

@@ -30,13 +30,13 @@ export async function prepareDefaultTemplates({ requireCatalog = false } = {}) {
   };
 }
 
-export async function seedDefaultTemplates() {
+export async function seedDefaultTemplates({ operation } = {}) {
   const existing = await getRoutines();
   if (existing.length && !existing.some(isPendingStarterRoutine)) {
     return { status: "existing", routines: existing };
   }
   const prepared = await prepareDefaultTemplates();
-  await commitRoutineLibrary(prepared.routines, { seed: true, ready: prepared.ready });
+  await commitRoutineLibrary(prepared.routines, { seed: true, ready: prepared.ready, operation });
   return {
     status: prepared.ready ? "catalog" : "catalog-unavailable",
     routines: await getRoutines(),
@@ -45,8 +45,8 @@ export async function seedDefaultTemplates() {
 }
 
 export function resetDefaultTemplates() {
-  return runMaintenanceOperation(async () => {
+  return runMaintenanceOperation(async (operation) => {
     const prepared = await prepareDefaultTemplates({ requireCatalog: true });
-    await commitRoutineLibrary(prepared.routines);
+    await commitRoutineLibrary(prepared.routines, { operation });
   });
 }
