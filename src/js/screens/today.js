@@ -550,7 +550,7 @@ export async function restoreDraftFromStorage() {
   }
 
   setEditingWorkoutId(draft.editingWorkoutId ?? null);
-  setEditingWorkoutRecord(draft);
+  setEditingWorkoutRecord(draft, { fromDraft: true });
   setOriginRoutineId(draft.originRoutineId);
   $("workoutDate").value = draft.date || today();
   await refreshTemplateDropdowns(draft.type);

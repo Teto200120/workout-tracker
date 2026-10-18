@@ -30,6 +30,7 @@ import {
   bindActiveWorkoutGuardrails,
   endExerciseDrag,
   finishCompletionPopup,
+  skipCompletionDetails,
   getEditingWorkoutId,
   handleSessionPrimaryAction,
   loadLastSameWorkout,
@@ -338,6 +339,7 @@ function bindEvents() {
     completeActiveExerciseDetailSet();
   });
   $("completionDone").addEventListener("click", finishCompletionPopup);
+  $("completionSkip").addEventListener("click", skipCompletionDetails);
   $("completionCustomNoteButton").addEventListener("click", () => {
     const note = $("completionCustomNote");
     note.classList.toggle("hidden");

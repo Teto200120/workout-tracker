@@ -88,6 +88,7 @@ let exerciseImageViewerTrigger = null;
 let exerciseFocusScrollToken = 0;
 let editingWorkoutId = null;
 let editingWorkoutRecord = null;
+let editingWorkoutBase = null;
 let sessionRecordId = null;
 const exerciseRecords = new WeakMap();
 const setRecords = new WeakMap();
@@ -262,11 +263,16 @@ export function getEditingWorkoutId() {
 export function setEditingWorkoutId(workoutId) {
   editingWorkoutId = workoutId ?? null;
   editingWorkoutRecord = null;
+  editingWorkoutBase = null;
   sessionRecordId = editingWorkoutId;
 }
 
-export function setEditingWorkoutRecord(record) {
+export function setEditingWorkoutRecord(record, { fromDraft = false } = {}) {
+  editingWorkoutBase = fromDraft
+    ? editingWorkoutId === null ? null : structuredClone(record.editingWorkoutBase)
+    : structuredClone(record);
   editingWorkoutRecord = structuredClone(record);
+  delete editingWorkoutRecord.editingWorkoutBase;
   delete editingWorkoutRecord.editingWorkoutId;
   delete editingWorkoutRecord.activeExerciseIndex;
   delete editingWorkoutRecord.savedAt;
@@ -2507,6 +2513,7 @@ export async function saveDraftSilently() {
   if (!isDatabaseOpen()) return;
   const draft = collectWorkout({ includeEmptySets: true });
   draft.editingWorkoutId = editingWorkoutId;
+  if (editingWorkoutBase !== undefined) draft.editingWorkoutBase = structuredClone(editingWorkoutBase);
   draft.activeExerciseIndex = getActiveExerciseIndex();
   draft.savedAt = new Date().toISOString();
   const validation = validateWorkoutInput(draft, {
@@ -2553,6 +2560,20 @@ export function setOriginRoutineId(value) {
       : null;
 }
 
+export function skipCompletionDetails() {
+  if (completionCoordinator.active) return false;
+  completionWorkout = null;
+  completionSelectedTags.clear();
+  $("completionModal")?.classList.add("hidden");
+  $("completionModal")?.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+  const focusTarget = document.body.contains(completionPreviousFocus)
+    ? completionPreviousFocus : $("todayStartWorkout");
+  focusTarget?.focus({ preventScroll: true });
+  completionPreviousFocus = null;
+  return true;
+}
+
 async function finishCompletionPopup() {
   return completionCoordinator.run(async () => {
     const modal = $("completionModal");
@@ -2565,6 +2586,9 @@ async function finishCompletionPopup() {
 
     const doneButton = $("completionDone");
     if (doneButton) doneButton.disabled = true;
+    const skipButton = $("completionSkip");
+    if (skipButton) skipButton.disabled = true;
+    let committed = false;
     try {
       const customNoteValue = $("completionCustomNote")?.value || "";
       const customNoteResult = validateCompletionNote(customNoteValue);
@@ -2597,7 +2621,8 @@ async function finishCompletionPopup() {
         toast(firstValidationMessage(notesResult));
         return;
       }
-      await saveWorkoutRecord(updated);
+      await saveWorkoutRecord(updated, { expected: completionWorkout });
+      committed = true;
       completionWorkout = null;
       completionSelectedTags.clear();
       modal?.classList.add("hidden");
@@ -2612,9 +2637,14 @@ async function finishCompletionPopup() {
       completionPreviousFocus = null;
     } catch (error) {
       console.info("Workout completion update failed.", error);
-      toast("Could not update workout details. The saved workout is unchanged.");
+      toast(committed
+        ? "Workout details saved, but the screen could not refresh. Reload the tracker."
+        : error?.code === "stale_record"
+          ? "This workout changed or was deleted in another action. Reopen it from History to add your details."
+          : "Could not update workout details. The saved workout is unchanged.");
     } finally {
       if (doneButton) doneButton.disabled = false;
+      if (skipButton) skipButton.disabled = false;
     }
   }).promise;
 }
@@ -2842,6 +2872,11 @@ async function offerRoutineExerciseAdditions(workout) {
 }
 
 async function performWorkoutSave(onCommitted) {
+  if (editingWorkoutId !== null && editingWorkoutBase == null) {
+    toast("This older edit draft has no original saved version to compare. Keep a copy of your changes, then reopen the workout from History before updating it.");
+    return false;
+  }
+  const expected = structuredClone(editingWorkoutBase);
   const currentEndTime = $("endTime").value;
   const endTime = editingWorkoutId === null && !currentEndTime && $("startTime").value
     ? timeNow()
@@ -2887,7 +2922,7 @@ async function performWorkoutSave(onCommitted) {
     previousWorkouts,
   );
 
-  await saveWorkoutRecord(workout);
+  await saveWorkoutRecord(workout, { expected });
   onCommitted();
   const routineUpdate = await offerRoutineExerciseAdditions(workout);
   await clearDraftStorage(false);
@@ -2932,7 +2967,9 @@ async function saveWorkout() {
         toast("Workout saved, but the screen could not refresh. Reload the tracker before saving another workout.");
         return true;
       }
-      toast("Could not save workout. Your draft and visible entries are still available.");
+      toast(error?.code === "stale_record"
+        ? "This workout changed or was deleted in another action. Your draft and visible entries are still available. Reopen the workout from History before editing again."
+        : "Could not save workout. Your draft and visible entries are still available.");
       return false;
     } finally {
       setWorkoutSaveState(false);

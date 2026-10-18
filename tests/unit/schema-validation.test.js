@@ -141,6 +141,37 @@ test("unknown fields are allowed without weakening known-field validation", () =
   );
 });
 
+test("edit-draft bases validate their complete workout and typed identity", () => {
+  const base = canonicalWorkout({ id: 0 });
+  const draft = canonicalDraft({
+    id: 0,
+    editingWorkoutId: 0,
+    editingWorkoutBase: base,
+  });
+  assert.equal(validateDraft(draft).valid, true);
+  assert.equal(
+    validateDraft({ ...draft, editingWorkoutBase: { ...base, id: "0" } }).valid,
+    false,
+  );
+  assert.equal(
+    validateDraft({ ...draft, editingWorkoutBase: { id: 0 } }).valid,
+    false,
+  );
+  assert.equal(
+    validateDraft({ ...draft, editingWorkoutBase: null }).valid,
+    false,
+  );
+  assert.equal(
+    validateDraft(canonicalDraft({ editingWorkoutBase: null })).valid,
+    true,
+  );
+  // Older drafts remain readable; the editor must refuse an unguarded historical update.
+  assert.equal(
+    validateDraft(canonicalDraft({ editingWorkoutId: "legacy" })).valid,
+    true,
+  );
+});
+
 test("optional origin routine IDs are validated without requiring them for existing workouts", () => {
   assert.equal(validateWorkout(canonicalWorkout()).valid, true);
   assert.equal(

@@ -90,7 +90,7 @@ export function getWorkouts() {
   return getAllItems("workouts");
 }
 
-export function saveWorkoutRecord(workout) {
+export function saveWorkoutRecord(workout, options = {}) {
   assertValidWorkout(workout, { path: "workout", source: "application" });
   const guardrails = validateWorkoutInput(workout, {
     allowHistoricalRpeZero: true,
@@ -101,10 +101,23 @@ export function saveWorkoutRecord(workout) {
       source: "application",
     });
   }
-  return putItem("workouts", workout);
+  if (Object.hasOwn(options, "expected")) {
+    const snapshot = structuredClone(workout);
+    const expected = structuredClone(options.expected);
+    return runDataOperation(() => runConditionalStoreMutation(
+      database, "workouts", snapshot.id, expected, (store) => store.put(snapshot), snapshot,
+    ), options.operation);
+  }
+  return putItem("workouts", workout, options.operation);
 }
 
-export function deleteWorkoutRecord(workoutId) {
+export function deleteWorkoutRecord(workoutId, options = {}) {
+  if (Object.hasOwn(options, "expected")) {
+    const expected = structuredClone(options.expected);
+    return runDataOperation(() => runConditionalStoreMutation(
+      database, "workouts", workoutId, expected, (store) => store.delete(workoutId),
+    ), options.operation);
+  }
   return deleteStoredItem("workouts", workoutId);
 }
 

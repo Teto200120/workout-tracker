@@ -17,6 +17,7 @@ import {
 
 const historyEditCoordinator = createActionCoordinator();
 const historyDeleteCoordinator = createActionCoordinator();
+let renderedWorkouts = new Map();
 
 export async function renderHistory() {
   const workouts = (await getWorkouts()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
@@ -33,6 +34,7 @@ export async function renderHistory() {
   const avgDuration = durations.length ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length) : 0;
   $("workoutStats").innerHTML = `<div class="stat stats-stat-card"><strong>${workouts.length}</strong><span class="muted small">Workouts</span></div><div class="stat stats-stat-card"><strong>${sets}</strong><span class="muted small">Total Sets</span></div><div class="stat stats-stat-card"><strong>${Math.round(volume).toLocaleString()}</strong><span class="muted small">Total Volume</span></div><div class="stat stats-stat-card"><strong>${durationLabel(avgDuration)}</strong><span class="muted small">Avg Duration</span></div>`;
   const list = $("historyList");
+  renderedWorkouts = new Map(visible.map((workout) => [workout.id, structuredClone(workout)]));
   if (!visible.length) { list.innerHTML = `<div class="stats-empty-state"><strong>No workouts found</strong><p class="muted small" style="margin:4px 0 0;">Try a different routine filter or exercise search.</p></div>`; return; }
   list.innerHTML = visible.map(renderWorkoutCard).join("");
 }
@@ -133,11 +135,12 @@ async function editWorkout(workoutId) {
 }
 
 async function deleteWorkout(workoutId) {
+  const expected = structuredClone(renderedWorkouts.get(workoutId));
   return historyDeleteCoordinator.run(async () => {
     let committed = false;
     try {
       if (!confirm("Delete this workout?")) return false;
-      await deleteWorkoutRecord(workoutId);
+      await deleteWorkoutRecord(workoutId, { expected });
       committed = true;
       await renderAll();
       toast("Workout deleted.");
@@ -146,7 +149,9 @@ async function deleteWorkout(workoutId) {
       console.info("Workout delete failed.", error);
       toast(committed
         ? "Workout deleted, but the screen could not refresh. Reload the tracker."
-        : "Could not delete the workout. Existing data is unchanged.");
+        : error?.code === "stale_record"
+          ? "This workout changed or was deleted in another action. Refresh History before deleting it."
+          : "Could not delete the workout. Existing data is unchanged.");
       return committed;
     }
   }).promise;

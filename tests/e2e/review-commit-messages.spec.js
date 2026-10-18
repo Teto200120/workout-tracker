@@ -11,6 +11,7 @@ test("a committed workout reports a view failure and blocks duplicate retries", 
 }) => {
   await loadApp(page);
   const workout = workoutFixture(0);
+  await seedStores(page, { workouts: [workout] });
   page.on("dialog", (dialog) => dialog.accept());
   const result = await page.evaluate(async (record) => {
     const active = await import("/src/js/screens/active-workout.js");

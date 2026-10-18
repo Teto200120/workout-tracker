@@ -38,6 +38,9 @@ for (const id of [0, 123, "123"]) {
     await page.locator(`[data-history-action="edit"]${key}`).click();
     await expect(page.locator("#workoutType")).toHaveValue("Retired routine");
     await page.locator("#workoutNotes").fill("Changed note only");
+    await page.evaluate(async () =>
+      (await import("/src/js/screens/active-workout.js")).saveDraftSilently(),
+    );
     // Exercise the actual persisted draft and module-state reset too.
     await page.reload();
     await expect(page.locator("#todayStartWorkout .cta-label")).toContainText(

@@ -341,6 +341,18 @@ export function validateDraft(value, options = {}) {
   if (required(errors, value, "editingWorkoutId", path, legacy)) {
     if (value.editingWorkoutId !== null) validateIdentifier(value.editingWorkoutId, `${path}.editingWorkoutId`, errors, options);
   }
+  // Optional for older drafts; an edited draft without a base may be resumed but not overwrite history.
+  if (hasOwn(value, "editingWorkoutBase")) {
+    const base = value.editingWorkoutBase;
+    if (value.editingWorkoutId === null) {
+      if (base !== null) addError(errors, `${path}.editingWorkoutBase`, "invalid_edit_base", "A new workout draft must not have an edit base.");
+    } else {
+      errors.push(...validateWorkout(base, { ...options, path: `${path}.editingWorkoutBase`, legacy: false }).errors);
+      if (base?.id !== value.editingWorkoutId || base?.id !== value.id) {
+        addError(errors, `${path}.editingWorkoutBase`, "invalid_edit_base", "The original snapshot must match the edited workout ID and type.");
+      }
+    }
+  }
   if (required(errors, value, "activeExerciseIndex", path, legacy)) {
     const index = value.activeExerciseIndex;
     if (legacy && (index === null || index === undefined)) {
