@@ -124,6 +124,7 @@ export async function saveSettingsFromForm() {
   return settingsCoordinator.run(async () => {
     const saveButton = $("saveSettings");
     if (saveButton) saveButton.disabled = true;
+    let committed = false;
     try {
       const schedule = {};
       all(".settings-day-row").forEach((row) => {
@@ -158,7 +159,7 @@ export async function saveSettingsFromForm() {
         return false;
       }
       clearSettingsValidation();
-      await setAppSettings({
+      await persistAppSettings({
         displayName: getAppSettings().displayName,
         schedule,
         defaultWeightJump: numericFormValue(rawSettings.defaultWeightJump),
@@ -174,12 +175,16 @@ export async function saveSettingsFromForm() {
         haptics: $("settingsHaptics").checked,
         animations: $("settingsAnimations").checked
       });
+      committed = true;
+      applyAppSettings();
       toast("Settings saved.");
       return true;
     } catch (error) {
       console.info("Settings save failed.", error);
-      toast("Could not save settings. Your entered values are still available.");
-      return false;
+      toast(committed
+        ? "Settings saved, but the screen could not refresh. Reload the tracker."
+        : "Could not save settings. Your entered values are still available.");
+      return committed;
     } finally {
       if (saveButton) saveButton.disabled = false;
     }
@@ -190,18 +195,22 @@ export async function resetAppSettings() {
   return settingsCoordinator.run(async () => {
     const resetButton = $("resetSettings");
     if (resetButton) resetButton.disabled = true;
+    let committed = false;
     try {
       if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return false;
       const displayName = getAppSettings().displayName;
-      await setAppSettings({ ...cloneDefaultSettings(), displayName });
+      await persistAppSettings({ ...cloneDefaultSettings(), displayName });
+      committed = true;
       applyAppSettings();
       await renderSettings();
       toast("Settings reset.");
       return true;
     } catch (error) {
       console.info("Settings reset failed.", error);
-      toast("Could not reset settings. Existing settings were left in place.");
-      return false;
+      toast(committed
+        ? "Settings reset, but the screen could not refresh. Reload the tracker."
+        : "Could not reset settings. Existing settings were left in place.");
+      return committed;
     } finally {
       if (resetButton) resetButton.disabled = false;
     }

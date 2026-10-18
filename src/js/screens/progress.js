@@ -401,6 +401,7 @@ export function saveGoalsToStorage() {
     const feedback = $("weeklyGoalError");
     const button = $("saveGoals");
     if (button) button.disabled = true;
+    let committed = false;
     try {
       const validation = validateWeeklyGoal(input.value);
       if (validation.errors.length) input.setAttribute("aria-invalid", "true");
@@ -425,14 +426,17 @@ export function saveGoalsToStorage() {
       }
       const weeklyGoal = Number(validation.normalized);
       await setGoals({ ...getGoals(), weeklyGoal });
+      committed = true;
       input.value = String(weeklyGoal);
       toast("Goals saved.");
       await renderAll();
       return true;
     } catch (error) {
       console.info("Goal save failed.", error);
-      toast("Could not save the goal. Your entered value is still available.");
-      return false;
+      toast(committed
+        ? "Goals saved, but the screen could not refresh. Reload the tracker."
+        : "Could not save the goal. Your entered value is still available.");
+      return committed;
     } finally {
       if (button) button.disabled = false;
     }

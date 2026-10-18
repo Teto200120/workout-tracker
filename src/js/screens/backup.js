@@ -94,25 +94,36 @@ export async function renderBackupStatus() {
 export async function exportData() {
   return exportCoordinator.run(async () => {
     setBackupActionPending("export", true);
+    let downloadStarted = false;
+    let metadataSaved = false;
+    let url;
+    let link;
     try {
       const exportedAt = new Date().toISOString();
       const data = await buildBackup(exportedAt);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      url = URL.createObjectURL(blob);
+      link = document.createElement("a");
       link.href = url;
       link.download = `workout-tracker-backup-${today()}.json`;
       document.body.appendChild(link);
       link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      downloadStarted = true;
       await setBackupMeta({ ...getBackupMeta(), lastExportedAt: exportedAt });
+      metadataSaved = true;
       await renderBackupStatus();
-      toast("Backup exported.");
+      toast("Backup download started.");
     } catch (error) {
       console.info("Backup export failed.", error);
-      toast("Could not export backup. Your local data is unchanged.");
+      toast(downloadStarted
+        ? metadataSaved
+          ? "Backup download started, but the screen could not refresh. Check your downloads."
+          : "Backup download started, but its reminder could not be updated. Check your downloads."
+        : "Could not start the backup download. Your workout data is unchanged.");
     } finally {
+      link?.remove();
+      // Give the browser time to consume the download URL before releasing it.
+      if (url) setTimeout(() => URL.revokeObjectURL(url), 60_000);
       setBackupActionPending("export", false);
     }
   }).promise;
@@ -121,6 +132,7 @@ export async function exportData() {
 export async function importData(file) {
   return importCoordinator.run(async () => {
     setBackupActionPending("import", true);
+    let committed = false;
     try {
       const sizeResult = validateBackupFileSize(file?.size);
       if (!sizeResult.valid) {
@@ -134,6 +146,7 @@ export async function importData(file) {
         : "";
       if (!confirm(`Import this backup? Existing entries stay. Matching IDs will be overwritten.${draftWarning}`)) return;
       await restoreBackup(data);
+      committed = true;
       applyAppSettings();
       await refreshTemplateDropdowns();
       await renderAll();
@@ -141,7 +154,9 @@ export async function importData(file) {
       toast("Backup imported.");
     } catch (error) {
       console.info("Backup import failed.", error);
-      toast(backupFailureMessage(error));
+      toast(committed
+        ? "Backup imported, but the screen could not refresh. Reload the tracker."
+        : backupFailureMessage(error));
     } finally {
       setBackupActionPending("import", false);
     }
@@ -173,7 +188,7 @@ export async function clearAllData() {
       console.info("Local data clear failed.", error);
       toast(cleared
         ? "Local data was cleared, but the view could not refresh. Reload the app."
-        : error?.code === "data_clear_failed"
+        : error?.code === "data_clear_failed" || error?.rollbackErrors?.length
           ? backupFailureMessage(error)
           : "Could not clear local data. No clear was committed.");
     } finally {

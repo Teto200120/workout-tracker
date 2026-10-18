@@ -63,3 +63,12 @@ Full cross-storage crash atomicity remains unfinished: synchronous local writes 
 - Final CI validation at `31c9a90`: all 88 browser tests passed without retries, alongside 214 unit tests, 15 Worker tests, catalog validation, lint and formatting. Existing browser tests now await persisted state or session readiness before inspecting data or reloading.
 
 The durable snapshot covers the reviewed cross-storage maintenance operations. This does not add stale-editor conflict detection or change historical metric semantics. The feedback outbox remains separate from application-data clear/backup, as before.
+
+## Pass 8: preference and backup commit messages
+
+- Settings save/reset and weekly-goal save acknowledge successful persistence even if applying preferences or refreshing the screen fails. Import likewise distinguishes a completed restore from a later UI failure.
+- Export distinguishes failure before a download starts, failure to save reminder metadata after starting it, and failure to refresh the status afterward. Messages describe a started download rather than claiming the browser finished saving the file. Download links are cleaned up in all paths; object URLs are released after a grace period.
+- Added browser failure-injection coverage for goal refresh, settings application/reset, import refresh, and export metadata/status failures. Service-worker shell cache advances to v57.
+- Local validation: 214 unit tests, 15 Worker tests, lint, formatting and catalog validation pass. Browser validation is pending CI: the local http-server fails during startup with `uv_interface_addresses`.
+
+Stale-editor conflict detection (F09) remains the next correctness task. These changes do not close the broader performance, organization or Android migration work listed above.
