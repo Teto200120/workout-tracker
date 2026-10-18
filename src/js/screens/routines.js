@@ -33,6 +33,8 @@ import { loadWorkoutTemplate, showSessionView } from "./active-workout.js";
 
 let templateDraftExercises = [];
 let editingTemplateId = null;
+let editingTemplateRecord = null;
+let renderedTemplates = new Map();
 const routineMutationCoordinator = createActionCoordinator();
 const routineStartCoordinator = createActionCoordinator();
 let routineEducationScheduled = false;
@@ -256,6 +258,7 @@ function removeTemplateDraftExercise(index) {
 
 function clearTemplateDraft(showMessage = true) {
   editingTemplateId = null;
+  editingTemplateRecord = null;
   templateDraftExercises = [];
   $("templateName").value = "";
   $("templateExerciseInput").value = "";
@@ -276,6 +279,7 @@ async function saveTemplate() {
       const nameResult = validateRoutineName($("templateName").value);
       setRoutineFieldFeedback("templateName", "templateNameError", nameResult);
       const name = nameResult.normalized;
+      let expected = editingTemplateRecord;
       const template = {
         id: editingTemplateId ?? id(),
         name,
@@ -318,9 +322,9 @@ async function saveTemplate() {
         if (!confirm(`Replace the existing ${existing.name} routine?`)) return false;
         template.id = existing.id;
         template.createdAt = existing.createdAt;
+        expected = existing;
       } else if (editingTemplateId !== null) {
-        const edited = routines.find((item) => item.id === editingTemplateId);
-        template.createdAt = edited?.createdAt || template.createdAt;
+        template.createdAt = editingTemplateRecord?.createdAt || template.createdAt;
       }
       if (
         validation.warnings.length &&
@@ -328,7 +332,7 @@ async function saveTemplate() {
       ) {
         return false;
       }
-      await saveRoutine(template);
+      await saveRoutine({ ...expected, ...template }, { expected });
       committed = true;
       clearTemplateDraft(false);
       await refreshTemplateDropdowns(name);
@@ -339,7 +343,9 @@ async function saveTemplate() {
       console.info("Routine save failed.", error);
       toast(committed
         ? "Routine saved, but the screen could not refresh. Reload the tracker."
-        : "Could not save the routine. Your draft is still available.");
+        : error?.code === "stale_record"
+          ? "This routine changed or was deleted in another action. Your draft is still available. Reopen the saved routine before editing again."
+          : "Could not save the routine. Your draft is still available.");
       return committed;
     } finally {
       if (button) button.disabled = false;
@@ -351,6 +357,7 @@ async function editTemplate(templateId) {
   const template = (await getRoutines()).find((item) => item.id === templateId);
   if (!template) return;
   editingTemplateId = template.id;
+  editingTemplateRecord = structuredClone(template);
   $("templateName").value = template.name;
   templateDraftExercises = [...template.exercises];
   renderTemplateDraft();
@@ -359,11 +366,12 @@ async function editTemplate(templateId) {
 }
 
 async function deleteTemplate(templateId) {
+  const expected = structuredClone(renderedTemplates.get(templateId));
   return routineMutationCoordinator.run(async () => {
     let committed = false;
     try {
       if (!confirm("Delete this routine? Workout history will not be deleted.")) return false;
-      await deleteRoutine(templateId);
+      await deleteRoutine(templateId, { expected });
       committed = true;
       await refreshTemplateDropdowns();
       await renderAll();
@@ -373,7 +381,9 @@ async function deleteTemplate(templateId) {
       console.info("Routine delete failed.", error);
       toast(committed
         ? "Routine deleted, but the screen could not refresh. Reload the tracker."
-        : "Could not delete the routine. Existing data is unchanged.");
+        : error?.code === "stale_record"
+          ? "This routine changed or was deleted in another action. Refresh the library before deleting it."
+          : "Could not delete the routine. Existing data is unchanged.");
       return committed;
     }
   }).promise;
@@ -429,6 +439,7 @@ export async function renderTemplates() {
   renderTemplateDraft();
   const templates = await getRoutines();
   const container = $("savedTemplates");
+  renderedTemplates = new Map(templates.map((template) => [template.id, structuredClone(template)]));
   if (!templates.length) {
     container.innerHTML = `
       <div class="routine-empty-state routine-library-empty">

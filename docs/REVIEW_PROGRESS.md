@@ -69,6 +69,15 @@ The durable snapshot covers the reviewed cross-storage maintenance operations. T
 - Settings save/reset and weekly-goal save acknowledge successful persistence even if applying preferences or refreshing the screen fails. Import likewise distinguishes a completed restore from a later UI failure.
 - Export distinguishes failure before a download starts, failure to save reminder metadata after starting it, and failure to refresh the status afterward. Messages describe a started download rather than claiming the browser finished saving the file. Download links are cleaned up in all paths; object URLs are released after a grace period.
 - Added browser failure-injection coverage for goal refresh, settings application/reset, import refresh, and export metadata/status failures. Service-worker shell cache advances to v57.
-- Local validation: 214 unit tests, 15 Worker tests, lint, formatting and catalog validation pass. Browser validation is pending CI: the local http-server fails during startup with `uv_interface_addresses`.
+- Final CI validation at `a6a7f17`: 214 unit tests, 93 browser tests (no retries), 15 Worker tests, lint, formatting and catalog validation passed. The local browser runner remains unavailable because http-server fails during startup with `uv_interface_addresses`.
 
 Stale-editor conflict detection (F09) remains the next correctness task. These changes do not close the broader performance, organization or Android migration work listed above.
+
+## Pass 9: routine optimistic conflict detection
+
+- Routine editors retain the original saved snapshot. Updates and intentional same-name replacements compare the expected record and write in one IndexedDB readwrite transaction. New IDs expect absence. Library deletes compare the record shown by the rendered card. Conflicts abort without modifying storage and retain the editor draft with an explanatory message.
+- The comparison checks complete nested content and identifier types rather than timestamps; object property order does not create false conflicts. Conditional writes still acknowledge only transaction completion and share the maintenance/recovery boundary. Ordinary routine edits preserve original creation time and extension fields.
+- Routine additions offered after a workout use a conditional save of the latest routine they read, so a subsequent change cannot be overwritten by that write.
+- Added unit coverage for comparison, colliding creates, changed/deleted snapshots and late aborts; browser coverage exercises stale edits across tabs, stale deletes, extension preservation and two competing saves. Local validation: 219 unit tests and lint pass; browser CI validation pending. Shell cache advances to v58.
+
+F09 remains open for workout/history editors and restored edit drafts, settings/goal forms, and library-wide constraints such as simultaneous same-name creates with different IDs. Bulk restore/reset remain intentional replacement operations. Unguarded storage calls retained for those operations and test setup do not provide editor conflict detection.

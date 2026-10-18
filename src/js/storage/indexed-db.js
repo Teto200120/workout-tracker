@@ -12,7 +12,7 @@ import {
 
 import { planRoutineSeed } from "../domain/routine-seeding.js";
 import { runDataOperation } from "./operation.js";
-import { runStoreMutation } from "./transaction.js";
+import { runConditionalStoreMutation, runStoreMutation } from "./transaction.js";
 import { openManagedDatabase } from "./connection.js";
 
 let database = null;
@@ -112,7 +112,7 @@ export function getRoutines() {
   return getAllItems("templates").then((templates) => templates.sort((a, b) => a.name.localeCompare(b.name)));
 }
 
-export function saveRoutine(routine) {
+export function saveRoutine(routine, options = {}) {
   assertValidRoutine(routine, { path: "routine", source: "application" });
   const guardrails = validateRoutineInput(routine);
   if (!guardrails.valid) {
@@ -121,10 +121,23 @@ export function saveRoutine(routine) {
       source: "application",
     });
   }
-  return putItem("templates", routine);
+  if (Object.hasOwn(options, "expected")) {
+    const snapshot = structuredClone(routine);
+    const expected = structuredClone(options.expected);
+    return runDataOperation(() => runConditionalStoreMutation(
+      database, "templates", snapshot.id, expected, (store) => store.put(snapshot), snapshot,
+    ), options.operation);
+  }
+  return putItem("templates", routine, options.operation);
 }
 
-export function deleteRoutine(routineId) {
+export function deleteRoutine(routineId, options = {}) {
+  if (Object.hasOwn(options, "expected")) {
+    const expected = structuredClone(options.expected);
+    return runDataOperation(() => runConditionalStoreMutation(
+      database, "templates", routineId, expected, (store) => store.delete(routineId),
+    ), options.operation);
+  }
   return deleteStoredItem("templates", routineId);
 }
 

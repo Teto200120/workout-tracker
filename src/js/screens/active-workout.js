@@ -2817,7 +2817,7 @@ async function offerRoutineExerciseAdditions(workout) {
           message: firstValidationMessage(validation),
         };
       }
-      await saveRoutine(updatedRoutine);
+      await saveRoutine(updatedRoutine, { expected: latestRoutine });
     }
 
     const persistedRoutine = (await getRoutines()).find(
