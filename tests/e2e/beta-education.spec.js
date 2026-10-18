@@ -611,9 +611,9 @@ test("coach marks respect reduced motion, reposition on resize, and block backgr
     "padding-top",
     "14px",
   );
-  expect(
-    await page.evaluate(() => globalThis.__educationScrollBehaviors),
-  ).toContain("auto");
+  await expect
+    .poll(() => page.evaluate(() => globalThis.__educationScrollBehaviors))
+    .toContain("auto");
   await expectCoachMarkSeparated(page);
   expect(
     (await page.locator(".coach-mark-bubble").boundingBox()).height,
