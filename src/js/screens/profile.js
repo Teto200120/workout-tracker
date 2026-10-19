@@ -123,12 +123,12 @@ export function bindProfileActions({ onDisplayNameSaved } = {}) {
   });
 }
 
-export async function renderProfile() {
+export async function renderProfile(records = {}) {
   if (!$("profile") || !isDatabaseOpen()) return;
 
   const [workoutsRaw, templates] = await Promise.all([
-    getWorkouts(),
-    getRoutines()
+    records.workouts ?? getWorkouts(),
+    records.routines ?? getRoutines()
   ]);
   const workouts = sortByDateDesc(workoutsRaw);
   const goals = getGoals();

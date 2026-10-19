@@ -151,9 +151,9 @@ function renderInsightList(targetId, insights, emptyText) {
   `).join("");
 }
 
-function renderStrengthSnapshot(workouts, exerciseStats) {
-  renderInsightList("strengthSnapshot", buildProgressInsights(workouts, exerciseStats, 3), "Strength trends will appear here once you have a few sessions logged.");
-  renderInsightList("strengthSnapshotDetail", buildProgressInsights(workouts, exerciseStats, 6), "Strength trends will appear here once you have a few sessions logged.");
+function renderStrengthSnapshot(workouts, exerciseStats, { preview = true, detail = true } = {}) {
+  if (preview) renderInsightList("strengthSnapshot", buildProgressInsights(workouts, exerciseStats, 3), "Strength trends will appear here once you have a few sessions logged.");
+  if (detail) renderInsightList("strengthSnapshotDetail", buildProgressInsights(workouts, exerciseStats, 6), "Strength trends will appear here once you have a few sessions logged.");
 }
 
 function renderWeeklyActivityStrip(targetId, countId, activity) {
@@ -187,33 +187,42 @@ function renderWeeklyActivityDetailList(activity) {
   `).join("");
 }
 
-function renderWeeklyActivity(workouts) {
+function renderWeeklyActivity(workouts, { preview = true, detail = true } = {}) {
   const activity = buildWeeklyActivityData(workouts, new Date());
-  renderWeeklyActivityStrip("weeklyActivityPreview", "weeklyActivityPreviewCount", activity);
-  renderWeeklyActivityStrip("weeklyActivityDetail", "weeklyActivityDetailCount", activity);
-  renderWeeklyActivityDetailList(activity);
+  if (preview) renderWeeklyActivityStrip("weeklyActivityPreview", "weeklyActivityPreviewCount", activity);
+  if (detail) {
+    renderWeeklyActivityStrip("weeklyActivityDetail", "weeklyActivityDetailCount", activity);
+    renderWeeklyActivityDetailList(activity);
+  }
 }
 
-export async function renderDashboard() {
-  const workouts = (await getWorkouts()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  const exerciseStats = buildExerciseStats(workouts);
-  const summary = getWorkoutStatsSummary(workouts);
-  const streak = calculateWorkoutStreak(workouts, new Date());
+export async function renderDashboard(records = {}, { destination = "all" } = {}) {
+  const workouts = [...(records.workouts ?? await getWorkouts())].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  const full = destination === "all";
+  const overview = full || destination === "stats";
+  const exerciseStats = overview || destination === "statsStrength" || destination === "statsRecords"
+    ? buildExerciseStats(workouts) : [];
+  if (overview) {
+    const summary = getWorkoutStatsSummary(workouts);
+    const streak = calculateWorkoutStreak(workouts, new Date());
 
-  $("dashboardStats").innerHTML = `
+    $("dashboardStats").innerHTML = `
     <div class="stat stats-stat-card stats-stat-accent"><strong>${summary.workouts}</strong><span class="muted small">Workouts</span></div>
     <div class="stat stats-stat-card"><strong>${summary.sets}</strong><span class="muted small">Total Sets</span></div>
     <div class="stat stats-stat-card"><strong>${Math.round(summary.volume).toLocaleString()}</strong><span class="muted small">Total Volume</span></div>
     <div class="stat stats-stat-card"><strong>${streak}</strong><span class="muted small">Streak Days</span></div>
   `;
-  renderWeeklyActivity(workouts);
-  renderStrengthSnapshot(workouts, exerciseStats);
-  renderRecentSessionsPreview(workouts);
-  renderWorkoutStats(workouts);
-  renderGoals(workouts);
-  renderPersonalRecords(exerciseStats);
-  renderExerciseSelectors(exerciseStats);
-  renderExerciseProgress(exerciseStats);
+    renderRecentSessionsPreview(workouts);
+  }
+  if (overview || destination === "statsWeekly") renderWeeklyActivity(workouts, { preview: overview, detail: full || destination === "statsWeekly" });
+  if (overview || destination === "statsStrength") renderStrengthSnapshot(workouts, exerciseStats, { preview: overview, detail: full || destination === "statsStrength" });
+  if (overview || destination === "statsWorkoutStats") renderWorkoutStats(workouts, { preview: overview, detail: full || destination === "statsWorkoutStats" });
+  if (full || destination === "statsGoals") renderGoals(workouts);
+  if (overview || destination === "statsRecords") renderPersonalRecords(exerciseStats, { preview: overview, detail: full || destination === "statsRecords" });
+  if (full || destination === "statsStrength") {
+    renderExerciseSelectors(exerciseStats);
+    renderExerciseProgress(exerciseStats);
+  }
 }
 
 function renderStatsGrid(targetId, stats) {
@@ -228,10 +237,10 @@ function renderStatsGrid(targetId, stats) {
   `;
 }
 
-function renderWorkoutStats(workouts) {
+function renderWorkoutStats(workouts, { preview = true, detail = true } = {}) {
   const stats = getWorkoutStatsSummary(workouts);
-  renderStatsGrid("workoutStats", stats);
-  renderStatsGrid("workoutStatsPreview", stats);
+  if (detail) renderStatsGrid("workoutStats", stats);
+  if (preview) renderStatsGrid("workoutStatsPreview", stats);
 }
 
 function renderRecentSessionsPreview(workouts) {
@@ -332,9 +341,10 @@ function renderPersonalRecordsPreview(records) {
   `).join("");
 }
 
-function renderPersonalRecords(exerciseStats) {
+function renderPersonalRecords(exerciseStats, { preview = true, detail = true } = {}) {
   const allRecords = exerciseStats.filter((exercise) => exercise.bestEstimated1rm > 0).sort((a, b) => b.bestEstimated1rm - a.bestEstimated1rm);
-  renderPersonalRecordsPreview(allRecords);
+  if (preview) renderPersonalRecordsPreview(allRecords);
+  if (!detail) return;
 
   const target = $("personalRecords");
   if (!target) return;

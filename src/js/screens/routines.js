@@ -437,9 +437,9 @@ async function resetTemplates() {
   }).promise;
 }
 
-export async function renderTemplates() {
+export async function renderTemplates(records = {}) {
   renderTemplateDraft();
-  const templates = await getRoutines();
+  const templates = records.routines ?? await getRoutines();
   const container = $("savedTemplates");
   renderedTemplates = new Map(templates.map((template) => [template.id, structuredClone(template)]));
   if (!templates.length) {

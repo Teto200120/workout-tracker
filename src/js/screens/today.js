@@ -180,12 +180,12 @@ function syncTodayFloatingCta() {
   $("todayFloatingCta")?.classList.toggle("hidden", !visible);
 }
 
-export async function showTodayView() {
+export async function showTodayView({ refresh = true } = {}) {
   if (isExerciseDetailOpen()) closeExerciseDetail();
   $("sessionView")?.classList.add("hidden");
   $("todayView")?.classList.remove("hidden");
   stopSessionElapsedTimer();
-  await renderTodayView();
+  if (refresh) await renderTodayView();
   syncTodayFloatingCta();
   replayAnimation($("todayView"), "settle-in", 260);
   window.scrollTo({ top: 0, behavior: motionBehavior() });
@@ -250,12 +250,12 @@ function updateTodayGreeting(workouts) {
   if (streakBadge) streakBadge.textContent = `🔥 ${getWorkoutStreak(workouts, new Date())}`;
 }
 
-export async function renderTodayView() {
+export async function renderTodayView(records = {}) {
   if (!isDatabaseOpen() || !$("todayView")) return;
 
   const plan = getTodayPlan(today());
-  const templates = await getRoutines();
-  const workouts = await getWorkouts();
+  const templates = records.routines ?? await getRoutines();
+  const workouts = records.workouts ?? await getWorkouts();
   const todaysWorkouts = workouts
     .filter((workout) => workout.date === today())
     .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));

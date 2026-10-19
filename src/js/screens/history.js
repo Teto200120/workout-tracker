@@ -19,8 +19,8 @@ const historyEditCoordinator = createActionCoordinator();
 const historyDeleteCoordinator = createActionCoordinator();
 let renderedWorkouts = new Map();
 
-export async function renderHistory() {
-  const workouts = (await getWorkouts()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+export async function renderHistory(records = {}) {
+  const workouts = [...(records.workouts ?? await getWorkouts())].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
   const filter = $("historyFilter").value;
   const search = $("exerciseSearch").value.trim().toLowerCase();
   const visible = workouts.filter((workout) => {
@@ -28,11 +28,6 @@ export async function renderHistory() {
     const searchMatch = !search || workout.exercises.some((exercise) => exercise.name.toLowerCase().includes(search));
     return typeMatch && searchMatch;
   });
-  const volume = workouts.reduce((sum, workout) => sum + workoutVolume(workout), 0);
-  const sets = workouts.reduce((sum, workout) => sum + totalSets(workout), 0);
-  const durations = workouts.map(workoutDurationMinutes).filter(Boolean);
-  const avgDuration = durations.length ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length) : 0;
-  $("workoutStats").innerHTML = `<div class="stat stats-stat-card"><strong>${workouts.length}</strong><span class="muted small">Workouts</span></div><div class="stat stats-stat-card"><strong>${sets}</strong><span class="muted small">Total Sets</span></div><div class="stat stats-stat-card"><strong>${Math.round(volume).toLocaleString()}</strong><span class="muted small">Total Volume</span></div><div class="stat stats-stat-card"><strong>${durationLabel(avgDuration)}</strong><span class="muted small">Avg Duration</span></div>`;
   const list = $("historyList");
   renderedWorkouts = new Map(visible.map((workout) => [workout.id, structuredClone(workout)]));
   if (!visible.length) { list.innerHTML = `<div class="stats-empty-state"><strong>No workouts found</strong><p class="muted small" style="margin:4px 0 0;">Try a different routine filter or exercise search.</p></div>`; return; }

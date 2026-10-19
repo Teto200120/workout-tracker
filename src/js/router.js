@@ -19,7 +19,7 @@ import {
   saveSettingsFromForm
 } from "./core/settings.js";
 import { haptic, motionBehavior, replayAnimation, scrollInputIntoView, today, toast } from "./core/utils.js";
-import { getWorkouts, openDatabase } from "./storage/indexed-db.js";
+import { getAllApplicationRecords, getRoutines, getWorkouts, openDatabase } from "./storage/indexed-db.js";
 import { getDraft } from "./storage/local.js";
 import {
   clearDraftStorage,
@@ -109,6 +109,7 @@ const STATS_DETAIL_DESTINATIONS = new Set([
 
 let applicationStarted = false;
 let eventsBound = false;
+let navigationRevision = 0;
 
 function settleScreenLayout() {
   return new Promise((resolve) => {
@@ -183,6 +184,8 @@ function openProfileSubpage(destination, focusId = "") {
 }
 
 export function switchScreen(name) {
+  const revision = ++navigationRevision;
+  const isCurrent = () => revision === navigationRevision;
   const destination = getScreenDestination(name);
   const activeScreens = SCREEN_GROUPS[destination];
   const activeNav = getActiveNavDestination(destination);
@@ -196,13 +199,16 @@ export function switchScreen(name) {
   all(".screen").forEach((screen) => screen.classList.toggle("active", activeScreens.includes(screen.id)));
   document.body.dataset.screenTransitioning = "true";
   replayAnimation($(activeScreens[0]), "settle-in", 260);
-  return renderAll()
-    .then(settleScreenLayout)
-    .then(() => {
+  return renderAll({ destination, isCurrent })
+    .then(async (rendered) => {
+      if (!rendered || !isCurrent()) return;
+      await settleScreenLayout();
+      if (!isCurrent()) return;
       document.body.dataset.screenTransitioning = "false";
       coordinateScreenEducation(destination);
     })
     .catch((error) => {
+      if (!isCurrent()) return;
       document.body.dataset.screenTransitioning = "false";
       console.info("Screen render failed.", error);
       toast("This screen could not be refreshed. Try again.");
@@ -421,15 +427,40 @@ function bindEvents() {
   });
 }
 
-export async function renderAll() {
-  await renderDashboard();
-  await renderHistory();
-  await renderTemplates();
-  await renderProfile();
-  renderFeedback();
-  await renderTodayView();
-  await renderSettings();
-  await renderBackupStatus();
+export async function renderAll({ destination = null, isCurrent = () => true } = {}) {
+  if (destination !== null) destination = getScreenDestination(destination);
+  let records;
+  if (destination === "feedback") records = {};
+  else if (destination === "settings" || destination === "templates") records = { routines: await getRoutines() };
+  else if (destination === "stats" || STATS_DETAIL_DESTINATIONS.has(destination)) records = { workouts: await getWorkouts() };
+  else records = await getAllApplicationRecords();
+  if (!isCurrent()) return false;
+  if (records.routines) records = { ...records, routines: [...records.routines].sort((a, b) => a.name.localeCompare(b.name)) };
+
+  const renderers = {
+    stats: (snapshot) => renderDashboard(snapshot, { destination: "stats" }),
+    history: renderHistory,
+    statsWeekly: (snapshot) => renderDashboard(snapshot, { destination: "statsWeekly" }),
+    statsStrength: (snapshot) => renderDashboard(snapshot, { destination: "statsStrength" }),
+    statsRecords: (snapshot) => renderDashboard(snapshot, { destination: "statsRecords" }),
+    statsWorkoutStats: (snapshot) => renderDashboard(snapshot, { destination: "statsWorkoutStats" }),
+    statsGoals: (snapshot) => renderDashboard(snapshot, { destination: "statsGoals" }),
+    templates: renderTemplates,
+    profile: renderProfile,
+    feedback: renderFeedback,
+    home: renderTodayView,
+    settings: renderSettings,
+    backup: renderBackupStatus,
+  };
+  const refresh = destination ? [renderers[destination]] : [
+    renderDashboard, renderHistory, renderTemplates, renderProfile,
+    renderFeedback, renderTodayView, renderSettings, renderBackupStatus,
+  ];
+  for (const render of refresh) {
+    if (!isCurrent()) return false;
+    await render(records);
+  }
+  return true;
 }
 
 export async function init() {
@@ -458,7 +489,7 @@ async function activateApplication() {
   await refreshTemplateDropdowns();
   if (firstStart) await loadWorkoutTemplate();
   await renderAll();
-  await showTodayView();
+  await showTodayView({ refresh: false });
   showApplicationShell();
 
   if (firstStart && getDraft()) {

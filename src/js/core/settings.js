@@ -68,11 +68,11 @@ export function applyAppSettings() {
   document.body.classList.toggle("no-animations", !settings.animations);
 }
 
-export async function renderSettings() {
+export async function renderSettings(records = {}) {
   if (!$("settingsSchedule")) return;
   const snapshot = getAppSettingsSnapshot();
   const settings = snapshot.value;
-  const templates = await getRoutines();
+  const templates = records.routines ?? await getRoutines();
   const routineOptions = templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");
 
   $("settingsSchedule").innerHTML = DAY_LABELS.map((day, index) => {

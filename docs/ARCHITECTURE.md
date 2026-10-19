@@ -13,6 +13,10 @@ The deployed app remains directly served HTML, CSS, images, and browser-native E
 
 `src/js/router.js` owns startup order, primary and nested screen navigation, static event binding, app-wide rendering, and screen-settle education coordination. Startup opens IndexedDB, completes application-schema detection, validation, and migration, applies settings, and then evaluates the display-name gate while the static app shell remains hidden. A required name shows the two-screen onboarding surface; a usable saved name continues through routine seeding, event binding, selector preparation, app-wide rendering, and Home.
 
+`renderAll()` reads workouts, routines and legacy weights once in one fresh readonly transaction and passes those records to the screen renderers. Renderers copy arrays before sorting and can still read storage when called independently without supplied records. This snapshot belongs to one refresh; there is no persistent render cache to invalidate after writes or changes in another tab.
+
+`switchScreen()` refreshes only the requested destination. Settings and Routines need only routine records, Feedback needs no application IndexedDB records, and Stats/History destinations read workout records once. Stats previews and detail pages render their own sections. A navigation revision check discards a superseded read before rendering and prevents old navigation completions from presenting education over the latest screen. Explicit full refreshes still render all screens after data-changing actions and during startup; replacing those with targeted invalidation is separate work. Startup reuses its freshly rendered Home view instead of immediately reading it again.
+
 ## Dependency direction
 
 The intended dependency direction is:

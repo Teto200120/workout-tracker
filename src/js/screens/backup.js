@@ -39,10 +39,12 @@ function setBackupActionPending(action, pending) {
   if (action === "import") $("importFile").disabled = pending;
 }
 
-export async function renderBackupStatus() {
+export async function renderBackupStatus(records = {}) {
   if (!isDatabaseOpen()) return;
 
-  const [workouts, legacyWeights] = await Promise.all([getWorkouts(), getLegacyWeights()]);
+  const [workouts, legacyWeights] = await Promise.all([
+    records.workouts ?? getWorkouts(), records.legacyWeights ?? getLegacyWeights(),
+  ]);
   // Legacy weight records still count for backup reminders so old data can be exported.
   const hasUserData = workouts.length > 0 || legacyWeights.length > 0;
   const meta = getBackupMeta();
