@@ -40,7 +40,16 @@ for (const path of paths) {
   integrity[path] =
     `sha256-${createHash("sha256").update(bytes).digest("base64")}`;
 }
+// Include worker policy as well as assets: even a policy-only update must not
+// install into (or delete on failure) the active generation's cache.
+const policy = await format(
+  source
+    .replace(/const CACHE_NAME = "[^"]+";/u, 'const CACHE_NAME = "";')
+    .replace(/const SHELL_INTEGRITY = \{[\s\S]*?\};\n*/u, ""),
+  { filepath: resolve("service-worker.js") },
+);
 const generation = createHash("sha256")
+  .update(policy)
   .update(JSON.stringify(integrity))
   .digest("hex")
   .slice(0, 16);

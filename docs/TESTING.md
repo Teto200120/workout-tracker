@@ -9,7 +9,7 @@ Node's built-in test runner imports production functions directly from `src/js/d
 The unit suite covers:
 
 - Epley estimated 1RM, set volume, workout volume, and workout duration.
-- Working-set totals and the existing completed warm-up behavior.
+- Working-set and completed-working-set totals excluding warm-ups, and one exercise session per workout.
 - Best-set selection, workout and exercise aggregation, PR comparison, and completion summaries.
 - Empty workouts, empty sets, zero and missing values, invalid numeric input behavior, and workout saveability.
 - Monday-first schedule resolution, weekly activity, streaks, rolling weekly counts, and date boundaries with an explicit current date.
@@ -62,20 +62,20 @@ The browser suite covers:
 - A controlled offline journey that resumes a draft, searches the cached catalog from Active Workout and Routines, opens a catalog-backed Guide, saves once, reloads, and verifies the IndexedDB workout remains available.
 - Two-screen onboarding with atomic name/RPE persistence; Home offer/tour/replay; coach-mark focus, Escape, browser Back, missing targets, reduced motion, resize, and background blocking; safe Active Workout/RPE/Routine guidance; inline History/Stats/Guide tips; Settings replay/reset; and Clear All Data education removal.
 
-Tests block service workers to prevent an older local cache from mixing assets between runs. Vibration is replaced with a harmless browser stub. Downloads, uploads, and confirmation dialogs are handled through Playwright. Fixtures use the same explicit production storage interfaces as the app.
+Most tests block service workers to isolate feature regressions. The dedicated offline-shell browser regression enables the real worker and verifies offline startup/navigation. Worker unit tests cover integrity-bound installation, safe activation, cache isolation and generation consistency. Vibration is replaced with a harmless browser stub. Downloads, uploads, and confirmation dialogs are handled through Playwright. Fixtures use the same explicit production storage interfaces as the app.
 
 ## Commands
 
 - `npm run serve` starts the static server at `http://127.0.0.1:4175`.
 - `npm run lint` checks JavaScript for likely defects and guards the reduced transitional-global list.
-- `npm run format:check` checks the adopted tooling, tests, workflow, and documentation files.
+- `npm run format:check` checks production HTML/CSS/JavaScript, backend source, tooling, tests, workflow and documentation. The generated exercise catalog retains the ingestion script formatter and is checked by `catalog:validate`.
 - `npm run catalog:refresh` is a manual, networked development command that fetches and deterministically regenerates the pinned provider snapshot. It is not part of startup or CI.
 - `npm run catalog:validate` validates the committed snapshot entirely offline and reports record, byte, gzip, and revision metadata.
 - `npm run test:unit` runs direct domain tests only.
 - `npm run test:e2e` runs the headless Chromium workflow suite only.
 - `npm run test` runs unit tests, then browser tests.
 - `npm run test:e2e:ui` opens Playwright UI mode for interactive browser debugging.
-- `npm run check` runs every merge-blocking validation used by CI: lint, formatting, unit tests, and browser tests.
+- `npm run check` runs every merge-blocking validation used by CI: lint, formatting, release/shell integrity and coverage, catalog validation, backend tests, unit tests and browser tests. Run `npm run release:prepare` after editing/formatting a shell asset.
 
 When a browser test fails, inspect `playwright-report/index.html` with `npx playwright show-report`. CI uploads the HTML report, traces, screenshots, and retained failure videos when available. Locally, rerun one test with `npx playwright test tests/e2e/workout.spec.js --debug` or use UI mode.
 
@@ -83,10 +83,10 @@ If the managed Playwright browser cannot launch on Windows, set `PLAYWRIGHT_CHRO
 
 ## Manual coverage
 
-The automated suites do not replace [QA_CHECKLIST.md](QA_CHECKLIST.md). Offline install/startup, installed-PWA behavior, device vibration, file handling outside Chromium, real keyboard behavior, and Android browser layout/performance remain manual. These checks depend on an installed PWA, physical hardware, or platform behavior that headless CI cannot represent reliably.
+The automated suites do not replace [QA_CHECKLIST.md](QA_CHECKLIST.md). Installed-PWA device behavior, device vibration, file handling outside Chromium, real keyboard behavior, and Android browser layout/performance remain manual. These checks depend on an installed PWA, physical hardware, or platform behavior that headless CI cannot represent reliably.
 
 The complete audit, exact hard limits and warning thresholds, failure behavior, and remaining risks are recorded in [BETA_HARDENING.md](BETA_HARDENING.md).
 
 On the Samsung Galaxy S24 Ultra, repeat first-run onboarding and name editing; Home, Active Workout, Routine Browse/Change, and Exercise Details scroll/action/keyboard checks; collapsed filter/count/reset and short local/catalog hierarchy; preview-versus-full-Guide behavior; exact/alias/custom/history name resolution; draft reload; save/edit; legacy startup migration; failed-migration recovery; backup clear/restore; offline routine/catalog/Guide reload; haptic; and portrait-layout checks from the release checklist.
 
-Formatting adoption covers tooling, catalog modules/data, tests, workflow, and documentation. Existing unrelated production HTML, CSS, and JavaScript are not reformatted as part of this spike.
+The pre-Android baseline adopts formatting across production source. Generated catalog data stays under its ingestion formatter. Real Cloudflare delivery, installed-app update lifecycle on a phone, device haptics, virtual keyboards and Android performance still require their respective deployment/device checks.

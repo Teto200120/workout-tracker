@@ -42,4 +42,6 @@ npm run test:e2e:ui
 npm run check
 ```
 
-`npm run test` runs direct domain-unit tests followed by the Playwright browser suite. `npm run check` runs the same lint, formatting, unit-test, and browser-test validation used by GitHub Actions. See [docs/TESTING.md](docs/TESTING.md) for test scope and debugging guidance.
+`npm run test` runs direct domain-unit tests followed by the Playwright browser suite. `npm run check` runs the same lint, full-source formatting, release/shell integrity, catalog, backend, unit and browser validation used by GitHub Actions. After changing or formatting a production shell asset, run `npm run release:prepare` to update the asset digests. See [docs/TESTING.md](docs/TESTING.md) for test scope and debugging guidance.
+
+The remaining pre-Android release gates and explicit native handoff are tracked in [docs/PRE_ANDROID_CHECKLIST.md](docs/PRE_ANDROID_CHECKLIST.md).
