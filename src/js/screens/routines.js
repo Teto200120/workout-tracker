@@ -345,6 +345,8 @@ async function saveTemplate() {
         ? "Routine saved, but the screen could not refresh. Reload the tracker."
         : error?.code === "stale_record"
           ? "This routine changed or was deleted in another action. Your draft is still available. Reopen the saved routine before editing again."
+          : error?.code === "routine_name_conflict" || error?.code === "routine_limit"
+            ? `${error.message} Your draft is still available.`
           : "Could not save the routine. Your draft is still available.");
       return committed;
     } finally {

@@ -15,9 +15,10 @@ import {
   workoutVolume
 } from "../domain/workout-metrics.js";
 import { getWorkouts } from "../storage/indexed-db.js";
-import { getGoals, setGoals } from "../storage/local.js";
+import { getGoalsSnapshot, setGoals } from "../storage/local.js";
 
 const goalsCoordinator = createActionCoordinator();
+let renderedGoalsSnapshot = null;
 
 function metricLabel(metric) {
   return { estimated1rm: "Estimated 1RM", bestWeight: "Best Load", bestVolume: "Best Set Volume" }[metric] || "Metric";
@@ -255,13 +256,17 @@ function renderRecentSessionsPreview(workouts) {
 }
 
 function renderGoals(workouts) {
-  const goals = getGoals();
+  const snapshot = getGoalsSnapshot();
+  const goals = snapshot.value;
   const weeklyGoalInput = $("weeklyGoal");
   const savedGoal = String(goals.weeklyGoal || 4);
   // Background navigation renders must not replace an unsaved edit.
-  if (weeklyGoalInput && weeklyGoalInput.dataset.savedGoal !== savedGoal) {
+  const dirty = weeklyGoalInput?.dataset.savedGoal !== undefined &&
+    weeklyGoalInput.value !== weeklyGoalInput.dataset.savedGoal;
+  if (weeklyGoalInput && !dirty) {
     weeklyGoalInput.value = savedGoal;
     weeklyGoalInput.dataset.savedGoal = savedGoal;
+    renderedGoalsSnapshot = snapshot;
   }
 
   const workoutsThisWeek = countRecentWorkouts(workouts, new Date());
@@ -403,6 +408,11 @@ export function saveGoalsToStorage() {
     if (button) button.disabled = true;
     let committed = false;
     try {
+      const base = renderedGoalsSnapshot;
+      if (!base) {
+        toast("Goals are still loading. Try again when they appear.");
+        return false;
+      }
       const validation = validateWeeklyGoal(input.value);
       if (validation.errors.length) input.setAttribute("aria-invalid", "true");
       else input.removeAttribute("aria-invalid");
@@ -425,9 +435,12 @@ export function saveGoalsToStorage() {
         return false;
       }
       const weeklyGoal = Number(validation.normalized);
-      await setGoals({ ...getGoals(), weeklyGoal });
+      const goals = { ...base.value, weeklyGoal };
+      const raw = await setGoals(goals, { expectedRaw: base.raw });
       committed = true;
+      renderedGoalsSnapshot = { raw, value: structuredClone(goals) };
       input.value = String(weeklyGoal);
+      input.dataset.savedGoal = String(weeklyGoal);
       toast("Goals saved.");
       await renderAll();
       return true;
@@ -435,7 +448,9 @@ export function saveGoalsToStorage() {
       console.info("Goal save failed.", error);
       toast(committed
         ? "Goals saved, but the screen could not refresh. Reload the tracker."
-        : "Could not save the goal. Your entered value is still available.");
+        : error?.code === "stale_record"
+          ? "Your goal changed in another action. Keep a copy of your entered value, then reload before saving again."
+          : "Could not save the goal. Your entered value is still available.");
       return committed;
     } finally {
       if (button) button.disabled = false;

@@ -1,4 +1,5 @@
 import { runDataOperation } from "./operation.js";
+import { DataConflictError } from "./transaction.js";
 import {
   APPLICATION_SCHEMA_VERSION_KEY,
   BACKUP_META_KEY,
@@ -48,15 +49,21 @@ export function cloneDefaultSettings() {
 
 export function getAppSettings() {
   try {
-    const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
-    return {
-      ...cloneDefaultSettings(),
-      ...stored,
-      schedule: { ...cloneDefaultSettings().schedule, ...(stored.schedule || {}) }
-    };
+    return getAppSettingsSnapshot().value;
   } catch {
     return cloneDefaultSettings();
   }
+}
+
+export function getAppSettingsSnapshot() {
+  const raw = localStorage.getItem(SETTINGS_KEY);
+  let stored;
+  try { stored = JSON.parse(raw) || {}; } catch { stored = {}; }
+  return { raw, value: {
+    ...cloneDefaultSettings(),
+    ...stored,
+    schedule: { ...cloneDefaultSettings().schedule, ...(stored.schedule || {}) }
+  } };
 }
 
 function rawSetAppSettings(settings) {
@@ -68,7 +75,9 @@ function rawSetAppSettings(settings) {
       source: "application",
     });
   }
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  const raw = JSON.stringify(settings);
+  localStorage.setItem(SETTINGS_KEY, raw);
+  return raw;
 }
 
 function rawRemoveAppSettings() {
@@ -77,10 +86,17 @@ function rawRemoveAppSettings() {
 
 export function getGoals() {
   try {
-    return JSON.parse(localStorage.getItem(GOALS_KEY)) || { weeklyGoal: 4 };
+    return getGoalsSnapshot().value;
   } catch {
     return { weeklyGoal: 4 };
   }
+}
+
+export function getGoalsSnapshot() {
+  const raw = localStorage.getItem(GOALS_KEY);
+  let value;
+  try { value = JSON.parse(raw) || { weeklyGoal: 4 }; } catch { value = { weeklyGoal: 4 }; }
+  return { raw, value };
 }
 
 function rawSetGoals(goals) {
@@ -95,7 +111,9 @@ function rawSetGoals(goals) {
       { code: "input_guardrail_failed", source: "application" },
     );
   }
-  localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+  const raw = JSON.stringify(goals);
+  localStorage.setItem(GOALS_KEY, raw);
+  return raw;
 }
 
 export function getDraft() {
@@ -214,7 +232,12 @@ function rawClearApplicationLocalStorage() {
 
 export function setAppSettings(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawSetAppSettings(snapshot), options.operation);
+  const guarded = Object.hasOwn(options, "expectedRaw");
+  const expectedRaw = options.expectedRaw;
+  return runDataOperation(() => {
+    if (guarded && localStorage.getItem(SETTINGS_KEY) !== expectedRaw) throw new DataConflictError();
+    return rawSetAppSettings(snapshot);
+  }, options.operation);
 }
 
 export function removeAppSettings(options = {}) {
@@ -223,7 +246,12 @@ export function removeAppSettings(options = {}) {
 
 export function setGoals(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawSetGoals(snapshot), options.operation);
+  const guarded = Object.hasOwn(options, "expectedRaw");
+  const expectedRaw = options.expectedRaw;
+  return runDataOperation(() => {
+    if (guarded && localStorage.getItem(GOALS_KEY) !== expectedRaw) throw new DataConflictError();
+    return rawSetGoals(snapshot);
+  }, options.operation);
 }
 
 export function setDraft(value, options = {}) {

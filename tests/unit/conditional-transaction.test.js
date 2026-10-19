@@ -96,3 +96,48 @@ test("a late conditional transaction abort never reports success", async () => {
   transaction.onabort();
   await assert.rejects(promise, /late abort/);
 });
+
+test("collection validation shares the write transaction and cannot hide a stale typed ID", async () => {
+  for (const stale of [false, true]) {
+    const failure = new Error("library constraint");
+    let writes = 0,
+      validations = 0;
+    const read = {
+      result: [
+        { id: "0", name: "other" },
+        { id: 0, name: "saved" },
+      ],
+    };
+    const transaction = {
+      objectStore: () => ({ getAll: () => read }),
+      abort() {
+        this.onabort();
+      },
+    };
+    const promise = runConditionalStoreMutation(
+      { transaction: () => transaction },
+      "templates",
+      0,
+      { id: 0, name: stale ? "older" : "saved" },
+      () => {
+        writes++;
+        return {};
+      },
+      null,
+      {
+        validateRecords(records) {
+          validations++;
+          assert.equal(records.length, 2);
+          throw failure;
+        },
+      },
+    );
+    read.onsuccess();
+    await assert.rejects(
+      promise,
+      stale ? { code: "stale_record" } : (error) => error === failure,
+    );
+    assert.equal(writes, 0);
+    assert.equal(validations, stale ? 0 : 1);
+  }
+});

@@ -10,12 +10,14 @@ import { getRoutines } from "../storage/indexed-db.js";
 import {
   cloneDefaultSettings,
   getAppSettings,
+  getAppSettingsSnapshot,
   setAppSettings as persistAppSettings
 } from "../storage/local.js";
 
 export { cloneDefaultSettings, getAppSettings };
 
 const settingsCoordinator = createActionCoordinator();
+let renderedSettingsSnapshot = null;
 
 const SETTINGS_INPUT_IDS = Object.freeze({
   defaultWeightJump: "settingsWeightJump",
@@ -68,7 +70,8 @@ export function applyAppSettings() {
 
 export async function renderSettings() {
   if (!$("settingsSchedule")) return;
-  const settings = getAppSettings();
+  const snapshot = getAppSettingsSnapshot();
+  const settings = snapshot.value;
   const templates = await getRoutines();
   const routineOptions = templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");
 
@@ -118,6 +121,7 @@ export async function renderSettings() {
   $("settingsGeneralMax").value = settings.generalMax;
   $("settingsHaptics").checked = !!settings.haptics;
   $("settingsAnimations").checked = !!settings.animations;
+  renderedSettingsSnapshot = snapshot;
 }
 
 export async function saveSettingsFromForm() {
@@ -126,6 +130,11 @@ export async function saveSettingsFromForm() {
     if (saveButton) saveButton.disabled = true;
     let committed = false;
     try {
+      const base = renderedSettingsSnapshot;
+      if (!base) {
+        toast("Settings are still loading. Try again when they appear.");
+        return false;
+      }
       const schedule = {};
       all(".settings-day-row").forEach((row) => {
         const index = row.dataset.settingsDay;
@@ -159,8 +168,8 @@ export async function saveSettingsFromForm() {
         return false;
       }
       clearSettingsValidation();
-      await persistAppSettings({
-        displayName: getAppSettings().displayName,
+      const settings = {
+        ...base.value,
         schedule,
         defaultWeightJump: numericFormValue(rawSettings.defaultWeightJump),
         compoundMin: numericFormValue(rawSettings.compoundMin),
@@ -174,8 +183,10 @@ export async function saveSettingsFromForm() {
         rpeAware: $("settingsRpeAware").checked,
         haptics: $("settingsHaptics").checked,
         animations: $("settingsAnimations").checked
-      });
+      };
+      const raw = await persistAppSettings(settings, { expectedRaw: base.raw });
       committed = true;
+      renderedSettingsSnapshot = { raw, value: structuredClone(settings) };
       applyAppSettings();
       toast("Settings saved.");
       return true;
@@ -183,7 +194,9 @@ export async function saveSettingsFromForm() {
       console.info("Settings save failed.", error);
       toast(committed
         ? "Settings saved, but the screen could not refresh. Reload the tracker."
-        : "Could not save settings. Your entered values are still available.");
+        : error?.code === "stale_record"
+          ? "Settings changed in another action. Your entries are still available. Keep a copy, then reload before editing again."
+          : "Could not save settings. Your entered values are still available.");
       return committed;
     } finally {
       if (saveButton) saveButton.disabled = false;
@@ -197,10 +210,16 @@ export async function resetAppSettings() {
     if (resetButton) resetButton.disabled = true;
     let committed = false;
     try {
+      const base = renderedSettingsSnapshot;
+      if (!base) {
+        toast("Settings are still loading. Try again when they appear.");
+        return false;
+      }
       if (!confirm("Reset app settings to defaults? Workout history and routines stay.")) return false;
-      const displayName = getAppSettings().displayName;
-      await persistAppSettings({ ...cloneDefaultSettings(), displayName });
+      const settings = { ...cloneDefaultSettings(), displayName: base.value.displayName };
+      const raw = await persistAppSettings(settings, { expectedRaw: base.raw });
       committed = true;
+      renderedSettingsSnapshot = { raw, value: structuredClone(settings) };
       applyAppSettings();
       await renderSettings();
       toast("Settings reset.");
@@ -209,7 +228,9 @@ export async function resetAppSettings() {
       console.info("Settings reset failed.", error);
       toast(committed
         ? "Settings reset, but the screen could not refresh. Reload the tracker."
-        : "Could not reset settings. Existing settings were left in place.");
+        : error?.code === "stale_record"
+          ? "Settings changed in another action. Reload before resetting them."
+          : "Could not reset settings. Existing settings were left in place.");
       return committed;
     } finally {
       if (resetButton) resetButton.disabled = false;

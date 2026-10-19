@@ -1,9 +1,11 @@
 import { DB_NAME, DB_VERSION, RECOVERY_STORE, STORES } from "../core/constants.js";
 import {
+  INPUT_LIMITS,
+  nameComparisonKey,
   validateRoutineInput,
   validateWorkoutInput
 } from "../domain/input-guardrails.js";
-import { createValidationError } from "../schema/errors.js";
+import { DataSchemaError, createValidationError } from "../schema/errors.js";
 import {
   assertValidLegacyWeight,
   assertValidRoutine,
@@ -139,6 +141,15 @@ export function saveRoutine(routine, options = {}) {
     const expected = structuredClone(options.expected);
     return runDataOperation(() => runConditionalStoreMutation(
       database, "templates", snapshot.id, expected, (store) => store.put(snapshot), snapshot,
+      { validateRecords(records) {
+        const name = nameComparisonKey(snapshot.name);
+        if (records.some((item) => item.id !== snapshot.id && nameComparisonKey(item.name) === name)) {
+          throw new DataSchemaError("Another routine already uses this name.", { code: "routine_name_conflict" });
+        }
+        if (!records.some((item) => item.id === snapshot.id) && records.length >= INPUT_LIMITS.routines) {
+          throw new DataSchemaError(`The app is limited to ${INPUT_LIMITS.routines} saved routines.`, { code: "routine_limit" });
+        }
+      } },
     ), options.operation);
   }
   return putItem("templates", routine, options.operation);

@@ -93,10 +93,6 @@ function renderWorkoutCard(workout) {
   `;
 }
 
-export function renderWorkout(workout) {
-  return `<article class="list-item"><div class="row" style="align-items:flex-start;"><div><h3>${cleanText(workout.type)}</h3><p class="muted small" style="margin-bottom:8px;">${dateLabel(workout.date)} · ${workout.exercises.length} exercises · ${completedSets(workout)} done / ${totalSets(workout)} work sets · ${Math.round(workoutVolume(workout)).toLocaleString()} volume · ${durationLabel(workoutDurationMinutes(workout))}</p>${workout.notes ? `<p class="small">${cleanText(workout.notes)}</p>` : ""}${renderWorkoutTags(workout)}<div>${workout.exercises.map((exercise) => `<span class="pill">${cleanText(exercise.name || "Unnamed")} · ${exercise.sets.length}</span>`).join("")}</div><details class="detail"><summary><strong>Full workout</strong></summary>${workout.exercises.map(renderExerciseDetails).join("")}</details></div><div class="stack" style="max-width:130px;"><button class="ghost" type="button" data-history-action="edit" data-workout-id="${cleanText(workout.id)}" data-workout-id-type="${typeof workout.id}">Edit</button><button class="danger" type="button" data-history-action="delete" data-workout-id="${cleanText(workout.id)}" data-workout-id-type="${typeof workout.id}">Delete</button></div></div></article>`;
-}
-
 function renderExerciseDetails(exercise) {
   return `<div style="margin-top:12px;"><strong>${cleanText(exercise.name || "Unnamed Exercise")}</strong>${exercise.notes ? `<p class="muted small" style="margin:6px 0;">${cleanText(exercise.notes)}</p>` : ""}<table><thead><tr><th>Set</th><th>Weight</th><th>Reps</th><th>RPE</th><th>Status</th></tr></thead><tbody>${exercise.sets.map((set, index) => `<tr><td>${index + 1}</td><td>${cleanText(set.weight || "-")}</td><td>${cleanText(set.reps || "-")}</td><td>${cleanText(set.rpe || "-")}</td><td>${set.warmup ? "Warm-up" : "Work"}${set.done ? " · Done" : ""}</td></tr>`).join("")}</tbody></table></div>`;
 }

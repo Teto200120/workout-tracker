@@ -44,7 +44,7 @@ export function sameRecordSnapshot(left, right) {
 }
 
 // The comparison and mutation share one readwrite transaction, including across tabs.
-export function runConditionalStoreMutation(database, storeName, key, expected, mutate, result) {
+export function runConditionalStoreMutation(database, storeName, key, expected, mutate, result, { validateRecords } = {}) {
   return new Promise((resolve, reject) => {
     const transaction = database.transaction(storeName, "readwrite");
     let failure;
@@ -57,11 +57,13 @@ export function runConditionalStoreMutation(database, storeName, key, expected, 
     transaction.onabort = () => reject(failure || transaction.error || new Error("Database transaction aborted."));
     try {
       const store = transaction.objectStore(storeName);
-      const request = store.get(key);
+      const request = validateRecords ? store.getAll() : store.get(key);
       request.onerror = () => { failure ||= request.error; };
       request.onsuccess = () => {
         try {
-          if (!sameRecordSnapshot(request.result ?? null, expected)) throw new DataConflictError();
+          const current = validateRecords ? request.result.find((item) => item.id === key) : request.result;
+          if (!sameRecordSnapshot(current ?? null, expected)) throw new DataConflictError();
+          validateRecords?.(request.result);
           const write = mutate(store);
           write.onerror = () => { failure ||= write.error; };
         } catch (error) { abort(error); }

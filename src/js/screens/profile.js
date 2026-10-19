@@ -32,10 +32,6 @@ function countRecentWorkouts(workouts) {
 }
 
 function getProfileBackupSummary() {
-  if (typeof getBackupMeta !== "function" || typeof daysSinceBackup !== "function" || typeof backupAgeText !== "function") {
-    return "Export or import local data";
-  }
-
   const age = daysSinceBackup(getBackupMeta().lastExportedAt);
   return backupAgeText(age);
 }
