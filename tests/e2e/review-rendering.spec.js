@@ -269,6 +269,8 @@ test("a delayed older navigation cannot render or finish over the latest destina
   await expect
     .poll(() => page.evaluate(() => typeof globalThis.__releaseHistoryRead))
     .toBe("function");
+  await expect(page.locator("#history")).toHaveAttribute("inert", "");
+  await expect(page.locator("#history")).toHaveAttribute("aria-busy", "true");
   const result = await page.evaluate(async () => {
     try {
       const router = await import("/src/js/router.js");
@@ -284,6 +286,7 @@ test("a delayed older navigation cannot render or finish over the latest destina
           globalThis.__historyBeforeNavigation,
         value: doc.querySelector("#settingsWeightJump").value,
         transitioning: doc.body.dataset.screenTransitioning,
+        interactive: !doc.querySelector("#settings").inert,
       };
     } finally {
       globalThis.__restoreHistoryRead();
@@ -294,6 +297,7 @@ test("a delayed older navigation cannot render or finish over the latest destina
     historyUnchanged: true,
     value: "9",
     transitioning: "false",
+    interactive: true,
   });
 });
 

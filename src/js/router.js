@@ -220,9 +220,14 @@ export function switchScreen(name) {
     if (isActive) tab.setAttribute("aria-current", "page");
     else tab.removeAttribute("aria-current");
   });
-  all(".screen").forEach((screen) =>
-    screen.classList.toggle("active", activeScreens.includes(screen.id)),
-  );
+  all(".screen").forEach((screen) => {
+    const active = activeScreens.includes(screen.id);
+    screen.classList.toggle("active", active);
+    // A newly visible form must not accept edits before its saved baseline is
+    // loaded. Navigation stays available so a slow read can be superseded.
+    screen.inert = active;
+    screen.setAttribute("aria-busy", String(active));
+  });
   document.body.dataset.screenTransitioning = "true";
   replayAnimation($(activeScreens[0]), "settle-in", 260);
   return renderAll({ destination, isCurrent })
@@ -231,11 +236,19 @@ export function switchScreen(name) {
       await settleScreenLayout();
       if (!isCurrent()) return;
       document.body.dataset.screenTransitioning = "false";
+      for (const id of activeScreens) {
+        $(id).inert = false;
+        $(id).setAttribute("aria-busy", "false");
+      }
       coordinateScreenEducation(destination);
     })
     .catch((error) => {
       if (!isCurrent()) return;
       document.body.dataset.screenTransitioning = "false";
+      for (const id of activeScreens) {
+        $(id).inert = false;
+        $(id).setAttribute("aria-busy", "false");
+      }
       console.info("Screen render failed.", error);
       toast("This screen could not be refreshed. Try again.");
     });
