@@ -100,6 +100,7 @@ test("goal refresh failures acknowledge the saved goal", async ({ page }) => {
   const outcome = await page.evaluate(async () => {
     const progress = await import("/src/js/screens/progress.js");
     const local = await import("/src/js/storage/local.js");
+    await (await import("/src/js/router.js")).switchScreen("statsGoals");
     globalThis.document.querySelector("#weeklyGoal").value = "5";
     const original = globalThis.renderAll;
     globalThis.renderAll = () => {
