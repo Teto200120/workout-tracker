@@ -208,16 +208,16 @@ for (const failure of ["metadata", "view"]) {
     const message = await page.evaluate(async (stage) => {
       const backup = await import("/src/js/screens/backup.js");
       const originalSet = Storage.prototype.setItem;
-      const originalLookup = globalThis.$;
+      const originalLookup = globalThis.document.getElementById;
       if (stage === "metadata") {
         Storage.prototype.setItem = () => {
           throw new Error("injected metadata failure");
         };
       } else {
-        globalThis.$ = (id) => {
+        globalThis.document.getElementById = (id) => {
           if (id === "backupStatusMore")
             throw new Error("injected backup view failure");
-          return originalLookup(id);
+          return originalLookup.call(globalThis.document, id);
         };
       }
       try {
@@ -225,7 +225,7 @@ for (const failure of ["metadata", "view"]) {
         return globalThis.document.querySelector("#toast").textContent;
       } finally {
         Storage.prototype.setItem = originalSet;
-        globalThis.$ = originalLookup;
+        globalThis.document.getElementById = originalLookup;
       }
     }, failure);
     expect((await download).suggestedFilename()).toMatch(
