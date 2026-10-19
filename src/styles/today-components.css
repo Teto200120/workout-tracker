@@ -40,7 +40,11 @@
 
 #todayView .card {
   background:
-    radial-gradient(circle at top right, rgba(255, 107, 69, 0.055), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 107, 69, 0.055),
+      transparent 34%
+    ),
     linear-gradient(180deg, rgba(34, 53, 79, 0.96), rgba(28, 45, 69, 0.96));
   border-color: rgba(158, 182, 210, 0.22);
   border-radius: 22px;
@@ -124,7 +128,11 @@
   width: 180px;
   height: 180px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 107, 69, 0.13), transparent 62%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 69, 0.13),
+    transparent 62%
+  );
   pointer-events: none;
 }
 
@@ -435,29 +443,79 @@
   }
 }
 
-
 @media (max-width: 700px) {
-  .grid-2, .grid-3, .today-meta, .today-actions, .today-secondary-actions, .completion-stats, .backup-reminder-actions { grid-template-columns: 1fr; }
-  .section-heading { align-items: flex-start; }
-  .section-heading > button { max-width: 132px; }
-  .routine-card .row { align-items: stretch; }
-  .routine-actions { min-width: 0; max-width: none; grid-template-columns: 1fr 1fr; margin-top: 10px; }
-  .routine-card > .row { display: grid; grid-template-columns: 1fr; }
-  .session-toolbar { grid-template-columns: auto 1fr auto; }
-  .session-toolbar button { padding-left: 9px; padding-right: 9px; }
-  .settings-day-row { grid-template-columns: 1fr; }
-  .settings-day-label { min-height: auto; }
-  .set-row { grid-template-columns: 0.48fr 1fr 1fr; }
-  .set-row .rpe-field { grid-column: 2 / 4; }
-  .set-actions { grid-template-columns: 1fr 1fr; }
-  .set-actions .delete-set { grid-column: 1 / -1; min-height: 42px; opacity: 0.9; }
-  .set-row label { font-size: 0.68rem; }
-  .set-row > div > label { text-align: center; }
-  .set-row input[type="checkbox"] { accent-color: var(--green); }
-  .guidance-grid { grid-template-columns: 1fr; }
-  .guidance-metric { padding: 9px 10px; }
+  .grid-2,
+  .grid-3,
+  .today-meta,
+  .today-actions,
+  .today-secondary-actions,
+  .completion-stats,
+  .backup-reminder-actions {
+    grid-template-columns: 1fr;
+  }
+  .section-heading {
+    align-items: flex-start;
+  }
+  .section-heading > button {
+    max-width: 132px;
+  }
+  .routine-card .row {
+    align-items: stretch;
+  }
+  .routine-actions {
+    min-width: 0;
+    max-width: none;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 10px;
+  }
+  .routine-card > .row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .session-toolbar {
+    grid-template-columns: auto 1fr auto;
+  }
+  .session-toolbar button {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .settings-day-row {
+    grid-template-columns: 1fr;
+  }
+  .settings-day-label {
+    min-height: auto;
+  }
+  .set-row {
+    grid-template-columns: 0.48fr 1fr 1fr;
+  }
+  .set-row .rpe-field {
+    grid-column: 2 / 4;
+  }
+  .set-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+  .set-actions .delete-set {
+    grid-column: 1 / -1;
+    min-height: 42px;
+    opacity: 0.9;
+  }
+  .set-row label {
+    font-size: 0.68rem;
+  }
+  .set-row > div > label {
+    text-align: center;
+  }
+  .set-row input[type="checkbox"] {
+    accent-color: var(--green);
+  }
+  .guidance-grid {
+    grid-template-columns: 1fr;
+  }
+  .guidance-metric {
+    padding: 9px 10px;
+  }
 }
-  
+
 /* === Today Screen Visual Iteration 2: closer to provided reference dashboard === */
 :root {
   --ref-bg-0: #0b1c31;
@@ -473,7 +531,11 @@
 
 body:has(#todayView:not(.hidden)) {
   background:
-    radial-gradient(circle at 50% -12%, rgba(78, 117, 160, 0.18), transparent 38%),
+    radial-gradient(
+      circle at 50% -12%,
+      rgba(78, 117, 160, 0.18),
+      transparent 38%
+    ),
     linear-gradient(180deg, #172d48 0%, #0b1c31 68%, #071423 100%);
   padding: 0;
 }
@@ -529,8 +591,11 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
 #todayView .card {
   margin-bottom: 0;
   border-radius: 20px;
-  background:
-    linear-gradient(180deg, rgba(40, 61, 90, 0.96), rgba(32, 52, 79, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(40, 61, 90, 0.96),
+    rgba(32, 52, 79, 0.96)
+  );
   border: 1px solid var(--ref-border);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -631,7 +696,11 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
   padding: 24px !important;
   border-radius: 24px !important;
   background:
-    radial-gradient(circle at 100% 10%, rgba(255, 104, 69, 0.065), transparent 42%),
+    radial-gradient(
+      circle at 100% 10%,
+      rgba(255, 104, 69, 0.065),
+      transparent 42%
+    ),
     linear-gradient(180deg, rgba(42, 62, 91, 0.98), rgba(34, 54, 82, 0.98)) !important;
 }
 
@@ -853,7 +922,6 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
   }
 }
 
-  
 /* === Today Screen Iteration 3: integrated switcher + floating breathing CTA === */
 .today-shortcuts {
   display: none !important;
@@ -863,11 +931,14 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
   margin-top: 20px !important;
   padding: 0 !important;
   border-radius: 18px !important;
-  background:
-    linear-gradient(180deg, rgba(31, 52, 80, 0.92), rgba(24, 42, 67, 0.92)) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(31, 52, 80, 0.92),
+    rgba(24, 42, 67, 0.92)
+  ) !important;
   border: 1px solid rgba(166, 190, 220, 0.18) !important;
   overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
 .today-change-panel summary {
@@ -942,7 +1013,8 @@ body:has(#todayView:not(.hidden)) .tabs .tab.active {
 }
 
 @keyframes ctaBreathe {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
     box-shadow:
       0 16px 34px rgba(255, 104, 69, 0.32),
@@ -996,10 +1068,8 @@ body.no-animations .today-primary-cta {
   body:has(#todayView:not(.hidden)) .today-cta-dock {
     width: calc(100vw - 36px) !important;
   }
-
 }
 
-  
 /* === Today Screen Iteration 4 feedback fixes === */
 
 #todayCompletedCard,
@@ -1062,7 +1132,6 @@ body:has(#todayView:not(.hidden)) #todayView.today-home {
   }
 }
 
-  
 /* === Today Screen Iteration 5: remove redundant chevron + hard-fix CTA dock === */
 
 .today-card-chevron {
@@ -1115,7 +1184,6 @@ body:has(#todayView:not(.hidden)) #todayView.today-home {
   }
 }
 
-  
 /* === Today Screen Iteration 6: body-level floating CTA, not scroll content === */
 .today-floating-cta {
   position: fixed !important;
@@ -1188,7 +1256,6 @@ body:has(#todayView:not(.hidden)) #todayView.today-home {
   padding-bottom: 188px !important;
 }
 
-  
 .today-floating-cta .today-primary-cta {
   overflow: hidden !important;
   white-space: nowrap !important;
@@ -1216,7 +1283,6 @@ body.no-animations .today-floating-cta .today-primary-cta {
   }
 }
 
-  
 /* Keep the button shell stable within the floating dock. */
 .today-floating-cta .today-primary-cta {
   max-width: none !important;
@@ -1232,8 +1298,13 @@ body.no-animations .today-floating-cta .today-primary-cta {
 }
 
 @keyframes ctaBreatheScaleOnly {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.012); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.012);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1242,7 +1313,6 @@ body.no-animations .today-floating-cta .today-primary-cta {
   }
 }
 
-  
 /* === Today Screen Iteration 10: dumbbell icon CTA === */
 .today-floating-cta .cta-icon {
   line-height: 0;
@@ -1260,7 +1330,6 @@ body.no-animations .today-floating-cta .today-primary-cta {
   letter-spacing: -0.02em;
 }
 
-  
 .today-floating-cta .cta-icon svg {
   transform-origin: center;
 }
@@ -1271,8 +1340,6 @@ body.no-animations .today-floating-cta .today-primary-cta {
   }
 }
 
-  
-  
 /* === Today Screen Iteration 17: remove extra blank scroll space === */
 body:has(#todayView:not(.hidden)) #todayView.today-home,
 #todayView.today-home {
@@ -1342,10 +1409,14 @@ body:has(#todayView:not(.hidden)) #todayView.today-home,
   width: min(100vw, 520px);
   min-height: 100vh;
   color: #edf6ff;
-  background:
-    linear-gradient(180deg, rgba(27, 48, 76, 0.99) 0, rgba(16, 36, 62, 1) 42%, rgba(7, 27, 49, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(27, 48, 76, 0.99) 0,
+    rgba(16, 36, 62, 1) 42%,
+    rgba(7, 27, 49, 1) 100%
+  );
   transform: translateX(-50%);
-  animation: detailViewIn 220ms cubic-bezier(.2,.86,.2,1) both;
+  animation: detailViewIn 220ms cubic-bezier(0.2, 0.86, 0.2, 1) both;
 }
 
 .today-review-view.hidden {
@@ -1423,18 +1494,26 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
   padding: 20px;
   border-radius: 22px;
   background:
-    radial-gradient(circle at top right, rgba(255, 104, 69, 0.08), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 104, 69, 0.08),
+      transparent 34%
+    ),
     linear-gradient(180deg, rgba(38, 59, 87, 0.9), rgba(27, 45, 70, 0.94));
   border: 1px solid rgba(153, 177, 205, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 18px 34px rgba(1, 8, 18, 0.22);
 }
 
 .today-review-card.success {
   border-color: rgba(34, 197, 94, 0.28);
   background:
-    radial-gradient(circle at top right, rgba(34, 197, 94, 0.1), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(34, 197, 94, 0.1),
+      transparent 34%
+    ),
     linear-gradient(180deg, rgba(34, 57, 76, 0.92), rgba(20, 42, 63, 0.96));
 }
 
@@ -1521,12 +1600,18 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
 }
 
 .exercise-detail-view:not(.hidden) {
-  animation: detailViewIn 220ms cubic-bezier(.2,.86,.2,1) both;
+  animation: detailViewIn 220ms cubic-bezier(0.2, 0.86, 0.2, 1) both;
 }
 
 @keyframes detailViewIn {
-  from { opacity: 0; transform: translateX(-50%); }
-  to { opacity: 1; transform: translateX(-50%); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
 }
 
 .exercise-detail-guidance {
@@ -1536,10 +1621,14 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
   padding: 16px;
   border-radius: 20px;
   background:
-    radial-gradient(circle at top right, rgba(255, 104, 69, 0.07), transparent 36%),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 104, 69, 0.07),
+      transparent 36%
+    ),
     linear-gradient(180deg, rgba(38, 59, 87, 0.88), rgba(28, 47, 73, 0.92));
   border: 1px solid rgba(153, 177, 205, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .exercise-detail-guidance .detail-stat-grid {
@@ -1579,7 +1668,11 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
   place-items: center;
   padding: 18px;
   background:
-    radial-gradient(circle at 50% -10%, rgba(34, 197, 94, 0.14), transparent 34%),
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(34, 197, 94, 0.14),
+      transparent 34%
+    ),
     rgba(2, 8, 20, 0.76);
   backdrop-filter: blur(16px);
 }
@@ -1590,11 +1683,15 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
   padding: 22px;
   border-radius: 24px;
   background:
-    radial-gradient(circle at top right, rgba(34, 197, 94, 0.13), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      rgba(34, 197, 94, 0.13),
+      transparent 34%
+    ),
     linear-gradient(180deg, rgba(35, 55, 82, 0.96), rgba(14, 31, 54, 0.98));
   border: 1px solid rgba(34, 197, 94, 0.26);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 26px 70px rgba(0, 0, 0, 0.55);
 }
 
@@ -1652,7 +1749,7 @@ body:has(#todayReviewView:not(.hidden)) .today-floating-cta {
 
 #sessionView .exercise,
 #sessionView .exercise-body {
-  transition-timing-function: cubic-bezier(.2,.86,.2,1);
+  transition-timing-function: cubic-bezier(0.2, 0.86, 0.2, 1);
 }
 
 #sessionView .exercise-body {
@@ -1706,7 +1803,11 @@ body:has(#todayView:not(.hidden)) #todayView.today-home {
   overflow: visible;
   color: #f7fbff;
   background:
-    radial-gradient(circle at 92% 4%, rgba(255, 104, 69, 0.09), transparent 38%),
+    radial-gradient(
+      circle at 92% 4%,
+      rgba(255, 104, 69, 0.09),
+      transparent 38%
+    ),
     linear-gradient(180deg, #263d59, #162b46) !important;
   border-color: rgba(166, 190, 220, 0.28) !important;
   border-radius: 18px !important;

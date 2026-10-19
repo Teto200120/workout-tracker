@@ -4,10 +4,7 @@ import {
   resetAllEducation,
   transitionEducationExperience,
 } from "../domain/education.js";
-import {
-  getEducationRecord,
-  setEducationRecord,
-} from "../storage/local.js";
+import { getEducationRecord, setEducationRecord } from "../storage/local.js";
 
 let cachedState = null;
 const pendingReplays = new Set();
@@ -48,11 +45,7 @@ export function ensureEducationState(options = {}) {
   return persistState(readState(), options);
 }
 
-export function updateEducationExperience(
-  experienceId,
-  status,
-  options = {},
-) {
+export function updateEducationExperience(experienceId, status, options = {}) {
   const nextState = transitionEducationExperience(
     readState(),
     experienceId,

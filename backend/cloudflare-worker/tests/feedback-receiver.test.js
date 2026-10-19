@@ -1,5 +1,6 @@
 /* global ReadableStream, Request, Response */
 
+import { setImmediate } from "node:timers";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createFeedbackReceiver } from "../src/feedback-receiver.js";
@@ -24,6 +25,7 @@ const REPORT = Object.freeze({
 function createEnvironment({ limited = false } = {}) {
   const rows = new Map();
   const claims = new Map();
+  const owners = new Map();
   const objects = new Map();
   let deletedObjectKey = null;
   return {
@@ -54,23 +56,26 @@ function createEnvironment({ limited = false } = {}) {
               async run() {
                 const [id] = values;
                 if (query.startsWith("INSERT INTO feedback_report_claims")) {
-                  const [, claimedAt, reclaimBefore] = values;
+                  const [, claimedAt, owner, reclaimBefore] = values;
                   if (claims.has(id) && claims.get(id) > reclaimBefore) {
                     return { success: true, meta: { changes: 0 } };
                   }
                   claims.set(id, claimedAt);
+                  owners.set(id, owner);
                   return { success: true, meta: { changes: 1 } };
                 }
                 if (query.startsWith("DELETE FROM feedback_report_claims")) {
                   if (
-                    !query.includes("AND NOT EXISTS") ||
-                    !rows.has(id)
+                    owners.get(id) === values[1] &&
+                    (!query.includes("AND NOT EXISTS") || !rows.has(id))
                   ) {
                     claims.delete(id);
                   }
                   return { success: true, meta: { changes: 1 } };
                 }
                 if (query.startsWith("INSERT INTO feedback_reports")) {
+                  if (owners.get(id) !== values[11] || rows.has(id))
+                    return { success: true, meta: { changes: 0 } };
                   rows.set(id, { id, values, query });
                 }
                 return { success: true, meta: { changes: 1 } };
@@ -123,10 +128,7 @@ test("stores only a validated, Turnstile-verified report in D1", async () => {
   assert.deepEqual(await response.json(), { ok: true });
   assert.equal(env.rows.get(REPORT.id).values[1], "bug");
   assert.equal(env.rows.get(REPORT.id).values[2], REPORT.message);
-  assert.equal(
-    env.rows.get(REPORT.id).values.at(-1),
-    "2026-08-15T12:05:00.000Z",
-  );
+  assert.equal(env.rows.get(REPORT.id).values[9], "2026-08-15T12:05:00.000Z");
   assert.equal(env.objects.size, 0);
   assert.equal(env.claims.has(REPORT.id), false);
 });
@@ -144,7 +146,10 @@ test("accepts a queued legacy diagnostic version without relabeling it", async (
   );
 
   assert.equal(response.status, 201);
-  assert.equal(env.rows.get(report.id).values[3], JSON.stringify(report.diagnostics));
+  assert.equal(
+    env.rows.get(report.id).values[3],
+    JSON.stringify(report.diagnostics),
+  );
   assert.equal(env.claims.has(report.id), false);
 });
 
@@ -405,4 +410,57 @@ test("reclaims an abandoned claim after its bounded lease expires", async () => 
   assert.equal(response.status, 201);
   assert.equal(env.rows.size, 1);
   assert.equal(env.claims.has(REPORT.id), false);
+});
+
+test("an expired invocation cannot commit or release its successor's lease (real SQL)", async () => {
+  const { database } = await import("./sqlite-fixture.js");
+  const env = createEnvironment();
+  env.FEEDBACK_DB = database();
+  let clock = 1_000_000;
+  const releases = [];
+  const entries = [];
+  env.FEEDBACK_SCREENSHOTS.put = async (key) => {
+    entries.push(key);
+    await new Promise((resolve) => releases.push(resolve));
+  };
+  const body = {
+    report: {
+      ...REPORT,
+      screenshot: {
+        dataUrl: "data:image/png;base64,AQID",
+        mimeType: "image/png",
+        width: 1,
+        height: 1,
+        size: 3,
+      },
+    },
+    turnstileToken: "token",
+  };
+  const handler = receiver({ nowMs: () => clock });
+  const first = handler.fetch(request(body), env);
+  while (releases.length < 1)
+    await new Promise((resolve) => setImmediate(resolve));
+  clock += 300_001;
+  const second = handler.fetch(request(body), env);
+  while (releases.length < 2)
+    await new Promise((resolve) => setImmediate(resolve));
+  const successor = env.FEEDBACK_DB.db
+    .prepare("SELECT owner FROM feedback_report_claims WHERE id = ?")
+    .get(REPORT.id).owner;
+  releases[0]();
+  assert.equal((await first).status, 503);
+  assert.equal(
+    env.FEEDBACK_DB.db
+      .prepare("SELECT owner FROM feedback_report_claims WHERE id = ?")
+      .get(REPORT.id).owner,
+    successor,
+  );
+  releases[1]();
+  assert.equal((await second).status, 201);
+  assert.equal(
+    env.FEEDBACK_DB.db
+      .prepare("SELECT screenshot_key FROM feedback_reports WHERE id = ?")
+      .get(REPORT.id).screenshot_key,
+    entries[1],
+  );
 });

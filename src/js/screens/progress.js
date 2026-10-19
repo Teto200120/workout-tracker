@@ -1,18 +1,22 @@
-import "../core/globals.js";
+import { $ } from "../core/globals.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { getWeeklyActivityData as buildWeeklyActivityData } from "../application/schedule.js";
 import { cleanText, dateLabel, toast } from "../core/utils.js";
-import { dateKeyFromDate, countRecentWorkouts, getWorkoutStreak as calculateWorkoutStreak } from "../domain/schedule.js";
+import {
+  dateKeyFromDate,
+  countRecentWorkouts,
+  getWorkoutStreak as calculateWorkoutStreak,
+} from "../domain/schedule.js";
 import {
   firstValidationMessage,
-  validateWeeklyGoal
+  validateWeeklyGoal,
 } from "../domain/input-guardrails.js";
 import {
   buildExerciseStats,
   durationLabel,
   getWorkoutStatsSummary,
   workoutDurationMinutes,
-  workoutVolume
+  workoutVolume,
 } from "../domain/workout-metrics.js";
 import { getWorkouts } from "../storage/indexed-db.js";
 import { getGoalsSnapshot, setGoals } from "../storage/local.js";
@@ -21,7 +25,13 @@ const goalsCoordinator = createActionCoordinator();
 let renderedGoalsSnapshot = null;
 
 function metricLabel(metric) {
-  return { estimated1rm: "Estimated 1RM", bestWeight: "Best Load", bestVolume: "Best Set Volume" }[metric] || "Metric";
+  return (
+    {
+      estimated1rm: "Estimated 1RM",
+      bestWeight: "Best Load",
+      bestVolume: "Best Set Volume",
+    }[metric] || "Metric"
+  );
 }
 
 function metricUnit(metric) {
@@ -30,12 +40,16 @@ function metricUnit(metric) {
 
 function formatSignedNumber(value, decimals = 1) {
   const number = Number(value || 0);
-  const fixed = Number.isInteger(number) ? number.toFixed(0) : number.toFixed(decimals);
+  const fixed = Number.isInteger(number)
+    ? number.toFixed(0)
+    : number.toFixed(decimals);
   return `${number >= 0 ? "+" : ""}${fixed}`;
 }
 
 function getSortedExerciseHistory(exercise) {
-  return [...(exercise.history || [])].sort((a, b) => a.date.localeCompare(b.date));
+  return [...(exercise.history || [])].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
 }
 
 function getExerciseTrendInsight(exercise, metric = "bestWeight") {
@@ -45,14 +59,15 @@ function getExerciseTrendInsight(exercise, metric = "bestWeight") {
   const first = history[0];
   const last = history[history.length - 1];
   const delta = Number(last[metric] || 0) - Number(first[metric] || 0);
-  const e1rmDelta = Number(last.estimated1rm || 0) - Number(first.estimated1rm || 0);
+  const e1rmDelta =
+    Number(last.estimated1rm || 0) - Number(first.estimated1rm || 0);
   if (delta <= 0 && e1rmDelta < 2) return null;
 
   return {
     type: "trend",
     score: Math.max(delta, e1rmDelta),
     title: `${exercise.name} is trending up`,
-    meta: `${history.length} recent sessions · ${metric === "bestWeight" ? `${formatSignedNumber(delta, 1)} lb` : `${formatSignedNumber(e1rmDelta, 1)} est. 1RM`} since ${dateLabel(first.date)}`
+    meta: `${history.length} recent sessions · ${metric === "bestWeight" ? `${formatSignedNumber(delta, 1)} lb` : `${formatSignedNumber(e1rmDelta, 1)} est. 1RM`} since ${dateLabel(first.date)}`,
   };
 }
 
@@ -74,7 +89,7 @@ function getRecentPrInsights(exerciseStats, limit = 3) {
           date: entry.date,
           score: value,
           title: `New PR: ${exercise.name}`,
-          meta: `${entry.records.estimated1rm.weight} × ${entry.records.estimated1rm.reps} · ${value.toFixed(1)} est. 1RM · ${dateLabel(entry.date)}`
+          meta: `${entry.records.estimated1rm.weight} × ${entry.records.estimated1rm.reps} · ${value.toFixed(1)} est. 1RM · ${dateLabel(entry.date)}`,
         });
       }
     });
@@ -102,8 +117,11 @@ function getVolumeInsight(workouts) {
   return {
     type: "volume",
     score: Math.abs(delta),
-    title: delta > 0 ? `${latest.type} volume increased` : `${latest.type} volume dipped`,
-    meta: `${formatSignedNumber(Math.round(delta), 0)} lb vs ${dateLabel(previousSame.date)}`
+    title:
+      delta > 0
+        ? `${latest.type} volume increased`
+        : `${latest.type} volume dipped`,
+    meta: `${formatSignedNumber(Math.round(delta), 0)} lb vs ${dateLabel(previousSame.date)}`,
   };
 }
 
@@ -143,17 +161,35 @@ function renderInsightList(targetId, insights, emptyText) {
     return;
   }
 
-  target.innerHTML = insights.map((insight) => `
+  target.innerHTML = insights
+    .map(
+      (insight) => `
     <div class="insight-item ${cleanText(insight.type || "")}">
       <strong>${cleanText(insight.title)}</strong>
       <p class="muted small" style="margin:0;">${cleanText(insight.meta)}</p>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
-function renderStrengthSnapshot(workouts, exerciseStats, { preview = true, detail = true } = {}) {
-  if (preview) renderInsightList("strengthSnapshot", buildProgressInsights(workouts, exerciseStats, 3), "Strength trends will appear here once you have a few sessions logged.");
-  if (detail) renderInsightList("strengthSnapshotDetail", buildProgressInsights(workouts, exerciseStats, 6), "Strength trends will appear here once you have a few sessions logged.");
+function renderStrengthSnapshot(
+  workouts,
+  exerciseStats,
+  { preview = true, detail = true } = {},
+) {
+  if (preview)
+    renderInsightList(
+      "strengthSnapshot",
+      buildProgressInsights(workouts, exerciseStats, 3),
+      "Strength trends will appear here once you have a few sessions logged.",
+    );
+  if (detail)
+    renderInsightList(
+      "strengthSnapshotDetail",
+      buildProgressInsights(workouts, exerciseStats, 6),
+      "Strength trends will appear here once you have a few sessions logged.",
+    );
 }
 
 function renderWeeklyActivityStrip(targetId, countId, activity) {
@@ -161,13 +197,17 @@ function renderWeeklyActivityStrip(targetId, countId, activity) {
   const count = $(countId);
   if (!target || !count) return;
 
-  target.innerHTML = activity.days.map((day) => `
+  target.innerHTML = activity.days
+    .map(
+      (day) => `
       <div class="${cleanText(day.classes)}" title="${cleanText(day.title)}">
         <span class="stats-week-label">${cleanText(day.label)}</span>
         <span class="stats-week-marker" aria-hidden="true"></span>
         <span class="stats-week-status">${cleanText(day.status)}</span>
       </div>
-    `).join("");
+    `,
+    )
+    .join("");
 
   count.textContent = `${activity.completedGymDays}/${activity.gymDays || 0}`;
 }
@@ -176,7 +216,9 @@ function renderWeeklyActivityDetailList(activity) {
   const target = $("weeklyActivityDetailList");
   if (!target) return;
 
-  target.innerHTML = activity.days.map((day) => `
+  target.innerHTML = activity.days
+    .map(
+      (day) => `
     <div class="stats-week-list-row ${day.complete ? "complete" : ""}">
       <div>
         <strong>${cleanText(dateLabel(day.key))}</strong>
@@ -184,24 +226,48 @@ function renderWeeklyActivityDetailList(activity) {
       </div>
       <span class="stats-section-badge">${cleanText(day.status)}</span>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
-function renderWeeklyActivity(workouts, { preview = true, detail = true } = {}) {
+function renderWeeklyActivity(
+  workouts,
+  { preview = true, detail = true } = {},
+) {
   const activity = buildWeeklyActivityData(workouts, new Date());
-  if (preview) renderWeeklyActivityStrip("weeklyActivityPreview", "weeklyActivityPreviewCount", activity);
+  if (preview)
+    renderWeeklyActivityStrip(
+      "weeklyActivityPreview",
+      "weeklyActivityPreviewCount",
+      activity,
+    );
   if (detail) {
-    renderWeeklyActivityStrip("weeklyActivityDetail", "weeklyActivityDetailCount", activity);
+    renderWeeklyActivityStrip(
+      "weeklyActivityDetail",
+      "weeklyActivityDetailCount",
+      activity,
+    );
     renderWeeklyActivityDetailList(activity);
   }
 }
 
-export async function renderDashboard(records = {}, { destination = "all" } = {}) {
-  const workouts = [...(records.workouts ?? await getWorkouts())].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+export async function renderDashboard(
+  records = {},
+  { destination = "all" } = {},
+) {
+  const workouts = [...(records.workouts ?? (await getWorkouts()))].sort(
+    (a, b) =>
+      b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+  );
   const full = destination === "all";
   const overview = full || destination === "stats";
-  const exerciseStats = overview || destination === "statsStrength" || destination === "statsRecords"
-    ? buildExerciseStats(workouts) : [];
+  const exerciseStats =
+    overview ||
+    destination === "statsStrength" ||
+    destination === "statsRecords"
+      ? buildExerciseStats(workouts)
+      : [];
   if (overview) {
     const summary = getWorkoutStatsSummary(workouts);
     const streak = calculateWorkoutStreak(workouts, new Date());
@@ -214,11 +280,31 @@ export async function renderDashboard(records = {}, { destination = "all" } = {}
   `;
     renderRecentSessionsPreview(workouts);
   }
-  if (overview || destination === "statsWeekly") renderWeeklyActivity(workouts, { preview: overview, detail: full || destination === "statsWeekly" });
-  if (overview || destination === "statsStrength") renderStrengthSnapshot(workouts, exerciseStats, { preview: overview, detail: full || destination === "statsStrength" });
-  if (overview || destination === "statsWorkoutStats") renderWorkoutStats(workouts, { preview: overview, detail: full || destination === "statsWorkoutStats" });
-  if (overview || destination === "statsGoals") renderGoals(workouts, { preview: overview, detail: full || destination === "statsGoals" });
-  if (overview || destination === "statsRecords") renderPersonalRecords(exerciseStats, { preview: overview, detail: full || destination === "statsRecords" });
+  if (overview || destination === "statsWeekly")
+    renderWeeklyActivity(workouts, {
+      preview: overview,
+      detail: full || destination === "statsWeekly",
+    });
+  if (overview || destination === "statsStrength")
+    renderStrengthSnapshot(workouts, exerciseStats, {
+      preview: overview,
+      detail: full || destination === "statsStrength",
+    });
+  if (overview || destination === "statsWorkoutStats")
+    renderWorkoutStats(workouts, {
+      preview: overview,
+      detail: full || destination === "statsWorkoutStats",
+    });
+  if (overview || destination === "statsGoals")
+    renderGoals(workouts, {
+      preview: overview,
+      detail: full || destination === "statsGoals",
+    });
+  if (overview || destination === "statsRecords")
+    renderPersonalRecords(exerciseStats, {
+      preview: overview,
+      detail: full || destination === "statsRecords",
+    });
   if (full || destination === "statsStrength") {
     renderExerciseSelectors(exerciseStats);
     renderExerciseProgress(exerciseStats);
@@ -253,7 +339,9 @@ function renderRecentSessionsPreview(workouts) {
     return;
   }
 
-  target.innerHTML = recent.map((workout) => `
+  target.innerHTML = recent
+    .map(
+      (workout) => `
     <div class="stats-preview-row">
       <div>
         <strong>${cleanText(workout.type)}</strong>
@@ -261,7 +349,9 @@ function renderRecentSessionsPreview(workouts) {
       </div>
       <span>${durationLabel(workoutDurationMinutes(workout))}</span>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 function renderGoals(workouts, { preview = true, detail = true } = {}) {
@@ -270,7 +360,8 @@ function renderGoals(workouts, { preview = true, detail = true } = {}) {
   const weeklyGoalInput = $("weeklyGoal");
   const savedGoal = String(goals.weeklyGoal || 4);
   // Background navigation renders must not replace an unsaved edit.
-  const dirty = weeklyGoalInput?.dataset.savedGoal !== undefined &&
+  const dirty =
+    weeklyGoalInput?.dataset.savedGoal !== undefined &&
     weeklyGoalInput.value !== weeklyGoalInput.dataset.savedGoal;
   if (detail && weeklyGoalInput && !dirty) {
     weeklyGoalInput.value = savedGoal;
@@ -280,7 +371,10 @@ function renderGoals(workouts, { preview = true, detail = true } = {}) {
 
   const workoutsThisWeek = countRecentWorkouts(workouts, new Date());
   const weeklyGoal = Math.max(1, Number(goals.weeklyGoal || 4));
-  const weeklyPercent = Math.min(100, Math.round((workoutsThisWeek / weeklyGoal) * 100));
+  const weeklyPercent = Math.min(
+    100,
+    Math.round((workoutsThisWeek / weeklyGoal) * 100),
+  );
 
   const previewTarget = preview ? $("goalsPreview") : null;
   if (previewTarget) {
@@ -331,7 +425,9 @@ function renderPersonalRecordsPreview(records) {
     return;
   }
 
-  target.innerHTML = preview.map((record) => `
+  target.innerHTML = preview
+    .map(
+      (record) => `
     <div class="stats-preview-row">
       <div>
         <strong>${cleanText(record.name)}</strong>
@@ -339,11 +435,18 @@ function renderPersonalRecordsPreview(records) {
       </div>
       <span>${record.sessions}x</span>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
-function renderPersonalRecords(exerciseStats, { preview = true, detail = true } = {}) {
-  const allRecords = exerciseStats.filter((exercise) => exercise.bestEstimated1rm > 0).sort((a, b) => b.bestEstimated1rm - a.bestEstimated1rm);
+function renderPersonalRecords(
+  exerciseStats,
+  { preview = true, detail = true } = {},
+) {
+  const allRecords = exerciseStats
+    .filter((exercise) => exercise.bestEstimated1rm > 0)
+    .sort((a, b) => b.bestEstimated1rm - a.bestEstimated1rm);
   if (preview) renderPersonalRecordsPreview(allRecords);
   if (!detail) return;
 
@@ -360,9 +463,19 @@ function renderExerciseSelectors(exerciseStats) {
   const select = $("progressExercise");
   if (!select) return;
   const current = select.value;
-  const options = exerciseStats.filter((exercise) => exercise.history.length).map((exercise) => `<option value="${cleanText(exercise.name)}">${cleanText(exercise.name)}</option>`).join("");
+  const options = exerciseStats
+    .filter((exercise) => exercise.history.length)
+    .map(
+      (exercise) =>
+        `<option value="${cleanText(exercise.name)}">${cleanText(exercise.name)}</option>`,
+    )
+    .join("");
   select.innerHTML = options || `<option value="">No exercises yet</option>`;
-  if (current && Array.from(select.options).some((option) => option.value === current)) select.value = current;
+  if (
+    current &&
+    Array.from(select.options).some((option) => option.value === current)
+  )
+    select.value = current;
 }
 
 export function renderExerciseProgress(exerciseStats) {
@@ -374,7 +487,10 @@ export function renderExerciseProgress(exerciseStats) {
   const selected = progressExercise.value;
   const metric = progressMetric.value;
   const exercise = exerciseStats.find((item) => item.name === selected);
-  if (!exercise || !exercise.history.length) { target.innerHTML = `<div class="stats-empty-state"><strong>No exercise trend yet</strong><p class="muted small" style="margin:4px 0 0;">Log loaded sets and reps to see progress.</p></div>`; return; }
+  if (!exercise || !exercise.history.length) {
+    target.innerHTML = `<div class="stats-empty-state"><strong>No exercise trend yet</strong><p class="muted small" style="margin:4px 0 0;">Log loaded sets and reps to see progress.</p></div>`;
+    return;
+  }
 
   const sorted = getSortedExerciseHistory(exercise);
   const recent = sorted.slice(-7);
@@ -383,19 +499,25 @@ export function renderExerciseProgress(exerciseStats) {
   const max = Math.max(...recent.map((entry) => Number(entry[metric] || 0)), 1);
   const first = recent[0];
   const last = recent[recent.length - 1];
-  const delta = recent.length > 1 ? Number(last[metric] || 0) - Number(first[metric] || 0) : 0;
-  const trendText = recent.length > 1
-    ? `${formatSignedNumber(delta, metric === "bestVolume" ? 0 : 1)}${unit} over last ${recent.length} sessions`
-    : "Need one more session to show a trend.";
+  const delta =
+    recent.length > 1
+      ? Number(last[metric] || 0) - Number(first[metric] || 0)
+      : 0;
+  const trendText =
+    recent.length > 1
+      ? `${formatSignedNumber(delta, metric === "bestVolume" ? 0 : 1)}${unit} over last ${recent.length} sessions`
+      : "Need one more session to show a trend.";
 
   let runningBest = 0;
-  const rows = recent.map((entry) => {
-    const value = Number(entry[metric] || 0);
-    const isPr = value > runningBest;
-    runningBest = Math.max(runningBest, value);
-    const width = Math.max(4, Math.round((value / max) * 100));
-    return `<div class="record-card"><div class="row" style="align-items:flex-start;"><div><strong>${dateLabel(entry.date)} ${isPr ? `<span class="pill">PR</span>` : ""}</strong><p class="muted small" style="margin:4px 0 0;">${cleanText(entry.type)} · ${label}: ${value.toFixed(metric === "bestVolume" ? 0 : 1)}${unit} · ${entry.records[metric].weight} × ${entry.records[metric].reps}</p><div class="progress-bar"><div class="progress-fill" style="width:${width}%"></div></div></div></div></div>`;
-  }).join("");
+  const rows = recent
+    .map((entry) => {
+      const value = Number(entry[metric] || 0);
+      const isPr = value > runningBest;
+      runningBest = Math.max(runningBest, value);
+      const width = Math.max(4, Math.round((value / max) * 100));
+      return `<div class="record-card"><div class="row" style="align-items:flex-start;"><div><strong>${dateLabel(entry.date)} ${isPr ? `<span class="pill">PR</span>` : ""}</strong><p class="muted small" style="margin:4px 0 0;">${cleanText(entry.type)} · ${label}: ${value.toFixed(metric === "bestVolume" ? 0 : 1)}${unit} · ${entry.records[metric].weight} × ${entry.records[metric].reps}</p><div class="progress-bar"><div class="progress-fill" style="width:${width}%"></div></div></div></div></div>`;
+    })
+    .join("");
 
   target.innerHTML = `
     <div class="detail">
@@ -453,15 +575,19 @@ export function saveGoalsToStorage() {
       input.value = String(weeklyGoal);
       input.dataset.savedGoal = String(weeklyGoal);
       toast("Goals saved.");
-      await renderAll();
+      await renderAll({
+        destination: document.querySelector(".screen.active")?.id || "home",
+      });
       return true;
     } catch (error) {
       console.info("Goal save failed.", error);
-      toast(committed
-        ? "Goals saved, but the screen could not refresh. Reload the tracker."
-        : error?.code === "stale_record"
-          ? "Your goal changed in another action. Keep a copy of your entered value, then reload before saving again."
-          : "Could not save the goal. Your entered value is still available.");
+      toast(
+        committed
+          ? "Goals saved, but the screen could not refresh. Reload the tracker."
+          : error?.code === "stale_record"
+            ? "Your goal changed in another action. Keep a copy of your entered value, then reload before saving again."
+            : "Could not save the goal. Your entered value is still available.",
+      );
       return committed;
     } finally {
       if (button) button.disabled = false;

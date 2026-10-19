@@ -37,11 +37,11 @@ function matched(status, exercise, matchedBy) {
 function isIndexableExercise(exercise) {
   return Boolean(
     exercise &&
-      typeof exercise === "object" &&
-      !Array.isArray(exercise) &&
-      typeof exercise.catalogId === "string" &&
-      exercise.catalogId.trim() &&
-      normalizeExerciseName(exercise.name),
+    typeof exercise === "object" &&
+    !Array.isArray(exercise) &&
+    typeof exercise.catalogId === "string" &&
+    exercise.catalogId.trim() &&
+    normalizeExerciseName(exercise.name),
   );
 }
 

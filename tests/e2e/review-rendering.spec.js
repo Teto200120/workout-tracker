@@ -296,3 +296,36 @@ test("a delayed older navigation cannot render or finish over the latest destina
     transitioning: "false",
   });
 });
+
+test("batch exercise hints read history once and keep the hidden settings draft", async ({
+  page,
+}) => {
+  await loadApp(page);
+  const result = await page.evaluate(async () => {
+    const doc = globalThis.document;
+    const router = await import("/src/js/router.js");
+    const session = await import("/src/js/screens/active-workout.js");
+    await router.switchScreen("settings");
+    const name = doc.querySelector("#settingsWeightJump");
+    name.value = "7.5";
+    await router.switchScreen("home");
+    const list = doc.querySelector("#exerciseList");
+    list.replaceChildren(
+      session.makeExercise({ name: "Bench", sets: [] }),
+      session.makeExercise({ name: "Squat", sets: [] }),
+    );
+    const read = globalThis.IDBObjectStore.prototype.getAll;
+    let reads = 0;
+    globalThis.IDBObjectStore.prototype.getAll = function (...args) {
+      if (this.name === "workouts") reads += 1;
+      return read.apply(this, args);
+    };
+    try {
+      await session.updateAllExerciseHints();
+    } finally {
+      globalThis.IDBObjectStore.prototype.getAll = read;
+    }
+    return { reads, hiddenDraft: name.value };
+  });
+  expect(result).toEqual({ reads: 1, hiddenDraft: "7.5" });
+});

@@ -147,13 +147,14 @@ export function transitionEducationExperience(
   const definition = EDUCATION_EXPERIENCES[experienceId];
   const current = normalized.experiences[experienceId];
   const updatedAt = safeTimestamp(options.now);
-  const lastStep = status === "unseen"
-    ? 0
-    : normalizeLastStep(
-        options.lastStep ?? current.lastStep,
-        definition,
-        current.contentVersion,
-      );
+  const lastStep =
+    status === "unseen"
+      ? 0
+      : normalizeLastStep(
+          options.lastStep ?? current.lastStep,
+          definition,
+          current.contentVersion,
+        );
 
   normalized.experiences[experienceId] = {
     ...current,

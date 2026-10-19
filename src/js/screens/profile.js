@@ -1,13 +1,20 @@
-import "../core/globals.js";
+import { $ } from "../core/globals.js";
 import { backupAgeText, daysSinceBackup } from "../application/backup.js";
-import { getDisplayName, saveDisplayName } from "../application/display-name.js";
+import {
+  getDisplayName,
+  saveDisplayName,
+} from "../application/display-name.js";
 import { countRecentWorkouts as calculateRecentWorkouts } from "../domain/schedule.js";
 import { toast } from "../core/utils.js";
 import {
   firstValidationMessage,
   validateDisplayName,
 } from "../domain/input-guardrails.js";
-import { getRoutines, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
+import {
+  getRoutines,
+  getWorkouts,
+  isDatabaseOpen,
+} from "../storage/indexed-db.js";
 import { getBackupMeta, getGoals } from "../storage/local.js";
 import { APP_RELEASE } from "../core/release.js";
 
@@ -21,9 +28,10 @@ function setProfileText(id, value) {
 }
 
 function sortByDateDesc(items) {
-  return [...items].sort((a, b) =>
-    String(b.date || "").localeCompare(String(a.date || "")) ||
-    String(b.createdAt || "").localeCompare(String(a.createdAt || ""))
+  return [...items].sort(
+    (a, b) =>
+      String(b.date || "").localeCompare(String(a.date || "")) ||
+      String(b.createdAt || "").localeCompare(String(a.createdAt || "")),
   );
 }
 
@@ -52,7 +60,8 @@ function setDisplayNameError(message) {
 
 function clearDisplayNameError() {
   $("settingsDisplayName")?.removeAttribute("aria-invalid");
-  if ($("settingsDisplayNameError")) $("settingsDisplayNameError").textContent = "";
+  if ($("settingsDisplayNameError"))
+    $("settingsDisplayNameError").textContent = "";
 }
 
 function setDisplayNameEditorOpen(open) {
@@ -97,7 +106,9 @@ async function handleDisplayNameSave(event) {
     toast("Name updated.");
   } catch (error) {
     console.info("Display name update failed.", error);
-    setDisplayNameError("Could not save your name. Your current name is unchanged.");
+    setDisplayNameError(
+      "Could not save your name. Your current name is unchanged.",
+    );
   } finally {
     displayNameSavePending = false;
     if (saveButton) saveButton.disabled = false;
@@ -128,16 +139,23 @@ export async function renderProfile(records = {}) {
 
   const [workoutsRaw, templates] = await Promise.all([
     records.workouts ?? getWorkouts(),
-    records.routines ?? getRoutines()
+    records.routines ?? getRoutines(),
   ]);
   const workouts = sortByDateDesc(workoutsRaw);
   const goals = getGoals();
   const storedWeeklyGoal = Number(goals.weeklyGoal || 4);
-  const weeklyGoal = Number.isFinite(storedWeeklyGoal) && storedWeeklyGoal > 0 ? storedWeeklyGoal : 4;
+  const weeklyGoal =
+    Number.isFinite(storedWeeklyGoal) && storedWeeklyGoal > 0
+      ? storedWeeklyGoal
+      : 4;
   const workoutsThisWeek = countRecentWorkouts(workouts);
-  const weeklyPercent = Math.min(100, Math.round((workoutsThisWeek / weeklyGoal) * 100));
+  const weeklyPercent = Math.min(
+    100,
+    Math.round((workoutsThisWeek / weeklyGoal) * 100),
+  );
   const workoutLabel = workouts.length === 1 ? "session" : "sessions";
-  const routineLabel = templates.length === 1 ? "saved routine" : "saved routines";
+  const routineLabel =
+    templates.length === 1 ? "saved routine" : "saved routines";
   const displayName = getDisplayName();
 
   setProfileText("profileDisplayName", displayName || "Workout Tracker");
@@ -145,17 +163,30 @@ export async function renderProfile(records = {}) {
   setProfileText("settingsDisplayNameCurrent", displayName || "Name required");
 
   setProfileText("profileWeeklyGoal", `${weeklyGoal} workouts/week`);
-  setProfileText("profileGoalSummary", `${workoutsThisWeek} logged in the last 7 days.`);
+  setProfileText(
+    "profileGoalSummary",
+    `${workoutsThisWeek} logged in the last 7 days.`,
+  );
   setProfileText("profileSessionCount", `${workouts.length}`);
   setProfileText("profileSessionSummary", `${workoutLabel} on this device.`);
-  setProfileText("profileGoalMeterLabel", workoutsThisWeek >= weeklyGoal ? "Weekly goal complete" : "Weekly goal progress");
+  setProfileText(
+    "profileGoalMeterLabel",
+    workoutsThisWeek >= weeklyGoal
+      ? "Weekly goal complete"
+      : "Weekly goal progress",
+  );
   setProfileText("profileGoalMeterCount", `${workoutsThisWeek}/${weeklyGoal}`);
-  setProfileText("profileRoutineSummary", `${templates.length} ${routineLabel}`);
+  setProfileText(
+    "profileRoutineSummary",
+    `${templates.length} ${routineLabel}`,
+  );
   setProfileText("profileBackupSummary", getProfileBackupSummary());
-  setProfileText("profileDataSummary", `${workouts.length} ${workoutLabel} on this device`);
+  setProfileText(
+    "profileDataSummary",
+    `${workouts.length} ${workoutLabel} on this device`,
+  );
   setProfileText("profileReleaseIndicator", `Build ${APP_RELEASE}`);
 
   const fill = $("profileGoalMeterFill");
   if (fill) fill.style.width = `${weeklyPercent}%`;
 }
-

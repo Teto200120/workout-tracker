@@ -8,11 +8,7 @@
   "orientation": "portrait",
   "background_color": "#070b14",
   "theme_color": "#070b14",
-  "categories": [
-    "fitness",
-    "health",
-    "productivity"
-  ],
+  "categories": ["fitness", "health", "productivity"],
   "icons": [
     {
       "src": "icon-192.png",

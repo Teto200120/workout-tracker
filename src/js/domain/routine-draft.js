@@ -1,7 +1,4 @@
-import {
-  nameComparisonKey,
-  validateExerciseName,
-} from "./input-guardrails.js";
+import { nameComparisonKey, validateExerciseName } from "./input-guardrails.js";
 
 export function hasRoutineExerciseDuplicate(
   exercises = [],
@@ -21,7 +18,9 @@ export function applyRoutineExerciseSelection(
 ) {
   const validation = validateExerciseName(name);
   if (!validation.valid) {
-    throw new TypeError(validation.errors[0]?.message || "Invalid exercise name.");
+    throw new TypeError(
+      validation.errors[0]?.message || "Invalid exercise name.",
+    );
   }
   const next = [...exercises];
   if (mode === "add") {

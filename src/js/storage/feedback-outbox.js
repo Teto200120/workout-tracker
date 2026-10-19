@@ -63,7 +63,9 @@ export function createFeedbackOutbox(storage = globalThis.localStorage) {
         );
       }
       const reports = read();
-      const index = reports.findIndex((candidate) => candidate.id === report.id);
+      const index = reports.findIndex(
+        (candidate) => candidate.id === report.id,
+      );
       if (index === -1) {
         if (reports.length >= FEEDBACK_OUTBOX_MAX_REPORTS) {
           throw outboxError(

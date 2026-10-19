@@ -56,10 +56,7 @@ export function searchCatalogExercises(
       (left, right) =>
         left.rank - right.rank ||
         compareCatalogText(left.exercise.name, right.exercise.name) ||
-        compareCatalogText(
-          left.exercise.catalogId,
-          right.exercise.catalogId,
-        ) ||
+        compareCatalogText(left.exercise.catalogId, right.exercise.catalogId) ||
         left.index - right.index,
     )
     .map(({ exercise }) => exercise);
@@ -89,10 +86,14 @@ export function mergeLocalAndCatalogResults({
   filters = {},
 } = {}) {
   const local = searchLocalNames(localNames, query);
-  const localKeys = new Set(localNames.map(normalizeCatalogKey).filter(Boolean));
-  const catalog = searchCatalogExercises(catalogExercises, query, filters).filter(
-    (exercise) => !localKeys.has(normalizeCatalogKey(exercise.name)),
+  const localKeys = new Set(
+    localNames.map(normalizeCatalogKey).filter(Boolean),
   );
+  const catalog = searchCatalogExercises(
+    catalogExercises,
+    query,
+    filters,
+  ).filter((exercise) => !localKeys.has(normalizeCatalogKey(exercise.name)));
   return { local, catalog };
 }
 
@@ -104,7 +105,9 @@ export function resolveCatalogCanonicalName(
   const name = normalizeCatalogText(value);
   const key = normalizeCatalogKey(name);
   if (!key) return "";
-  const local = localNames.find((option) => normalizeCatalogKey(option) === key);
+  const local = localNames.find(
+    (option) => normalizeCatalogKey(option) === key,
+  );
   if (local) return normalizeCatalogText(local);
   const catalog = catalogExercises.find(
     (exercise) => normalizeCatalogKey(exercise?.name) === key,
@@ -118,7 +121,9 @@ export function getCatalogFilterOptions(exercises = []) {
       compareCatalogText,
     );
   return {
-    primaryMuscles: unique(exercises.flatMap((item) => item.primaryMuscles || [])),
+    primaryMuscles: unique(
+      exercises.flatMap((item) => item.primaryMuscles || []),
+    ),
     equipment: unique(exercises.flatMap((item) => item.equipment || [])),
     categories: unique(exercises.map((item) => item.category)),
   };

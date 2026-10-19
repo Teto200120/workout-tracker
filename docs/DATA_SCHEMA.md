@@ -6,12 +6,12 @@ The tracker has four deliberately separate version concepts:
 
 | Concept                         | Current value | Storage                                                | Responsibility                                                                        |
 | ------------------------------- | ------------: | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| IndexedDB database version      |             2 | `indexedDB.open("hector_workout_tracker_fresh_v1", 2)` | Creates or upgrades object stores and indexes only.                                   |
+| IndexedDB database version      |             3 | `indexedDB.open("hector_workout_tracker_fresh_v1", 3)` | Creates or upgrades object stores and indexes only.                                   |
 | Application data-schema version |             2 | localStorage key `hector_workout_data_schema_version`  | Describes the logical shape of all application-owned IndexedDB and localStorage data. |
 | Backup-file version             |             3 | `backupFileVersion` in exported JSON                   | Describes the backup envelope and import/export contract.                             |
 | Education schema version        |             1 | localStorage key `hector_workout_education_v1`         | Describes only local guidance progress and content versions.                          |
 
-IndexedDB remains at version 2 because schema 2 needs no new store or index. The application schema marker is not stored on individual records. A single marker is sufficient because startup reads, validates, and migrates the full application snapshot before any application screen renders.
+IndexedDB version 3 adds only the private `recovery` journal store. The three application stores retain their existing keys and indexes. Logical application schema 2 and backup envelope 3 are unchanged. Recovery metadata is not application history and is never exported in a normal backup. The application schema marker is not stored on individual records. A single marker is sufficient because startup reads, validates, and migrates the full application snapshot before any application screen renders.
 
 A missing application marker means legacy application schema 0. Schema 1 is the prior canonical snapshot without a required display-name field. A marker greater than 2 is a future version and stops startup without writing. Invalid, negative, fractional, or non-numeric markers also stop startup.
 
@@ -109,7 +109,7 @@ Numeric settings are finite numbers. Rep-range values are at least 1 and each ma
 
 Education progress is deliberately outside the canonical application snapshot and application schema. `hector_workout_education_v1` has its own `schemaVersion: 1` plus versioned experience records for Home, Active Workout, RPE, Routine Editor, History, Stats, and Exercise Guide. It is normalized by `domain/education.js`, persisted only through `storage/local.js`, and coordinated by `application/education.js`.
 
-Clear All Data removes this key. Reset Settings leaves it alone. Backup export/import and backup rollback snapshots exclude it in version 3. A future education change must use an experience content version or new ID; it must not increase IndexedDB version 2, application schema 2, or backup version 3.
+Clear All Data removes this key. Reset Settings leaves it alone. Backup export/import and backup rollback snapshots exclude it in version 3. A future education change must use an experience content version or new ID; it must not increase IndexedDB version 3, application schema 2, or backup version 3.
 
 ## Goals
 

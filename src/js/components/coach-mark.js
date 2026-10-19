@@ -78,7 +78,9 @@ export function canPresentEducation(options = {}) {
   if (document.querySelector(".dragging, [data-drag-active='true']")) {
     return false;
   }
-  return options.target ? Boolean(resolveEducationTarget(options.target)) : true;
+  return options.target
+    ? Boolean(resolveEducationTarget(options.target))
+    : true;
 }
 
 function createComponent() {
@@ -399,9 +401,7 @@ async function showStep(index, direction = 1) {
   ui.body.textContent = step.body;
   ui.back.disabled = !findStep(found.index - 1, -1);
   const nextStep = findStep(found.index + 1, 1);
-  ui.next.textContent = nextStep
-    ? "Next"
-    : activeState.finalLabel || "Done";
+  ui.next.textContent = nextStep ? "Next" : activeState.finalLabel || "Done";
   const restoreScrollLock = document.body.classList.contains("coach-mark-open");
   if (restoreScrollLock) document.body.classList.remove("coach-mark-open");
   let targetReady = false;
@@ -550,8 +550,8 @@ function restoreFocusAfterClose(closingState) {
     : isElementVisible(currentTab)
       ? currentTab
       : isElementVisible(closingState.target)
-      ? closingState.target
-      : null;
+        ? closingState.target
+        : null;
   if (!focusTarget || typeof focusTarget.focus !== "function") return;
 
   const temporaryTabIndex = !focusTarget.matches(FOCUSABLE_SELECTOR);
@@ -609,7 +609,10 @@ export function startCoachMark(options = {}) {
     return false;
   }
   const initialTarget = resolveEducationTarget(options.steps[0].target);
-  if (!initialTarget && !options.steps.some((step) => resolveEducationTarget(step.target))) {
+  if (
+    !initialTarget &&
+    !options.steps.some((step) => resolveEducationTarget(step.target))
+  ) {
     options.onClose?.({ reason: "deferred", lastStep: 0 });
     return false;
   }
@@ -625,7 +628,9 @@ export function startCoachMark(options = {}) {
     target: initialTarget,
     launcher:
       options.launcher ||
-      (document.activeElement === document.body ? null : document.activeElement),
+      (document.activeElement === document.body
+        ? null
+        : document.activeElement),
     finalLabel: options.finalLabel || "Done",
     onStepChange: options.onStepChange,
     onClose: options.onClose,

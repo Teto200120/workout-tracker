@@ -1,7 +1,4 @@
-import {
-  getCatalogStatus,
-  loadCatalog,
-} from "../catalog/catalog-loader.js";
+import { getCatalogStatus, loadCatalog } from "../catalog/catalog-loader.js";
 import {
   getCatalogFilterOptions,
   mergeLocalAndCatalogResults,
@@ -46,11 +43,19 @@ export function createExercisePickerSelectionSession({
     },
     select(name) {
       if (settled || typeof name !== "string") {
-        return { accepted: false, result: null, promise: Promise.resolve(false) };
+        return {
+          accepted: false,
+          result: null,
+          promise: Promise.resolve(false),
+        };
       }
       const validation = validateExerciseName(name);
       if (!validation.valid) {
-        return { accepted: false, result: null, promise: Promise.resolve(false) };
+        return {
+          accepted: false,
+          result: null,
+          promise: Promise.resolve(false),
+        };
       }
       settled = true;
       const result = Object.freeze({ name: validation.normalized });
@@ -270,7 +275,12 @@ function createExercisePickerController() {
     const items = Array.isArray(values) ? values : [values];
     const available = items.filter(Boolean);
     if (!available.length) return;
-    const row = appendText(container, "div", "", "exercise-picker-preview-meta");
+    const row = appendText(
+      container,
+      "div",
+      "",
+      "exercise-picker-preview-meta",
+    );
     appendText(row, "dt", label);
     appendText(row, "dd", available.map(displayValue).join(", "));
   }
@@ -646,9 +656,10 @@ function createExercisePickerController() {
     const validation = validateExerciseName(customInput.value);
     if (!validation.valid) {
       customInput.setAttribute("aria-invalid", "true");
-      customError.textContent = validation.errors[0]?.code === "required"
-        ? "Enter an exercise name."
-        : firstValidationMessage(validation);
+      customError.textContent =
+        validation.errors[0]?.code === "required"
+          ? "Enter an exercise name."
+          : firstValidationMessage(validation);
       customInput.focus();
       return;
     }
@@ -735,8 +746,7 @@ export function openExercisePicker(options = {}) {
 export function bindExercisePicker({ trigger, ...options }) {
   if (!trigger) return () => {};
   initializeExercisePicker();
-  const handleOpen = () =>
-    openExercisePicker({ ...options, origin: trigger });
+  const handleOpen = () => openExercisePicker({ ...options, origin: trigger });
   trigger.addEventListener("click", handleOpen);
   return () => trigger.removeEventListener("click", handleOpen);
 }

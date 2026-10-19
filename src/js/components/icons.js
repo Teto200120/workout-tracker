@@ -1,5 +1,3 @@
-import "../core/globals.js";
-
 export function iconCheck() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
 }
@@ -31,4 +29,3 @@ export function iconPlus() {
 export function iconMinus() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>`;
 }
-

@@ -62,7 +62,10 @@ export function normalizeFreeExerciseDbRecord(
     primaryMuscles: normalizeCatalogList(record.primaryMuscles),
     secondaryMuscles: normalizeCatalogList(record.secondaryMuscles),
     instructions: normalizeCatalogList(record.instructions),
-    imageReferences: imageReferences(record.images, sourceMetadata.imageBaseUrl),
+    imageReferences: imageReferences(
+      record.images,
+      sourceMetadata.imageBaseUrl,
+    ),
     attribution: {
       label: normalizeCatalogText(sourceMetadata.label),
       url: normalizeCatalogText(sourceMetadata.url),

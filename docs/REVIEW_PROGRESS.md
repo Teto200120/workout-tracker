@@ -16,7 +16,11 @@ Delivered through `88d7fc1`: F01 transaction completion, F02 typed UI identifier
 
 Validation covers pure bootstrap decisions, FIFO failure recovery, rollback messaging, middle-write aborts, unavailable catalog/reset preservation, deferred bootstrap retry, concurrent seeds, clear compensation, consistent snapshots and the cross-tab maintenance lock. Run `npm run check`, the Worker tests and `npm run catalog:validate`.
 
-## Remaining boundaries
+## Current scope and compatibility boundaries
+
+The finite completion/disposition checklist is [PRE_ANDROID_CHECKLIST.md](PRE_ANDROID_CHECKLIST.md). The passes below are historical; their “pending” statements describe the state at that pass. See the checklist and final pass for current release gates.
+
+### Boundaries retained from the safety work
 
 The shared operation boundary now covers application local-storage mutations as well as IndexedDB writers (pass 7). Import, clear and startup migration use durable undo snapshots. Recovery runs before the next outer operation, including another tab's write. Cross-tab guarantees require Web Locks; destructive cross-storage operations fail before mutation if that facility is unavailable. Earlier app versions that bypass the boundary cannot participate.
 
@@ -118,3 +122,11 @@ The next review work remains metric semantics (F06), rendering/session separatio
 - Added browser regressions for exact full-refresh store/transaction counts, fresh destination data with unrelated DOM/form preservation, zero workout reads on settings/routine/feedback navigation, immutable shared-array inputs, fresh goal previews without advancing a hidden goal editor's baseline, and delayed navigation completion. Final CI validation at `1f550f4`: all 227 unit tests, 121 browser tests without retries, 15 Worker tests, lint, formatting and catalog validation passed. Browser flows used the repository's 412 × 915 mobile Chromium configuration; connected Browser controls and the local server remain unavailable as previously recorded. Fresh visual screenshots and native Android/device performance were not tested. Shell cache advances to v62.
 
 F11 remains partial: startup and explicit post-mutation full refreshes still eagerly render hidden screens; history filter/metric-change handlers and exercise hints retain their independent reads/calculations. A future pass can introduce targeted post-write invalidation and derived view models. F12's DOM-backed active workout model is still pending. Metric semantics (F06) are unchanged.
+
+## Final pre-Android pass: reliability and handoff
+
+Implemented destination-only startup and post-write refreshes, one-snapshot hint batches, pure session serialization, a written metrics contract and two derived-count corrections. Settings UI has a screen owner; DOM aliases use explicit imports; CSS file names and architecture docs define ownership without changing cascade order. Removed the obsolete HTML archive. Formatter coverage now includes production source, shell and backend.
+
+The shell verifies asset integrity and uses a content-derived generation, serves installed assets together and waits for open clients to close before updating. Source/release checks catch omitted JS/CSS and stale digests. Feedback client work has verification/network/body deadlines and a separate cooperating-tab outbox lock. Backend source adds owner-fenced claims and durable digest batches; tests execute the real migration SQL. Cloudflare publication is separate from Pages and remains explicitly tracked in PRE_ANDROID_CHECKLIST.md.
+
+Full web state/navigation replacement, further visual/CSS redesign and optional persistent analytics caches are explicitly deferred to Android implementation rather than treated as more PWA blockers. The current web live-session controls remain DOM-backed; the pure serializer is the bounded handoff delivered here.

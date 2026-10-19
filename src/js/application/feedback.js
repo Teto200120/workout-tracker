@@ -64,6 +64,7 @@ export function createFeedbackService({
   transport,
   now = () => new Date().toISOString(),
   createId,
+  locks = globalThis.navigator?.locks,
 }) {
   if (!outbox || typeof outbox.save !== "function") {
     throw new TypeError("A feedback outbox is required.");
@@ -72,7 +73,18 @@ export function createFeedbackService({
     throw new TypeError("A feedback transport is required.");
   }
 
-  async function retry(id) {
+  let tail = Promise.resolve();
+  function coordinate(action) {
+    const run = () =>
+      locks?.request
+        ? locks.request("hector-workout-feedback-v1", action)
+        : action();
+    const result = tail.then(run, run);
+    tail = result.catch(() => {});
+    return result;
+  }
+
+  async function retryUnlocked(id) {
     const current = outbox.get(id);
     if (!current) throw new Error("That pending report no longer exists.");
     const attemptedAt = now();
@@ -117,7 +129,7 @@ export function createFeedbackService({
     return { sent: false, code: pending.lastFailure, report: pending };
   }
 
-  function queue(draft) {
+  function queueUnlocked(draft) {
     const report = createFeedbackReport(draft, { now, createId });
     outbox.save(report);
     return report;
@@ -127,14 +139,22 @@ export function createFeedbackService({
     list() {
       return outbox.list();
     },
-    queue,
-    async submit(draft) {
-      const report = queue(draft);
-      return retry(report.id);
+    queue(draft) {
+      const snapshot = structuredClone(draft);
+      return coordinate(() => queueUnlocked(snapshot));
     },
-    retry,
+    submit(draft) {
+      const snapshot = structuredClone(draft);
+      return coordinate(async () => {
+        const report = queueUnlocked(snapshot);
+        return retryUnlocked(report.id);
+      });
+    },
+    retry(id) {
+      return coordinate(() => retryUnlocked(id));
+    },
     remove(id) {
-      return outbox.remove(id);
+      return coordinate(() => outbox.remove(id));
     },
   });
 }

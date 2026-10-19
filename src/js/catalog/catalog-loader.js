@@ -33,7 +33,10 @@ export function parseCatalogPayload(payload) {
   return parseCatalogEnvelope(payload);
 }
 
-export function loadCatalog({ fetchImpl = globalThis.fetch, force = false } = {}) {
+export function loadCatalog({
+  fetchImpl = globalThis.fetch,
+  force = false,
+} = {}) {
   if (!force && state.status === "ready") return Promise.resolve(snapshot());
   if (!force && state.promise) return state.promise;
 
@@ -41,7 +44,8 @@ export function loadCatalog({ fetchImpl = globalThis.fetch, force = false } = {}
   state.error = null;
   state.promise = (async () => {
     try {
-      if (typeof fetchImpl !== "function") throw new Error("Fetch is unavailable.");
+      if (typeof fetchImpl !== "function")
+        throw new Error("Fetch is unavailable.");
       const response = await fetchImpl(CATALOG_ASSET_URL, { cache: "default" });
       if (!response.ok) {
         throw new Error(`Catalog request failed with HTTP ${response.status}.`);

@@ -1,0 +1,266 @@
+import { $, all } from "../core/globals.js";
+import { createActionCoordinator } from "../application/action-coordinator.js";
+import { DAY_LABELS, DEFAULT_APP_SETTINGS } from "../core/constants.js";
+import { cleanText, toast } from "../core/utils.js";
+import {
+  firstValidationMessage,
+  validateSettingsInput,
+} from "../domain/input-guardrails.js";
+import { getRoutines } from "../storage/indexed-db.js";
+import {
+  cloneDefaultSettings,
+  getAppSettings,
+  getAppSettingsSnapshot,
+  setAppSettings as persistAppSettings,
+} from "../storage/local.js";
+
+export { cloneDefaultSettings, getAppSettings };
+
+const settingsCoordinator = createActionCoordinator();
+let renderedSettingsSnapshot = null;
+
+const SETTINGS_INPUT_IDS = Object.freeze({
+  defaultWeightJump: "settingsWeightJump",
+  compoundMin: "settingsCompoundMin",
+  compoundMax: "settingsCompoundMax",
+  pullMin: "settingsPullMin",
+  pullMax: "settingsPullMax",
+  isolationMin: "settingsIsolationMin",
+  isolationMax: "settingsIsolationMax",
+  generalMin: "settingsGeneralMin",
+  generalMax: "settingsGeneralMax",
+});
+
+function clearSettingsValidation() {
+  Object.values(SETTINGS_INPUT_IDS).forEach((inputId) =>
+    $(inputId)?.removeAttribute("aria-invalid"),
+  );
+  all("[data-settings-validation]").forEach((feedback) => feedback.remove());
+}
+
+function showSettingsValidation(error) {
+  clearSettingsValidation();
+  const field = error?.path?.replace(/^settings\./u, "");
+  const input = $(SETTINGS_INPUT_IDS[field]);
+  if (!input) return;
+  input.setAttribute("aria-invalid", "true");
+  const feedback = document.createElement("p");
+  feedback.className = "field-validation";
+  feedback.dataset.settingsValidation = "true";
+  feedback.setAttribute("role", "alert");
+  feedback.textContent = error.message;
+  const row = input.closest(".settings-list-row");
+  (row || input).insertAdjacentElement("afterend", feedback);
+  input.focus();
+}
+
+function numericFormValue(value) {
+  return Number(String(value).trim().replace(",", "."));
+}
+
+export async function setAppSettings(settings) {
+  await persistAppSettings(settings);
+  applyAppSettings();
+}
+
+export function applyAppSettings() {
+  const settings = getAppSettings();
+  document.body.classList.toggle("no-animations", !settings.animations);
+}
+
+export async function renderSettings(records = {}) {
+  if (!$("settingsSchedule")) return;
+  const snapshot = getAppSettingsSnapshot();
+  const settings = snapshot.value;
+  const templates = records.routines ?? (await getRoutines());
+  const routineOptions = templates
+    .map(
+      (template) =>
+        `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`,
+    )
+    .join("");
+
+  $("settingsSchedule").innerHTML = DAY_LABELS.map((day, index) => {
+    const item =
+      settings.schedule[index] || DEFAULT_APP_SETTINGS.schedule[index];
+    return `<div class="settings-day-row" data-settings-day="${index}">
+      <div class="settings-day-main">
+        <span class="settings-row-icon settings-day-icon" aria-hidden="true">${day.slice(0, 2)}</span>
+        <div>
+          <div class="settings-day-label">${day}</div>
+          <p class="settings-row-note">Today suggestion</p>
+        </div>
+      </div>
+      <div class="settings-schedule-controls">
+        <div class="settings-field">
+          <label>Type</label>
+          <select class="settings-day-kind">
+            <option value="gym" ${item.kind === "gym" ? "selected" : ""}>Gym</option>
+            <option value="rest" ${item.kind === "rest" ? "selected" : ""}>Rest</option>
+            <option value="soccer" ${item.kind === "soccer" ? "selected" : ""}>Soccer</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label>Routine</label>
+          <select class="settings-day-routine">${routineOptions}</select>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  all(".settings-day-row").forEach((row) => {
+    const index = row.dataset.settingsDay;
+    const value =
+      settings.schedule[index]?.routine ||
+      DEFAULT_APP_SETTINGS.schedule[index]?.routine ||
+      "Custom";
+    const routineSelect = row.querySelector(".settings-day-routine");
+    if (
+      Array.from(routineSelect.options).some((option) => option.value === value)
+    )
+      routineSelect.value = value;
+  });
+
+  $("settingsWeightJump").value = settings.defaultWeightJump;
+  $("settingsRpeAware").checked = !!settings.rpeAware;
+  $("settingsCompoundMin").value = settings.compoundMin;
+  $("settingsCompoundMax").value = settings.compoundMax;
+  $("settingsPullMin").value = settings.pullMin;
+  $("settingsPullMax").value = settings.pullMax;
+  $("settingsIsolationMin").value = settings.isolationMin;
+  $("settingsIsolationMax").value = settings.isolationMax;
+  $("settingsGeneralMin").value = settings.generalMin;
+  $("settingsGeneralMax").value = settings.generalMax;
+  $("settingsHaptics").checked = !!settings.haptics;
+  $("settingsAnimations").checked = !!settings.animations;
+  renderedSettingsSnapshot = snapshot;
+}
+
+export async function saveSettingsFromForm() {
+  return settingsCoordinator.run(async () => {
+    const saveButton = $("saveSettings");
+    if (saveButton) saveButton.disabled = true;
+    let committed = false;
+    try {
+      const base = renderedSettingsSnapshot;
+      if (!base) {
+        toast("Settings are still loading. Try again when they appear.");
+        return false;
+      }
+      const schedule = structuredClone(base.value.schedule);
+      all(".settings-day-row").forEach((row) => {
+        const index = row.dataset.settingsDay;
+        schedule[index] = {
+          ...base.value.schedule[index],
+          kind: row.querySelector(".settings-day-kind").value,
+          routine: row.querySelector(".settings-day-routine").value,
+        };
+      });
+
+      const rawSettings = {
+        defaultWeightJump: $("settingsWeightJump").value,
+        compoundMin: $("settingsCompoundMin").value,
+        compoundMax: $("settingsCompoundMax").value,
+        pullMin: $("settingsPullMin").value,
+        pullMax: $("settingsPullMax").value,
+        isolationMin: $("settingsIsolationMin").value,
+        isolationMax: $("settingsIsolationMax").value,
+        generalMin: $("settingsGeneralMin").value,
+        generalMax: $("settingsGeneralMax").value,
+      };
+      const validation = validateSettingsInput(rawSettings);
+      if (!validation.valid) {
+        showSettingsValidation(validation.errors[0]);
+        toast(firstValidationMessage(validation));
+        return false;
+      }
+      if (
+        validation.warnings.length &&
+        !confirm(
+          `${firstValidationMessage({ errors: [], warnings: validation.warnings })}\n\nSave these settings anyway?`,
+        )
+      ) {
+        return false;
+      }
+      clearSettingsValidation();
+      const settings = {
+        ...base.value,
+        schedule,
+        defaultWeightJump: numericFormValue(rawSettings.defaultWeightJump),
+        compoundMin: numericFormValue(rawSettings.compoundMin),
+        compoundMax: numericFormValue(rawSettings.compoundMax),
+        pullMin: numericFormValue(rawSettings.pullMin),
+        pullMax: numericFormValue(rawSettings.pullMax),
+        isolationMin: numericFormValue(rawSettings.isolationMin),
+        isolationMax: numericFormValue(rawSettings.isolationMax),
+        generalMin: numericFormValue(rawSettings.generalMin),
+        generalMax: numericFormValue(rawSettings.generalMax),
+        rpeAware: $("settingsRpeAware").checked,
+        haptics: $("settingsHaptics").checked,
+        animations: $("settingsAnimations").checked,
+      };
+      const raw = await persistAppSettings(settings, { expectedRaw: base.raw });
+      committed = true;
+      renderedSettingsSnapshot = { raw, value: structuredClone(settings) };
+      applyAppSettings();
+      toast("Settings saved.");
+      return true;
+    } catch (error) {
+      console.info("Settings save failed.", error);
+      toast(
+        committed
+          ? "Settings saved, but the screen could not refresh. Reload the tracker."
+          : error?.code === "stale_record"
+            ? "Settings changed in another action. Your entries are still available. Keep a copy, then reload before editing again."
+            : "Could not save settings. Your entered values are still available.",
+      );
+      return committed;
+    } finally {
+      if (saveButton) saveButton.disabled = false;
+    }
+  }).promise;
+}
+
+export async function resetAppSettings() {
+  return settingsCoordinator.run(async () => {
+    const resetButton = $("resetSettings");
+    if (resetButton) resetButton.disabled = true;
+    let committed = false;
+    try {
+      const base = renderedSettingsSnapshot;
+      if (!base) {
+        toast("Settings are still loading. Try again when they appear.");
+        return false;
+      }
+      if (
+        !confirm(
+          "Reset app settings to defaults? Workout history and routines stay.",
+        )
+      )
+        return false;
+      const settings = {
+        ...cloneDefaultSettings(),
+        displayName: base.value.displayName,
+      };
+      const raw = await persistAppSettings(settings, { expectedRaw: base.raw });
+      committed = true;
+      renderedSettingsSnapshot = { raw, value: structuredClone(settings) };
+      applyAppSettings();
+      await renderSettings();
+      toast("Settings reset.");
+      return true;
+    } catch (error) {
+      console.info("Settings reset failed.", error);
+      toast(
+        committed
+          ? "Settings reset, but the screen could not refresh. Reload the tracker."
+          : error?.code === "stale_record"
+            ? "Settings changed in another action. Reload before resetting them."
+            : "Could not reset settings. Existing settings were left in place.",
+      );
+      return committed;
+    } finally {
+      if (resetButton) resetButton.disabled = false;
+    }
+  }).promise;
+}

@@ -320,11 +320,9 @@ export function validateRepRange(minimum, maximum, label = "Rep range") {
     Number(minResult.normalized) > Number(maxResult.normalized)
   ) {
     errors.push(
-      issue(
-        "invalid_range",
-        `${label} minimum must not exceed its maximum.`,
-        { field: "maximum" },
-      ),
+      issue("invalid_range", `${label} minimum must not exceed its maximum.`, {
+        field: "maximum",
+      }),
     );
   }
   return validationResult(
@@ -505,7 +503,9 @@ export function validateWorkoutTiming(
 
 export function validateCollectionSize(collection, options = {}) {
   const label = options.label || "Items";
-  const size = Array.isArray(collection) ? collection.length : Number(collection);
+  const size = Array.isArray(collection)
+    ? collection.length
+    : Number(collection);
   const errors = [];
   const warnings = [];
   if (!Number.isInteger(size) || size < 0) {
@@ -628,10 +628,7 @@ export function validateWorkoutInput(workout = {}, options = {}) {
       ),
     );
     parts.push(
-      withPath(
-        validateExerciseNotes(exercise?.notes),
-        `${exercisePath}.notes`,
-      ),
+      withPath(validateExerciseNotes(exercise?.notes), `${exercisePath}.notes`),
     );
     const sets = Array.isArray(exercise?.sets) ? exercise.sets : [];
     parts.push(
@@ -747,11 +744,9 @@ export function validateBackupFileSize(size) {
   }
   if (size > INPUT_LIMITS.backupFileBytes) {
     return validationResult(size, [
-      issue(
-        "backup_too_large",
-        "Backup files are limited to 25 MB.",
-        { maximum: INPUT_LIMITS.backupFileBytes },
-      ),
+      issue("backup_too_large", "Backup files are limited to 25 MB.", {
+        maximum: INPUT_LIMITS.backupFileBytes,
+      }),
     ]);
   }
   return validationResult(size);
@@ -809,11 +804,9 @@ function duplicateIdentifierErrors(records, path) {
     const key = `${typeof record.id}:${String(record.id)}`;
     if (seen.has(key)) {
       errors.push(
-        issue(
-          "duplicate_id",
-          `Backup contains a duplicate ID in ${path}.`,
-          { path: `${path}[${index}].id` },
-        ),
+        issue("duplicate_id", `Backup contains a duplicate ID in ${path}.`, {
+          path: `${path}[${index}].id`,
+        }),
       );
     }
     seen.add(key);

@@ -1,21 +1,44 @@
-import "../core/globals.js";
+import { $ } from "../core/globals.js";
 import { cleanText } from "../core/utils.js";
 import { getRoutines } from "../storage/indexed-db.js";
 
 export async function refreshTemplateDropdowns(selected = null) {
   const templates = await getRoutines();
-  const currentWorkout = selected || $("workoutType").value || "Chest / Triceps";
+  const currentWorkout =
+    selected || $("workoutType").value || "Chest / Triceps";
   const currentHistory = $("historyFilter").value || "All";
 
-  $("workoutType").innerHTML = templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");
+  $("workoutType").innerHTML = templates
+    .map(
+      (template) =>
+        `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`,
+    )
+    .join("");
   if (selected && !templates.some((template) => template.name === selected)) {
     const option = document.createElement("option");
     option.value = selected;
     option.textContent = selected;
     $("workoutType").append(option);
   }
-  if (Array.from($("workoutType").options).some((option) => option.value === currentWorkout)) $("workoutType").value = currentWorkout;
+  if (
+    Array.from($("workoutType").options).some(
+      (option) => option.value === currentWorkout,
+    )
+  )
+    $("workoutType").value = currentWorkout;
 
-  $("historyFilter").innerHTML = `<option value="All">All</option>` + templates.map((template) => `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`).join("");
-  if (Array.from($("historyFilter").options).some((option) => option.value === currentHistory)) $("historyFilter").value = currentHistory;
+  $("historyFilter").innerHTML =
+    `<option value="All">All</option>` +
+    templates
+      .map(
+        (template) =>
+          `<option value="${cleanText(template.name)}">${cleanText(template.name)}</option>`,
+      )
+      .join("");
+  if (
+    Array.from($("historyFilter").options).some(
+      (option) => option.value === currentHistory,
+    )
+  )
+    $("historyFilter").value = currentHistory;
 }

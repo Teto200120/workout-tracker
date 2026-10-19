@@ -202,9 +202,7 @@ export function validateCatalogMetadata(metadata) {
   }
 
   if (metadata.catalogFormatVersion !== CATALOG_FORMAT_VERSION) {
-    errors.push(
-      `catalogFormatVersion must be ${CATALOG_FORMAT_VERSION}`,
-    );
+    errors.push(`catalogFormatVersion must be ${CATALOG_FORMAT_VERSION}`);
   }
   for (const field of [
     "source",
@@ -226,7 +224,10 @@ export function validateCatalogMetadata(metadata) {
   if (!Number.isInteger(metadata.exerciseCount) || metadata.exerciseCount < 0) {
     errors.push("exerciseCount must be a non-negative integer");
   }
-  if (!Number.isInteger(metadata.normalizerVersion) || metadata.normalizerVersion < 1) {
+  if (
+    !Number.isInteger(metadata.normalizerVersion) ||
+    metadata.normalizerVersion < 1
+  ) {
     errors.push("normalizerVersion must be a positive integer");
   }
   if (typeof metadata.imagesIncluded !== "boolean") {

@@ -15,7 +15,7 @@ The deployed app remains directly served HTML, CSS, images, and browser-native E
 
 `renderAll()` reads workouts, routines and legacy weights once in one fresh readonly transaction and passes those records to the screen renderers. Renderers copy arrays before sorting and can still read storage when called independently without supplied records. This snapshot belongs to one refresh; there is no persistent render cache to invalidate after writes or changes in another tab.
 
-`switchScreen()` refreshes only the requested destination. Settings and Routines need only routine records, Feedback needs no application IndexedDB records, and Stats/History destinations read workout records once. Stats previews and detail pages render their own sections. A navigation revision check discards a superseded read before rendering and prevents old navigation completions from presenting education over the latest screen. Explicit full refreshes still render all screens after data-changing actions and during startup; replacing those with targeted invalidation is separate work. Startup reuses its freshly rendered Home view instead of immediately reading it again.
+`switchScreen()` refreshes only the requested destination. Settings and Routines need only routine records, Feedback needs no application IndexedDB records, and Stats/History destinations read workout records once. Stats previews and detail pages render their own sections. A navigation revision check discards a superseded read before rendering and prevents old navigation completions from presenting education over the latest screen. Startup renders Home only. Data-changing screen actions refresh their visible destination; navigation always reads current storage for the destination, so hidden screens need no long-lived cache or invalidation registry. `renderAll()` without a destination remains an explicit full-snapshot diagnostic API. Exercise hint batches share one history read, and an individual hint shares its history snapshot between last-performance and PR calculations.
 
 ## Dependency direction
 
@@ -62,7 +62,7 @@ No module may import Node-only code. Every production import must resolve from t
 - Completion summaries
 - Workout saveability
 
-Warm-up behavior intentionally matches the pre-refactor application: warm-up sets contribute no volume and are excluded from working-set totals and best-set selection. The existing completed-set total counts any set marked done, including a warm-up marked done.
+The metrics contract is [METRICS_CONTRACT.md](METRICS_CONTRACT.md). Warm-ups contribute neither working volume, working-set totals, completed working sets nor PRs. Saved working-set load/repetition values contribute to volume and PRs regardless of their completion checkbox; completion is a separate metric. Repeated same-name exercise rows within one workout count as one exercise session. Stored records are not rewritten.
 
 `domain/schedule.js` owns Monday-first week resolution, day-plan resolution, weekly activity, streaks, and rolling recent-workout counts. Any time-dependent function receives the current date as an argument.
 
@@ -90,7 +90,7 @@ To add a pure workout calculation:
 - Lifecycle: `openDatabase`, `isDatabaseOpen`, `seedDefaultTemplates`
 - App-wide operations: `getAllApplicationRecords`, `clearApplicationStores`, `importBackupRecords`, `replaceApplicationRecords`
 
-The database name, version, store names, key paths, and indexes are unchanged. Record-specific writes validate schema 2 before opening a write request. `importBackupRecords` keeps one read-write transaction across all three stores, handles request and transaction errors, and explicitly aborts if synchronous or asynchronous insertion fails. `replaceApplicationRecords` uses the same multi-store transaction for startup migration and compensating rollback.
+The database name, application store names, key paths, and indexes are retained. Physical IndexedDB version 3 adds the private `recovery` store for durable undo journals; application records remain schema 2. Record-specific writes validate schema 2 before opening a write request. `importBackupRecords` keeps one read-write transaction across all three stores, handles request and transaction errors, and explicitly aborts if synchronous or asynchronous insertion fails. `replaceApplicationRecords` uses the same multi-store transaction for startup migration and compensating rollback.
 
 `storage/local.js` owns the existing settings, goals, draft, and backup-metadata keys plus `hector_workout_data_schema_version`. It provides typed-by-purpose reads and validated writes, raw snapshot/restore operations for cross-storage recovery, and application cleanup. Clear All Local Data removes the schema marker.
 
@@ -154,13 +154,12 @@ The normalized contract, provider comparison, licensing evidence, refresh workfl
 
 ## Remaining transitional globals
 
-Eight global names intentionally remain:
+Six transitional router/view commands remain:
 
-- `$` and `all`: pervasive DOM query aliases used by every existing screen. Replacing them would be a large mechanical diff with little boundary benefit in this branch.
 - `renderAll` and `switchScreen`: screen actions call router coordination. Importing the router back into those screens would create router-to-screen cycles.
 - `closeTodayReview`, `showTodayView`, `stopTodayActiveElapsedTimer`, and `syncTodayFloatingCta`: Active Workout and Home still have a bidirectional view-transition relationship. These four commands are the narrow compatibility bridge that avoids a static Today/Active Workout import cycle while draft recovery and workout completion remain stable.
 
-No mutable feature state, calculation, icon, settings accessor, or storage function is exposed through `globalThis`.
+`$` and `all` are explicit module imports from `core/globals.js`, not ambient names. The six commands are a documented web adapter bridge; a wholesale web navigation rewrite is deferred because Android will own navigation. No mutable feature state, calculation, icon, settings accessor, or storage function is exposed through `globalThis`. Settings UI belongs to `screens/settings.js`; `core/settings.js` is a compatibility re-export.
 
 ## Testing
 
@@ -172,15 +171,26 @@ Storage errors propagate to screens or application callers. Unit tests assert pu
 
 ## Service-worker caching
 
-`service-worker.js` manually lists the complete production app shell. When adding or renaming a production module:
+`service-worker.js` lists the production shell; `npm run release:prepare` generates SHA-256 integrity values and a content-derived cache generation. `npm run release:check` rejects stale digests, omitted production JS/CSS and inconsistent package/UI versions. Run the prepare command after formatting or editing shell assets.
 
-1. Add or update its app-shell path.
-2. Confirm the path returns HTTP 200 from the static server.
-3. Bump the cache name once for the completed change set.
-4. Verify an online load before testing cached/offline startup.
+Installation downloads every asset with integrity verification. A failed installation discards its incomplete cache. An installed generation serves its cached HTML, scripts, styles and catalog together, including while online. External and unknown requests are never cached. An update waits while existing tracker clients are open, preventing a forced controller change during a workout; the app announces that closing all tracker windows and reopening will update it. Activation deletes only tracker-prefixed old caches. A damaged generation returns an explicit 503 instead of fetching a mixture of new assets.
 
-The current cache is `hector-workout-tracker-pwa-v19`. It includes the onboarding and beta-education modules/styles, routine-draft domain helper, shared picker, every catalog production module—including aliases, resolver, and Guide adapter—and `src/data/exercise-catalog.json`; the network-only development refresh scripts are not production assets.
+The beta release label remains 0.4.0 until the separately deployed feedback receiver accepts the next label; source revisions are distinguished automatically by the content-derived shell generation. The package, lockfile and UI release labels now agree. No claim is made that the old v62 worker can retroactively obey the new cache policy during its one-time transition.
+
+## Stylesheet ownership
+
+`main.css` is the only stylesheet entry point and fixes cascade order. `base.css` owns tokens and common controls; `onboarding.css`, `education.css`, and `screens.css` own their named surfaces; `motion.css` owns shared animation/accessibility rules. Home uses `today-layout.css` followed by `today-components.css`; the session uses `session-layout.css` followed by `session-components.css`. The layout/component ordering retains the established cascade. Removing further overrides or redesigning the visual system is deferred to native Material Expressive work, with navy/coral identity retained. Formatting covers all production HTML, CSS, JS and backend source.
+
+## Session adapter boundary
+
+`domain/workout-session.js::buildWorkoutSessionRecord` owns metadata-preserving serialization, empty-set filtering, stable typed identity and duration preservation. It receives only plain snapshots and explicit creation time. `active-workout.js::collectWorkout` reads the browser controls and calls that pure boundary for both draft and save paths. The current live controls remain DOM-backed; replacing the entire web interaction model is deliberately deferred to Android's state holder rather than made a prerequisite. The same record contract and preservation tests define the mobile handoff.
+
+## Feedback delivery
+
+Feedback uses a separate outbox and Web Lock, outside application backups/clear. Queue, retry and delete serialize through transport completion so a failed retry cannot resurrect a deleted report. Web Locks coordinate cooperating tabs; without them this is limited to one service instance. Verification and network/body work have bounded deadlines; failures retain the local report. The local test-transport hook rejects production origins.
+
+Worker migration `0005_delivery_ownership.sql` adds owner-fenced report claims and durable immutable digest batches. The report insert and claim release verify ownership; stale invocations cannot commit through or delete a successor's claim. Digest retries use the frozen payload and provider idempotency key, with delivery markers committed together. Ambiguous batches outside the provider's retry window require operator reconciliation. These backend changes require a separate Cloudflare migration/deployment; a Pages deploy alone does not publish them.
 
 ## Versioned data contracts
 
-The full record contracts, ordered application schema 0-to-1-to-2 migration, version boundaries, startup recovery and onboarding sequence, backup compatibility rules, future-version behavior, and future-migration procedure are documented in [DATA_SCHEMA.md](DATA_SCHEMA.md). IndexedDB remains version 2, application data is schema 2, and new backup files remain version 3. The legacy `weights` store and backups without a `weights` array remain supported.
+The full record contracts, ordered application schema 0-to-1-to-2 migration, version boundaries, startup recovery and onboarding sequence, backup compatibility rules, future-version behavior, and future-migration procedure are documented in [DATA_SCHEMA.md](DATA_SCHEMA.md). IndexedDB is version 3, application data is schema 2, and new backup files remain version 3. The legacy `weights` store and backups without a `weights` array remain supported.

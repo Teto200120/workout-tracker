@@ -7,18 +7,18 @@ import {
   DRAFT_KEY,
   EDUCATION_KEY,
   GOALS_KEY,
-  SETTINGS_KEY
+  SETTINGS_KEY,
 } from "../core/constants.js";
 import {
   validateSettingsInput,
-  validateWeeklyGoal
+  validateWeeklyGoal,
 } from "../domain/input-guardrails.js";
 import { DataSchemaError, createValidationError } from "../schema/errors.js";
 import {
   assertValidBackupMeta,
   assertValidDraft,
   assertValidGoals,
-  assertValidSettings
+  assertValidSettings,
 } from "../schema/validators.js";
 
 const LOCAL_STORAGE_FIELDS = Object.freeze({
@@ -26,7 +26,7 @@ const LOCAL_STORAGE_FIELDS = Object.freeze({
   goals: GOALS_KEY,
   draft: DRAFT_KEY,
   backupMeta: BACKUP_META_KEY,
-  applicationSchemaVersion: APPLICATION_SCHEMA_VERSION_KEY
+  applicationSchemaVersion: APPLICATION_SCHEMA_VERSION_KEY,
 });
 
 function parseStoredJson(rawValue, field) {
@@ -34,12 +34,15 @@ function parseStoredJson(rawValue, field) {
   try {
     return JSON.parse(rawValue);
   } catch (cause) {
-    throw new DataSchemaError(`Invalid JSON in ${LOCAL_STORAGE_FIELDS[field]}.`, {
-      cause,
-      code: "invalid_json",
-      path: field,
-      source: "application"
-    });
+    throw new DataSchemaError(
+      `Invalid JSON in ${LOCAL_STORAGE_FIELDS[field]}.`,
+      {
+        cause,
+        code: "invalid_json",
+        path: field,
+        source: "application",
+      },
+    );
   }
 }
 
@@ -58,12 +61,22 @@ export function getAppSettings() {
 export function getAppSettingsSnapshot() {
   const raw = localStorage.getItem(SETTINGS_KEY);
   let stored;
-  try { stored = JSON.parse(raw) || {}; } catch { stored = {}; }
-  return { raw, value: {
-    ...cloneDefaultSettings(),
-    ...stored,
-    schedule: { ...cloneDefaultSettings().schedule, ...(stored.schedule || {}) }
-  } };
+  try {
+    stored = JSON.parse(raw) || {};
+  } catch {
+    stored = {};
+  }
+  return {
+    raw,
+    value: {
+      ...cloneDefaultSettings(),
+      ...stored,
+      schedule: {
+        ...cloneDefaultSettings().schedule,
+        ...(stored.schedule || {}),
+      },
+    },
+  };
 }
 
 function rawSetAppSettings(settings) {
@@ -95,7 +108,11 @@ export function getGoals() {
 export function getGoalsSnapshot() {
   const raw = localStorage.getItem(GOALS_KEY);
   let value;
-  try { value = JSON.parse(raw) || { weeklyGoal: 4 }; } catch { value = { weeklyGoal: 4 }; }
+  try {
+    value = JSON.parse(raw) || { weeklyGoal: 4 };
+  } catch {
+    value = { weeklyGoal: 4 };
+  }
   return { raw, value };
 }
 
@@ -178,23 +195,31 @@ function rawRemoveEducationRecord() {
 }
 
 export function captureApplicationLocalStorage() {
-  return Object.fromEntries(Object.entries(LOCAL_STORAGE_FIELDS).map(([field, key]) => [field, localStorage.getItem(key)]));
+  return Object.fromEntries(
+    Object.entries(LOCAL_STORAGE_FIELDS).map(([field, key]) => [
+      field,
+      localStorage.getItem(key),
+    ]),
+  );
 }
 
 function rawRestoreApplicationLocalStorage(snapshot) {
   Object.entries(LOCAL_STORAGE_FIELDS).forEach(([field, key]) => {
     const rawValue = snapshot[field];
-    if (rawValue === null || rawValue === undefined) localStorage.removeItem(key);
+    if (rawValue === null || rawValue === undefined)
+      localStorage.removeItem(key);
     else localStorage.setItem(key, rawValue);
   });
 }
 
-export function readPersistedApplicationLocalData(snapshot = captureApplicationLocalStorage()) {
+export function readPersistedApplicationLocalData(
+  snapshot = captureApplicationLocalStorage(),
+) {
   return {
     settings: parseStoredJson(snapshot.settings, "settings"),
     goals: parseStoredJson(snapshot.goals, "goals"),
     draft: parseStoredJson(snapshot.draft, "draft"),
-    backupMeta: parseStoredJson(snapshot.backupMeta, "backupMeta")
+    backupMeta: parseStoredJson(snapshot.backupMeta, "backupMeta"),
   };
 }
 
@@ -235,7 +260,8 @@ export function setAppSettings(value, options = {}) {
   const guarded = Object.hasOwn(options, "expectedRaw");
   const expectedRaw = options.expectedRaw;
   return runDataOperation(() => {
-    if (guarded && localStorage.getItem(SETTINGS_KEY) !== expectedRaw) throw new DataConflictError();
+    if (guarded && localStorage.getItem(SETTINGS_KEY) !== expectedRaw)
+      throw new DataConflictError();
     return rawSetAppSettings(snapshot);
   }, options.operation);
 }
@@ -249,7 +275,8 @@ export function setGoals(value, options = {}) {
   const guarded = Object.hasOwn(options, "expectedRaw");
   const expectedRaw = options.expectedRaw;
   return runDataOperation(() => {
-    if (guarded && localStorage.getItem(GOALS_KEY) !== expectedRaw) throw new DataConflictError();
+    if (guarded && localStorage.getItem(GOALS_KEY) !== expectedRaw)
+      throw new DataConflictError();
     return rawSetGoals(snapshot);
   }, options.operation);
 }
@@ -270,12 +297,18 @@ export function setBackupMeta(value, options = {}) {
 
 export function setEducationRecord(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawSetEducationRecord(snapshot), options.operation);
+  return runDataOperation(
+    () => rawSetEducationRecord(snapshot),
+    options.operation,
+  );
 }
 
 export function restoreRawEducationRecord(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawRestoreRawEducationRecord(snapshot), options.operation);
+  return runDataOperation(
+    () => rawRestoreRawEducationRecord(snapshot),
+    options.operation,
+  );
 }
 
 export function removeEducationRecord(options = {}) {
@@ -284,23 +317,38 @@ export function removeEducationRecord(options = {}) {
 
 export function restoreApplicationLocalStorage(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawRestoreApplicationLocalStorage(snapshot), options.operation);
+  return runDataOperation(
+    () => rawRestoreApplicationLocalStorage(snapshot),
+    options.operation,
+  );
 }
 
 export function writePersistedApplicationLocalData(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawWritePersistedApplicationLocalData(snapshot), options.operation);
+  return runDataOperation(
+    () => rawWritePersistedApplicationLocalData(snapshot),
+    options.operation,
+  );
 }
 
 export function setApplicationSchemaVersionMarker(value, options = {}) {
   const snapshot = structuredClone(value);
-  return runDataOperation(() => rawSetApplicationSchemaVersionMarker(snapshot), options.operation);
+  return runDataOperation(
+    () => rawSetApplicationSchemaVersionMarker(snapshot),
+    options.operation,
+  );
 }
 
 export function removeApplicationSchemaVersionMarker(options = {}) {
-  return runDataOperation(() => rawRemoveApplicationSchemaVersionMarker(), options.operation);
+  return runDataOperation(
+    () => rawRemoveApplicationSchemaVersionMarker(),
+    options.operation,
+  );
 }
 
 export function clearApplicationLocalStorage(options = {}) {
-  return runDataOperation(() => rawClearApplicationLocalStorage(), options.operation);
+  return runDataOperation(
+    () => rawClearApplicationLocalStorage(),
+    options.operation,
+  );
 }

@@ -93,3 +93,18 @@ against a staging/controlled Worker and invoke the scheduled handler once; it
 uses the same logic and durable delivery markers, so repeating it cannot email
 already delivered reports. Do not run this against production or send mail
 until the user confirms the final test.
+
+## Baseline deployment and reconciliation
+
+Apply migrations through `0005_delivery_ownership.sql` before deploying this Worker source. The additive migration leaves existing report, screenshot and delivery records intact. With the existing authenticated Cloudflare account, run from this directory:
+
+```sh
+npx wrangler d1 migrations apply workout-tracker-beta-feedback --remote
+npx wrangler deploy
+```
+
+Do not run a live mail test as part of repository verification. Automated tests use in-memory SQLite and a fake provider. A Pages deployment does not deploy this Worker. The client beta label stays 0.4.0 until the receiver allowlist is deployed; content-derived shell generations distinguish PWA changes in the meantime.
+
+Each local calendar day freezes one digest payload and report-ID list in `feedback_digest_batches` before contacting Resend. Concurrent invocations and same-day retries reuse the same `Idempotency-Key`. New reports after freezing wait for a later day. D1 delivery markers and batch completion are one atomic batch. Resend retains keys for 24 hours; unresolved batches are never automatically resent outside a conservative 23-hour window or absorbed into later batches. If the handler returns `reconciliation_required`, check the provider's delivery record for that batch key. Mark reports delivered and the batch complete only after confirmed delivery; resolve a definitely unsent batch explicitly before allowing a new daily batch. Never clear ambiguous state merely to retry.
+
+Report claims have unique owners. Both report insertion and claim cleanup verify the owner, so a resumed expired invocation cannot replace its successor. If a D1 response is ambiguous, referenced screenshots are retained. Unreferenced objects may require explicit operator review; there is no automatic destructive cleanup.

@@ -29,78 +29,91 @@ export function isOnboardingRequired(settings = getAppSettings()) {
 }
 
 export function saveDisplayName(value) {
-  return displayNameCoordinator.run(() => runDataOperation(async (operation) => {
-    const validation = validateDisplayName(value);
-    if (!validation.valid) {
+  return displayNameCoordinator.run(() =>
+    runDataOperation(async (operation) => {
+      const validation = validateDisplayName(value);
+      if (!validation.valid) {
+        return {
+          saved: false,
+          displayName: null,
+          validation,
+          message: firstValidationMessage(validation),
+        };
+      }
+      const settings = getAppSettings();
+      await setAppSettings(
+        { ...settings, displayName: validation.normalized },
+        { operation },
+      );
       return {
-        saved: false,
-        displayName: null,
+        saved: true,
+        displayName: validation.normalized,
         validation,
-        message: firstValidationMessage(validation),
+        message: "",
       };
-    }
-    const settings = getAppSettings();
-    await setAppSettings({ ...settings, displayName: validation.normalized }, { operation });
-    return {
-      saved: true,
-      displayName: validation.normalized,
-      validation,
-      message: "",
-    };
-  }));
+    }),
+  );
 }
 
 export function completeOnboarding(value, rpeAware = true) {
-  return displayNameCoordinator.run(() => runDataOperation(async (operation) => {
-    const validation = validateDisplayName(value);
-    if (!validation.valid) {
-      return {
-        saved: false,
-        displayName: null,
-        validation,
-        message: firstValidationMessage(validation),
-      };
-    }
+  return displayNameCoordinator.run(() =>
+    runDataOperation(async (operation) => {
+      const validation = validateDisplayName(value);
+      if (!validation.valid) {
+        return {
+          saved: false,
+          displayName: null,
+          validation,
+          message: firstValidationMessage(validation),
+        };
+      }
 
-    const localSnapshot = captureApplicationLocalStorage();
-    const educationSnapshot = getRawEducationRecord();
-    try {
-      const settings = getAppSettings();
-      await setAppSettings({
-        ...settings,
+      const localSnapshot = captureApplicationLocalStorage();
+      const educationSnapshot = getRawEducationRecord();
+      try {
+        const settings = getAppSettings();
+        await setAppSettings(
+          {
+            ...settings,
+            displayName: validation.normalized,
+            rpeAware: Boolean(rpeAware),
+          },
+          { operation },
+        );
+        const educationResult = await ensureEducationState({ operation });
+        if (!educationResult.saved) throw educationResult.error;
+        await setApplicationSchemaVersionMarker(
+          CURRENT_APPLICATION_SCHEMA_VERSION,
+          { operation },
+        );
+      } catch (cause) {
+        const rollbackErrors = [];
+        try {
+          await restoreApplicationLocalStorage(localSnapshot, { operation });
+        } catch (error) {
+          rollbackErrors.push(error);
+        }
+        try {
+          await restoreRawEducationRecord(educationSnapshot, { operation });
+        } catch (error) {
+          rollbackErrors.push(error);
+        }
+        forgetEducationState();
+        throw new DataSchemaError("Onboarding could not be persisted.", {
+          cause,
+          code: "onboarding_persistence_failed",
+          source: "application",
+          rollbackErrors,
+        });
+      }
+
+      return {
+        saved: true,
         displayName: validation.normalized,
         rpeAware: Boolean(rpeAware),
-      }, { operation });
-      const educationResult = await ensureEducationState({ operation });
-      if (!educationResult.saved) throw educationResult.error;
-      await setApplicationSchemaVersionMarker(CURRENT_APPLICATION_SCHEMA_VERSION, { operation });
-    } catch (cause) {
-      const rollbackErrors = [];
-      try {
-        await restoreApplicationLocalStorage(localSnapshot, { operation });
-      } catch (error) {
-        rollbackErrors.push(error);
-      }
-      try {
-        await restoreRawEducationRecord(educationSnapshot, { operation });
-      } catch (error) {
-        rollbackErrors.push(error);
-      }
-      forgetEducationState();
-      throw new DataSchemaError("Onboarding could not be persisted.", {
-        cause,
-        code: "onboarding_persistence_failed",
-        source: "application",
-        rollbackErrors,
-      });
-    }
-
-    return {
-      saved: true,
-      displayName: validation.normalized,
-      rpeAware: Boolean(rpeAware),
-      validation,
-      message: "",
-    };
-  }));
+        validation,
+        message: "",
+      };
+    }),
+  );
 }

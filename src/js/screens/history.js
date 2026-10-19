@@ -1,10 +1,16 @@
-import "../core/globals.js";
+import { $ } from "../core/globals.js";
 import { decodeRecordId } from "../domain/record-id.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { refreshTemplateDropdowns } from "../components/routine-selectors.js";
 import { cleanText, dateLabel, toast } from "../core/utils.js";
 import { inferMuscleTag } from "../domain/training-rules.js";
-import { completedSets, durationLabel, totalSets, workoutDurationMinutes, workoutVolume } from "../domain/workout-metrics.js";
+import {
+  completedSets,
+  durationLabel,
+  totalSets,
+  workoutDurationMinutes,
+  workoutVolume,
+} from "../domain/workout-metrics.js";
 import { deleteWorkoutRecord, getWorkouts } from "../storage/indexed-db.js";
 import {
   collapseAllButFirstExercise,
@@ -12,7 +18,7 @@ import {
   setEditingWorkoutId,
   setEditingWorkoutRecord,
   showSessionView,
-  updateAllExerciseHints
+  updateAllExerciseHints,
 } from "./active-workout.js";
 
 const historyEditCoordinator = createActionCoordinator();
@@ -20,17 +26,29 @@ const historyDeleteCoordinator = createActionCoordinator();
 let renderedWorkouts = new Map();
 
 export async function renderHistory(records = {}) {
-  const workouts = [...(records.workouts ?? await getWorkouts())].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  const workouts = [...(records.workouts ?? (await getWorkouts()))].sort(
+    (a, b) =>
+      b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+  );
   const filter = $("historyFilter").value;
   const search = $("exerciseSearch").value.trim().toLowerCase();
   const visible = workouts.filter((workout) => {
     const typeMatch = filter === "All" || workout.type === filter;
-    const searchMatch = !search || workout.exercises.some((exercise) => exercise.name.toLowerCase().includes(search));
+    const searchMatch =
+      !search ||
+      workout.exercises.some((exercise) =>
+        exercise.name.toLowerCase().includes(search),
+      );
     return typeMatch && searchMatch;
   });
   const list = $("historyList");
-  renderedWorkouts = new Map(visible.map((workout) => [workout.id, structuredClone(workout)]));
-  if (!visible.length) { list.innerHTML = `<div class="stats-empty-state"><strong>No workouts found</strong><p class="muted small" style="margin:4px 0 0;">Try a different routine filter or exercise search.</p></div>`; return; }
+  renderedWorkouts = new Map(
+    visible.map((workout) => [workout.id, structuredClone(workout)]),
+  );
+  if (!visible.length) {
+    list.innerHTML = `<div class="stats-empty-state"><strong>No workouts found</strong><p class="muted small" style="margin:4px 0 0;">Try a different routine filter or exercise search.</p></div>`;
+    return;
+  }
   list.innerHTML = visible.map(renderWorkoutCard).join("");
 }
 
@@ -42,12 +60,14 @@ function renderWorkoutTags(workout) {
 
 function renderWorkoutExerciseChips(workout) {
   if (!workout.exercises.length) return "";
-  return `<div class="history-chip-row history-exercise-row">${workout.exercises.map((exercise) => {
-    const name = exercise.name || "Unnamed";
-    const muscle = inferMuscleTag(name) || "Exercise";
-    const setLabel = `${exercise.sets.length} ${exercise.sets.length === 1 ? "set" : "sets"}`;
-    return `<span class="pill stats-chip stats-exercise-chip"><span>${cleanText(name)}</span><small>${cleanText(muscle)} - ${setLabel}</small></span>`;
-  }).join("")}</div>`;
+  return `<div class="history-chip-row history-exercise-row">${workout.exercises
+    .map((exercise) => {
+      const name = exercise.name || "Unnamed";
+      const muscle = inferMuscleTag(name) || "Exercise";
+      const setLabel = `${exercise.sets.length} ${exercise.sets.length === 1 ? "set" : "sets"}`;
+      return `<span class="pill stats-chip stats-exercise-chip"><span>${cleanText(name)}</span><small>${cleanText(muscle)} - ${setLabel}</small></span>`;
+    })
+    .join("")}</div>`;
 }
 
 function renderWorkoutCard(workout) {
@@ -95,7 +115,9 @@ function renderExerciseDetails(exercise) {
 async function editWorkout(workoutId) {
   return historyEditCoordinator.run(async () => {
     try {
-      const workout = (await getWorkouts()).find((item) => item.id === workoutId);
+      const workout = (await getWorkouts()).find(
+        (item) => item.id === workoutId,
+      );
       if (!workout) return false;
 
       setEditingWorkoutId(workout.id);
@@ -110,7 +132,9 @@ async function editWorkout(workoutId) {
 
       const list = $("exerciseList");
       list.innerHTML = "";
-      workout.exercises.forEach((exercise) => list.appendChild(makeExercise(exercise)));
+      workout.exercises.forEach((exercise) =>
+        list.appendChild(makeExercise(exercise)),
+      );
       collapseAllButFirstExercise();
       await updateAllExerciseHints();
       switchScreen("log");
@@ -133,16 +157,20 @@ async function deleteWorkout(workoutId) {
       if (!confirm("Delete this workout?")) return false;
       await deleteWorkoutRecord(workoutId, { expected });
       committed = true;
-      await renderAll();
+      await renderAll({
+        destination: document.querySelector(".screen.active")?.id || "home",
+      });
       toast("Workout deleted.");
       return true;
     } catch (error) {
       console.info("Workout delete failed.", error);
-      toast(committed
-        ? "Workout deleted, but the screen could not refresh. Reload the tracker."
-        : error?.code === "stale_record"
-          ? "This workout changed or was deleted in another action. Refresh History before deleting it."
-          : "Could not delete the workout. Existing data is unchanged.");
+      toast(
+        committed
+          ? "Workout deleted, but the screen could not refresh. Reload the tracker."
+          : error?.code === "stale_record"
+            ? "This workout changed or was deleted in another action. Refresh History before deleting it."
+            : "Could not delete the workout. Existing data is unchanged.",
+      );
       return committed;
     }
   }).promise;
@@ -152,7 +180,13 @@ export function bindHistoryActions() {
   $("historyList").addEventListener("click", (event) => {
     const button = event.target.closest("[data-history-action]");
     if (!button) return;
-    if (button.dataset.historyAction === "edit") editWorkout(decodeRecordId(button.dataset.workoutId, button.dataset.workoutIdType));
-    if (button.dataset.historyAction === "delete") deleteWorkout(decodeRecordId(button.dataset.workoutId, button.dataset.workoutIdType));
+    if (button.dataset.historyAction === "edit")
+      editWorkout(
+        decodeRecordId(button.dataset.workoutId, button.dataset.workoutIdType),
+      );
+    if (button.dataset.historyAction === "delete")
+      deleteWorkout(
+        decodeRecordId(button.dataset.workoutId, button.dataset.workoutIdType),
+      );
   });
 }

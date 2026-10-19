@@ -8,16 +8,20 @@ export async function prepareDefaultTemplates({ requireCatalog = false } = {}) {
   const catalog = await loadCatalog();
   const starter = buildCatalogStarterRoutines(catalog.exercises);
   if (requireCatalog && !starter.ok) {
-    throw new Error("Default routines are unavailable. Existing routines were left unchanged.");
+    throw new Error(
+      "Default routines are unavailable. Existing routines were left unchanged.",
+    );
   }
   const timestamp = new Date().toISOString();
-  const templates = starter.ok ? [
-    ...starter.routines.map((routine) => ({
-      name: routine.name,
-      exercises: routine.exercises.map((exercise) => exercise.name),
-    })),
-    { name: "Custom", exercises: [] },
-  ] : [{ name: "Custom", exercises: [], starterSeedPending: 1 }];
+  const templates = starter.ok
+    ? [
+        ...starter.routines.map((routine) => ({
+          name: routine.name,
+          exercises: routine.exercises.map((exercise) => exercise.name),
+        })),
+        { name: "Custom", exercises: [] },
+      ]
+    : [{ name: "Custom", exercises: [], starterSeedPending: 1 }];
   return {
     ready: starter.ok,
     routines: templates.map((template) => ({
@@ -36,7 +40,11 @@ export async function seedDefaultTemplates({ operation } = {}) {
     return { status: "existing", routines: existing };
   }
   const prepared = await prepareDefaultTemplates();
-  await commitRoutineLibrary(prepared.routines, { seed: true, ready: prepared.ready, operation });
+  await commitRoutineLibrary(prepared.routines, {
+    seed: true,
+    ready: prepared.ready,
+    operation,
+  });
   return {
     status: prepared.ready ? "catalog" : "catalog-unavailable",
     routines: await getRoutines(),

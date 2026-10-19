@@ -1,7 +1,4 @@
-import {
-  compareCatalogText,
-  normalizeCatalogKey,
-} from "./catalog-contract.js";
+import { compareCatalogText, normalizeCatalogKey } from "./catalog-contract.js";
 
 const STARTER_PROGRAMS = Object.freeze([
   {
@@ -171,16 +168,16 @@ function listIncludes(values, expected) {
 function matchesSlot(exercise, slot) {
   return Boolean(
     exercise?.catalogId &&
-      exercise?.name &&
-      Array.isArray(exercise.instructions) &&
-      exercise.instructions.length &&
-      normalizeCatalogKey(exercise.category) ===
-        normalizeCatalogKey(slot.category) &&
-      listIncludes(exercise.primaryMuscles, slot.primaryMuscle) &&
-      (!slot.mechanic ||
-        normalizeCatalogKey(exercise.mechanic) ===
-          normalizeCatalogKey(slot.mechanic)) &&
-      (!slot.equipment || listIncludes(exercise.equipment, slot.equipment))
+    exercise?.name &&
+    Array.isArray(exercise.instructions) &&
+    exercise.instructions.length &&
+    normalizeCatalogKey(exercise.category) ===
+      normalizeCatalogKey(slot.category) &&
+    listIncludes(exercise.primaryMuscles, slot.primaryMuscle) &&
+    (!slot.mechanic ||
+      normalizeCatalogKey(exercise.mechanic) ===
+        normalizeCatalogKey(slot.mechanic)) &&
+    (!slot.equipment || listIncludes(exercise.equipment, slot.equipment)),
   );
 }
 
@@ -198,8 +195,7 @@ function secondaryMuscleScore(exercise, slot) {
 
 function compareCandidates(left, right, slot) {
   return (
-    secondaryMuscleScore(right, slot) -
-      secondaryMuscleScore(left, slot) ||
+    secondaryMuscleScore(right, slot) - secondaryMuscleScore(left, slot) ||
     compareCatalogText(left.name, right.name) ||
     compareCatalogText(left.catalogId, right.catalogId)
   );

@@ -124,7 +124,10 @@ async function submitOnboarding(event) {
   }
   clearError();
   try {
-    const operation = completeOnboarding(input.value, rpeAware?.checked ?? true);
+    const operation = completeOnboarding(
+      input.value,
+      rpeAware?.checked ?? true,
+    );
     const result = await operation.promise;
     if (!result.saved) {
       showError(result.message || "Enter a valid display name.", {

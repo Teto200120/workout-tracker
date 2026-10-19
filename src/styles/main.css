@@ -1,9 +1,9 @@
 @import "./base.css";
 @import "./onboarding.css";
 @import "./education.css";
-@import "./today-base.css";
-@import "./active-workout-base.css";
+@import "./today-layout.css";
+@import "./session-layout.css";
 @import "./screens.css";
 @import "./motion.css";
-@import "./today.css";
-@import "./active-workout.css";
+@import "./today-components.css";
+@import "./session-components.css";

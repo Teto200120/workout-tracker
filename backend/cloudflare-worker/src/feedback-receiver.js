@@ -1,4 +1,5 @@
 /* global Headers, Response, TextDecoder, URLSearchParams, atob, console, crypto, fetch */
+import { withDeadline } from "../../../src/js/application/deadline.js";
 import { runFeedbackDigest } from "./feedback-digest.js";
 
 const CATEGORIES = new Set(["bug", "idea", "other"]);
@@ -12,7 +13,7 @@ const DIAGNOSTIC_KEYS = [
 ];
 // Preserve delivery for already queued reports while each new published app
 // release is explicitly added alongside its client marker.
-const DIAGNOSTIC_APP_VERSIONS = new Set(["1.0.0", "0.4.0"]);
+const DIAGNOSTIC_APP_VERSIONS = new Set(["1.0.0", "0.4.0", "0.4.1"]);
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_SCREENSHOT_BYTES = 425 * 1024;
 const MAX_SCREENSHOT_EDGE = 1280;
@@ -68,7 +69,13 @@ function validDiagnostics(diagnostics) {
 function decodeScreenshot(screenshot) {
   if (screenshot === null) return null;
   if (
-    !hasOnlyKeys(screenshot, ["dataUrl", "mimeType", "width", "height", "size"]) ||
+    !hasOnlyKeys(screenshot, [
+      "dataUrl",
+      "mimeType",
+      "width",
+      "height",
+      "size",
+    ]) ||
     !SCREENSHOT_TYPES.has(screenshot.mimeType) ||
     !Number.isInteger(screenshot.width) ||
     !Number.isInteger(screenshot.height) ||
@@ -86,15 +93,18 @@ function decodeScreenshot(screenshot) {
   const prefix = `data:${screenshot.mimeType};base64,`;
   if (
     !screenshot.dataUrl.startsWith(prefix) ||
-    screenshot.dataUrl.length > prefix.length + Math.ceil((MAX_SCREENSHOT_BYTES * 4) / 3) + 4
+    screenshot.dataUrl.length >
+      prefix.length + Math.ceil((MAX_SCREENSHOT_BYTES * 4) / 3) + 4
   ) {
     return undefined;
   }
   try {
-    const bytes = Uint8Array.from(atob(screenshot.dataUrl.slice(prefix.length)), (char) =>
-      char.charCodeAt(0),
+    const bytes = Uint8Array.from(
+      atob(screenshot.dataUrl.slice(prefix.length)),
+      (char) => char.charCodeAt(0),
     );
-    return bytes.byteLength === screenshot.size && bytes.byteLength <= MAX_SCREENSHOT_BYTES
+    return bytes.byteLength === screenshot.size &&
+      bytes.byteLength <= MAX_SCREENSHOT_BYTES
       ? bytes
       : undefined;
   } catch {
@@ -131,16 +141,24 @@ function validReport(report) {
 }
 
 async function verifyTurnstile(token, secret, fetcher) {
-  if (typeof token !== "string" || !token || typeof secret !== "string" || !secret) {
+  if (
+    typeof token !== "string" ||
+    !token ||
+    typeof secret !== "string" ||
+    !secret
+  ) {
     return false;
   }
   try {
-    const response = await fetcher(TURNSTILE_VERIFY_URL, {
-      method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ secret, response: token }),
-    });
-    return response.ok && (await response.json()).success === true;
+    return await withDeadline(async (signal) => {
+      const response = await fetcher(TURNSTILE_VERIFY_URL, {
+        signal,
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ secret, response: token }),
+      });
+      return response.ok && (await response.json()).success === true;
+    }, 15_000);
   } catch {
     return false;
   }
@@ -192,12 +210,17 @@ export function createFeedbackReceiver({
         return json({ ok: false, code: "origin_not_allowed" }, 403);
       }
       if (request.method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: corsHeaders(origin) });
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders(origin),
+        });
       }
       if (request.method !== "POST") {
         return json({ ok: false, code: "method_not_allowed" }, 405, origin);
       }
-      if (!request.headers.get("content-type")?.startsWith("application/json")) {
+      if (
+        !request.headers.get("content-type")?.startsWith("application/json")
+      ) {
         return json({ ok: false, code: "invalid_request" }, 415, origin);
       }
       const contentLength = Number(request.headers.get("content-length"));
@@ -216,19 +239,31 @@ export function createFeedbackReceiver({
       } catch {
         return json({ ok: false, code: "invalid_request" }, 400, origin);
       }
-      if (!hasOnlyKeys(body, ["report", "turnstileToken"]) || !validReport(body.report)) {
+      if (
+        !hasOnlyKeys(body, ["report", "turnstileToken"]) ||
+        !validReport(body.report)
+      ) {
         return json({ ok: false, code: "invalid_request" }, 400, origin);
       }
 
-      const rateKey = request.headers.get("cf-connecting-ip") || "unknown-client";
+      const rateKey =
+        request.headers.get("cf-connecting-ip") || "unknown-client";
       const rate = await env.FEEDBACK_RATE_LIMITER.limit({ key: rateKey });
-      if (!rate.success) return json({ ok: false, code: "rate_limited" }, 429, origin);
-      if (!(await verifyTurnstile(body.turnstileToken, env.TURNSTILE_SECRET, fetcher))) {
+      if (!rate.success)
+        return json({ ok: false, code: "rate_limited" }, 429, origin);
+      if (
+        !(await verifyTurnstile(
+          body.turnstileToken,
+          env.TURNSTILE_SECRET,
+          fetcher,
+        ))
+      ) {
         return json({ ok: false, code: "challenge_failed" }, 403, origin);
       }
 
       const report = body.report;
       let persistenceStage = "existing_report";
+      const claimId = crypto.randomUUID();
       try {
         const existing = await env.FEEDBACK_DB.prepare(
           "SELECT id FROM feedback_reports WHERE id = ?",
@@ -238,12 +273,11 @@ export function createFeedbackReceiver({
         if (existing) return json({ ok: true, duplicate: true }, 200, origin);
 
         persistenceStage = "claim";
-        const claimId = crypto.randomUUID();
         const claimedAt = nowMs();
         const claim = await env.FEEDBACK_DB.prepare(
-          "INSERT INTO feedback_report_claims (id, claimed_at) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET claimed_at = excluded.claimed_at WHERE feedback_report_claims.claimed_at <= ?",
+          "INSERT INTO feedback_report_claims (id, claimed_at, owner) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET claimed_at = excluded.claimed_at, owner = excluded.owner WHERE feedback_report_claims.claimed_at <= ?",
         )
-          .bind(report.id, claimedAt, claimedAt - CLAIM_LEASE_MS)
+          .bind(report.id, claimedAt, claimId, claimedAt - CLAIM_LEASE_MS)
           .run();
         if (!claim.meta.changes) {
           return json({ ok: false, code: "temporary_failure" }, 503, origin);
@@ -257,35 +291,48 @@ export function createFeedbackReceiver({
             claimId,
             report.screenshot.mimeType,
           );
-          await env.FEEDBACK_SCREENSHOTS.put(screenshotObjectKey, screenshotBytes, {
-            httpMetadata: { contentType: report.screenshot.mimeType },
-          });
+          await env.FEEDBACK_SCREENSHOTS.put(
+            screenshotObjectKey,
+            screenshotBytes,
+            {
+              httpMetadata: { contentType: report.screenshot.mimeType },
+            },
+          );
         }
 
         persistenceStage = "report";
-        await env.FEEDBACK_DB.prepare(
-          "INSERT INTO feedback_reports (id, category, message, diagnostics_json, screenshot_key, screenshot_mime_type, screenshot_width, screenshot_height, client_created_at, received_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        const saved = await env.FEEDBACK_DB.prepare(
+          "INSERT INTO feedback_reports (id, category, message, diagnostics_json, screenshot_key, screenshot_mime_type, screenshot_width, screenshot_height, client_created_at, received_at) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM feedback_report_claims WHERE id = ? AND owner = ?) ON CONFLICT(id) DO NOTHING",
         )
           .bind(
             report.id,
             report.category,
             report.message.trim(),
-            report.diagnostics === null ? null : JSON.stringify(report.diagnostics),
+            report.diagnostics === null
+              ? null
+              : JSON.stringify(report.diagnostics),
             screenshotObjectKey,
             report.screenshot?.mimeType || null,
             report.screenshot?.width || null,
             report.screenshot?.height || null,
             report.createdAt,
             now(),
+            report.id,
+            claimId,
           )
           .run();
+        if (!saved.meta.changes) {
+          if (screenshotObjectKey)
+            await env.FEEDBACK_SCREENSHOTS.delete(screenshotObjectKey);
+          return json({ ok: false, code: "temporary_failure" }, 503, origin);
+        }
         // Once D1 has the report, the durable row is the idempotency record.
         // The temporary lease must not accumulate after accepted submissions.
         try {
           await env.FEEDBACK_DB.prepare(
-            "DELETE FROM feedback_report_claims WHERE id = ?",
+            "DELETE FROM feedback_report_claims WHERE id = ? AND owner = ?",
           )
-            .bind(report.id)
+            .bind(report.id, claimId)
             .run();
         } catch {
           // Never turn a persisted, acknowledged report into a failed delivery.
@@ -294,20 +341,42 @@ export function createFeedbackReceiver({
         }
       } catch {
         log("feedback_delivery_failure", persistenceStage);
-        // A failed cross-store write is not delivery. The client keeps its local
-        // report and may retry its same deterministic ID without data loss.
-        if (screenshotObjectKey) {
+        // A lost D1 response may follow a committed insert. Never delete a
+        // screenshot referenced by that durable row. If the check fails, retain
+        // the object for operator reconciliation rather than risk data loss.
+        let persisted;
+        let checked = false;
+        try {
+          persisted = await env.FEEDBACK_DB.prepare(
+            "SELECT screenshot_key FROM feedback_reports WHERE id = ?",
+          )
+            .bind(report.id)
+            .first();
+          checked = true;
+        } catch {
+          /* Preserve the object when delivery is ambiguous. */
+        }
+        if (
+          checked &&
+          screenshotObjectKey &&
+          persisted?.screenshot_key !== screenshotObjectKey
+        ) {
           try {
             await env.FEEDBACK_SCREENSHOTS.delete(screenshotObjectKey);
           } catch {
-            // A later retry safely overwrites this private deterministic key.
+            /* Private orphan; operator cleanup. */
           }
         }
-        await env.FEEDBACK_DB.prepare(
-          "DELETE FROM feedback_report_claims WHERE id = ? AND NOT EXISTS (SELECT 1 FROM feedback_reports WHERE id = ?)",
-        )
-          .bind(report.id, report.id)
-          .run();
+        if (persisted) return json({ ok: true, duplicate: true }, 200, origin);
+        try {
+          await env.FEEDBACK_DB.prepare(
+            "DELETE FROM feedback_report_claims WHERE id = ? AND owner = ? AND NOT EXISTS (SELECT 1 FROM feedback_reports WHERE id = ?)",
+          )
+            .bind(report.id, claimId, report.id)
+            .run();
+        } catch {
+          log("feedback_delivery_failure", "claim_cleanup");
+        }
         return json({ ok: false, code: "temporary_failure" }, 503, origin);
       }
       return json({ ok: true }, 201, origin);
@@ -316,4 +385,9 @@ export function createFeedbackReceiver({
 }
 
 const receiver = createFeedbackReceiver();
-export default { ...receiver, async scheduled(_event, env, ctx) { ctx.waitUntil(runFeedbackDigest(env)); } };
+export default {
+  ...receiver,
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(runFeedbackDigest(env));
+  },
+};

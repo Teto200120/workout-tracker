@@ -1,11 +1,11 @@
-import "../core/globals.js";
+import { $ } from "../core/globals.js";
 import {
   backupAgeText,
   buildBackup,
   clearApplicationData,
   daysSinceBackup,
   restoreBackup,
-  validateBackupStructure
+  validateBackupStructure,
 } from "../application/backup.js";
 import { createActionCoordinator } from "../application/action-coordinator.js";
 import { isOnboardingRequired } from "../application/display-name.js";
@@ -14,12 +14,19 @@ import { applyAppSettings } from "../core/settings.js";
 import { today, toast } from "../core/utils.js";
 import {
   firstValidationMessage,
-  validateBackupFileSize
+  validateBackupFileSize,
 } from "../domain/input-guardrails.js";
 import { backupFailureMessage } from "../schema/errors.js";
-import { getLegacyWeights, getWorkouts, isDatabaseOpen } from "../storage/indexed-db.js";
+import {
+  getLegacyWeights,
+  getWorkouts,
+  isDatabaseOpen,
+} from "../storage/indexed-db.js";
 import { getBackupMeta, getDraft, setBackupMeta } from "../storage/local.js";
-import { loadWorkoutTemplate, stopSessionElapsedTimer } from "./active-workout.js";
+import {
+  loadWorkoutTemplate,
+  stopSessionElapsedTimer,
+} from "./active-workout.js";
 import { showOnboarding } from "./onboarding.js";
 
 const exportCoordinator = createActionCoordinator();
@@ -27,11 +34,12 @@ const importCoordinator = createActionCoordinator();
 const clearCoordinator = createActionCoordinator();
 
 function setBackupActionPending(action, pending) {
-  const buttonIds = action === "export"
-    ? ["exportData"]
-    : action === "import"
-      ? ["importData"]
-      : ["clearData"];
+  const buttonIds =
+    action === "export"
+      ? ["exportData"]
+      : action === "import"
+        ? ["importData"]
+        : ["clearData"];
   buttonIds.forEach((buttonId) => {
     const button = $(buttonId);
     if (button) button.disabled = pending;
@@ -43,7 +51,8 @@ export async function renderBackupStatus(records = {}) {
   if (!isDatabaseOpen()) return;
 
   const [workouts, legacyWeights] = await Promise.all([
-    records.workouts ?? getWorkouts(), records.legacyWeights ?? getLegacyWeights(),
+    records.workouts ?? getWorkouts(),
+    records.legacyWeights ?? getLegacyWeights(),
   ]);
   // Legacy weight records still count for backup reminders so old data can be exported.
   const hasUserData = workouts.length > 0 || legacyWeights.length > 0;
@@ -56,11 +65,13 @@ export async function renderBackupStatus(records = {}) {
   if (!hasUserData) {
     level = "good";
     pill = "No data";
-    text = "No workout data yet. Backup reminders will appear once there is progress to protect.";
+    text =
+      "No workout data yet. Backup reminders will appear once there is progress to protect.";
   } else if (age === null) {
     level = "warn";
     pill = "Backup";
-    text = "No backup exported yet. Export once so your progress has a safe local copy.";
+    text =
+      "No backup exported yet. Export once so your progress has a safe local copy.";
   } else if (age < 14) {
     level = "good";
     pill = "Current";
@@ -82,7 +93,11 @@ export async function renderBackupStatus(records = {}) {
 
   const backupCard = $("backupRestoreTool");
   if (backupCard) {
-    backupCard.classList.remove("backup-status-good", "backup-status-warn", "backup-status-urgent");
+    backupCard.classList.remove(
+      "backup-status-good",
+      "backup-status-warn",
+      "backup-status-urgent",
+    );
     backupCard.classList.add(`backup-status-${level}`);
   }
 
@@ -103,7 +118,9 @@ export async function exportData() {
     try {
       const exportedAt = new Date().toISOString();
       const data = await buildBackup(exportedAt);
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
       url = URL.createObjectURL(blob);
       link = document.createElement("a");
       link.href = url;
@@ -117,11 +134,13 @@ export async function exportData() {
       toast("Backup download started.");
     } catch (error) {
       console.info("Backup export failed.", error);
-      toast(downloadStarted
-        ? metadataSaved
-          ? "Backup download started, but the screen could not refresh. Check your downloads."
-          : "Backup download started, but its reminder could not be updated. Check your downloads."
-        : "Could not start the backup download. Your workout data is unchanged.");
+      toast(
+        downloadStarted
+          ? metadataSaved
+            ? "Backup download started, but the screen could not refresh. Check your downloads."
+            : "Backup download started, but its reminder could not be updated. Check your downloads."
+          : "Could not start the backup download. Your workout data is unchanged.",
+      );
     } finally {
       link?.remove();
       // Give the browser time to consume the download URL before releasing it.
@@ -146,19 +165,28 @@ export async function importData(file) {
       const draftWarning = getDraft()
         ? " Your unsaved workout draft will stay on this device."
         : "";
-      if (!confirm(`Import this backup? Existing entries stay. Matching IDs will be overwritten.${draftWarning}`)) return;
+      if (
+        !confirm(
+          `Import this backup? Existing entries stay. Matching IDs will be overwritten.${draftWarning}`,
+        )
+      )
+        return;
       await restoreBackup(data);
       committed = true;
       applyAppSettings();
       await refreshTemplateDropdowns();
-      await renderAll();
+      await renderAll({
+        destination: document.querySelector(".screen.active")?.id || "home",
+      });
       if (isOnboardingRequired()) showOnboarding({ resetInput: true });
       toast("Backup imported.");
     } catch (error) {
       console.info("Backup import failed.", error);
-      toast(committed
-        ? "Backup imported, but the screen could not refresh. Reload the tracker."
-        : backupFailureMessage(error));
+      toast(
+        committed
+          ? "Backup imported, but the screen could not refresh. Reload the tracker."
+          : backupFailureMessage(error),
+      );
     } finally {
       setBackupActionPending("import", false);
     }
@@ -183,19 +211,24 @@ export async function clearAllData() {
       applyAppSettings();
       await refreshTemplateDropdowns();
       await loadWorkoutTemplate();
-      await renderAll();
+      await renderAll({
+        destination: document.querySelector(".screen.active")?.id || "home",
+      });
       showOnboarding({ resetInput: true });
-      toast("Workout and profile data cleared. Pending feedback was left unchanged.");
+      toast(
+        "Workout and profile data cleared. Pending feedback was left unchanged.",
+      );
     } catch (error) {
       console.info("Local data clear failed.", error);
-      toast(cleared
-        ? "Local data was cleared, but the view could not refresh. Reload the app."
-        : error?.code === "data_clear_failed" || error?.rollbackErrors?.length
-          ? backupFailureMessage(error)
-          : "Could not clear local data. No clear was committed.");
+      toast(
+        cleared
+          ? "Local data was cleared, but the view could not refresh. Reload the app."
+          : error?.code === "data_clear_failed" || error?.rollbackErrors?.length
+            ? backupFailureMessage(error)
+            : "Could not clear local data. No clear was committed.",
+      );
     } finally {
       setBackupActionPending("clear", false);
     }
   }).promise;
 }
-

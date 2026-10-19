@@ -19,12 +19,13 @@ export function createValidationError(errors, options = {}) {
     ...options,
     code: options.code || "schema_validation_failed",
     path: first?.path || options.path || "",
-    validationErrors: errors
+    validationErrors: errors,
   });
 }
 
 export function startupFailureMessage(error) {
-  if (error?.code === "recovery_prepare_failed") return "Could not save the recovery snapshot needed for this update. Existing application data was left unchanged. Download recovery data before freeing device storage.";
+  if (error?.code === "recovery_prepare_failed")
+    return "Could not save the recovery snapshot needed for this update. Existing application data was left unchanged. Download recovery data before freeing device storage.";
   if (error?.code === "recovery_lock_unavailable") {
     return "This browser cannot safely coordinate data recovery. Use an updated browser with Web Locks support. Keep this browser’s storage and download recovery data if needed.";
   }
@@ -44,15 +45,20 @@ export function startupFailureMessage(error) {
 }
 
 export function backupFailureMessage(error) {
-  if (error?.code === "recovery_prepare_failed") return "Could not start the data change because its recovery snapshot could not be saved. Existing data was left unchanged.";
-  if (error?.code === "recovery_lock_unavailable") return "This browser cannot safely coordinate import or clear. Use an updated browser with Web Locks support.";
+  if (error?.code === "recovery_prepare_failed")
+    return "Could not start the data change because its recovery snapshot could not be saved. Existing data was left unchanged.";
+  if (error?.code === "recovery_lock_unavailable")
+    return "This browser cannot safely coordinate import or clear. Use an updated browser with Web Locks support.";
   if (error?.rollbackErrors?.length) {
     return "Recovery could not finish. Some data may have changed. Keep this browser's data and your backups; do not clear storage.";
   }
   if (error?.code === "data_clear_failed") {
     return "Could not clear local data. The previous data was restored.";
   }
-  if (error?.code === "future_backup_file_version" || error?.code === "future_application_schema_version") {
+  if (
+    error?.code === "future_backup_file_version" ||
+    error?.code === "future_application_schema_version"
+  ) {
     return "Could not import backup. It was created by a newer app version.";
   }
   if (error?.code === "backup_restore_failed") {

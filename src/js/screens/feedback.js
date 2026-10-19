@@ -1,7 +1,5 @@
-import "../core/globals.js";
-import {
-  createFeedbackService,
-} from "../application/feedback.js";
+import { $ } from "../core/globals.js";
+import { createFeedbackService } from "../application/feedback.js";
 import {
   createLiveFeedbackTransport,
   FEEDBACK_TURNSTILE_SITE_KEY,
@@ -73,8 +71,10 @@ function failureText(code) {
   if (code === "verification_unavailable") {
     return "Verification did not complete. Your report is still saved.";
   }
-  if (code === "temporary_failure") return "The last send attempt failed. Your report is still saved.";
-  if (code === "invalid_response") return "The receiver did not confirm delivery. Your report is still saved.";
+  if (code === "temporary_failure")
+    return "The last send attempt failed. Your report is still saved.";
+  if (code === "invalid_response")
+    return "The receiver did not confirm delivery. Your report is still saved.";
   return "Saved on this device and ready to retry.";
 }
 
@@ -153,7 +153,8 @@ function blobToDataUrl(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("The compressed screenshot could not be read."));
+    reader.onerror = () =>
+      reject(new Error("The compressed screenshot could not be read."));
     reader.readAsDataURL(blob);
   });
 }
@@ -163,7 +164,8 @@ async function compressScreenshot(file) {
   if (!validation.valid) throw new Error(validation.message);
 
   const headerDimensions = await readFeedbackScreenshotDimensions(file);
-  const headerValidation = validateFeedbackScreenshotDimensions(headerDimensions);
+  const headerValidation =
+    validateFeedbackScreenshotDimensions(headerDimensions);
   if (!headerValidation.valid) throw new Error(headerValidation.message);
 
   let bitmap;
@@ -191,14 +193,19 @@ async function compressScreenshot(file) {
     canvas.width = Math.max(1, Math.round(bitmap.width * initialScale));
     canvas.height = Math.max(1, Math.round(bitmap.height * initialScale));
     let context = canvas.getContext("2d", { alpha: false });
-    if (!context) throw new Error("Screenshot compression is not supported here.");
+    if (!context)
+      throw new Error("Screenshot compression is not supported here.");
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
     let quality = 0.82;
     let blob = await canvasToBlob(canvas, quality);
-    while (blob && blob.size > FEEDBACK_SCREENSHOT_MAX_OUTPUT_BYTES && quality > 0.46) {
+    while (
+      blob &&
+      blob.size > FEEDBACK_SCREENSHOT_MAX_OUTPUT_BYTES &&
+      quality > 0.46
+    ) {
       quality -= 0.09;
       blob = await canvasToBlob(canvas, quality);
     }
@@ -224,7 +231,9 @@ async function compressScreenshot(file) {
     }
 
     if (!blob || blob.size > FEEDBACK_SCREENSHOT_MAX_OUTPUT_BYTES) {
-      throw new Error("That screenshot could not be compressed enough for safe local storage.");
+      throw new Error(
+        "That screenshot could not be compressed enough for safe local storage.",
+      );
     }
 
     return {
@@ -247,7 +256,10 @@ async function handleScreenshotChange(event) {
     return;
   }
   setScreenshotPending(true);
-  setText("feedbackScreenshotStatus", "Validating and compressing screenshot on this device...");
+  setText(
+    "feedbackScreenshotStatus",
+    "Validating and compressing screenshot on this device...",
+  );
   try {
     screenshot = await compressScreenshot(file);
     const image = $("feedbackScreenshotImage");
@@ -306,9 +318,13 @@ function pendingReportElement(report) {
   const attempts = document.createElement("span");
   attempts.textContent = `${report.attempts} send ${report.attempts === 1 ? "attempt" : "attempts"}`;
   const attachment = document.createElement("span");
-  attachment.textContent = report.screenshot ? "Screenshot attached" : "No screenshot";
+  attachment.textContent = report.screenshot
+    ? "Screenshot attached"
+    : "No screenshot";
   const diagnostics = document.createElement("span");
-  diagnostics.textContent = report.diagnostics ? "Safe diagnostics included" : "No diagnostics";
+  diagnostics.textContent = report.diagnostics
+    ? "Safe diagnostics included"
+    : "No diagnostics";
   metadata.append(attempts, attachment, diagnostics);
 
   const state = document.createElement("p");
@@ -394,11 +410,20 @@ async function handleSubmit(event) {
     const result = await service.submit(draft);
     clearFormAfterQueue();
     if (result.sent) {
-      setText("feedbackFormStatus", "Report sent. Its local pending copy was removed after confirmation.");
+      setText(
+        "feedbackFormStatus",
+        "Report sent. Its local pending copy was removed after confirmation.",
+      );
     } else if (result.code === "local_cleanup_failed") {
-      setText("feedbackFormStatus", "Delivery was confirmed, but the local copy could not be cleared. It remains visible for safety.");
+      setText(
+        "feedbackFormStatus",
+        "Delivery was confirmed, but the local copy could not be cleared. It remains visible for safety.",
+      );
     } else {
-      setText("feedbackFormStatus", `${failureText(result.code)} You can retry it below.`);
+      setText(
+        "feedbackFormStatus",
+        `${failureText(result.code)} You can retry it below.`,
+      );
     }
     renderFeedback();
   } catch (error) {
@@ -417,9 +442,14 @@ async function handleOutboxAction(event) {
   if (!id) return;
 
   if (button.dataset.feedbackAction === "delete") {
-    if (!confirm("Delete this pending feedback report from this device? This cannot be undone.")) return;
+    if (
+      !confirm(
+        "Delete this pending feedback report from this device? This cannot be undone.",
+      )
+    )
+      return;
     try {
-      service.remove(id);
+      await service.remove(id);
       setText("feedbackFormStatus", "Pending report deleted from this device.");
       renderFeedback();
     } catch (error) {
@@ -454,14 +484,23 @@ export function bindFeedbackActions() {
       "feedbackCharacterCount",
       `${event.target.value.length}/${FEEDBACK_MESSAGE_MAX_LENGTH}`,
     );
-    if (event.target.value.trim().length >= 10) setText("feedbackMessageError", "");
+    if (event.target.value.trim().length >= 10)
+      setText("feedbackMessageError", "");
   });
   $("feedbackScreenshot")?.addEventListener("change", handleScreenshotChange);
-  $("feedbackRemoveScreenshot")?.addEventListener("click", () => clearScreenshot());
+  $("feedbackRemoveScreenshot")?.addEventListener("click", () =>
+    clearScreenshot(),
+  );
   $("feedbackOutboxList")?.addEventListener("click", handleOutboxAction);
 }
 
 export function setFeedbackTransport(nextTransport) {
+  if (
+    !["localhost", "127.0.0.1", "[::1]"].includes(globalThis.location.hostname)
+  )
+    throw new Error(
+      "Test transports are available only on a local development origin.",
+    );
   if (!nextTransport || typeof nextTransport.send !== "function") {
     throw new TypeError("A feedback transport with send() is required.");
   }

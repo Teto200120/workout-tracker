@@ -1,7 +1,11 @@
 import { DataSchemaError, createValidationError } from "./errors.js";
 import { validateDisplayName } from "../domain/input-guardrails.js";
 import { clonePersistedValue, normalizeApplicationData } from "./normalize.js";
-import { assertValidApplicationData, isPlainObject, validateApplicationData } from "./validators.js";
+import {
+  assertValidApplicationData,
+  isPlainObject,
+  validateApplicationData,
+} from "./validators.js";
 import {
   CURRENT_APPLICATION_SCHEMA_VERSION,
   CURRENT_BACKUP_FILE_VERSION,
@@ -9,7 +13,7 @@ import {
   PREVIOUS_APPLICATION_SCHEMA_VERSION,
   detectApplicationSchemaVersion,
   detectBackupApplicationSchemaVersion,
-  detectBackupFileVersion
+  detectBackupFileVersion,
 } from "./versions.js";
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
@@ -35,7 +39,7 @@ export function migrateLegacyApplicationDataToV1(value, options = {}) {
     deferIdConstraints: options.deferIdConstraints,
     source: options.source || "application",
     fromVersion: LEGACY_APPLICATION_SCHEMA_VERSION,
-    toVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION
+    toVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
   });
   const migrated = normalizeApplicationData(value);
   if (migrated.settings) delete migrated.settings.displayName;
@@ -44,7 +48,7 @@ export function migrateLegacyApplicationDataToV1(value, options = {}) {
     deferIdConstraints: options.deferIdConstraints,
     source: options.source || "application",
     fromVersion: LEGACY_APPLICATION_SCHEMA_VERSION,
-    toVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION
+    toVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
   });
   return migrated;
 }
@@ -55,11 +59,14 @@ export function migrateApplicationDataV1ToV2(value, options = {}) {
     deferIdConstraints: options.deferIdConstraints,
     source: options.source || "application",
     fromVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
-    toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
+    toVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
   });
   const migrated = clonePersistedValue(value);
   if (migrated.settings !== null) {
-    const rawDisplayName = Object.prototype.hasOwnProperty.call(migrated.settings, "displayName")
+    const rawDisplayName = Object.prototype.hasOwnProperty.call(
+      migrated.settings,
+      "displayName",
+    )
       ? migrated.settings.displayName
       : null;
     migrated.settings.displayName = normalizeValidatedDisplayName(
@@ -75,14 +82,14 @@ export function migrateApplicationDataV1ToV2(value, options = {}) {
     deferIdConstraints: options.deferIdConstraints,
     source: options.source || "application",
     fromVersion: PREVIOUS_APPLICATION_SCHEMA_VERSION,
-    toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
+    toVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
   });
   return migrated;
 }
 
 export const APPLICATION_MIGRATIONS = Object.freeze({
   [LEGACY_APPLICATION_SCHEMA_VERSION]: migrateLegacyApplicationDataToV1,
-  [PREVIOUS_APPLICATION_SCHEMA_VERSION]: migrateApplicationDataV1ToV2
+  [PREVIOUS_APPLICATION_SCHEMA_VERSION]: migrateApplicationDataV1ToV2,
 });
 
 export function migrateApplicationData(value, fromVersion, options = {}) {
@@ -92,7 +99,7 @@ export function migrateApplicationData(value, fromVersion, options = {}) {
       deferIdConstraints: options.deferIdConstraints,
       source: options.source || "application",
       fromVersion: detectedVersion,
-      toVersion: CURRENT_APPLICATION_SCHEMA_VERSION
+      toVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
     });
     return clonePersistedValue(value);
   }
@@ -103,25 +110,28 @@ export function migrateApplicationData(value, fromVersion, options = {}) {
   while (version < CURRENT_APPLICATION_SCHEMA_VERSION) {
     const migrate = migrations[version];
     if (!migrate) {
-      throw new DataSchemaError(`No application migration is registered for schema version ${version}.`, {
-        code: "missing_application_schema_migration",
-        source: options.source || "application",
-        fromVersion: version,
-        toVersion: version + 1
-      });
+      throw new DataSchemaError(
+        `No application migration is registered for schema version ${version}.`,
+        {
+          code: "missing_application_schema_migration",
+          source: options.source || "application",
+          fromVersion: version,
+          toVersion: version + 1,
+        },
+      );
     }
     current = migrate(current, options);
     version += 1;
     const validation = validateApplicationData(current, {
       allowMissingDisplayName: version === PREVIOUS_APPLICATION_SCHEMA_VERSION,
-      deferIdConstraints: options.deferIdConstraints
+      deferIdConstraints: options.deferIdConstraints,
     });
     if (!validation.valid) {
       throw createValidationError(validation.errors, {
         code: "invalid_migration_output",
         source: options.source || "application",
         fromVersion: version - 1,
-        toVersion: version
+        toVersion: version,
       });
     }
   }
@@ -130,38 +140,66 @@ export function migrateApplicationData(value, fromVersion, options = {}) {
 
 function assertBackupEnvelopeObject(data) {
   if (!isPlainObject(data)) {
-    throw createValidationError([{
-      path: "",
-      code: "expected_object",
-      message: "Backup must be an object."
-    }], { source: "backup" });
+    throw createValidationError(
+      [
+        {
+          path: "",
+          code: "expected_object",
+          message: "Backup must be an object.",
+        },
+      ],
+      { source: "backup" },
+    );
   }
   if (!hasOwn(data, "workouts")) {
-    throw createValidationError([{
-      path: "workouts",
-      code: "required_field",
-      message: "workouts is required."
-    }], { source: "backup" });
+    throw createValidationError(
+      [
+        {
+          path: "workouts",
+          code: "required_field",
+          message: "workouts is required.",
+        },
+      ],
+      { source: "backup" },
+    );
   }
-  if (hasOwn(data, "exportedAt") && (typeof data.exportedAt !== "string" || Number.isNaN(new Date(data.exportedAt).getTime()))) {
-    throw createValidationError([{
-      path: "exportedAt",
-      code: "invalid_timestamp",
-      message: "exportedAt must be an ISO timestamp."
-    }], { source: "backup" });
+  if (
+    hasOwn(data, "exportedAt") &&
+    (typeof data.exportedAt !== "string" ||
+      Number.isNaN(new Date(data.exportedAt).getTime()))
+  ) {
+    throw createValidationError(
+      [
+        {
+          path: "exportedAt",
+          code: "invalid_timestamp",
+          message: "exportedAt must be an ISO timestamp.",
+        },
+      ],
+      { source: "backup" },
+    );
   }
 }
 
 export function prepareBackupImport(data) {
   assertBackupEnvelopeObject(data);
   const backupFileVersion = detectBackupFileVersion(data);
-  const applicationSchemaVersion = detectBackupApplicationSchemaVersion(data, backupFileVersion);
-  if (backupFileVersion === CURRENT_BACKUP_FILE_VERSION && !hasOwn(data, "backupFileVersion")) {
-    throw new DataSchemaError("Current backup files must use backupFileVersion.", {
-      code: "missing_backup_file_version",
-      path: "backupFileVersion",
-      source: "backup"
-    });
+  const applicationSchemaVersion = detectBackupApplicationSchemaVersion(
+    data,
+    backupFileVersion,
+  );
+  if (
+    backupFileVersion === CURRENT_BACKUP_FILE_VERSION &&
+    !hasOwn(data, "backupFileVersion")
+  ) {
+    throw new DataSchemaError(
+      "Current backup files must use backupFileVersion.",
+      {
+        code: "missing_backup_file_version",
+        path: "backupFileVersion",
+        source: "backup",
+      },
+    );
   }
 
   const presence = {
@@ -169,7 +207,7 @@ export function prepareBackupImport(data) {
     routines: hasOwn(data, "templates"),
     settings: hasOwn(data, "settings") && data.settings !== null,
     goals: hasOwn(data, "goals") && data.goals !== null,
-    backupMeta: hasOwn(data, "backupMeta") && data.backupMeta !== null
+    backupMeta: hasOwn(data, "backupMeta") && data.backupMeta !== null,
   };
   const applicationData = {
     workouts: data.workouts,
@@ -178,12 +216,16 @@ export function prepareBackupImport(data) {
     settings: presence.settings ? data.settings : null,
     goals: presence.goals ? data.goals : null,
     draft: null,
-    backupMeta: presence.backupMeta ? data.backupMeta : null
+    backupMeta: presence.backupMeta ? data.backupMeta : null,
   };
-  const migratedData = migrateApplicationData(applicationData, applicationSchemaVersion, {
-    deferIdConstraints: true,
-    source: "backup"
-  });
+  const migratedData = migrateApplicationData(
+    applicationData,
+    applicationSchemaVersion,
+    {
+      deferIdConstraints: true,
+      source: "backup",
+    },
+  );
   if (
     migratedData.settings !== null &&
     migratedData.settings.displayName !== null
@@ -202,6 +244,6 @@ export function prepareBackupImport(data) {
     applicationSchemaVersion,
     currentApplicationSchemaVersion: CURRENT_APPLICATION_SCHEMA_VERSION,
     presence,
-    data: migratedData
+    data: migratedData,
   };
 }

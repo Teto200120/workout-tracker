@@ -1,4 +1,4 @@
-import "./globals.js";
+import { $ } from "./globals.js";
 import { dateKeyFromDate } from "../domain/schedule.js";
 import { getAppSettings } from "../storage/local.js";
 
@@ -11,7 +11,11 @@ export function timeNow() {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-export function id() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+export function id() {
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 export function cleanText(value) {
   return String(value ?? "")
@@ -23,7 +27,11 @@ export function cleanText(value) {
 }
 
 export function dateLabel(value) {
-  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function toast(message) {
@@ -46,7 +54,10 @@ export function easeInOut(value) {
 }
 
 export function prefersReducedMotion() {
-  return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 export function motionBehavior() {
@@ -80,4 +91,3 @@ export function scrollInputIntoView(input) {
     input.scrollIntoView({ behavior: motionBehavior(), block: "center" });
   }, 260);
 }
-

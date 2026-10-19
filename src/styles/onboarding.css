@@ -4,7 +4,8 @@
   min-height: calc(100dvh - 28px);
   display: grid;
   place-items: center;
-  padding: max(10px, env(safe-area-inset-top)) 0 max(10px, env(safe-area-inset-bottom));
+  padding: max(10px, env(safe-area-inset-top)) 0
+    max(10px, env(safe-area-inset-bottom));
 }
 
 .onboarding-card {
@@ -26,7 +27,11 @@
   margin-bottom: 18px;
   border-radius: 18px;
   color: #fff;
-  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  background: linear-gradient(
+    135deg,
+    var(--coral, #ff6b45),
+    var(--coral-2, #ff7a59)
+  );
   box-shadow: 0 14px 28px rgba(255, 107, 69, 0.24);
   font-weight: 950;
 }
@@ -125,7 +130,11 @@
   margin-top: 14px;
   border-radius: 17px;
   color: #fff;
-  background: linear-gradient(135deg, var(--coral, #ff6b45), var(--coral-2, #ff7a59));
+  background: linear-gradient(
+    135deg,
+    var(--coral, #ff6b45),
+    var(--coral-2, #ff7a59)
+  );
   box-shadow: 0 12px 24px rgba(255, 107, 69, 0.2);
   font-weight: 950;
 }

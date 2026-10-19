@@ -1,5 +1,5 @@
+import { $, all } from "./core/globals.js";
 import { enableDataRecovery } from "./application/recovery.js";
-import "./core/globals.js";
 import { ensureCurrentApplicationSchema } from "./application/data-schema.js";
 import { isOnboardingRequired } from "./application/display-name.js";
 import { seedDefaultTemplates } from "./application/routine-seeding.js";
@@ -16,10 +16,22 @@ import {
   applyAppSettings,
   renderSettings,
   resetAppSettings,
-  saveSettingsFromForm
+  saveSettingsFromForm,
 } from "./core/settings.js";
-import { haptic, motionBehavior, replayAnimation, scrollInputIntoView, today, toast } from "./core/utils.js";
-import { getAllApplicationRecords, getRoutines, getWorkouts, openDatabase } from "./storage/indexed-db.js";
+import {
+  haptic,
+  motionBehavior,
+  replayAnimation,
+  scrollInputIntoView,
+  today,
+  toast,
+} from "./core/utils.js";
+import {
+  getAllApplicationRecords,
+  getRoutines,
+  getWorkouts,
+  openDatabase,
+} from "./storage/indexed-db.js";
 import { getDraft } from "./storage/local.js";
 import {
   clearDraftStorage,
@@ -43,9 +55,14 @@ import {
   undoLastCompletedSet,
   updateAllExerciseHints,
   getCurrentWorkoutExerciseNames,
-  updateSessionTitle
+  updateSessionTitle,
 } from "./screens/active-workout.js";
-import { clearAllData, exportData, importData, renderBackupStatus } from "./screens/backup.js";
+import {
+  clearAllData,
+  exportData,
+  importData,
+  renderBackupStatus,
+} from "./screens/backup.js";
 import { bindFeedbackActions, renderFeedback } from "./screens/feedback.js";
 import { bindHistoryActions, renderHistory } from "./screens/history.js";
 import { bindProfileActions, renderProfile } from "./screens/profile.js";
@@ -54,7 +71,12 @@ import {
   showApplicationShell,
   showOnboarding,
 } from "./screens/onboarding.js";
-import { buildExerciseStats, renderDashboard, renderExerciseProgress, saveGoalsToStorage } from "./screens/progress.js";
+import {
+  buildExerciseStats,
+  renderDashboard,
+  renderExerciseProgress,
+  saveGoalsToStorage,
+} from "./screens/progress.js";
 import {
   addTemplateExercise,
   bindRoutineActions,
@@ -62,7 +84,7 @@ import {
   renderTemplates,
   resetTemplates,
   scheduleRoutineEditorEducation,
-  saveTemplate
+  saveTemplate,
 } from "./screens/routines.js";
 import {
   closeTodayReview,
@@ -74,7 +96,7 @@ import {
   restoreDraftFromStorage,
   resumeWorkoutFromToday,
   showTodayView,
-  startHomeTour
+  startHomeTour,
 } from "./screens/today.js";
 
 const SCREEN_GROUPS = {
@@ -90,12 +112,12 @@ const SCREEN_GROUPS = {
   templates: ["templates"],
   backup: ["backup"],
   feedback: ["feedback"],
-  settings: ["settings"]
+  settings: ["settings"],
 };
 
 const SCREEN_ALIASES = {
   dashboard: "stats",
-  log: "home"
+  log: "home",
 };
 
 const STATS_DETAIL_DESTINATIONS = new Set([
@@ -104,7 +126,7 @@ const STATS_DETAIL_DESTINATIONS = new Set([
   "statsStrength",
   "statsRecords",
   "statsWorkoutStats",
-  "statsGoals"
+  "statsGoals",
 ]);
 
 let applicationStarted = false;
@@ -164,7 +186,9 @@ function getScreenDestination(name) {
 
 function getActiveNavDestination(destination) {
   if (STATS_DETAIL_DESTINATIONS.has(destination)) return "stats";
-  return ["templates", "backup", "feedback", "settings"].includes(destination) ? "profile" : destination;
+  return ["templates", "backup", "feedback", "settings"].includes(destination)
+    ? "profile"
+    : destination;
 }
 
 function openStatsDetail(destination) {
@@ -196,7 +220,9 @@ export function switchScreen(name) {
     if (isActive) tab.setAttribute("aria-current", "page");
     else tab.removeAttribute("aria-current");
   });
-  all(".screen").forEach((screen) => screen.classList.toggle("active", activeScreens.includes(screen.id)));
+  all(".screen").forEach((screen) =>
+    screen.classList.toggle("active", activeScreens.includes(screen.id)),
+  );
   document.body.dataset.screenTransitioning = "true";
   replayAnimation($(activeScreens[0]), "settle-in", 260);
   return renderAll({ destination, isCurrent })
@@ -219,7 +245,12 @@ async function handleEducationAction(event) {
   const action = event.currentTarget.dataset.educationAction;
   const launcher = event.currentTarget;
   if (action === "reset-all") {
-    if (!confirm("Reset all guidance? Contextual tips will reappear when you reach them.")) return;
+    if (
+      !confirm(
+        "Reset all guidance? Contextual tips will reappear when you reach them.",
+      )
+    )
+      return;
     const result = await resetAllGuidance();
     educationActionFeedback(result);
     $("statsEducationTip")?.classList.add("hidden");
@@ -289,16 +320,21 @@ function bindEvents() {
   bindTodayEducation();
   bindFeedbackActions();
   document.addEventListener("focusin", (event) => {
-    if (event.target.matches("input, textarea")) scrollInputIntoView(event.target);
+    if (event.target.matches("input, textarea"))
+      scrollInputIntoView(event.target);
   });
   document.addEventListener("pointermove", moveExerciseDrag);
   document.addEventListener("pointerup", endExerciseDrag);
   document.addEventListener("pointercancel", endExerciseDrag);
   document.addEventListener("mousemove", moveExerciseDrag);
   document.addEventListener("mouseup", endExerciseDrag);
-  all(".tab").forEach((tab) => tab.addEventListener("click", () => switchScreen(tab.dataset.screen)));
+  all(".tab").forEach((tab) =>
+    tab.addEventListener("click", () => switchScreen(tab.dataset.screen)),
+  );
   all("[data-stats-detail]").forEach((button) => {
-    button.addEventListener("click", () => openStatsDetail(button.dataset.statsDetail));
+    button.addEventListener("click", () =>
+      openStatsDetail(button.dataset.statsDetail),
+    );
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
@@ -317,10 +353,19 @@ function bindEvents() {
   $("todayReviewBack")?.addEventListener("click", closeTodayReview);
   $("todayResumeWorkout").addEventListener("click", resumeWorkoutFromToday);
   $("todayWorkoutSelect").addEventListener("change", renderTodayView);
-  all("[data-open-settings]").forEach((button) => button.addEventListener("click", () => switchScreen("settings")));
-  all("[data-profile-back]").forEach((button) => button.addEventListener("click", () => switchScreen("profile")));
+  all("[data-open-settings]").forEach((button) =>
+    button.addEventListener("click", () => switchScreen("settings")),
+  );
+  all("[data-profile-back]").forEach((button) =>
+    button.addEventListener("click", () => switchScreen("profile")),
+  );
   all("[data-profile-target]").forEach((button) => {
-    button.addEventListener("click", () => openProfileSubpage(button.dataset.profileTarget, button.dataset.profileFocus));
+    button.addEventListener("click", () =>
+      openProfileSubpage(
+        button.dataset.profileTarget,
+        button.dataset.profileFocus,
+      ),
+    );
   });
   $("settingsBack").addEventListener("click", () => switchScreen("profile"));
   $("saveSettings").addEventListener("click", async () => {
@@ -340,7 +385,11 @@ function bindEvents() {
   $("sessionBack").addEventListener("click", showTodayView);
   $("sessionSaveTop").addEventListener("click", saveWorkout);
   $("exerciseDetailBack")?.addEventListener("click", closeExerciseDetail);
-  all("[data-detail-tab]").forEach((button) => button.addEventListener("click", () => setExerciseDetailTab(button.dataset.detailTab)));
+  all("[data-detail-tab]").forEach((button) =>
+    button.addEventListener("click", () =>
+      setExerciseDetailTab(button.dataset.detailTab),
+    ),
+  );
   $("exerciseDetailCompleteSet")?.addEventListener("click", () => {
     completeActiveExerciseDetailSet();
   });
@@ -353,24 +402,37 @@ function bindEvents() {
   });
   $("workoutType").addEventListener("change", updateSessionTitle);
   $("loadTemplate").addEventListener("click", async () => {
-    if (getEditingWorkoutId() !== null && !confirm("You are editing a saved workout. Loading a template will replace the visible exercises. Continue?")) return;
+    if (
+      getEditingWorkoutId() !== null &&
+      !confirm(
+        "You are editing a saved workout. Loading a template will replace the visible exercises. Continue?",
+      )
+    )
+      return;
     await loadWorkoutTemplate();
     saveDraftSilently();
   });
-  $("loadLastWorkout").addEventListener("click", async () => { await loadLastSameWorkout(); saveDraftSilently(); });
+  $("loadLastWorkout").addEventListener("click", async () => {
+    await loadLastSameWorkout();
+    saveDraftSilently();
+  });
   bindExercisePicker({
     trigger: $("addExercise"),
     context: "active-workout",
     mode: "add",
     getCurrentExerciseNames: getCurrentWorkoutExerciseNames,
-    onSelect: ({ name }) => addExerciseToWorkout(name)
+    onSelect: ({ name }) => addExerciseToWorkout(name),
   });
   $("saveWorkout").addEventListener("click", handleSessionPrimaryAction);
   $("sessionUndoSet")?.addEventListener("click", undoLastCompletedSet);
   $("historyFilter").addEventListener("change", renderHistory);
   $("exerciseSearch").addEventListener("input", renderHistory);
-  $("progressExercise").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getWorkouts())));
-  $("progressMetric").addEventListener("change", async () => renderExerciseProgress(buildExerciseStats(await getWorkouts())));
+  $("progressExercise").addEventListener("change", async () =>
+    renderExerciseProgress(buildExerciseStats(await getWorkouts())),
+  );
+  $("progressMetric").addEventListener("change", async () =>
+    renderExerciseProgress(buildExerciseStats(await getWorkouts())),
+  );
   $("exportData").addEventListener("click", exportData);
   $("importData").addEventListener("click", () => $("importFile").click());
   $("importFile").addEventListener("change", (event) => {
@@ -381,7 +443,10 @@ function bindEvents() {
   $("clearData").addEventListener("click", clearAllData);
   $("addTemplateExercise").addEventListener("click", addTemplateExercise);
   $("templateExerciseInput").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") { event.preventDefault(); addTemplateExercise(); }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addTemplateExercise();
+    }
   });
   $("saveTemplate").addEventListener("click", saveTemplate);
   $("clearTemplateDraft").addEventListener("click", clearTemplateDraft);
@@ -423,28 +488,47 @@ function bindEvents() {
     onDisplayNameSaved: async () => {
       await renderTodayView();
       await renderProfile();
-    }
+    },
   });
 }
 
-export async function renderAll({ destination = null, isCurrent = () => true } = {}) {
+export async function renderAll({
+  destination = null,
+  isCurrent = () => true,
+} = {}) {
   if (destination !== null) destination = getScreenDestination(destination);
   let records;
   if (destination === "feedback") records = {};
-  else if (destination === "settings" || destination === "templates") records = { routines: await getRoutines() };
-  else if (destination === "stats" || STATS_DETAIL_DESTINATIONS.has(destination)) records = { workouts: await getWorkouts() };
+  else if (destination === "settings" || destination === "templates")
+    records = { routines: await getRoutines() };
+  else if (
+    destination === "stats" ||
+    STATS_DETAIL_DESTINATIONS.has(destination)
+  )
+    records = { workouts: await getWorkouts() };
   else records = await getAllApplicationRecords();
   if (!isCurrent()) return false;
-  if (records.routines) records = { ...records, routines: [...records.routines].sort((a, b) => a.name.localeCompare(b.name)) };
+  if (records.routines)
+    records = {
+      ...records,
+      routines: [...records.routines].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
+    };
 
   const renderers = {
     stats: (snapshot) => renderDashboard(snapshot, { destination: "stats" }),
     history: renderHistory,
-    statsWeekly: (snapshot) => renderDashboard(snapshot, { destination: "statsWeekly" }),
-    statsStrength: (snapshot) => renderDashboard(snapshot, { destination: "statsStrength" }),
-    statsRecords: (snapshot) => renderDashboard(snapshot, { destination: "statsRecords" }),
-    statsWorkoutStats: (snapshot) => renderDashboard(snapshot, { destination: "statsWorkoutStats" }),
-    statsGoals: (snapshot) => renderDashboard(snapshot, { destination: "statsGoals" }),
+    statsWeekly: (snapshot) =>
+      renderDashboard(snapshot, { destination: "statsWeekly" }),
+    statsStrength: (snapshot) =>
+      renderDashboard(snapshot, { destination: "statsStrength" }),
+    statsRecords: (snapshot) =>
+      renderDashboard(snapshot, { destination: "statsRecords" }),
+    statsWorkoutStats: (snapshot) =>
+      renderDashboard(snapshot, { destination: "statsWorkoutStats" }),
+    statsGoals: (snapshot) =>
+      renderDashboard(snapshot, { destination: "statsGoals" }),
     templates: renderTemplates,
     profile: renderProfile,
     feedback: renderFeedback,
@@ -452,10 +536,18 @@ export async function renderAll({ destination = null, isCurrent = () => true } =
     settings: renderSettings,
     backup: renderBackupStatus,
   };
-  const refresh = destination ? [renderers[destination]] : [
-    renderDashboard, renderHistory, renderTemplates, renderProfile,
-    renderFeedback, renderTodayView, renderSettings, renderBackupStatus,
-  ];
+  const refresh = destination
+    ? [renderers[destination]]
+    : [
+        renderDashboard,
+        renderHistory,
+        renderTemplates,
+        renderProfile,
+        renderFeedback,
+        renderTodayView,
+        renderSettings,
+        renderBackupStatus,
+      ];
   for (const render of refresh) {
     if (!isCurrent()) return false;
     await render(records);
@@ -488,7 +580,7 @@ async function activateApplication() {
   }
   await refreshTemplateDropdowns();
   if (firstStart) await loadWorkoutTemplate();
-  await renderAll();
+  await renderAll({ destination: "home" });
   await showTodayView({ refresh: false });
   showApplicationShell();
 

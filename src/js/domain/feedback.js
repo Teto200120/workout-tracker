@@ -25,7 +25,11 @@ const FEEDBACK_DIAGNOSTIC_KEYS = Object.freeze(
   Object.keys(FEEDBACK_DIAGNOSTIC_ALLOWLIST),
 );
 const FEEDBACK_SCREENS = new Set(["feedback"]);
-const FEEDBACK_DIAGNOSTIC_APP_VERSIONS = new Set(["1.0.0", APP_RELEASE]);
+const FEEDBACK_DIAGNOSTIC_APP_VERSIONS = new Set([
+  "1.0.0",
+  "0.4.0",
+  APP_RELEASE,
+]);
 const UUID_V4_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 let fallbackIdSequence = 0;
@@ -151,7 +155,9 @@ export function validateFeedbackScreenshotFile(file) {
 
 function bytesMatch(view, offset, expected) {
   if (offset < 0 || offset + expected.length > view.byteLength) return false;
-  return expected.every((value, index) => view.getUint8(offset + index) === value);
+  return expected.every(
+    (value, index) => view.getUint8(offset + index) === value,
+  );
 }
 
 function asciiAt(view, offset, length) {
@@ -179,19 +185,7 @@ function parsePngDimensions(view) {
 }
 
 const JPEG_START_OF_FRAME_MARKERS = new Set([
-  0xc0,
-  0xc1,
-  0xc2,
-  0xc3,
-  0xc5,
-  0xc6,
-  0xc7,
-  0xc9,
-  0xca,
-  0xcb,
-  0xcd,
-  0xce,
-  0xcf,
+  0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf,
 ]);
 
 function parseJpegDimensions(view) {
@@ -244,7 +238,11 @@ function parseWebpDimensions(view) {
   const chunkType = asciiAt(view, 12, 4);
   const chunkSize = view.getUint32(16, true);
   const dataOffset = 20;
-  if (chunkType === "VP8X" && chunkSize >= 10 && dataOffset + 10 <= view.byteLength) {
+  if (
+    chunkType === "VP8X" &&
+    chunkSize >= 10 &&
+    dataOffset + 10 <= view.byteLength
+  ) {
     const width = readUint24LittleEndian(view, dataOffset + 4);
     const height = readUint24LittleEndian(view, dataOffset + 7);
     return { width: width + 1, height: height + 1 };
@@ -390,7 +388,8 @@ export function isFeedbackReport(report) {
     report.attempts < 0 ||
     typeof report.createdAt !== "string" ||
     typeof report.updatedAt !== "string" ||
-    (report.lastAttemptAt !== null && typeof report.lastAttemptAt !== "string") ||
+    (report.lastAttemptAt !== null &&
+      typeof report.lastAttemptAt !== "string") ||
     (report.lastFailure !== null &&
       ![
         "challenge_failed",
@@ -402,9 +401,7 @@ export function isFeedbackReport(report) {
         "temporary_failure",
         "invalid_response",
         "verification_unavailable",
-      ].includes(
-        report.lastFailure,
-      )) ||
+      ].includes(report.lastFailure)) ||
     !validScreenshot(report.screenshot)
   ) {
     return false;

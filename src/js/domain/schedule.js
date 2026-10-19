@@ -16,18 +16,30 @@ export function dateKeyFromDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function resolveWorkoutDay(date, settings, defaultSchedule, defaultSettings, dayLabels) {
+export function resolveWorkoutDay(
+  date,
+  settings,
+  defaultSchedule,
+  defaultSettings,
+  dayLabels,
+) {
   const day = new Date(`${date}T00:00:00`).getDay();
   const defaults = defaultSchedule[day] || defaultSchedule[0];
-  const saved = settings.schedule?.[day] || settings.schedule?.[String(day)] || defaultSettings.schedule[day] || {};
+  const saved =
+    settings.schedule?.[day] ||
+    settings.schedule?.[String(day)] ||
+    defaultSettings.schedule[day] ||
+    {};
   const kind = saved.kind || defaults.kind;
   const routine = saved.routine || defaults.routine || "Custom";
-  const title = kind === "gym" ? routine : kind === "soccer" ? "Soccer Day" : "Rest Day";
-  const note = kind === "gym"
-    ? `Suggested from your ${dayLabels[day]} schedule.`
-    : kind === "soccer"
-      ? "Soccer is treated separately, since you do not track it as a gym workout here."
-      : "No gym workout scheduled. Optional recovery, mobility, or custom workout.";
+  const title =
+    kind === "gym" ? routine : kind === "soccer" ? "Soccer Day" : "Rest Day";
+  const note =
+    kind === "gym"
+      ? `Suggested from your ${dayLabels[day]} schedule.`
+      : kind === "soccer"
+        ? "Soccer is treated separately, since you do not track it as a gym workout here."
+        : "No gym workout scheduled. Optional recovery, mobility, or custom workout.";
   return { kind, title, routine, note };
 }
 
@@ -48,9 +60,31 @@ export function getWeeklyActivityData(workouts, currentDate, resolvePlan) {
       gymDays += 1;
       if (complete) completedGymDays += 1;
     }
-    const classes = ["stats-week-day", complete ? "complete" : "", key === todayKey ? "today" : "", plan.kind === "rest" ? "rest" : "", plan.kind === "soccer" ? "soccer" : ""].filter(Boolean).join(" ");
-    const status = complete ? "Logged" : plan.kind === "rest" ? "Rest" : plan.kind === "soccer" ? "Soccer" : "Open";
-    return { key, label: dayLabels[index], title: plan.title, kind: plan.kind, complete, status, classes };
+    const classes = [
+      "stats-week-day",
+      complete ? "complete" : "",
+      key === todayKey ? "today" : "",
+      plan.kind === "rest" ? "rest" : "",
+      plan.kind === "soccer" ? "soccer" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const status = complete
+      ? "Logged"
+      : plan.kind === "rest"
+        ? "Rest"
+        : plan.kind === "soccer"
+          ? "Soccer"
+          : "Open";
+    return {
+      key,
+      label: dayLabels[index],
+      title: plan.title,
+      kind: plan.kind,
+      complete,
+      status,
+      classes,
+    };
   });
 
   return { days, gymDays, completedGymDays };
@@ -75,5 +109,7 @@ export function countRecentWorkouts(workouts, currentDate, days = 7) {
   cutoff.setDate(cutoff.getDate() - (days - 1));
   const cutoffKey = dateKeyFromDate(cutoff);
   const todayKey = dateKeyFromDate(currentDate);
-  return workouts.filter((workout) => workout.date >= cutoffKey && workout.date <= todayKey).length;
+  return workouts.filter(
+    (workout) => workout.date >= cutoffKey && workout.date <= todayKey,
+  ).length;
 }

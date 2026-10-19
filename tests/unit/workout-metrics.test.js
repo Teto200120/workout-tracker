@@ -62,7 +62,7 @@ test("set and workout volume exclude warm-ups and tolerate missing values", () =
   assert.equal(workoutVolume({}), 0);
 });
 
-test("working and completed-set counts preserve current warm-up behavior", () => {
+test("working and completed-set counts both exclude warm-ups", () => {
   const value = workout({
     exercises: [
       {
@@ -75,7 +75,7 @@ test("working and completed-set counts preserve current warm-up behavior", () =>
     ],
   });
   assert.equal(totalSets(value), 2);
-  assert.equal(completedSets(value), 2);
+  assert.equal(completedSets(value), 1);
   assert.equal(totalSets({}), 0);
   assert.equal(completedSets({}), 0);
 });
@@ -135,7 +135,7 @@ test("exercise and workout aggregation keep stored shapes unchanged", () => {
   ];
   const [bench] = buildExerciseStats(workouts);
   assert.equal(bench.sessions, 2);
-  assert.equal(bench.sets, 3);
+  assert.equal(bench.sets, 2);
   assert.equal(bench.bestWeight, 105);
   assert.equal(bench.history.length, 2);
   assert.deepEqual(getWorkoutStatsSummary(workouts), {
