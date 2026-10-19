@@ -192,6 +192,42 @@ test("renderers consume shared record arrays without sorting or changing them in
   ).toBe(true);
 });
 
+test("Stats refreshes its goal preview without rebasing or rewriting the hidden goal draft", async ({
+  page,
+}) => {
+  await loadApp(page);
+  const result = await page.evaluate(async () => {
+    const router = await import("/src/js/router.js");
+    const local = await import("/src/js/storage/local.js");
+    const progress = await import("/src/js/screens/progress.js");
+    const doc = globalThis.document;
+    await local.setGoals({ weeklyGoal: 4 });
+    await router.renderAll();
+    doc.querySelector("#weeklyGoal").value = "7";
+    const detail = doc.querySelector("#goalsProgress").firstElementChild;
+    await local.setGoals({ weeklyGoal: 6 });
+    await router.switchScreen("stats");
+    const preview = doc.querySelector("#goalsPreview").textContent;
+    const detailUnchanged =
+      doc.querySelector("#goalsProgress").firstElementChild === detail;
+    await router.switchScreen("statsGoals");
+    const entered = doc.querySelector("#weeklyGoal").value;
+    const saved = await progress.saveGoalsToStorage();
+    return {
+      preview,
+      detailUnchanged,
+      entered,
+      saved,
+      goal: local.getGoals().weeklyGoal,
+    };
+  });
+  expect(result.preview).toContain("/ 6");
+  expect(result.detailUnchanged).toBe(true);
+  expect(result.entered).toBe("7");
+  expect(result.saved).toBe(false);
+  expect(result.goal).toBe(6);
+});
+
 test("a delayed older navigation cannot render or finish over the latest destination", async ({
   page,
 }) => {

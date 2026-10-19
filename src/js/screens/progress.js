@@ -217,7 +217,7 @@ export async function renderDashboard(records = {}, { destination = "all" } = {}
   if (overview || destination === "statsWeekly") renderWeeklyActivity(workouts, { preview: overview, detail: full || destination === "statsWeekly" });
   if (overview || destination === "statsStrength") renderStrengthSnapshot(workouts, exerciseStats, { preview: overview, detail: full || destination === "statsStrength" });
   if (overview || destination === "statsWorkoutStats") renderWorkoutStats(workouts, { preview: overview, detail: full || destination === "statsWorkoutStats" });
-  if (full || destination === "statsGoals") renderGoals(workouts);
+  if (overview || destination === "statsGoals") renderGoals(workouts, { preview: overview, detail: full || destination === "statsGoals" });
   if (overview || destination === "statsRecords") renderPersonalRecords(exerciseStats, { preview: overview, detail: full || destination === "statsRecords" });
   if (full || destination === "statsStrength") {
     renderExerciseSelectors(exerciseStats);
@@ -264,7 +264,7 @@ function renderRecentSessionsPreview(workouts) {
   `).join("");
 }
 
-function renderGoals(workouts) {
+function renderGoals(workouts, { preview = true, detail = true } = {}) {
   const snapshot = getGoalsSnapshot();
   const goals = snapshot.value;
   const weeklyGoalInput = $("weeklyGoal");
@@ -272,7 +272,7 @@ function renderGoals(workouts) {
   // Background navigation renders must not replace an unsaved edit.
   const dirty = weeklyGoalInput?.dataset.savedGoal !== undefined &&
     weeklyGoalInput.value !== weeklyGoalInput.dataset.savedGoal;
-  if (weeklyGoalInput && !dirty) {
+  if (detail && weeklyGoalInput && !dirty) {
     weeklyGoalInput.value = savedGoal;
     weeklyGoalInput.dataset.savedGoal = savedGoal;
     renderedGoalsSnapshot = snapshot;
@@ -282,9 +282,9 @@ function renderGoals(workouts) {
   const weeklyGoal = Math.max(1, Number(goals.weeklyGoal || 4));
   const weeklyPercent = Math.min(100, Math.round((workoutsThisWeek / weeklyGoal) * 100));
 
-  const preview = $("goalsPreview");
-  if (preview) {
-    preview.innerHTML = `
+  const previewTarget = preview ? $("goalsPreview") : null;
+  if (previewTarget) {
+    previewTarget.innerHTML = `
       <div class="stats-goal-row">
         <div class="stats-goal-preview-line">
           <strong>${workoutsThisWeek} / ${weeklyGoal}</strong>
@@ -295,6 +295,7 @@ function renderGoals(workouts) {
     `;
   }
 
+  if (!detail) return;
   const progress = $("goalsProgress");
   if (!progress) return;
   progress.innerHTML = `
