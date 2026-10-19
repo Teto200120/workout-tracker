@@ -333,3 +333,31 @@ test("batch exercise hints read history once and keep the hidden settings draft"
   });
   expect(result).toEqual({ reads: 1, hiddenDraft: "7.5" });
 });
+
+test("destination inputs stay read-only until their saved baseline has rendered", async ({
+  page,
+}) => {
+  await loadApp(page);
+  const result = await page.evaluate(async () => {
+    const router = await import("/src/js/router.js");
+    const doc = globalThis.document;
+    const ready = router.switchScreen("settings");
+    const input = doc.querySelector("#settingsWeightJump");
+    const during = {
+      readOnly: input.readOnly,
+      inert: doc.querySelector("#settings").inert,
+    };
+    await ready;
+    return {
+      during,
+      after: {
+        readOnly: input.readOnly,
+        inert: doc.querySelector("#settings").inert,
+      },
+    };
+  });
+  expect(result).toEqual({
+    during: { readOnly: true, inert: true },
+    after: { readOnly: false, inert: false },
+  });
+});

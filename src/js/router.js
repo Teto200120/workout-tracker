@@ -132,6 +132,12 @@ const STATS_DETAIL_DESTINATIONS = new Set([
 let applicationStarted = false;
 let eventsBound = false;
 let navigationRevision = 0;
+let navigationFields = [];
+
+function releaseNavigationFields() {
+  for (const [field, readOnly] of navigationFields) field.readOnly = readOnly;
+  navigationFields = [];
+}
 
 function settleScreenLayout() {
   return new Promise((resolve) => {
@@ -213,6 +219,7 @@ export function switchScreen(name) {
   const destination = getScreenDestination(name);
   const activeScreens = SCREEN_GROUPS[destination];
   const activeNav = getActiveNavDestination(destination);
+  releaseNavigationFields();
 
   all(".tab").forEach((tab) => {
     const isActive = tab.dataset.screen === activeNav;
@@ -226,6 +233,12 @@ export function switchScreen(name) {
     // A newly visible form must not accept edits before its saved baseline is
     // loaded. Navigation stays available so a slow read can be superseded.
     screen.inert = active;
+    if (active) {
+      for (const field of screen.querySelectorAll("input, textarea")) {
+        navigationFields.push([field, field.readOnly]);
+        field.readOnly = true;
+      }
+    }
     screen.setAttribute("aria-busy", String(active));
   });
   document.body.dataset.screenTransitioning = "true";
@@ -233,18 +246,20 @@ export function switchScreen(name) {
   return renderAll({ destination, isCurrent })
     .then(async (rendered) => {
       if (!rendered || !isCurrent()) return;
-      await settleScreenLayout();
-      if (!isCurrent()) return;
-      document.body.dataset.screenTransitioning = "false";
+      releaseNavigationFields();
       for (const id of activeScreens) {
         $(id).inert = false;
         $(id).setAttribute("aria-busy", "false");
       }
+      await settleScreenLayout();
+      if (!isCurrent()) return;
+      document.body.dataset.screenTransitioning = "false";
       coordinateScreenEducation(destination);
     })
     .catch((error) => {
       if (!isCurrent()) return;
       document.body.dataset.screenTransitioning = "false";
+      releaseNavigationFields();
       for (const id of activeScreens) {
         $(id).inert = false;
         $(id).setAttribute("aria-busy", "false");

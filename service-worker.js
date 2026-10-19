@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-0.4.0-7fe2be0dab5108de";
+const CACHE_NAME = "hector-workout-tracker-pwa-0.4.0-75a8e37fe006ca32";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -111,7 +111,7 @@ const SHELL_INTEGRITY = {
   "./src/styles/session-components.css":
     "sha256-UGz1TUfJgbNZDXW9d/n3NyDltiQ3/AjPHenvWKw7U94=",
   "./src/js/main.js": "sha256-r7/Y0i3epr+TpkOAbzMfD0Me4deUsdu445eIZoQJAl4=",
-  "./src/js/router.js": "sha256-J6pHngv7HXE5Y86ZRd9t+dCrM3NDbN8GZD3hxoyQUTU=",
+  "./src/js/router.js": "sha256-kWTEVKkl9UTazSNhTnvSp4tS8UkVpRnO0tC4aiUqjb0=",
   "./src/js/application/backup.js":
     "sha256-YnGAYpR8uiMJdP6qGTYBJsTW8piUkG9q7tsC+gsiYNs=",
   "./src/js/application/deadline.js":
