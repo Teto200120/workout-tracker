@@ -89,8 +89,14 @@ test("successful preference saves advance their own snapshots and retain extensi
     const local = await import("/src/js/storage/local.js");
     const settings = await import("/src/js/core/settings.js");
     const progress = await import("/src/js/screens/progress.js");
+    const current = local.getAppSettings();
     await local.setAppSettings({
-      ...local.getAppSettings(),
+      ...current,
+      schedule: {
+        ...current.schedule,
+        0: { ...current.schedule[0], extension: "keep day" },
+        extension: { source: "keep schedule" },
+      },
       extension: { keep: true },
     });
     await local.setGoals({ weeklyGoal: 4, extension: "keep" });
@@ -115,5 +121,9 @@ test("successful preference saves advance their own snapshots and retain extensi
   expect(outcomes.results).toEqual([true, true, true, true]);
   expect(outcomes.settings.defaultWeightJump).toBe(4);
   expect(outcomes.settings.extension).toEqual({ keep: true });
+  expect(outcomes.settings.schedule[0].extension).toBe("keep day");
+  expect(outcomes.settings.schedule.extension).toEqual({
+    source: "keep schedule",
+  });
   expect(outcomes.goals).toEqual({ weeklyGoal: 6, extension: "keep" });
 });

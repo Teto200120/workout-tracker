@@ -135,10 +135,11 @@ export async function saveSettingsFromForm() {
         toast("Settings are still loading. Try again when they appear.");
         return false;
       }
-      const schedule = {};
+      const schedule = structuredClone(base.value.schedule);
       all(".settings-day-row").forEach((row) => {
         const index = row.dataset.settingsDay;
         schedule[index] = {
+          ...base.value.schedule[index],
           kind: row.querySelector(".settings-day-kind").value,
           routine: row.querySelector(".settings-day-routine").value
         };
