@@ -278,16 +278,26 @@ test("selecting an existing exercise adds, opens, and restores it from the draft
   );
   await expect(addedExercise).not.toHaveClass(/collapsed/);
 
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const { getDraft } = await import("/src/js/storage/local.js");
+        return getDraft()?.exercises.map((exercise) => exercise.name);
+      }),
+    )
+    .toEqual([...expectedExercises, "Romanian Deadlift"]);
   await page.reload();
   await expect(page.locator("#todayStartWorkout .cta-label")).toContainText(
     "Resume",
   );
   await page.locator("#todayStartWorkout").click({ force: true });
-  expect(
-    await page
-      .locator(".exercise-name")
-      .evaluateAll((inputs) => inputs.map((input) => input.value)),
-  ).toEqual([...expectedExercises, "Romanian Deadlift"]);
+  await expect
+    .poll(() =>
+      page
+        .locator(".exercise-name")
+        .evaluateAll((inputs) => inputs.map((input) => input.value)),
+    )
+    .toEqual([...expectedExercises, "Romanian Deadlift"]);
   await expect(page.locator(".exercise").last()).not.toHaveClass(/collapsed/);
   assertNoRuntimeErrors();
 });
