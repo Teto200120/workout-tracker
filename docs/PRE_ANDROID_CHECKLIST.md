@@ -18,8 +18,8 @@ Fixed scope: the original F01–F19 review. Additional optional web redesigns ar
 
 ## Release gates
 
-- [ ] Full repository checks and browser regressions pass for the published commit.
-- [ ] GitHub Pages serves the expected shell and runtime files.
-- [ ] Apply Cloudflare migration 0005 and deploy the updated Worker; do not send real digest test emails.
+- [x] Full repository checks and browser regressions pass at `d5ac9c8`: 235 unit, 124 browser without retries, and 18 Worker tests; lint, formatting, catalog and release/shell validation also pass.
+- [x] GitHub Pages deployment succeeded; all 82 live shell assets match their source integrity digests.
+- [ ] Apply Cloudflare migration 0005 and deploy the updated Worker; do not send real digest test emails. **Blocked on authenticated Cloudflare access:** this environment has no deployment credentials or saved Wrangler login. The tested migration/source and exact commands are in `backend/cloudflare-worker/README.md`.
 
 The native Android implementation has not begun. Android foundation can start once these release gates are recorded, without another general PWA cleanup pass. The first Android task should define native storage/import, session state, navigation and the Material Expressive theme around the existing navy/coral identity. It must preserve the versioned data contracts and metrics contract above.
