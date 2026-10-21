@@ -10,7 +10,6 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
@@ -179,11 +178,11 @@ class WorkoutFlowTest {
             )
         directory.mkdirs()
         File(directory, "$name.png").outputStream().use {
-            compose
-                .onAllNodes(isRoot())
-                .onLast()
-                .captureToImage()
-                .asAndroidBitmap()
+            requireNotNull(
+                    InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+                ) {
+                    "The emulator screen could not be captured."
+                }
                 .compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
