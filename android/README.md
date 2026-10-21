@@ -1,6 +1,6 @@
 # Workout Tracker for Android
 
-Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. The migration bridge adds reviewed PWA JSON import and compatible export. Routines, catalog/guides, full analytics and native feedback remain subsequent slices. See the progress document for current verification status.
+Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. The migration bridge adds reviewed PWA JSON import and compatible export. Imported routine launch and offline catalog search/text guides are available. Routine editing, full analytics and native feedback remain subsequent slices. See the progress document for current verification status.
 
 Read [the transition instructions](../docs/ANDROID_TRANSITION.md) and [implementation progress](../docs/ANDROID_IMPLEMENTATION.md) before changing contracts.
 
@@ -39,7 +39,7 @@ Session duration uses monotonic time across process recreation on the same boot.
 
 ## Preview signing and updates
 
-Stable application ID: `com.hector.workouttracker`. The initial preview was versionCode 1 / `0.1.0-foundation`; the migration preview is versionCode 2 / `0.2.0-migration`. Subsequent delivered APKs must increase versionCode and reuse their signing identity. Debug APKs are development previews, not the production signing plan. Keep the original PWA and its backup until native migration and signed upgrade checks pass.
+Stable application ID: `com.hector.workouttracker`. The initial preview was versionCode 1 / `0.1.0-foundation`; the migration preview is versionCode 2 / `0.2.0-migration`; the training preview is versionCode 3 / `0.3.0-training`. Subsequent delivered APKs must increase versionCode and reuse their signing identity. Debug APKs are development previews, not the production signing plan. Keep the original PWA and its backup until native migration and signed upgrade checks pass.
 
 CI can restore a persistent preview key from repository secret `ANDROID_DEBUG_KEYSTORE_BASE64`. Without that secret, CI generates an ephemeral debug key and successive CI artifacts are not guaranteed to update one another. Do not advise uninstalling an app containing workouts to fix a certificate mismatch. Production signing and its secure backup must be finalized before daily-use release. Never commit a keystore or passwords.
 
@@ -57,3 +57,10 @@ node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/nat
 ```
 
 Run that command from `android/` after the unit-test task. It verifies actual native output against the PWA parser and semantic guardrails, including native-created sets. The instrumented flow also checks document-contract cancellation/rejection, preview/confirm, importing alongside a native workout and exporting through ContentResolver. It uses a test-only provider and intercepted picker results; vendor document-picker navigation and physical signed upgrade testing remain manual release gates.
+
+
+## Training library verification
+
+The generated asset task bundles only `src/data/exercise-catalog.json` from the shared PWA snapshot. Native code uses no remote image references. `CatalogTest` and the web contract test compare ranking/filter order, local spelling precedence and reviewed aliases against the same synthetic fixture. Catalog data is disposable reference data; selected names and typed routine origins are the persistence boundary.
+
+`RepositoryTest` additionally emits `app/build/outputs/compatibility/training-export.json`. Verify it with `node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json` from this directory. The device flow covers imported routine launch, alias-guide navigation, filtered exercise search, adding from a guide, resume and export. It does not yet prove true process-death or installed APK upgrade retention.

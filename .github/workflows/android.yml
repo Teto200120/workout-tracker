@@ -5,17 +5,23 @@ on:
     branches: [main]
     paths:
       - "android/**"
+      - "src/data/exercise-catalog.json"
+      - "src/js/catalog/**"
       - "tests/fixtures/android/**"
       - "tests/unit/android-contract.test.js"
       - "scripts/verify-android-roundtrip.mjs"
+      - "scripts/verify-android-training.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
     paths:
       - "android/**"
+      - "src/data/exercise-catalog.json"
+      - "src/js/catalog/**"
       - "tests/fixtures/android/**"
       - "tests/unit/android-contract.test.js"
       - "scripts/verify-android-roundtrip.mjs"
+      - "scripts/verify-android-training.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -53,7 +59,9 @@ jobs:
       - name: Build, test persistence and lint
         run: ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
       - name: Verify native export with the PWA importer
-        run: node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
+        run: |
+          node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
+          node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

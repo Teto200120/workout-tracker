@@ -15,6 +15,7 @@ class WriteConflict :
 class TrackerRepository(private val db: TrackerDatabase) {
     private val dao = db.trackerDao()
     val workouts = dao.observeRecords("workout")
+    val routines = dao.observeRecords("routine")
 
     suspend fun readDraft(): Pair<SessionDraft, Long>? =
         dao.draft()?.let { trackerJson.decodeFromString<SessionDraft>(it.payload) to it.revision }
@@ -67,6 +68,24 @@ class TrackerRepository(private val db: TrackerDatabase) {
             1L
         }
 
+    /**
+     * Selection is fenced against imports; the routine and new draft are read/written atomically.
+     */
+    suspend fun startRoutine(selected: RecordEntity, empty: SessionDraft): SessionDraft =
+        db.withTransaction {
+            val current = dao.record("routine", selected.idKey) ?: throw WriteConflict()
+            if (selected.kind != "routine" || current != selected) throw WriteConflict()
+            val routine = routineSnapshot(current)
+            val draft =
+                empty.copy(
+                    type = routine.name,
+                    originRoutineId = routine.id,
+                    exercises = routine.exercises.map { Exercise(name = it) },
+                )
+            start(draft)
+            draft
+        }
+
     suspend fun saveDraft(draft: SessionDraft, expected: Long): Long {
         if (dao.updateDraft(draft.id, expected, trackerJson.encodeToString(draft)) != 1)
             throw WriteConflict()
@@ -90,3 +109,47 @@ class TrackerRepository(private val db: TrackerDatabase) {
         if (dao.deleteDraft(id, expected) != 1) throw WriteConflict()
     }
 }
+
+/** No catalog resolution here: imported spellings, duplicate rows and order remain user data. */
+data class SavedRoutine(
+    val record: RecordEntity,
+    val id: JsonElement,
+    val name: String,
+    val exercises: List<String>,
+)
+
+fun routineSnapshot(record: RecordEntity): SavedRoutine {
+    require(record.kind == "routine")
+    val json = trackerJson.parseToJsonElement(record.payload).jsonObject
+    val id = json.getValue("id")
+    require(typedIdKey(id) == record.idKey)
+    val name =
+        json.getValue("name").jsonPrimitive.let {
+            require(it.isString)
+            it.content
+        }
+    require(visibleName(name, 80))
+    val exercises =
+        json.getValue("exercises").jsonArray.map { value ->
+            value.jsonPrimitive.let {
+                require(it.isString && visibleName(it.content, 120))
+                it.content
+            }
+        }
+    require(exercises.size <= 100)
+    return SavedRoutine(record, id, name, exercises)
+}
+
+fun localExerciseNames(workouts: List<RecordEntity>, routines: List<SavedRoutine>): List<String> =
+    (routines.flatMap { it.exercises } +
+            workouts.flatMap { record ->
+                trackerJson
+                    .parseToJsonElement(record.payload)
+                    .jsonObject
+                    .getValue("exercises")
+                    .jsonArray
+                    .map { it.jsonObject.getValue("name").jsonPrimitive.content }
+            })
+        .map { it.trim() }
+        .filter { visibleName(it, 120) }
+        .distinctBy { it.lowercase(java.util.Locale.US) }

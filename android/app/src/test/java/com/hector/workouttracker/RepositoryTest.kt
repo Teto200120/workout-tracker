@@ -152,4 +152,94 @@ class RepositoryTest {
         } catch (_: WriteConflict) {}
         assertEquals("keep", repository.readDraft()!!.first.notes)
     }
+
+    @Test
+    fun routineLaunchPreservesTypedOriginOrderDuplicatesAndFencesStaleSelections() = runBlocking {
+        for (id in listOf(JsonPrimitive(0), JsonPrimitive("0"))) {
+            val payload = buildJsonObject {
+                put("id", id)
+                put("name", "Saved routine")
+                put(
+                    "exercises",
+                    JsonArray(
+                        listOf("Flat Bench Press", "My custom lift", "Flat Bench Press")
+                            .map(::JsonPrimitive)
+                    ),
+                )
+                put("extension", "retained")
+                put("createdAt", "2026-10-21T12:00:00Z")
+                put("updatedAt", "2026-10-21T12:00:00Z")
+            }
+            val record = RecordEntity("routine", typedIdKey(id), payload.toString())
+            db.trackerDao().insertRecord(record)
+            val started = repository.startRoutine(record, draft().copy(exercises = emptyList()))
+            assertEquals(id, started.originRoutineId)
+            assertEquals(
+                listOf("Flat Bench Press", "My custom lift", "Flat Bench Press"),
+                started.exercises.map { it.name },
+            )
+            assertEquals(3, started.exercises.map { it.key }.toSet().size)
+            assertTrue(
+                started.exercises.all { it.notes.isEmpty() && it.sets.single().reps.isEmpty() }
+            )
+            db.close()
+            reopen()
+            assertEquals(started, repository.readDraft()!!.first)
+            val valid =
+                started.copy(
+                    exercises =
+                        started.exercises.map {
+                            it.copy(sets = listOf(WorkingSet(weight = "0", reps = "5")))
+                        }
+                )
+            repository.saveDraft(valid, 1)
+            val canonical = workoutPayload(valid, 110000, 0, ZoneId.of("UTC"))
+            assertEquals(id, canonical.getValue("originRoutineId"))
+            val fields = canonical.getValue("exercises").jsonArray.first().jsonObject.keys
+            assertEquals(setOf("name", "notes", "sets"), fields)
+            repository.finish(valid, 2, canonical)
+            assertEquals(record, db.trackerDao().record("routine", record.idKey))
+            db.trackerDao().updateRecord("routine", record.idKey, 1, payload.toString())
+            try {
+                repository.startRoutine(record, draft())
+                fail("stale routine")
+            } catch (_: WriteConflict) {}
+            assertNull(repository.readDraft())
+        }
+        val output = java.io.File("build/outputs/compatibility/training-export.json")
+        requireNotNull(output.parentFile).mkdirs()
+        output.writeText(BackupRepository(db).export("2026-10-21T18:00:00Z"))
+    }
+
+    @Test
+    fun routineLaunchCannotReplaceActiveDraftAndOldDraftFormatStillReads() = runBlocking {
+        val record =
+            RecordEntity(
+                "routine",
+                "number:0",
+                """{"id":0,"name":"Empty routine","exercises":[]}""",
+            )
+        db.trackerDao().insertRecord(record)
+        val original = draft()
+        repository.start(original)
+        try {
+            repository.startRoutine(record, draft())
+            fail("active draft overwritten")
+        } catch (_: IllegalStateException) {}
+        assertEquals(original, repository.readDraft()!!.first)
+        val legacy =
+            trackerJson.encodeToJsonElement(SessionDraft.serializer(), original).jsonObject.let {
+                JsonObject(it - "originRoutineId")
+            }
+        assertNull(
+            trackerJson.decodeFromJsonElement(SessionDraft.serializer(), legacy).originRoutineId
+        )
+        assertFalse(
+            workoutPayload(original, 110000, 0, ZoneId.of("UTC")).containsKey("originRoutineId")
+        )
+        repository.discard(original.id, 1)
+        val empty = repository.startRoutine(record, original.copy(exercises = emptyList()))
+        assertTrue(empty.exercises.isEmpty())
+        assertEquals("Empty routine", empty.type)
+    }
 }

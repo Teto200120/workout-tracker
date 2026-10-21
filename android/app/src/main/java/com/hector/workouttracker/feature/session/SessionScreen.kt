@@ -16,6 +16,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.feature.catalog.ExerciseGuide
+import com.hector.workouttracker.feature.catalog.ExercisePicker
 
 @Composable
 internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -> Unit) {
@@ -23,6 +25,8 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     var exerciseName by rememberSaveable { mutableStateOf("") }
     var discard by rememberSaveable { mutableStateOf(false) }
     var finish by rememberSaveable { mutableStateOf(false) }
+    var picker by rememberSaveable { mutableStateOf(false) }
+    var guide by rememberSaveable { mutableStateOf<String?>(null) }
     fun changeExercise(key: String, transform: (Exercise) -> Exercise) {
         vm.edit {
             it.copy(exercises = it.exercises.map { e -> if (e.key == key) transform(e) else e })
@@ -59,6 +63,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(exercise.name, style = MaterialTheme.typography.titleLarge)
+                    TextButton(onClick = { guide = exercise.name }) { Text("Exercise guide") }
                     exercise.sets.forEachIndexed { index, set ->
                         key(set.key) {
                             fun changeSet(transform: (WorkingSet) -> WorkingSet) {
@@ -172,6 +177,13 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { picker = true },
+                    enabled = !state.busy && draft.exercises.size < 100,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                ) {
+                    Text("Browse exercises")
+                }
                 OutlinedTextField(
                     exerciseName,
                     { exerciseName = it },
@@ -181,11 +193,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                     enabled = !state.busy,
                 )
                 OutlinedButton(
-                    onClick = {
-                        val name = exerciseName.trim()
-                        vm.edit { it.copy(exercises = it.exercises + Exercise(name = name)) }
-                        exerciseName = ""
-                    },
+                    onClick = { if (vm.addExercise(exerciseName)) exerciseName = "" },
                     enabled =
                         visibleName(exerciseName, 120) && !state.busy && draft.exercises.size < 100,
                 ) {
@@ -217,6 +225,8 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             }
         }
     }
+    if (picker) ExercisePicker(state, onDismiss = { picker = false }, onAdd = vm::addExercise)
+    guide?.let { name -> ExerciseGuide(name, state.catalog, onDismiss = { guide = null }) }
     if (discard)
         AlertDialog(
             onDismissRequest = { discard = false },

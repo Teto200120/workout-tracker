@@ -20,17 +20,18 @@ public class TestDocumentsProvider extends ContentProvider {
 
     private File file(Uri uri) {
         String name = uri.getLastPathSegment();
-        if (!"fixture.json".equals(name) && !"future.json".equals(name) && !"legacy.json".equals(name) && !"export.json".equals(name)) {
+        if (!"fixture.json".equals(name) && !"future.json".equals(name) && !"legacy.json".equals(name) && !"export.json".equals(name) && !"training.json".equals(name)) {
             throw new IllegalArgumentException("Unknown test document");
         }
         File file = new File(getContext().getFilesDir(), name);
         if (!"export.json".equals(name) && !file.exists()) {
-            try (java.io.InputStream input = getContext().getAssets().open("baseline.json")) {
+            try (java.io.InputStream input = getContext().getAssets().open("training.json".equals(name) ? "training-backup.json" : "baseline.json")) {
                 java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
                 byte[] buffer = new byte[8192];
                 int count;
                 while ((count = input.read(buffer)) != -1) bytes.write(buffer, 0, count);
-                JSONObject backup = new JSONObject(bytes.toString("UTF-8")).getJSONObject("backup");
+                JSONObject document = new JSONObject(bytes.toString("UTF-8"));
+                JSONObject backup = "training.json".equals(name) ? document : document.getJSONObject("backup");
                 if ("future.json".equals(name)) backup.put("backupFileVersion", 99);
                 if ("legacy.json".equals(name)) {
                     backup.put("applicationSchemaVersion", 0);

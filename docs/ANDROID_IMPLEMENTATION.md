@@ -56,3 +56,23 @@ Local verification: APK and instrumentation APK build; Kotlin formatting passes;
 ### Next bounded slice after B
 
 Continue slice C: routine/catalog integration in the workout flow, complete kill/relaunch recovery and same-signature APK upgrade retention acceptance. Then slice D covers the remaining schedule/History/PR/Stats/settings parity. Keep the existing PWA and its backup until native daily-use acceptance is complete.
+
+## Slice C1: imported routine launch and offline exercise library
+
+This bounded pass adds the training flow on top of slice B. Preview: versionCode 3 / `0.3.0-training`; Room schema remains 1 and backup envelope/schema remain 3/2.
+
+- Today offers imported saved routines beside the quick-workout path. Starting a routine re-reads its exact record and revision inside the draft transaction. A stale selection fails without creating or replacing a draft. Ordered names and intentional repeated rows become independent native exercise rows; the original routine and its extensions remain untouched. Empty routines open an empty session.
+- The native draft has an optional typed `originRoutineId`, exported only for routine sessions. Numeric zero and string zero stay distinct. Existing version-2 drafts decode with the absent field defaulting to null; no destructive migration or data rewrite is required.
+- Native picker search ranks exact/prefix/substring matches and applies muscle/equipment/category filters to catalog suggestions. Existing exercise names take precedence, including names from the active session, routines and history. Custom entry remains available without the catalog. Parsing, library-name extraction and search run off the UI thread; paged lazy lists bound rendered rows.
+- The APK bundles the exact existing 873-entry PWA snapshot from `src/data/exercise-catalog.json` through a generated asset task. There is no second committed catalog or runtime fetch. This pass uses text and metadata only; remote image references are not loaded. Catalog changes and reviewed-alias changes trigger native CI.
+- Guides resolve only normalized exact names or the seven reviewed PWA aliases. Ambiguous/unknown names show a fallback. An alias may name the reference movement, but never renames the saved exercise. Instructions, catalog IDs, provider data and guide text never enter workout notes or backup exercise records. Free Exercise DB attribution and Unlicense credit are shown with the guide.
+- Shared fixtures compare actual PWA search order, filters, local spelling precedence and reviewed aliases with Kotlin results. Repository checks cover typed origins, order/duplicates, stale selection, active-draft protection and database reopen. The device flow imports a synthetic routine, opens an alias guide, filters/searches the catalog, adds from a guide, resumes, saves and verifies the exported names and origin.
+
+Local verification results and final CI run links are recorded in the implementation PR and [Android verification runs](https://github.com/Teto200120/workout-tracker/actions/workflows/android.yml). The accelerated emulator flow, screenshots and full browser suite are merge gates. This remains a preview, not complete native daily-use parity.
+
+### Remaining transition work
+
+1. Finish slice C acceptance: true kill/relaunch recovery and a same-signature APK upgrade retaining profile, history and active drafts. Repository reopen and compatible serialization checks do not replace those device tests.
+2. Port routine editing/library management and deliberate starter-library seeding according to `ONBOARDING_AND_ROUTINE_CATALOG.md`. C1 never seeds or replaces imported routines.
+3. Slice D: schedule, complete session/History editing, PR/Stats calculations and remaining settings/haptic/motion preferences, following the existing contracts.
+4. Slice E: physical S24 Ultra testing, large text/TalkBack, performance/offline acceptance and production signing/release. Keep the PWA and a backup until these gates pass.

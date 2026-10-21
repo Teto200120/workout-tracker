@@ -1,0 +1,289 @@
+{
+  "revision": "b0eed061e1c832b3ed815fbaa4b45b3cdc14df49",
+  "count": 873,
+  "aliases": [
+    {
+      "localName": "Flat Bench Press",
+      "catalogId": "free-exercise-db:Barbell_Bench_Press_-_Medium_Grip"
+    },
+    {
+      "localName": "Tricep Pushdown",
+      "catalogId": "free-exercise-db:Triceps_Pushdown"
+    },
+    {
+      "localName": "V-Bar Lat Pulldown",
+      "catalogId": "free-exercise-db:V-Bar_Pulldown"
+    },
+    {
+      "localName": "V-Bar Cable Row",
+      "catalogId": "free-exercise-db:Seated_Cable_Rows"
+    },
+    {
+      "localName": "Incline Hammer Curl",
+      "catalogId": "free-exercise-db:Incline_Hammer_Curls"
+    },
+    {
+      "localName": "Cable Bicep Curl",
+      "catalogId": "free-exercise-db:Standing_Biceps_Cable_Curl"
+    },
+    {
+      "localName": "Standing Calf Raise",
+      "catalogId": "free-exercise-db:Standing_Calf_Raises"
+    }
+  ],
+  "local": [
+    "barbell bench press - medium grip",
+    "Flat Bench Press",
+    "My custom lift"
+  ],
+  "searches": [
+    {
+      "query": "bench",
+      "filters": {},
+      "local": [
+        "barbell bench press - medium grip",
+        "Flat Bench Press"
+      ],
+      "catalog": [
+        "free-exercise-db:Bench_Dips",
+        "free-exercise-db:Bench_Jump",
+        "free-exercise-db:Bench_Press_-_Powerlifting",
+        "free-exercise-db:Bench_Press_-_With_Bands",
+        "free-exercise-db:Bench_Press_with_Chains",
+        "free-exercise-db:Bench_Sprint",
+        "free-exercise-db:Barbell_Guillotine_Bench_Press",
+        "free-exercise-db:Barbell_Incline_Bench_Press_-_Medium_Grip",
+        "free-exercise-db:Barbell_Rollout_from_Bench",
+        "free-exercise-db:Barbell_Squat_To_A_Bench",
+        "free-exercise-db:Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench",
+        "free-exercise-db:Close-Grip_Barbell_Bench_Press",
+        "free-exercise-db:Decline_Barbell_Bench_Press",
+        "free-exercise-db:Decline_Close-Grip_Bench_To_Skull_Crusher",
+        "free-exercise-db:Decline_Dumbbell_Bench_Press",
+        "free-exercise-db:Dumbbell_Bench_Press",
+        "free-exercise-db:Dumbbell_Bench_Press_with_Neutral_Grip",
+        "free-exercise-db:Dumbbell_Squat_To_A_Bench",
+        "free-exercise-db:Flat_Bench_Cable_Flyes",
+        "free-exercise-db:Flat_Bench_Leg_Pull-In",
+        "free-exercise-db:Flat_Bench_Lying_Leg_Raise",
+        "free-exercise-db:Front_Barbell_Squat_To_A_Bench",
+        "free-exercise-db:Hammer_Grip_Incline_DB_Bench_Press",
+        "free-exercise-db:Hyperextensions_With_No_Hyperextension_Bench",
+        "free-exercise-db:Incline_Bench_Pull",
+        "free-exercise-db:Incline_Dumbbell_Bench_With_Palms_Facing_In",
+        "free-exercise-db:Lying_High_Bench_Barbell_Curl",
+        "free-exercise-db:Machine_Bench_Press",
+        "free-exercise-db:One_Arm_Dumbbell_Bench_Press",
+        "free-exercise-db:One-Arm_Flat_Bench_Dumbbell_Flye",
+        "free-exercise-db:Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench",
+        "free-exercise-db:Palms-Down_Wrist_Curl_Over_A_Bench",
+        "free-exercise-db:Palms-Up_Barbell_Wrist_Curl_Over_A_Bench",
+        "free-exercise-db:Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+        "free-exercise-db:Reverse_Band_Bench_Press",
+        "free-exercise-db:Reverse_Triceps_Bench_Press",
+        "free-exercise-db:Seated_Flat_Bench_Leg_Pull-In",
+        "free-exercise-db:Smith_Machine_Bench_Press",
+        "free-exercise-db:Smith_Machine_Close-Grip_Bench_Press",
+        "free-exercise-db:Smith_Machine_Incline_Bench_Press",
+        "free-exercise-db:Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench",
+        "free-exercise-db:Straight_Bar_Bench_Mid_Rows",
+        "free-exercise-db:Straight_Raises_on_Incline_Bench",
+        "free-exercise-db:Weighted_Bench_Dip",
+        "free-exercise-db:Wide-Grip_Barbell_Bench_Press",
+        "free-exercise-db:Wide-Grip_Decline_Barbell_Bench_Press"
+      ]
+    },
+    {
+      "query": "curl",
+      "filters": {
+        "equipment": "dumbbell"
+      },
+      "local": [],
+      "catalog": [
+        "free-exercise-db:Alternate_Hammer_Curl",
+        "free-exercise-db:Alternate_Incline_Dumbbell_Curl",
+        "free-exercise-db:Concentration_Curls",
+        "free-exercise-db:Cross_Body_Hammer_Curl",
+        "free-exercise-db:Dumbbell_Alternate_Bicep_Curl",
+        "free-exercise-db:Dumbbell_Bicep_Curl",
+        "free-exercise-db:Dumbbell_Prone_Incline_Curl",
+        "free-exercise-db:Flexor_Incline_Dumbbell_Curls",
+        "free-exercise-db:Hammer_Curls",
+        "free-exercise-db:Incline_Dumbbell_Curl",
+        "free-exercise-db:Incline_Hammer_Curls",
+        "free-exercise-db:Incline_Inner_Biceps_Curl",
+        "free-exercise-db:Lying_Supine_Dumbbell_Curl",
+        "free-exercise-db:One_Arm_Dumbbell_Preacher_Curl",
+        "free-exercise-db:Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench",
+        "free-exercise-db:Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+        "free-exercise-db:Preacher_Hammer_Dumbbell_Curl",
+        "free-exercise-db:Seated_Dumbbell_Curl",
+        "free-exercise-db:Seated_Dumbbell_Inner_Biceps_Curl",
+        "free-exercise-db:Seated_Dumbbell_Palms-Down_Wrist_Curl",
+        "free-exercise-db:Seated_Dumbbell_Palms-Up_Wrist_Curl",
+        "free-exercise-db:Seated_One-Arm_Dumbbell_Palms-Down_Wrist_Curl",
+        "free-exercise-db:Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl",
+        "free-exercise-db:Standing_Concentration_Curl",
+        "free-exercise-db:Standing_Dumbbell_Reverse_Curl",
+        "free-exercise-db:Standing_Inner-Biceps_Curl",
+        "free-exercise-db:Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench",
+        "free-exercise-db:Two-Arm_Dumbbell_Preacher_Curl",
+        "free-exercise-db:Zottman_Curl",
+        "free-exercise-db:Zottman_Preacher_Curl"
+      ]
+    },
+    {
+      "query": "",
+      "filters": {
+        "primaryMuscle": "abdominals",
+        "category": "strength"
+      },
+      "local": [
+        "barbell bench press - medium grip",
+        "Flat Bench Press",
+        "My custom lift"
+      ],
+      "catalog": [
+        "free-exercise-db:3_4_Sit-Up",
+        "free-exercise-db:Ab_Crunch_Machine",
+        "free-exercise-db:Ab_Roller",
+        "free-exercise-db:Advanced_Kettlebell_Windmill",
+        "free-exercise-db:Air_Bike",
+        "free-exercise-db:Alternate_Heel_Touchers",
+        "free-exercise-db:Barbell_Ab_Rollout",
+        "free-exercise-db:Barbell_Ab_Rollout_-_On_Knees",
+        "free-exercise-db:Barbell_Rollout_from_Bench",
+        "free-exercise-db:Barbell_Side_Bend",
+        "free-exercise-db:Bent_Press",
+        "free-exercise-db:Bent-Knee_Hip_Raise",
+        "free-exercise-db:Bosu_Ball_Cable_Crunch_With_Side_Bends",
+        "free-exercise-db:Bottoms_Up",
+        "free-exercise-db:Butt-Ups",
+        "free-exercise-db:Cable_Crunch",
+        "free-exercise-db:Cable_Judo_Flip",
+        "free-exercise-db:Cable_Reverse_Crunch",
+        "free-exercise-db:Cable_Russian_Twists",
+        "free-exercise-db:Cable_Seated_Crunch",
+        "free-exercise-db:Cocoons",
+        "free-exercise-db:Cross-Body_Crunch",
+        "free-exercise-db:Crunch_-_Hands_Overhead",
+        "free-exercise-db:Crunch_-_Legs_On_Exercise_Ball",
+        "free-exercise-db:Crunches",
+        "free-exercise-db:Dead_Bug",
+        "free-exercise-db:Decline_Crunch",
+        "free-exercise-db:Decline_Oblique_Crunch",
+        "free-exercise-db:Decline_Reverse_Crunch",
+        "free-exercise-db:Double_Kettlebell_Windmill",
+        "free-exercise-db:Dumbbell_Side_Bend",
+        "free-exercise-db:Elbow_to_Knee",
+        "free-exercise-db:Exercise_Ball_Crunch",
+        "free-exercise-db:Exercise_Ball_Pull-In",
+        "free-exercise-db:Flat_Bench_Leg_Pull-In",
+        "free-exercise-db:Flat_Bench_Lying_Leg_Raise",
+        "free-exercise-db:Frog_Sit-Ups",
+        "free-exercise-db:Gorilla_Chin_Crunch",
+        "free-exercise-db:Hanging_Leg_Raise",
+        "free-exercise-db:Hanging_Pike",
+        "free-exercise-db:Jackknife_Sit-Up",
+        "free-exercise-db:Janda_Sit-Up",
+        "free-exercise-db:Kettlebell_Figure_8",
+        "free-exercise-db:Kettlebell_Pass_Between_The_Legs",
+        "free-exercise-db:Kettlebell_Windmill",
+        "free-exercise-db:Knee_Hip_Raise_On_Parallel_Bars",
+        "free-exercise-db:Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists",
+        "free-exercise-db:Landmine_180s",
+        "free-exercise-db:Leg_Pull-In",
+        "free-exercise-db:Oblique_Crunches",
+        "free-exercise-db:Oblique_Crunches_-_On_The_Floor",
+        "free-exercise-db:One-Arm_High-Pulley_Cable_Side_Bends",
+        "free-exercise-db:One-Arm_Medicine_Ball_Slam",
+        "free-exercise-db:Otis-Up",
+        "free-exercise-db:Pallof_Press",
+        "free-exercise-db:Pallof_Press_With_Rotation",
+        "free-exercise-db:Plank",
+        "free-exercise-db:Plate_Twist",
+        "free-exercise-db:Press_Sit-Up",
+        "free-exercise-db:Reverse_Crunch",
+        "free-exercise-db:Rope_Crunch",
+        "free-exercise-db:Russian_Twist",
+        "free-exercise-db:Seated_Barbell_Twist",
+        "free-exercise-db:Seated_Flat_Bench_Leg_Pull-In",
+        "free-exercise-db:Seated_Leg_Tucks",
+        "free-exercise-db:Side_Bridge",
+        "free-exercise-db:Side_Jackknife",
+        "free-exercise-db:Sit-Up",
+        "free-exercise-db:Smith_Machine_Hip_Raise",
+        "free-exercise-db:Spell_Caster",
+        "free-exercise-db:Spider_Crawl",
+        "free-exercise-db:Standing_Cable_Lift",
+        "free-exercise-db:Standing_Cable_Wood_Chop",
+        "free-exercise-db:Standing_Rope_Crunch",
+        "free-exercise-db:Suspended_Fallout",
+        "free-exercise-db:Suspended_Reverse_Crunch",
+        "free-exercise-db:Tuck_Crunch",
+        "free-exercise-db:Weighted_Ball_Side_Bend",
+        "free-exercise-db:Weighted_Crunches",
+        "free-exercise-db:Weighted_Sit-Ups_-_With_Bands",
+        "free-exercise-db:Wind_Sprints"
+      ]
+    },
+    {
+      "query": "pushdown",
+      "filters": {},
+      "local": [],
+      "catalog": [
+        "free-exercise-db:Cable_Incline_Pushdown",
+        "free-exercise-db:Reverse_Grip_Triceps_Pushdown",
+        "free-exercise-db:Triceps_Pushdown",
+        "free-exercise-db:Triceps_Pushdown_-_Rope_Attachment",
+        "free-exercise-db:Triceps_Pushdown_-_V-Bar_Attachment"
+      ]
+    },
+    {
+      "query": "unlikely-name",
+      "filters": {},
+      "local": [],
+      "catalog": []
+    }
+  ],
+  "guides": [
+    {
+      "name": "Flat Bench Press",
+      "id": "free-exercise-db:Barbell_Bench_Press_-_Medium_Grip"
+    },
+    {
+      "name": "Tricep Pushdown",
+      "id": "free-exercise-db:Triceps_Pushdown"
+    },
+    {
+      "name": "V-Bar Cable Row",
+      "id": "free-exercise-db:Seated_Cable_Rows"
+    },
+    {
+      "name": "Ｂａｒｂｅｌｌ Bench Press - Medium Grip",
+      "id": "free-exercise-db:Barbell_Bench_Press_-_Medium_Grip"
+    },
+    {
+      "name": "Bench Press",
+      "id": null
+    },
+    {
+      "name": "My custom lift",
+      "id": null
+    }
+  ],
+  "canonical": [
+    {
+      "value": "BARBELL BENCH PRESS - MEDIUM GRIP",
+      "name": "barbell bench press - medium grip"
+    },
+    {
+      "value": "  flat bench press ",
+      "name": "Flat Bench Press"
+    },
+    {
+      "value": "new move",
+      "name": "new move"
+    }
+  ]
+}

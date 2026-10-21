@@ -137,7 +137,8 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Weight (lb)").performScrollTo().performTextInput("100")
         compose.onNodeWithText("Reps").performScrollTo().performTextInput("5")
         screenshot("session")
-        compose.onNodeWithText("Back to Today").performScrollTo().performClick()
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performClick()
         compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithText("Weight (lb)").performScrollTo().assertTextContains("100")
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
@@ -208,6 +209,112 @@ class WorkoutFlowTest {
         assertTrue(pickerActions.contains(Intent.ACTION_OPEN_DOCUMENT))
         assertTrue(pickerActions.contains(Intent.ACTION_CREATE_DOCUMENT))
         screenshot("backup-settings")
+
+        // Launch an imported routine without changing its names, duplicate rows or typed ID.
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/training.json")
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Import PWA backup"))
+        compose.onNodeWithText("Import PWA backup").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review backup import").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Import backup").performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup imported. Your other saved records were kept.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithText("Today").performClick()
+        compose.onNodeWithText("Use saved routine").performClick()
+        screenshot("routine-chooser")
+        compose.onNodeWithText("Training fixture").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Active workout").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
+        compose.onAllNodesWithText("Exercise guide").onFirst().performScrollTo().performClick()
+        compose
+            .onNodeWithText("Reference movement: Barbell Bench Press - Medium Grip")
+            .assertExists()
+        screenshot("exercise-guide")
+        compose.onNodeWithText("Back", substring = false).performClick()
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Browse exercises"))
+        compose.onNodeWithText("Browse exercises").performClick()
+        compose.onNodeWithTag("exercise-search").performTextInput("curl")
+        compose.onNodeWithText("Show filters").performClick()
+        compose.onNodeWithText("Equipment", substring = false).performClick()
+        compose.onNodeWithText("dumbbell", substring = false).performClick()
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose
+                        .onNodeWithTag("exercise-picker")
+                        .performScrollToNode(hasText("Guide for Alternate Hammer Curl"))
+                }
+                .isSuccess
+        }
+        screenshot("exercise-picker")
+        compose.onNodeWithText("Guide for Alternate Hammer Curl").performScrollTo().performClick()
+        compose.onNodeWithTag("add-from-guide").performClick()
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(hasText("Alternate Hammer Curl", substring = false))
+        compose.onNodeWithText("Alternate Hammer Curl", substring = false).assertExists()
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Workout name"))
+        compose
+            .onAllNodesWithText("Reps", substring = false)
+            .onFirst()
+            .performScrollTo()
+            .performTextInput("8")
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithText("Resume workout").performClick()
+        compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
+        compose.onNodeWithText("Finish workout").performClick()
+        compose.onNodeWithText("Save workout").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("You", substring = false).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("You", substring = false).performClick()
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/export.json")
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Export backup"))
+        compose.onNodeWithText("Export backup").performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup file created. Active workouts are not included.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        val trainingExport =
+            BackupCodec.parse(
+                compose.activity.contentResolver.openInputStream(nextUri!!)!!.bufferedReader().use {
+                    it.readText()
+                }
+            )
+        assertEquals(4, trainingExport.workouts.size)
+        val training =
+            trainingExport.workouts.single {
+                it["originRoutineId"] == JsonPrimitive(0) &&
+                    it["type"] == JsonPrimitive("Training fixture")
+            }
+        assertEquals(
+            listOf(
+                "Flat Bench Press",
+                "My custom lift",
+                "Flat Bench Press",
+                "Alternate Hammer Curl",
+            ),
+            training.getValue("exercises").jsonArray.map {
+                it.jsonObject.getValue("name").jsonPrimitive.content
+            },
+        )
+        training.getValue("exercises").jsonArray.forEach {
+            assertEquals(setOf("name", "notes", "sets"), it.jsonObject.keys)
+        }
+        assertEquals(
+            JsonPrimitive(true),
+            trainingExport.routines.single().getValue("extension").jsonObject.getValue("keep"),
+        )
     }
 
     private fun screenshot(name: String) {

@@ -8,9 +8,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hector.workouttracker.TrackerApplication
 import com.hector.workouttracker.core.backup.*
+import com.hector.workouttracker.core.catalog.ExerciseCatalog
 import com.hector.workouttracker.core.database.RecordEntity
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.data.ImportPreview
+import com.hector.workouttracker.data.SavedRoutine
+import com.hector.workouttracker.data.localExerciseNames
+import com.hector.workouttracker.data.routineSnapshot
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
@@ -27,6 +31,10 @@ data class TrackerState(
     val setupRpe: Boolean = true,
     val draft: SessionDraft? = null,
     val workouts: List<RecordEntity> = emptyList(),
+    val routines: List<SavedRoutine> = emptyList(),
+    val localNames: List<String> = emptyList(),
+    val catalog: ExerciseCatalog? = null,
+    val catalogLoading: Boolean = true,
     val busy: Boolean = false,
     val editVersion: Long = 0,
     val savedVersion: Long = 0,
@@ -89,13 +97,42 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             }
         }
         viewModelScope.launch {
-            repository.workouts
-                .catch {
-                    mutable.update {
-                        it.copy(error = "History could not be loaded. Reopen the app to retry.")
+            combine(repository.workouts, repository.routines) { workouts, records ->
+                    withContext(Dispatchers.Default) {
+                        val routines =
+                            records.map(::routineSnapshot).sortedBy {
+                                it.name.lowercase(java.util.Locale.US)
+                            }
+                        Triple(workouts, routines, localExerciseNames(workouts, routines))
                     }
                 }
-                .collect { records -> mutable.update { it.copy(workouts = records) } }
+                .catch {
+                    mutable.update {
+                        it.copy(
+                            error = "Your library could not be loaded. Reopen the app to retry."
+                        )
+                    }
+                }
+                .collect { (workouts, routines, localNames) ->
+                    mutable.update {
+                        it.copy(workouts = workouts, routines = routines, localNames = localNames)
+                    }
+                }
+        }
+        viewModelScope.launch {
+            val catalog =
+                withContext(Dispatchers.IO) {
+                    try {
+                        application.assets.open("exercise-catalog.json").bufferedReader().use {
+                            ExerciseCatalog.parse(it.readText())
+                        }
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+            mutable.update { it.copy(catalog = catalog, catalogLoading = false) }
         }
     }
 
@@ -196,18 +233,20 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun start() {
+    fun start(routine: SavedRoutine? = null) {
         if (state.value.busy || state.value.draft != null || state.value.loading) return
         mutable.update { it.copy(busy = true) }
         enqueue {
-            val draft =
+            val empty =
                 newSession(
                     System.currentTimeMillis(),
                     SystemClock.elapsedRealtime(),
                     boot(),
                     ZoneId.systemDefault(),
                 )
-            draftRevision = repository.start(draft)
+            val draft =
+                if (routine == null) empty else repository.startRoutine(routine.record, empty)
+            draftRevision = if (routine == null) repository.start(draft) else 1L
             mutable.update {
                 it.copy(
                     draft = draft,
@@ -218,6 +257,21 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                 )
             }
         }
+    }
+
+    /** The accepted name is the entire persistence boundary for picker selections. */
+    fun addExercise(value: String): Boolean {
+        val current = state.value
+        val draft = current.draft ?: return false
+        if (current.loading || current.busy || draft.exercises.size >= 100) return false
+        val local = draft.exercises.map { it.name } + current.localNames
+        val name =
+            current.catalog?.canonicalName(value, local)
+                ?: local.firstOrNull { it.trim().equals(value.trim(), ignoreCase = true) }
+                ?: value.trim()
+        if (!visibleName(name, 120)) return false
+        edit { it.copy(exercises = it.exercises + Exercise(name = name)) }
+        return true
     }
 
     fun edit(change: (SessionDraft) -> SessionDraft) {
