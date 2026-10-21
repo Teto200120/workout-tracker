@@ -15,6 +15,7 @@ export default [
       "playwright-report/**",
       "test-results/**",
       "coverage/**",
+      "android/**/build/**",
       "legacy/**",
     ],
   },
