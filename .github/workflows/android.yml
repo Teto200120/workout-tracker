@@ -11,6 +11,7 @@ on:
       - "tests/unit/android-contract.test.js"
       - "scripts/verify-android-roundtrip.mjs"
       - "scripts/verify-android-training.mjs"
+      - "scripts/verify-android-lifecycle.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
@@ -22,6 +23,7 @@ on:
       - "tests/unit/android-contract.test.js"
       - "scripts/verify-android-roundtrip.mjs"
       - "scripts/verify-android-training.mjs"
+      - "scripts/verify-android-lifecycle.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -58,6 +60,8 @@ jobs:
           fi
       - name: Build, test persistence and lint
         run: ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
+      - name: Build the pinned version-2 upgrade baseline
+        run: bash qa/build_upgrade_baseline.sh
       - name: Verify native export with the PWA importer
         run: |
           node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
@@ -77,6 +81,8 @@ jobs:
           working-directory: android
           script: >-
             bash -c '
+            python3 qa/verify_lifecycle.py --serial emulator-5554 --baseline-dir "$RUNNER_TEMP/workout-upgrade-baseline/android" || exit $?;
+            node ../scripts/verify-android-lifecycle.mjs app/build/outputs/lifecycle/database/lifecycle-export.json || exit $?;
             ./gradlew --no-daemon -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true :app:connectedDebugAndroidTest;
             native_status=$?;
             adb pull /sdcard/Android/data/com.hector.workouttracker/files/qa app/build/outputs/screenshots;
@@ -93,5 +99,6 @@ jobs:
             android/app/build/outputs/compatibility/
             android/app/build/outputs/androidTest-results/
             android/app/build/outputs/screenshots/
+            android/app/build/outputs/lifecycle/
           if-no-files-found: warn
           retention-days: 14
