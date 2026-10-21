@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 data class TrackerState(
     val loading: Boolean = true,
     val profile: Profile = Profile(),
+    val setupRpe: Boolean = true,
     val draft: SessionDraft? = null,
     val workouts: List<RecordEntity> = emptyList(),
     val busy: Boolean = false,
@@ -79,7 +80,12 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             val draft = repository.readDraft()
             draftRevision = draft?.second ?: 0L
             mutable.update {
-                it.copy(loading = false, profile = profile.first, draft = draft?.first)
+                it.copy(
+                    loading = false,
+                    profile = profile.first,
+                    setupRpe = profile.first.trackRpe,
+                    draft = draft?.first,
+                )
             }
         }
         viewModelScope.launch {
@@ -101,13 +107,20 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         mutable.update { it.copy(error = null) }
     }
 
+    fun setSetupRpe(value: Boolean) {
+        if (state.value.busy || state.value.loading) return
+        mutable.update { it.copy(setupRpe = value) }
+    }
+
     fun saveProfile(name: String, rpe: Boolean) {
         if (state.value.busy || state.value.loading) return
         mutable.update { it.copy(busy = true) }
         enqueue {
             val profile = Profile(name.trim(), rpe)
             profileRevision = repository.saveProfile(profile, profileRevision)
-            mutable.update { it.copy(profile = profile, busy = false, error = null) }
+            mutable.update {
+                it.copy(profile = profile, setupRpe = profile.trackRpe, busy = false, error = null)
+            }
         }
     }
 
@@ -153,6 +166,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             mutable.update {
                 it.copy(
                     profile = profile.first,
+                    setupRpe = profile.first.trackRpe,
                     busy = false,
                     error = null,
                     backupMessage = "Backup imported. Your other saved records were kept.",

@@ -103,6 +103,22 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("setup-list").performScrollToNode(hasTestTag("setup-rpe"))
         compose.onNodeWithTag("setup-rpe").assertIsOff()
         screenshot("legacy-onboarding")
+        // Re-import must reset an unsaved toggle even when the stored preference is unchanged.
+        compose.onNodeWithTag("setup-rpe").performClick().assertIsOn()
+        compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Import PWA backup"))
+        compose.onNodeWithText("Import PWA backup").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review backup import").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Import backup").performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup imported. Your other saved records were kept.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithTag("setup-list").performScrollToNode(hasTestTag("setup-rpe"))
+        compose.onNodeWithTag("setup-rpe").assertIsOff()
 
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Your name"))
         compose.onNodeWithText("Your name").performTextInput("Fixture User")
