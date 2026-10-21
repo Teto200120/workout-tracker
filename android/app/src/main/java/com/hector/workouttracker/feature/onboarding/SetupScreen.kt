@@ -7,18 +7,20 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.feature.backup.BackupControls
 import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 
 @Composable
 internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
     var name by rememberSaveable { mutableStateOf("") }
-    var rpe by rememberSaveable { mutableStateOf(true) }
+    val rpe = state.setupRpe
     LazyColumn(
-        Modifier.fillMaxSize(),
+        Modifier.fillMaxSize().testTag("setup-list"),
         contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
@@ -29,6 +31,7 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
                 "Your workouts stay on this device. Start with a name and make it yours.",
             )
         }
+        item { BackupControls(state, vm, firstRun = true) }
         item {
             OutlinedTextField(
                 name,
@@ -42,7 +45,12 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Track RPE", Modifier.weight(1f))
-                Switch(rpe, { rpe = it }, enabled = !state.busy)
+                Switch(
+                    rpe,
+                    vm::setSetupRpe,
+                    modifier = Modifier.testTag("setup-rpe"),
+                    enabled = !state.busy,
+                )
             }
         }
         item {
@@ -62,7 +70,7 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
         }
         item {
             Text(
-                "This is the first native version. PWA backup import is coming in the next stage; your existing PWA data stays where it is.",
+                "You can import a PWA backup above, or start fresh with a name. Importing does not remove or synchronize your browser data.",
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

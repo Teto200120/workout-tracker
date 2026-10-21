@@ -29,7 +29,7 @@ internal fun HistoryScreen(state: TrackerState) {
         contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item { Heading("Your progress", "History", "Workouts saved in the native app.") }
+        item { Heading("Your progress", "History", "Saved and imported workouts.") }
         if (workouts.isEmpty())
             item { Text("Your first workout starts the story. Saved sessions will appear here.") }
         items(workouts, key = { typedIdKey(it.getValue("id")) }) { workout ->

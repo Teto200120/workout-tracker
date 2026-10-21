@@ -1,29 +1,38 @@
 package com.hector.workouttracker.feature.session
 
 import android.app.Application
+import android.net.Uri
 import android.os.SystemClock
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hector.workouttracker.TrackerApplication
+import com.hector.workouttracker.core.backup.*
 import com.hector.workouttracker.core.database.RecordEntity
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.data.ImportPreview
+import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** All writes have one owner. UI values update immediately; snapshots queue in order. */
 data class TrackerState(
     val loading: Boolean = true,
     val profile: Profile = Profile(),
+    val setupRpe: Boolean = true,
     val draft: SessionDraft? = null,
     val workouts: List<RecordEntity> = emptyList(),
     val busy: Boolean = false,
     val editVersion: Long = 0,
     val savedVersion: Long = 0,
     val error: String? = null,
+    val importPreview: ImportPreview? = null,
+    val backupMessage: String? = null,
 ) {
     val pending: Boolean
         get() = editVersion != savedVersion
@@ -31,6 +40,7 @@ data class TrackerState(
 
 class TrackerViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as TrackerApplication).repository
+    private val backups = (application as TrackerApplication).backups
     private val mutable = MutableStateFlow(TrackerState())
     val state = mutable.asStateFlow()
     private val commands = Channel<suspend () -> Unit>(Channel.UNLIMITED)
@@ -55,6 +65,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     mutable.update {
                         it.copy(
                             busy = false,
+                            backupMessage = null,
                             error =
                                 error.message
                                     ?: "Unable to save. Your visible entries are retained.",
@@ -69,7 +80,12 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             val draft = repository.readDraft()
             draftRevision = draft?.second ?: 0L
             mutable.update {
-                it.copy(loading = false, profile = profile.first, draft = draft?.first)
+                it.copy(
+                    loading = false,
+                    profile = profile.first,
+                    setupRpe = profile.first.trackRpe,
+                    draft = draft?.first,
+                )
             }
         }
         viewModelScope.launch {
@@ -91,13 +107,92 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         mutable.update { it.copy(error = null) }
     }
 
+    fun setSetupRpe(value: Boolean) {
+        if (state.value.busy || state.value.loading) return
+        mutable.update { it.copy(setupRpe = value) }
+    }
+
     fun saveProfile(name: String, rpe: Boolean) {
         if (state.value.busy || state.value.loading) return
         mutable.update { it.copy(busy = true) }
         enqueue {
             val profile = Profile(name.trim(), rpe)
             profileRevision = repository.saveProfile(profile, profileRevision)
-            mutable.update { it.copy(profile = profile, busy = false, error = null) }
+            mutable.update {
+                it.copy(profile = profile, setupRpe = profile.trackRpe, busy = false, error = null)
+            }
+        }
+    }
+
+    fun importBackup(uri: Uri) {
+        if (state.value.busy || state.value.loading) return
+        mutable.update {
+            it.copy(
+                busy = true,
+                error = null,
+                importPreview = null,
+                backupMessage = "Checking backup…",
+            )
+        }
+        enqueue {
+            val preview =
+                withContext(Dispatchers.IO) {
+                    val resolver = getApplication<Application>().contentResolver
+                    val text =
+                        resolver.openInputStream(uri)?.use { readBackup(it) }
+                            ?: error("The backup file could not be opened.")
+                    backups.preview(BackupCodec.parse(text))
+                }
+            mutable.update { it.copy(busy = false, importPreview = preview, backupMessage = null) }
+        }
+    }
+
+    fun cancelImport() {
+        mutable.update {
+            it.copy(importPreview = null, backupMessage = "Import cancelled. No data changed.")
+        }
+    }
+
+    fun confirmImport() {
+        val preview = state.value.importPreview ?: return
+        if (state.value.busy) return
+        mutable.update {
+            it.copy(busy = true, importPreview = null, backupMessage = "Importing backup…")
+        }
+        enqueue {
+            withContext(Dispatchers.IO) { backups.confirm(preview) }
+            val profile = repository.readProfile()
+            profileRevision = profile.second
+            mutable.update {
+                it.copy(
+                    profile = profile.first,
+                    setupRpe = profile.first.trackRpe,
+                    busy = false,
+                    error = null,
+                    backupMessage = "Backup imported. Your other saved records were kept.",
+                )
+            }
+        }
+    }
+
+    fun exportBackup(uri: Uri) {
+        if (state.value.busy || state.value.loading) return
+        mutable.update { it.copy(busy = true, error = null, backupMessage = "Creating backup…") }
+        enqueue {
+            withContext(Dispatchers.IO) {
+                val encoded = backups.export(Instant.now().toString())
+                val resolver = getApplication<Application>().contentResolver
+                val output =
+                    resolver.openOutputStream(uri, "wt")
+                        ?: error("The destination could not be opened.")
+                output.use { it.write(encoded.toByteArray(Charsets.UTF_8)) }
+            }
+            mutable.update {
+                it.copy(
+                    busy = false,
+                    backupMessage = "Backup file created. Active workouts are not included.",
+                )
+            }
         }
     }
 

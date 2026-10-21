@@ -13,6 +13,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.hector.workouttracker.R
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.feature.backup.ImportDialog
 import com.hector.workouttracker.feature.history.HistoryScreen
 import com.hector.workouttracker.feature.onboarding.SetupScreen
 import com.hector.workouttracker.feature.session.*
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.*
 @Composable
 fun TrackerApp(vm: TrackerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"

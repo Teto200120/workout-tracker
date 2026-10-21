@@ -7,10 +7,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.BuildConfig
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.feature.backup.BackupControls
 import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 
@@ -20,7 +22,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
         rememberSaveable(state.profile.displayName) { mutableStateOf(state.profile.displayName) }
     var rpe by rememberSaveable(state.profile.trackRpe) { mutableStateOf(state.profile.trackRpe) }
     LazyColumn(
-        Modifier.fillMaxSize(),
+        Modifier.fillMaxSize().testTag("settings-list"),
         contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
@@ -53,6 +55,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
             }
         }
         item { HorizontalDivider() }
+        item { BackupControls(state, vm) }
         item {
             Text(
                 "Workout Tracker ${BuildConfig.VERSION_NAME}",
@@ -61,7 +64,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
         }
         item {
             Text(
-                "Native Android foundation. Workouts and drafts are stored locally. PWA import/export, routine planning and full analytics are not available in this build."
+                "Native Android preview. Workouts and drafts are stored locally. Routine planning and full analytics are not available in this build; imported routines and goals are preserved for future versions."
             )
         }
         item {

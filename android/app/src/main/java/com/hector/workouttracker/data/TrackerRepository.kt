@@ -1,6 +1,7 @@
 package com.hector.workouttracker.data
 
 import androidx.room.withTransaction
+import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.database.*
 import com.hector.workouttracker.core.model.*
 import kotlinx.serialization.encodeToString
@@ -34,6 +35,25 @@ class TrackerRepository(private val db: TrackerDatabase) {
                 if (dao.document("native_profile") != null) throw WriteConflict()
                 dao.insertDocument(DocumentEntity("native_profile", payload))
             } else if (dao.updateDocument("native_profile", expected, payload) != 1)
+                throw WriteConflict()
+            val settings = dao.document("settings")
+            val canonical =
+                settings?.let { trackerJson.parseToJsonElement(it.payload).jsonObject }
+                    ?: BackupCodec.defaultSettings
+            val updated =
+                JsonObject(
+                        canonical +
+                            mapOf(
+                                "displayName" to JsonPrimitive(profile.displayName.trim()),
+                                "rpeAware" to JsonPrimitive(profile.trackRpe),
+                            )
+                    )
+                    .toString()
+            if (settings == null) dao.insertDocument(DocumentEntity("settings", updated))
+            else if (
+                settings.payload != updated &&
+                    dao.updateDocument("settings", settings.revision, updated) != 1
+            )
                 throw WriteConflict()
             expected + 1
         }

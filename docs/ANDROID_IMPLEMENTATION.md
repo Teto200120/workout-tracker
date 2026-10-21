@@ -28,8 +28,31 @@ Today, active-session and History screenshots were inspected. That review comple
 
 Physical Samsung S24 Ultra validation, large-text/TalkBack acceptance, same-signature version-upgrade retention and a production signing identity remain release gates. The next implementation slice is the backup migration bridge, not another general PWA cleanup pass.
 
-## Next bounded slice
+## Migration bridge
 
-Complete slice B: validated legacy/current PWA backup parsing, future-version rejection, preview and duplicate/conflict handling, atomic Room merge with supplied settings/goals/metadata, compatible export, round-trip fixtures and explicit active-draft policy. Offer import during first-run migration once it is implemented. Do not silently load, rewrite or delete the user's browser data.
+Slice B is described below. It adds explicit migration through a JSON file; it never silently reads or removes browser data.
 
 Then build routine/catalog integration and full session/History/Stats parity according to the transition plan. Do not restart general PWA cleanup or treat this foundation as the finished daily-use Android app.
+
+## Slice B: PWA backup migration bridge
+
+Implemented in `android/` on top of the foundation. The merge gate includes the native CI flow and actual native-export compatibility checks below.
+
+- System document contracts (`OpenDocument` / JSON `CreateDocument`) on first-run setup and You. The app requests no broad storage permission. Cancellation leaves data unchanged; parsing and file I/O run off the main thread.
+- Bounded UTF-8 input: 25 MiB stream limit, nesting preflight before recursive JSON parsing, 20 levels and 500,000 accepted values. Future/conflicting versions, malformed structure, duplicate typed IDs and semantic bounds are rejected before a preview. Unsafe prototype-like extension keys are rejected explicitly rather than exported into JavaScript consumers.
+- Legacy envelopes 0–2 and current envelope 3, logical schema 0→1→2. Migration fixtures are derived from the actual PWA migrations, including legacy name reset, numeric/boolean normalization, blank/zero/RPE values, typed zero IDs and nested extensions. Current records retain their original JSON values and ordered arrays.
+- Preview separates new, changed matching-ID and unchanged counts for workouts/routines/legacy weights. It names changed preferences, shows the resulting weekly goal/name/RPE preference, and discloses settings/goals/metadata replacement. Other records remain. Supplied settings replace the canonical document; omitted settings retain preferences but reset the display name to setup, matching the PWA restore policy. Omitted goals/metadata remain untouched.
+- One Room transaction merges records, settings, goals, backup metadata and the native profile. Changed records/documents advance revisions; unchanged imports are no-ops. A fingerprint of the coherent preview snapshot rejects confirmation after any saved state changed. Active native drafts block both preview and confirmation. No destructive schema change or database reset is involved; Room remains schema 1.
+- Native profile edits update the canonical settings document in the same transaction, retaining imported extensions, schedule and unsupported preferences. When a legacy import requires name setup, onboarding initializes RPE from the imported profile and retains that preference when saving the name. Export maps foundation-only profiles into complete canonical settings. Disabling RPE does not delete historical values.
+- Export takes a coherent database snapshot, emits envelope 3/schema 2 and validates the result. Native drafts/device state, education, journals and feedback outboxes are excluded. A successful export notice appears only after the provider stream closes; creating an export does not mutate saved metadata. Interrupted/failed provider writes can leave an incomplete destination file and must be retried.
+- Imported routines, legacy weights, goals, schedule and unsupported preferences are retained and re-exported. Routine/catalog/Stats screens and complete haptic/motion preference application remain later slices.
+
+Preview version: versionCode 2 / `0.2.0-migration`, using the original preview signing identity. A real signed APK upgrade on a physical device remains a release gate; a schema-1 reopen test alone is not an APK upgrade test.
+
+### Verification for this slice
+
+Local verification: APK and instrumentation APK build; Kotlin formatting passes; **23 native JVM/Room tests** pass, including a 2,000-workout history and forced rollback after records/profile/settings writes. Android lint has no errors. The actual native-generated export passes the PWA parser and semantic guardrails. Web lint, formatting, release integrity and **237 unit tests** pass. The accelerated emulator flow and screenshots are an Android CI merge gate; current results are recorded in the implementation PR and [Android verification runs](https://github.com/Teto200120/workout-tracker/actions/workflows/android.yml). The document-contract emulator test supplies a test provider through the activity-result registry; it verifies the real ContentResolver streams, picker intent actions and preview/confirm UI, not every vendor's document-picker UI. No private workout exports are committed.
+
+### Next bounded slice after B
+
+Continue slice C: routine/catalog integration in the workout flow, complete kill/relaunch recovery and same-signature APK upgrade retention acceptance. Then slice D covers the remaining schedule/History/PR/Stats/settings parity. Keep the existing PWA and its backup until native daily-use acceptance is complete.
