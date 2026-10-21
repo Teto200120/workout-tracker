@@ -31,6 +31,15 @@ class WorkoutFlowTest {
 
     @Test
     fun onboardingSessionNavigationAndSavedHistory() {
+        try {
+            workoutFlow()
+        } catch (failure: Throwable) {
+            runCatching { screenshot("failure") }
+            throw failure
+        }
+    }
+
+    private fun workoutFlow() {
         val testContext = InstrumentationRegistry.getInstrumentation().context
         val fixture =
             Json.parseToJsonElement(
@@ -228,9 +237,19 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Use saved routine").performClick()
         screenshot("routine-chooser")
         compose.onNodeWithText("Training fixture").performClick()
+        val vm =
+            compose.runOnIdle {
+                androidx.lifecycle
+                    .ViewModelProvider(compose.activity)[
+                        com.hector.workouttracker.feature.session.TrackerViewModel::class.java]
+            }
+        compose.waitUntil(10000) { vm.state.value.draft != null || vm.state.value.error != null }
+        assertNull(vm.state.value.error)
+        assertEquals("Training fixture", vm.state.value.draft!!.type)
         compose.waitUntil(10000) {
-            compose.onAllNodesWithText("Active workout").fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
         }
+        compose.onNodeWithText("Active workout").assertIsDisplayed()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         compose.onAllNodesWithText("Exercise guide").onFirst().performScrollTo().performClick()
         compose

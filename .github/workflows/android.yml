@@ -75,9 +75,13 @@ jobs:
           target: google_apis
           disable-animations: true
           working-directory: android
-          script: |
-            ./gradlew --no-daemon -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true :app:connectedDebugAndroidTest
-            adb pull /sdcard/Android/data/com.hector.workouttracker/files/qa app/build/outputs/screenshots
+          script: >-
+            bash -c '
+            ./gradlew --no-daemon -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true :app:connectedDebugAndroidTest;
+            native_status=$?;
+            adb pull /sdcard/Android/data/com.hector.workouttracker/files/qa app/build/outputs/screenshots;
+            exit "$native_status"
+            '
       - name: Upload preview APK and verification reports
         if: always()
         uses: actions/upload-artifact@v4

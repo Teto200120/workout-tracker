@@ -3,6 +3,7 @@ package com.hector.workouttracker.feature.session
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -32,8 +33,10 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             it.copy(exercises = it.exercises.map { e -> if (e.key == key) transform(e) else e })
         }
     }
+    val listState = key(draft.id) { rememberLazyListState() }
     LazyColumn(
         Modifier.fillMaxSize().testTag("session-list"),
+        state = listState,
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
