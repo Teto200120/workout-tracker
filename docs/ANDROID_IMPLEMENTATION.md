@@ -18,7 +18,9 @@ The native model is not a complete backup importer. Raw record storage preserves
 
 ## Verification
 
-Verification results will be recorded here before this slice is published. Do not treat the presence of a test as evidence it ran. Physical Samsung S24 Ultra validation, large-text/TalkBack acceptance, same-signature upgrade retention and a production signing identity remain release gates.
+Local verification: debug APK and instrumentation APK build successfully; all **10 native JVM/Robolectric tests** pass (5 compatibility/domain, 5 actual Room persistence/transaction tests); Android lint reports **0 errors**. Web verification: **236 unit tests**, lint, formatting and release/shell integrity pass. Kotlin sources/Gradle scripts are formatted with ktfmt.
+
+The local workspace has no hardware acceleration; a software emulator failed to boot within six minutes. No local rendered-device result is claimed. Accelerated emulator/Compose flow verification is being run in the Android GitHub workflow before merge. Physical Samsung S24 Ultra validation, large-text/TalkBack acceptance, same-signature upgrade retention and a production signing identity remain release gates.
 
 ## Next bounded slice
 
