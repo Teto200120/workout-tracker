@@ -3,3 +3,11 @@ playwright-report/
 test-results/
 coverage/
 
+
+# Native Android build and machine-local configuration
+android/.gradle/
+android/.kotlin/
+android/**/build/
+android/local.properties
+*.jks
+*.keystore

@@ -3,8 +3,12 @@ name: Quality checks
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "android/**"
   push:
     branches: [main]
+    paths-ignore:
+      - "android/**"
 
 permissions:
   contents: read
