@@ -366,7 +366,8 @@ class WorkoutFlowTest {
             }
         }
         compose.onNodeWithText("Today", substring = false).performClick()
-        compose.onNodeWithText("Manage routines").performScrollTo().performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
+        compose.onNodeWithText("Manage routines").performClick()
         waitLibrary()
         openImported()
         name("Edited fixture")
@@ -481,7 +482,8 @@ class WorkoutFlowTest {
         assertEquals(JsonPrimitive(0), active.originRoutineId)
         assertEquals(expected, active.exercises.map { it.name })
         compose.onNodeWithText("Back to Today").performClick()
-        compose.onNodeWithText("Manage routines").performScrollTo().performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
+        compose.onNodeWithText("Manage routines").performClick()
         waitLibrary()
         compose
             .onNodeWithTag("routine-library")
