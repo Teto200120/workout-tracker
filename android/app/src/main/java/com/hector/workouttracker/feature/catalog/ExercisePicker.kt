@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -34,6 +35,7 @@ internal fun ExercisePicker(
     onDismiss: () -> Unit,
     onAdd: (String) -> Boolean,
 ) {
+    val focus = LocalFocusManager.current
     var query by rememberSaveable { mutableStateOf("") }
     var muscle by rememberSaveable { mutableStateOf("") }
     var equipment by rememberSaveable { mutableStateOf("") }
@@ -94,7 +96,12 @@ internal fun ExercisePicker(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().testTag("exercise-search"),
                     )
-                    TextButton(onClick = { filtersOpen = !filtersOpen }) {
+                    TextButton(
+                        onClick = {
+                            filtersOpen = !filtersOpen
+                            if (filtersOpen) focus.clearFocus()
+                        }
+                    ) {
                         Text(if (filtersOpen) "Hide filters" else "Show filters")
                     }
                     if (filtersOpen) {

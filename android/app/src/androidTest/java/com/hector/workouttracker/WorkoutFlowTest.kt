@@ -261,8 +261,8 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Browse exercises").performClick()
         compose.onNodeWithTag("exercise-search").performTextInput("curl")
         compose.onNodeWithText("Show filters").performClick()
-        compose.onNodeWithText("Equipment", substring = false).performClick()
-        compose.onNodeWithText("dumbbell", substring = false).performClick()
+        compose.onNodeWithText("Equipment", substring = false).performScrollTo().performClick()
+        compose.onNodeWithText("dumbbell", substring = false).performScrollTo().performClick()
         compose.waitUntil(10000) {
             runCatching {
                     compose
