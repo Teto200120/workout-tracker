@@ -4,7 +4,7 @@ Baseline review: 2026-10-16, `8e0fcb9`. Work stays on `main`; no Android migrati
 
 ## Current handoff status — 2026-10-21 UTC
 
-Pre-Android work is complete within the native deferrals. Cloudflare migration 0005 and Worker deployment are now complete; an actual no-screenshot PWA report was confirmed in D1. Email delivery remains unverified by user choice. Read [BASELINE_HANDOFF.md](BASELINE_HANDOFF.md) for the consolidated completion/evidence record and [ANDROID_TRANSITION.md](ANDROID_TRANSITION.md) for implementation instructions. All pass-level pending statements below describe historical states; they do not reopen the completed baseline. No Android code has been implemented.
+Pre-Android work is complete within the native deferrals. Cloudflare migration 0005 and Worker deployment are now complete; an actual no-screenshot PWA report was confirmed in D1. Email delivery remains unverified by user choice. Read [BASELINE_HANDOFF.md](BASELINE_HANDOFF.md) for the consolidated completion/evidence record and [ANDROID_TRANSITION.md](ANDROID_TRANSITION.md) for implementation instructions. All pass-level pending statements below describe historical states; they do not reopen the completed baseline. Native Android foundation implementation has now started; see [ANDROID_IMPLEMENTATION.md](ANDROID_IMPLEMENTATION.md) for delivered scope and verification.
 
 ## Pass 1: record integrity
 

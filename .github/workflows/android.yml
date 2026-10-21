@@ -62,7 +62,7 @@ jobs:
           disable-animations: true
           working-directory: android
           script: |
-            ./gradlew --no-daemon :app:connectedDebugAndroidTest
+            ./gradlew --no-daemon -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true :app:connectedDebugAndroidTest
             adb pull /sdcard/Android/data/com.hector.workouttracker/files/qa app/build/outputs/screenshots
       - name: Upload preview APK and verification reports
         if: always()
