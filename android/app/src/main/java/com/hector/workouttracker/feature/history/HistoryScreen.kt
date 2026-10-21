@@ -48,7 +48,7 @@ internal fun HistoryScreen(state: TrackerState) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        "${metrics.workingSets} working sets · ${metrics.completedSets} completed · ${metrics.duration.toInt()} min"
+                        "${metrics.workingSets} working ${if (metrics.workingSets == 1) "set" else "sets"} · ${metrics.completedSets} completed · ${metrics.duration.toInt()} min"
                     )
                     Text(
                         "Volume: ${String.format(Locale.US, "%.1f", metrics.volume)}",
@@ -57,7 +57,7 @@ internal fun HistoryScreen(state: TrackerState) {
                     workout.getValue("exercises").jsonArray.forEach { exercise ->
                         val e = exercise.jsonObject
                         Text(
-                            "${e.getValue("name").jsonPrimitive.content} · ${e.getValue("sets").jsonArray.size} sets"
+                            "${e.getValue("name").jsonPrimitive.content} · ${e.getValue("sets").jsonArray.size} ${if (e.getValue("sets").jsonArray.size == 1) "set" else "sets"}"
                         )
                     }
                 }

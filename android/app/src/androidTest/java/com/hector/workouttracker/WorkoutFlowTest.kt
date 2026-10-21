@@ -39,12 +39,14 @@ class WorkoutFlowTest {
             compose.onAllNodesWithText("History").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("History").performClick()
-        compose.onNodeWithText("Bench Press · 1 sets").assertExists()
+        compose.onNodeWithText("Bench Press · 1 set").assertExists()
         compose.onNodeWithText("Volume: 500.0").assertExists()
         screenshot("history")
     }
 
     private fun screenshot(name: String) {
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.waitForIdle()
         val directory =
             File(
                 InstrumentationRegistry.getInstrumentation()
