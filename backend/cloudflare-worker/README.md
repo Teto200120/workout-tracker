@@ -96,7 +96,9 @@ until the user confirms the final test.
 
 ## Baseline deployment and reconciliation
 
-Apply migrations through `0005_delivery_ownership.sql` before deploying this Worker source. The additive migration leaves existing report, screenshot and delivery records intact. With the existing authenticated Cloudflare account, run from this directory:
+Production status (2026-10-21 UTC): migration 0005 was applied manually in the D1 Console and the bundled Worker was deployed through the Dashboard. Active status and actual PWA report persistence were confirmed. Email delivery remains unverified by user choice. See [the baseline handoff](../../docs/BASELINE_HANDOFF.md). Before using the migration command below on this existing database, reconcile its migration ledger with the already-applied schema; do not rerun the non-idempotent owner-column ALTER.
+
+For a database where these migrations have not already been applied, apply migrations through `0005_delivery_ownership.sql` before deploying this Worker source. The additive migration leaves existing report, screenshot and delivery records intact. With the existing authenticated Cloudflare account, run from this directory:
 
 ```sh
 npx wrangler d1 migrations apply workout-tracker-beta-feedback --remote

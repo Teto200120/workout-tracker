@@ -125,7 +125,7 @@ A draft contains the Workout contract plus:
 | `activeExerciseIndex` | Yes      | Non-negative integer.                   |
 | `savedAt`             | Yes      | ISO timestamp or `""` for an old draft. |
 
-`startTime`, `endTime`, and optional `durationMinutes` are the existing elapsed-time state. Drafts may contain empty set values because active-workout recovery intentionally preserves incomplete rows. Drafts remain excluded from backups.
+`startTime`, `endTime`, and optional `durationMinutes` are the existing elapsed-time state. Drafts may contain empty set values because active-workout recovery intentionally preserves incomplete rows. Drafts remain excluded from backups. New history-edit drafts also carry optional `editingWorkoutBase`, the validated original workout snapshot with the same typed ID. That baseline is retained across resume and excluded from saved History. A legacy edit draft without a baseline cannot overwrite an existing workout; retain the draft and reopen History to edit. New-workout drafts expect their target ID to be absent.
 
 ## Backup metadata
 
@@ -197,7 +197,7 @@ The migration registry maps each source version to exactly the next version. Cur
 
 Startup order is:
 
-1. Open IndexedDB version 2.
+1. Open IndexedDB version 3 and enable the coordinated recovery boundary. Recover any pending durable undo snapshot before subsequent coordinated writes.
 2. Detect the application marker. Future or invalid markers stop immediately.
 3. Read all three stores and raw application-owned localStorage values.
 4. Parse and validate the complete source snapshot in memory.
@@ -210,13 +210,13 @@ Startup order is:
 
 If a persistence step fails, the coordinator restores the original IndexedDB records with a compensating multi-store transaction when needed, restores the exact raw localStorage snapshot, leaves the schema marker unchanged, and throws a structured error. Startup does not render. The screen shows a concise recovery message and the console receives the full technical error. The next startup can retry.
 
-IndexedDB and localStorage cannot share a native transaction. The implementation minimizes that boundary by preparing everything first, using one IndexedDB transaction, snapshotting exact localStorage strings, writing the marker last, and compensating caught failures. A browser or device process termination in the narrow interval between storage technologies cannot be synchronously compensated; the absent old marker and ordered idempotent migrations make the next startup safe and non-duplicating.
+IndexedDB and localStorage cannot share a native transaction. The implementation minimizes that boundary by preparing everything first, using one IndexedDB transaction, snapshotting exact localStorage strings, writing the marker last, and compensating caught failures. Before migration, import or clear mutates either storage technology, a durable undo snapshot commits in the private IndexedDB recovery store under the shared Web Lock. The journal is removed only after all effects complete. After process termination, the next coordinated operation restores the original records and exact local strings before continuing. Recovery is repeatable; failures retain the journal and block writes. Destructive cross-storage operations fail before mutation when Web Locks are unavailable. Older clients bypassing this boundary cannot participate.
 
 ## Backup restore safety
 
 Backup detection, validation, application-schema migration, normalization, and post-migration validation complete before confirmation or writes. Imported IndexedDB records are merged by ID exactly as before; unrelated existing entries stay. Workouts, weights, and routines share one transaction with explicit abort handling.
 
-Before import, the app snapshots every IndexedDB store and exact application localStorage strings. If a caught failure occurs after the import transaction, a compensating replacement restores the original stores and raw localStorage. The schema marker is written only after imported records, default-routine handling, and supplied localStorage values succeed. Future files, malformed structures, and malformed display names are never written. A missing legacy name is compatible and deliberately produces onboarding after import rather than inventing a person.
+Before import, the app durably snapshots all application IndexedDB stores and exact application localStorage strings in the private recovery store. The journal also retains education state for rollback, although education is excluded from the normal backup envelope. If a caught failure occurs after the import transaction, a compensating replacement restores the original stores and raw localStorage. The schema marker is written only after imported records, default-routine handling, and supplied localStorage values succeed. Future files, malformed structures, and malformed display names are never written. A missing legacy name is compatible and deliberately produces onboarding after import rather than inventing a person.
 
 ## Adding a future schema migration
 
@@ -231,7 +231,7 @@ Before import, the app snapshots every IndexedDB store and exact application loc
 
 ## Compatibility guarantees and deferred work
 
-Schema 2 preserves the existing database name, IndexedDB version, stores, indexes, localStorage data keys, workout/routine IDs, workout dates, ordering, legacy weights, backup merge semantics, optional legacy backup weights, current draft behavior, and visible workout workflows. Its only new canonical field is `settings.displayName`. Safe unknown record fields survive migration and new backup round trips.
+Schema 2 preserves the existing database name, application stores, indexes, localStorage data keys, workout/routine IDs, workout dates, ordering, legacy weights, backup merge semantics, optional legacy backup weights, current draft behavior, and visible workout workflows. Its only new canonical field is `settings.displayName`. Safe unknown record fields survive migration and new backup round trips.
 
 The exercise-catalog prototype does not change these contracts. `src/data/exercise-catalog.json` is versioned disposable application content cached by the service worker, not application-owned user data. It is never read or written by IndexedDB/localStorage interfaces, schema migration, normalization, backup export/import, or Clear All Local Data. Selecting a catalog entry passes only its canonical name into the existing Exercise contract, so drafts and saved workouts remain `{ name, notes, sets }`.
 

@@ -44,4 +44,4 @@ npm run check
 
 `npm run test` runs direct domain-unit tests followed by the Playwright browser suite. `npm run check` runs the same lint, full-source formatting, release/shell integrity, catalog, backend, unit and browser validation used by GitHub Actions. After changing or formatting a production shell asset, run `npm run release:prepare` to update the asset digests. See [docs/TESTING.md](docs/TESTING.md) for test scope and debugging guidance.
 
-The remaining pre-Android release gates and explicit native handoff are tracked in [docs/PRE_ANDROID_CHECKLIST.md](docs/PRE_ANDROID_CHECKLIST.md).
+The completed review and live deployment evidence are consolidated in [docs/BASELINE_HANDOFF.md](docs/BASELINE_HANDOFF.md). The finite findings checklist is [docs/PRE_ANDROID_CHECKLIST.md](docs/PRE_ANDROID_CHECKLIST.md). Follow [docs/ANDROID_TRANSITION.md](docs/ANDROID_TRANSITION.md) for the native Android implementation plan and acceptance gates.

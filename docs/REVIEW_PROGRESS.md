@@ -2,6 +2,10 @@
 
 Baseline review: 2026-10-16, `8e0fcb9`. Work stays on `main`; no Android migration or visual redesign has started.
 
+## Current handoff status — 2026-10-21 UTC
+
+Pre-Android work is complete within the native deferrals. Cloudflare migration 0005 and Worker deployment are now complete; an actual no-screenshot PWA report was confirmed in D1. Email delivery remains unverified by user choice. Read [BASELINE_HANDOFF.md](BASELINE_HANDOFF.md) for the consolidated completion/evidence record and [ANDROID_TRANSITION.md](ANDROID_TRANSITION.md) for implementation instructions. All pass-level pending statements below describe historical states; they do not reopen the completed baseline. No Android code has been implemented.
+
 ## Pass 1: record integrity
 
 Delivered through `88d7fc1`: F01 transaction completion, F02 typed UI identifiers (including zero), F03 historical metadata and edit-draft recovery, F04 local calendar dates. GitHub validated 191 unit tests and 69 browser tests. Backend tests and catalog validation passed separately.
@@ -136,3 +140,9 @@ Browser verification caught two obsolete test assumptions (ambient DOM lookup an
 Final verification at `d5ac9c8` ([Quality checks](https://github.com/Teto200120/workout-tracker/actions/runs/39346091854)): 235 unit tests, 124 mobile Chromium browser tests without retries, 18 Worker tests, lint, full-source formatting, catalog and release/shell checks all passed. The exercise-picker draft regression now waits for persisted draft contents before reload and restored rendering afterward, rather than racing those asynchronous operations. GitHub Pages deployment succeeded and all 82 live shell assets matched their source integrity digests. Browser tests use 412 × 915 mobile Chromium; physical-phone update behavior, fresh visual screenshots and native Android performance were not tested.
 
 PWA preparation is signed off within the explicit native deferrals in PRE_ANDROID_CHECKLIST.md. No further general cleanup pass is planned. The sole remaining release gate is Cloudflare migration 0005 and Worker deployment, blocked on account authentication; those backend fixes are committed/tested but must not be described as live. The PWA retains the existing receiver-compatible 0.4.0 label and uses content-derived shell generations.
+
+## Cloudflare deployment closure and native transition documentation
+
+On 2026-10-21 UTC, the user applied the owner column and digest-batch table manually in D1, then deployed a single-file Worker bundle that passed all 18 backend tests. The dashboard showed Active (latest); public OPTIONS returned 204 for the allowed PWA origin. A user-submitted report was persisted at `2026-10-21T02:04:23.651Z`. Email delivery was left unverified at the user's direction. This supersedes the authentication/deployment blocker in the historical final pass above.
+
+The completed baseline, validation limitations and manual migration-ledger caveat are consolidated in BASELINE_HANDOFF.md. ANDROID_TRANSITION.md defines native architecture, compatible import/export, durable sessions, brand-preserving Material Expressive design, ordered implementation slices and acceptance gates. No further general PWA cleanup or Android implementation is part of this documentation change.
