@@ -45,7 +45,12 @@ class WorkoutFlowTest {
     }
 
     private fun screenshot(name: String) {
-        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        compose.runOnIdle {
+            val input =
+                compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
+                    as android.view.inputmethod.InputMethodManager
+            input.hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
+        }
         compose.waitForIdle()
         val directory =
             File(
