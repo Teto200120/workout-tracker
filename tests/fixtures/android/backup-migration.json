@@ -1,0 +1,1070 @@
+{
+  "cases": [
+    {
+      "name": "schema-0",
+      "backup": {
+        "app": "Workout Tracker",
+        "database": "hector_workout_tracker_fresh_v1",
+        "exportedAt": "2026-10-21T02:00:00.000Z",
+        "workouts": [
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": 0,
+            "durationMinutes": 0,
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": 100,
+                    "reps": 5,
+                    "rpe": 0,
+                    "done": 0,
+                    "warmup": "false",
+                    "extension": {
+                      "keep": "legacy"
+                    }
+                  },
+                  {
+                    "weight": "20",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": true
+                  },
+                  {
+                    "weight": "0",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": false
+                  }
+                ],
+                "extension": {
+                  "keep": 1
+                }
+              }
+            ],
+            "originRoutineId": 0
+          },
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": "0",
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "",
+                    "reps": "",
+                    "rpe": "",
+                    "done": false,
+                    "warmup": false
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "weights": [
+          {
+            "id": "0",
+            "date": "2026-10-20",
+            "weight": "0",
+            "notes": "legacy only",
+            "createdAt": "",
+            "extension": {
+              "keep": true
+            }
+          }
+        ],
+        "templates": [
+          {
+            "id": 0,
+            "name": "Push",
+            "exercises": [
+              "Bench Press",
+              "Custom exercise"
+            ],
+            "updatedAt": "2026-10-20T12:00:00.000Z",
+            "extension": {
+              "order": [
+                2,
+                1
+              ]
+            }
+          }
+        ],
+        "settings": {
+          "displayName": "Discarded legacy name",
+          "rpeAware": "false",
+          "extension": {
+            "preserved": true
+          }
+        },
+        "goals": {
+          "extension": {
+            "keep": "goal"
+          },
+          "targetWeight": ""
+        },
+        "backupMeta": {
+          "lastExportedAt": "2026-10-20T12:00:00.000Z",
+          "extension": {
+            "keep": "metadata"
+          }
+        },
+        "version": 2
+      },
+      "expected": {
+        "workouts": [
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": 0,
+            "durationMinutes": 0,
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "100",
+                    "reps": "5",
+                    "rpe": "0",
+                    "done": false,
+                    "warmup": false,
+                    "extension": {
+                      "keep": "legacy"
+                    }
+                  },
+                  {
+                    "weight": "20",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": true
+                  },
+                  {
+                    "weight": "0",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": false
+                  }
+                ],
+                "extension": {
+                  "keep": 1
+                }
+              }
+            ],
+            "originRoutineId": 0,
+            "notes": ""
+          },
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": "0",
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "",
+                    "reps": "",
+                    "rpe": "",
+                    "done": false,
+                    "warmup": false
+                  }
+                ]
+              }
+            ],
+            "tags": []
+          }
+        ],
+        "legacyWeights": [
+          {
+            "id": "0",
+            "date": "2026-10-20",
+            "weight": 0,
+            "notes": "legacy only",
+            "createdAt": "",
+            "extension": {
+              "keep": true
+            }
+          }
+        ],
+        "routines": [
+          {
+            "id": 0,
+            "name": "Push",
+            "exercises": [
+              "Bench Press",
+              "Custom exercise"
+            ],
+            "updatedAt": "2026-10-20T12:00:00.000Z",
+            "extension": {
+              "order": [
+                2,
+                1
+              ]
+            },
+            "createdAt": ""
+          }
+        ],
+        "settings": {
+          "schedule": {
+            "0": {
+              "kind": "rest",
+              "routine": "Custom"
+            },
+            "1": {
+              "kind": "gym",
+              "routine": "Chest / Triceps"
+            },
+            "2": {
+              "kind": "gym",
+              "routine": "Back / Biceps"
+            },
+            "3": {
+              "kind": "soccer",
+              "routine": "Custom"
+            },
+            "4": {
+              "kind": "rest",
+              "routine": "Custom"
+            },
+            "5": {
+              "kind": "gym",
+              "routine": "Legs"
+            },
+            "6": {
+              "kind": "gym",
+              "routine": "Shoulders / Traps"
+            }
+          },
+          "defaultWeightJump": 5,
+          "compoundMin": 6,
+          "compoundMax": 10,
+          "pullMin": 8,
+          "pullMax": 12,
+          "isolationMin": 12,
+          "isolationMax": 20,
+          "generalMin": 8,
+          "generalMax": 12,
+          "rpeAware": false,
+          "haptics": true,
+          "animations": true,
+          "extension": {
+            "preserved": true
+          },
+          "displayName": null
+        },
+        "goals": {
+          "extension": {
+            "keep": "goal"
+          },
+          "targetWeight": "",
+          "weeklyGoal": 4
+        },
+        "draft": null,
+        "backupMeta": {
+          "lastExportedAt": "2026-10-20T12:00:00.000Z",
+          "extension": {
+            "keep": "metadata"
+          }
+        }
+      }
+    },
+    {
+      "name": "schema-1",
+      "backup": {
+        "app": "Workout Tracker",
+        "backupFileVersion": 1,
+        "applicationSchemaVersion": 1,
+        "database": "hector_workout_tracker_fresh_v1",
+        "exportedAt": "2026-10-21T02:00:00.000Z",
+        "workouts": [
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": 0,
+            "durationMinutes": 0,
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "100",
+                    "reps": "5",
+                    "rpe": "8",
+                    "done": false,
+                    "warmup": false,
+                    "extension": {
+                      "source": "fixture"
+                    }
+                  },
+                  {
+                    "weight": "20",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": true
+                  },
+                  {
+                    "weight": "0",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": false
+                  }
+                ],
+                "extension": {
+                  "keep": 1
+                }
+              }
+            ],
+            "originRoutineId": 0
+          },
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": "0",
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "",
+                    "reps": "",
+                    "rpe": "",
+                    "done": false,
+                    "warmup": false
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "weights": [
+          {
+            "id": "0",
+            "date": "2026-10-20",
+            "weight": 0,
+            "notes": "legacy only",
+            "createdAt": "",
+            "extension": {
+              "keep": true
+            }
+          }
+        ],
+        "templates": [
+          {
+            "id": 0,
+            "name": "Push",
+            "exercises": [
+              "Bench Press",
+              "Custom exercise"
+            ],
+            "createdAt": "",
+            "updatedAt": "2026-10-20T12:00:00.000Z",
+            "extension": {
+              "order": [
+                2,
+                1
+              ]
+            }
+          }
+        ],
+        "settings": {
+          "schedule": {
+            "0": {
+              "kind": "rest",
+              "routine": "",
+              "extension": {
+                "keep": "day"
+              }
+            },
+            "1": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "2": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "3": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "4": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "5": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "6": {
+              "kind": "rest",
+              "routine": ""
+            }
+          },
+          "defaultWeightJump": 5,
+          "compoundMin": 6,
+          "compoundMax": 10,
+          "pullMin": 8,
+          "pullMax": 12,
+          "isolationMin": 10,
+          "isolationMax": 15,
+          "generalMin": 8,
+          "generalMax": 12,
+          "rpeAware": true,
+          "haptics": true,
+          "animations": true,
+          "extension": {
+            "nested": [
+              false,
+              0,
+              ""
+            ]
+          }
+        },
+        "goals": {
+          "weeklyGoal": 4,
+          "extension": {
+            "keep": "goal"
+          },
+          "targetWeight": ""
+        },
+        "backupMeta": {
+          "lastExportedAt": "2026-10-20T12:00:00.000Z",
+          "extension": {
+            "keep": "metadata"
+          }
+        }
+      },
+      "expected": {
+        "workouts": [
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": 0,
+            "durationMinutes": 0,
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "100",
+                    "reps": "5",
+                    "rpe": "8",
+                    "done": false,
+                    "warmup": false,
+                    "extension": {
+                      "source": "fixture"
+                    }
+                  },
+                  {
+                    "weight": "20",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": true
+                  },
+                  {
+                    "weight": "0",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": false
+                  }
+                ],
+                "extension": {
+                  "keep": 1
+                }
+              }
+            ],
+            "originRoutineId": 0
+          },
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": "0",
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "",
+                    "reps": "",
+                    "rpe": "",
+                    "done": false,
+                    "warmup": false
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "legacyWeights": [
+          {
+            "id": "0",
+            "date": "2026-10-20",
+            "weight": 0,
+            "notes": "legacy only",
+            "createdAt": "",
+            "extension": {
+              "keep": true
+            }
+          }
+        ],
+        "routines": [
+          {
+            "id": 0,
+            "name": "Push",
+            "exercises": [
+              "Bench Press",
+              "Custom exercise"
+            ],
+            "createdAt": "",
+            "updatedAt": "2026-10-20T12:00:00.000Z",
+            "extension": {
+              "order": [
+                2,
+                1
+              ]
+            }
+          }
+        ],
+        "settings": {
+          "schedule": {
+            "0": {
+              "kind": "rest",
+              "routine": "",
+              "extension": {
+                "keep": "day"
+              }
+            },
+            "1": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "2": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "3": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "4": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "5": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "6": {
+              "kind": "rest",
+              "routine": ""
+            }
+          },
+          "defaultWeightJump": 5,
+          "compoundMin": 6,
+          "compoundMax": 10,
+          "pullMin": 8,
+          "pullMax": 12,
+          "isolationMin": 10,
+          "isolationMax": 15,
+          "generalMin": 8,
+          "generalMax": 12,
+          "rpeAware": true,
+          "haptics": true,
+          "animations": true,
+          "extension": {
+            "nested": [
+              false,
+              0,
+              ""
+            ]
+          },
+          "displayName": null
+        },
+        "goals": {
+          "weeklyGoal": 4,
+          "extension": {
+            "keep": "goal"
+          },
+          "targetWeight": ""
+        },
+        "draft": null,
+        "backupMeta": {
+          "lastExportedAt": "2026-10-20T12:00:00.000Z",
+          "extension": {
+            "keep": "metadata"
+          }
+        }
+      }
+    },
+    {
+      "name": "schema-2",
+      "backup": {
+        "app": "Workout Tracker",
+        "backupFileVersion": 3,
+        "applicationSchemaVersion": 2,
+        "database": "hector_workout_tracker_fresh_v1",
+        "exportedAt": "2026-10-21T02:00:00.000Z",
+        "workouts": [
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": 0,
+            "durationMinutes": 0,
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "100",
+                    "reps": "5",
+                    "rpe": "8",
+                    "done": false,
+                    "warmup": false,
+                    "extension": {
+                      "source": "fixture"
+                    }
+                  },
+                  {
+                    "weight": "20",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": true
+                  },
+                  {
+                    "weight": "0",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": false
+                  }
+                ],
+                "extension": {
+                  "keep": 1
+                }
+              }
+            ],
+            "originRoutineId": 0
+          },
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": "0",
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "",
+                    "reps": "",
+                    "rpe": "",
+                    "done": false,
+                    "warmup": false
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "weights": [
+          {
+            "id": "0",
+            "date": "2026-10-20",
+            "weight": 0,
+            "notes": "legacy only",
+            "createdAt": "",
+            "extension": {
+              "keep": true
+            }
+          }
+        ],
+        "templates": [
+          {
+            "id": 0,
+            "name": "Push",
+            "exercises": [
+              "Bench Press",
+              "Custom exercise"
+            ],
+            "createdAt": "",
+            "updatedAt": "2026-10-20T12:00:00.000Z",
+            "extension": {
+              "order": [
+                2,
+                1
+              ]
+            }
+          }
+        ],
+        "settings": {
+          "displayName": "Fixture User",
+          "schedule": {
+            "0": {
+              "kind": "rest",
+              "routine": "",
+              "extension": {
+                "keep": "day"
+              }
+            },
+            "1": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "2": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "3": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "4": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "5": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "6": {
+              "kind": "rest",
+              "routine": ""
+            }
+          },
+          "defaultWeightJump": 5,
+          "compoundMin": 6,
+          "compoundMax": 10,
+          "pullMin": 8,
+          "pullMax": 12,
+          "isolationMin": 10,
+          "isolationMax": 15,
+          "generalMin": 8,
+          "generalMax": 12,
+          "rpeAware": true,
+          "haptics": true,
+          "animations": true,
+          "extension": {
+            "nested": [
+              false,
+              0,
+              ""
+            ]
+          }
+        },
+        "goals": {
+          "weeklyGoal": 4,
+          "extension": {
+            "keep": "goal"
+          },
+          "targetWeight": ""
+        },
+        "backupMeta": {
+          "lastExportedAt": "2026-10-20T12:00:00.000Z",
+          "extension": {
+            "keep": "metadata"
+          }
+        }
+      },
+      "expected": {
+        "workouts": [
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": 0,
+            "durationMinutes": 0,
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "100",
+                    "reps": "5",
+                    "rpe": "8",
+                    "done": false,
+                    "warmup": false,
+                    "extension": {
+                      "source": "fixture"
+                    }
+                  },
+                  {
+                    "weight": "20",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": true
+                  },
+                  {
+                    "weight": "0",
+                    "reps": "10",
+                    "rpe": "",
+                    "done": true,
+                    "warmup": false
+                  }
+                ],
+                "extension": {
+                  "keep": 1
+                }
+              }
+            ],
+            "originRoutineId": 0
+          },
+          {
+            "date": "2026-10-20",
+            "type": "Compatibility fixture",
+            "startTime": "23:50",
+            "endTime": "00:10",
+            "notes": "preserve me",
+            "tags": [
+              "baseline"
+            ],
+            "createdAt": "2026-10-21T01:00:00.000Z",
+            "extension": {
+              "retained": true
+            },
+            "id": "0",
+            "exercises": [
+              {
+                "name": "Bench Press",
+                "notes": "",
+                "sets": [
+                  {
+                    "weight": "",
+                    "reps": "",
+                    "rpe": "",
+                    "done": false,
+                    "warmup": false
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "legacyWeights": [
+          {
+            "id": "0",
+            "date": "2026-10-20",
+            "weight": 0,
+            "notes": "legacy only",
+            "createdAt": "",
+            "extension": {
+              "keep": true
+            }
+          }
+        ],
+        "routines": [
+          {
+            "id": 0,
+            "name": "Push",
+            "exercises": [
+              "Bench Press",
+              "Custom exercise"
+            ],
+            "createdAt": "",
+            "updatedAt": "2026-10-20T12:00:00.000Z",
+            "extension": {
+              "order": [
+                2,
+                1
+              ]
+            }
+          }
+        ],
+        "settings": {
+          "displayName": "Fixture User",
+          "schedule": {
+            "0": {
+              "kind": "rest",
+              "routine": "",
+              "extension": {
+                "keep": "day"
+              }
+            },
+            "1": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "2": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "3": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "4": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "5": {
+              "kind": "rest",
+              "routine": ""
+            },
+            "6": {
+              "kind": "rest",
+              "routine": ""
+            }
+          },
+          "defaultWeightJump": 5,
+          "compoundMin": 6,
+          "compoundMax": 10,
+          "pullMin": 8,
+          "pullMax": 12,
+          "isolationMin": 10,
+          "isolationMax": 15,
+          "generalMin": 8,
+          "generalMax": 12,
+          "rpeAware": true,
+          "haptics": true,
+          "animations": true,
+          "extension": {
+            "nested": [
+              false,
+              0,
+              ""
+            ]
+          }
+        },
+        "goals": {
+          "weeklyGoal": 4,
+          "extension": {
+            "keep": "goal"
+          },
+          "targetWeight": ""
+        },
+        "draft": null,
+        "backupMeta": {
+          "lastExportedAt": "2026-10-20T12:00:00.000Z",
+          "extension": {
+            "keep": "metadata"
+          }
+        }
+      }
+    }
+  ]
+}

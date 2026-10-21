@@ -12,8 +12,8 @@ android {
         applicationId = "com.hector.workouttracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-foundation"
+        versionCode = 2
+        versionName = "0.2.0-migration"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
@@ -27,6 +27,7 @@ android {
 
     testOptions { unitTests.isIncludeAndroidResources = true }
     sourceSets["test"].resources.srcDir("../../tests/fixtures/android")
+    sourceSets["androidTest"].assets.srcDir("../../tests/fixtures/android")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
     buildTypes { release { isMinifyEnabled = false } }
 }

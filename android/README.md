@@ -1,6 +1,6 @@
 # Workout Tracker for Android
 
-Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. PWA import/export, routines, catalog/guides, full analytics and native feedback are subsequent slices, not completed features.
+Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. The migration bridge adds reviewed PWA JSON import and compatible export. Routines, catalog/guides, full analytics and native feedback remain subsequent slices. See the progress document for current verification status.
 
 Read [the transition instructions](../docs/ANDROID_TRANSITION.md) and [implementation progress](../docs/ANDROID_IMPLEMENTATION.md) before changing contracts.
 
@@ -28,7 +28,7 @@ Versions live in `gradle/libs.versions.toml`: AGP 9.1.1 with built-in Kotlin, Ko
 One Room database, `workout-tracker.db`, schema 1:
 
 - `records`: `(kind, idKey)` composite key, untouched JSON payload and revision. Kinds reserve workout/routine/legacy-weight ownership. Tagged IDs preserve numeric versus string identity; nested arrays/extensions remain in the payload. This is deliberately a compatibility-first store; normalize additional query tables only when needed and preserve the original contract.
-- `documents`: named JSON settings/metadata documents and revisions. Foundation uses a native-only minimal `native_profile` document (display name/RPE). Slice B must map it explicitly into the canonical full settings/backup contract, not export it as schema-2 settings.
+- `documents`: named JSON settings/metadata documents and revisions. `native_profile` holds display name/RPE for the UI; `settings`, `goals` and `backup_meta` retain canonical compatibility documents. Profile changes update the canonical settings document atomically while preserving extensions. Foundation-only profiles are explicitly mapped into complete settings on export.
 - `drafts`: one active native session, payload and revision. This is not a PWA backup draft format. Saving into History and consuming the draft is one transaction. UI edits update immediately and enqueue immutable whole-draft snapshots in order; the UI distinguishes pending persistence. A killed process cannot retain an entry still marked as saving.
 
 Room schemas are exported under `app/schemas/` and must be committed after schema changes. There is no destructive migration fallback. Subsequent schema changes require upgrade tests. Settings and records participating in imports must stay within the same transaction.
@@ -39,10 +39,21 @@ Session duration uses monotonic time across process recreation on the same boot.
 
 ## Preview signing and updates
 
-Stable application ID: `com.hector.workouttracker`. The initial preview is versionCode 1 / `0.1.0-foundation`. Subsequent delivered APKs must increase versionCode and reuse their signing identity. Debug APKs are development previews, not the production signing plan. Keep the original PWA and its backup until native migration and signed upgrade checks pass.
+Stable application ID: `com.hector.workouttracker`. The initial preview was versionCode 1 / `0.1.0-foundation`; the migration preview is versionCode 2 / `0.2.0-migration`. Subsequent delivered APKs must increase versionCode and reuse their signing identity. Debug APKs are development previews, not the production signing plan. Keep the original PWA and its backup until native migration and signed upgrade checks pass.
 
 CI can restore a persistent preview key from repository secret `ANDROID_DEBUG_KEYSTORE_BASE64`. Without that secret, CI generates an ephemeral debug key and successive CI artifacts are not guaranteed to update one another. Do not advise uninstalling an app containing workouts to fix a certificate mismatch. Production signing and its secure backup must be finalized before daily-use release. Never commit a keystore or passwords.
 
 ## Scope boundaries
 
-Current PWA data is untouched and is not automatically visible to Android. Backup parsing/import/export and legacy/future-version handling are not implemented yet. The shared fixture proves only the modeled metric/ID contract and web fixture validity, not a complete Android importer. Native Stats, routine planning and feedback need their own parity gates. User guidance and motion/haptic preference parity follow in those slices. See the progress document for what was actually tested.
+Current PWA data is untouched and is not automatically visible to Android. Export a JSON backup from the PWA, then choose **Import PWA backup** in native setup or You, review the preview and confirm. Finish/save the PWA session before exporting; active sessions do not transfer. Finish or discard an active native session before importing. Current and supported legacy backups merge by typed ID; changed matching IDs are replaced, unrelated records remain. Export uses the same current PWA envelope. Keep the browser backup until you verify record counts and representative workouts. Raw rescue files are diagnostic files and cannot be imported here. Native Stats, routine planning and feedback need their own parity gates. User guidance and motion/haptic preference parity follow in those slices. See the progress document for what was actually tested.
+
+
+## Migration verification
+
+`BackupCodecTest` compares full nested migration output to `tests/fixtures/android/backup-migration.json`; web tests compare the same fixture to the actual PWA migrations. `BackupRepositoryTest` covers transactional rollback, revisions/idempotency, typed IDs, stale previews, active drafts, omitted documents, merged capacity and schema-1 continuity. It emits a synthetic native export that CI verifies with:
+
+```sh
+node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
+```
+
+Run that command from `android/` after the unit-test task. It verifies actual native output against the PWA parser and semantic guardrails, including native-created sets. The instrumented flow also checks document-contract cancellation/rejection, preview/confirm, importing alongside a native workout and exporting through ContentResolver. It uses a test-only provider and intercepted picker results; vendor document-picker navigation and physical signed upgrade testing remain manual release gates.

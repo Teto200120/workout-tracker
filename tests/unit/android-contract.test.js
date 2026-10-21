@@ -7,6 +7,7 @@ import {
   completedSets,
   workoutDurationMinutes,
 } from "../../src/js/domain/workout-metrics.js";
+import { validateImportedApplicationData } from "../../src/js/domain/input-guardrails.js";
 import { prepareBackupImport } from "../../src/js/schema/migrations.js";
 
 const fixture = JSON.parse(
@@ -29,4 +30,25 @@ test("Android golden fixture matches actual PWA calculations and retains its dat
     typeof prepared.data.workouts[0].id,
     typeof prepared.data.workouts[1].id,
   );
+});
+
+const migrations = JSON.parse(
+  readFileSync(
+    new URL("../fixtures/android/backup-migration.json", import.meta.url),
+    "utf8",
+  ),
+);
+test("Android migration fixtures are generated from the PWA migrations without data loss", () => {
+  for (const fixture of migrations.cases) {
+    assert.equal(
+      validateImportedApplicationData(prepareBackupImport(fixture.backup).data)
+        .valid,
+      true,
+    );
+    assert.deepEqual(
+      prepareBackupImport(fixture.backup).data,
+      fixture.expected,
+      fixture.name,
+    );
+  }
 });

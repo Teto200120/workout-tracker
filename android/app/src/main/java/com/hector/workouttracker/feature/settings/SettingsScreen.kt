@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.BuildConfig
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.feature.backup.BackupControls
 import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 
@@ -53,6 +54,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
             }
         }
         item { HorizontalDivider() }
+        item { BackupControls(state, vm) }
         item {
             Text(
                 "Workout Tracker ${BuildConfig.VERSION_NAME}",
@@ -61,7 +63,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
         }
         item {
             Text(
-                "Native Android foundation. Workouts and drafts are stored locally. PWA import/export, routine planning and full analytics are not available in this build."
+                "Native Android preview. Workouts and drafts are stored locally. Routine planning and full analytics are not available in this build; imported routines and goals are preserved for future versions."
             )
         }
         item {

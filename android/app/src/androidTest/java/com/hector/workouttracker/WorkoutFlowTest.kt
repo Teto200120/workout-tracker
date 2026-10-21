@@ -1,20 +1,94 @@
 package com.hector.workouttracker
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.app.ActivityOptionsCompat
 import androidx.test.platform.app.InstrumentationRegistry
+import com.hector.workouttracker.core.backup.BackupCodec
+import com.hector.workouttracker.core.designsystem.TrackerTheme
+import com.hector.workouttracker.feature.home.TrackerApp
 import java.io.File
+import kotlinx.serialization.json.*
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
 class WorkoutFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
+    private var nextUri: Uri? = null
+    private val pickerActions = mutableListOf<String?>()
+
     @Test
     fun onboardingSessionNavigationAndSavedHistory() {
-        compose.onNodeWithText("Your name").performTextInput("Fixture User")
+        val testContext = InstrumentationRegistry.getInstrumentation().context
+        val fixture =
+            Json.parseToJsonElement(
+                    testContext.assets.open("baseline.json").bufferedReader().use { it.readText() }
+                )
+                .jsonObject
+                .getValue("backup")
+                .jsonObject
+        val registry =
+            object : ActivityResultRegistry() {
+                override fun <I, O> onLaunch(
+                    requestCode: Int,
+                    contract: ActivityResultContract<I, O>,
+                    input: I,
+                    options: ActivityOptionsCompat?,
+                ) {
+                    pickerActions += contract.createIntent(compose.activity, input).action
+                    dispatchResult(
+                        requestCode,
+                        if (nextUri == null) Activity.RESULT_CANCELED else Activity.RESULT_OK,
+                        Intent().setData(nextUri),
+                    )
+                }
+            }
+        val owner =
+            object : ActivityResultRegistryOwner {
+                override val activityResultRegistry = registry
+            }
+        compose.activity.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                TrackerTheme { TrackerApp() }
+            }
+        }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Import PWA backup").fetchSemanticsNodes().isNotEmpty()
+        }
+        // Cancellation and rejected files leave onboarding and storage untouched.
+        compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/future.json")
+        compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup was created by a newer application version.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithText("Dismiss").performClick()
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/fixture.json")
+        compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review backup import").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Workouts: 2 new, 0 replaced, 0 unchanged").assertExists()
+        screenshot("import-preview")
+        compose.onNodeWithText("Cancel").performClick()
+
+        compose.onNodeWithText("Your name").performScrollTo().performTextInput("Fixture User")
         compose.onNodeWithText("Let's begin").performScrollTo().performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Start workout").fetchSemanticsNodes().isNotEmpty()
@@ -42,6 +116,46 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Bench Press · 1 set").assertExists()
         compose.onNodeWithText("Volume: 500.0").assertExists()
         screenshot("history")
+        compose.onNodeWithText("You").performClick()
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/fixture.json")
+        compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review backup import").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Import backup").performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup imported. Your other saved records were kept.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/export.json")
+        compose.onNodeWithText("Export backup").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup file created. Active workouts are not included.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        val exported =
+            BackupCodec.parse(
+                compose.activity.contentResolver
+                    .openInputStream(
+                        Uri.parse("content://com.hector.workouttracker.test.documents/export.json")
+                    )!!
+                    .bufferedReader()
+                    .use { it.readText() }
+            )
+        assertEquals(3, exported.workouts.size)
+        assertEquals(
+            fixture.getValue("workouts").jsonArray.toList(),
+            exported.workouts.filter {
+                it["id"] == JsonPrimitive(0) || it["id"] == JsonPrimitive("0")
+            },
+        )
+        assertTrue(pickerActions.contains(Intent.ACTION_OPEN_DOCUMENT))
+        assertTrue(pickerActions.contains(Intent.ACTION_CREATE_DOCUMENT))
+        screenshot("backup-settings")
     }
 
     private fun screenshot(name: String) {
@@ -62,7 +176,8 @@ class WorkoutFlowTest {
         directory.mkdirs()
         File(directory, "$name.png").outputStream().use {
             compose
-                .onRoot()
+                .onAllNodes(isRoot())
+                .onLast()
                 .captureToImage()
                 .asAndroidBitmap()
                 .compress(Bitmap.CompressFormat.PNG, 100, it)

@@ -25,6 +25,15 @@ data class DraftEntity(
 
 @Dao
 interface TrackerDao {
+    @Query("SELECT * FROM records ORDER BY kind, idKey") suspend fun records(): List<RecordEntity>
+
+    @Query("SELECT * FROM documents ORDER BY name") suspend fun documents(): List<DocumentEntity>
+
+    @Query(
+        "UPDATE records SET payload = :payload, revision = revision + 1 WHERE kind = :kind AND idKey = :idKey AND revision = :expected"
+    )
+    suspend fun updateRecord(kind: String, idKey: String, expected: Long, payload: String): Int
+
     @Query("SELECT * FROM records WHERE kind = :kind ORDER BY idKey")
     fun observeRecords(kind: String): Flow<List<RecordEntity>>
 

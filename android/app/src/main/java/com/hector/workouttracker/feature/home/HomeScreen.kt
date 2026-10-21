@@ -94,7 +94,7 @@ internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: 
         }
         item {
             Text(
-                "Your PWA history has not been imported. Routines, the exercise catalog and full Stats will follow the migration bridge.",
+                "Bring your PWA history into the app from You → Import PWA backup. Routines, the exercise catalog and full Stats are still being built.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

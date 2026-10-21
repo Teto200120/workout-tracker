@@ -1,4 +1,4 @@
-name: Android foundation
+name: Android verification
 
 on:
   pull_request:
@@ -6,12 +6,16 @@ on:
     paths:
       - "android/**"
       - "tests/fixtures/android/**"
+      - "tests/unit/android-contract.test.js"
+      - "scripts/verify-android-roundtrip.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
     paths:
       - "android/**"
       - "tests/fixtures/android/**"
+      - "tests/unit/android-contract.test.js"
+      - "scripts/verify-android-roundtrip.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -48,6 +52,8 @@ jobs:
           fi
       - name: Build, test persistence and lint
         run: ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
+      - name: Verify native export with the PWA importer
+        run: node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -68,10 +74,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: workout-tracker-android-foundation
+          name: workout-tracker-android-preview
           path: |
             android/app/build/outputs/apk/debug/*.apk
             android/app/build/reports/
+            android/app/build/outputs/compatibility/
             android/app/build/outputs/androidTest-results/
             android/app/build/outputs/screenshots/
           if-no-files-found: warn
