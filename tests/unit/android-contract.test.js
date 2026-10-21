@@ -52,3 +52,64 @@ test("Android migration fixtures are generated from the PWA migrations without d
     );
   }
 });
+
+const catalogContract = JSON.parse(
+  readFileSync(
+    new URL("../fixtures/android/catalog.json", import.meta.url),
+    "utf8",
+  ),
+);
+const catalog = JSON.parse(
+  readFileSync(
+    new URL("../../src/data/exercise-catalog.json", import.meta.url),
+    "utf8",
+  ),
+);
+const { mergeLocalAndCatalogResults, resolveCatalogCanonicalName } =
+  await import("../../src/js/catalog/catalog-search.js");
+const { createExerciseCatalogResolver } =
+  await import("../../src/js/catalog/exercise-catalog-resolver.js");
+const { EXERCISE_CATALOG_ALIASES } =
+  await import("../../src/js/catalog/exercise-aliases.js");
+test("Native catalog fixtures match PWA search, local precedence and reviewed guides", () => {
+  assert.equal(catalog.metadata.sourceRevision, catalogContract.revision);
+  assert.equal(catalog.exercises.length, catalogContract.count);
+  assert.deepEqual(EXERCISE_CATALOG_ALIASES, catalogContract.aliases);
+  for (const item of catalogContract.searches) {
+    const result = mergeLocalAndCatalogResults({
+      localNames: catalogContract.local,
+      catalogExercises: catalog.exercises,
+      query: item.query,
+      filters: item.filters,
+    });
+    assert.deepEqual(result.local, item.local);
+    assert.deepEqual(
+      result.catalog.map((x) => x.catalogId),
+      item.catalog,
+    );
+  }
+  const resolver = createExerciseCatalogResolver(catalog.exercises);
+  for (const item of catalogContract.guides)
+    assert.equal(
+      resolver.resolve(item.name).exercise?.catalogId ?? null,
+      item.id,
+    );
+  for (const item of catalogContract.canonical)
+    assert.equal(
+      resolveCatalogCanonicalName(
+        item.value,
+        catalogContract.local,
+        catalog.exercises,
+      ),
+      item.name,
+    );
+  const backup = JSON.parse(
+    readFileSync(
+      new URL("../fixtures/android/training-backup.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  const prepared = prepareBackupImport(backup);
+  assert.deepEqual(prepared.data.routines, backup.templates);
+  assert.equal(validateImportedApplicationData(prepared.data).valid, true);
+});

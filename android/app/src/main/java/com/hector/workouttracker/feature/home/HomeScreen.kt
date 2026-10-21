@@ -2,6 +2,7 @@ package com.hector.workouttracker.feature.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: () -> Unit) {
     var opening by rememberSaveable { mutableStateOf(false) }
+    var routinesOpen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.draft, opening, state.busy, state.error) {
         if (opening && state.draft != null) {
             opening = false
@@ -53,7 +55,7 @@ internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: 
                         style = MaterialTheme.typography.titleLarge,
                     )
                     Text(
-                        if (state.draft == null) "Build a quick session with your own exercises."
+                        if (state.draft == null) "Start fresh or train from a saved routine."
                         else "${state.draft.type} · ${state.draft.exercises.size} exercises"
                     )
                     Button(
@@ -69,6 +71,14 @@ internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: 
                     ) {
                         Text(if (state.draft == null) "Start workout" else "Resume workout")
                     }
+                    if (state.draft == null && state.routines.isNotEmpty())
+                        OutlinedButton(
+                            onClick = { routinesOpen = true },
+                            enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        ) {
+                            Text("Use saved routine")
+                        }
                     if (state.draft != null)
                         Text(
                             if (state.pending) "Saving your latest entries…"
@@ -94,9 +104,38 @@ internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: 
         }
         item {
             Text(
-                "Bring your PWA history into the app from You → Import PWA backup. Routines, the exercise catalog and full Stats are still being built.",
+                "Bring your PWA history and routines into the app from You → Import PWA backup. Exercise search and text guides work offline. Routine editing and full Stats are coming next.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
+    if (routinesOpen)
+        AlertDialog(
+            onDismissRequest = { routinesOpen = false },
+            title = { Text("Choose a routine") },
+            text = {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(state.routines, key = { it.record.idKey }) { routine ->
+                        OutlinedButton(
+                            onClick = {
+                                routinesOpen = false
+                                opening = true
+                                vm.start(routine)
+                            },
+                            enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                                Text(routine.name, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "${routine.exercises.size} exercises",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { routinesOpen = false }) { Text("Cancel") } },
+        )
 }

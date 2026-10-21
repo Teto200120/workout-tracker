@@ -22,6 +22,7 @@ data class SessionDraft(
     val startTime: String,
     val notes: String = "",
     val exercises: List<Exercise> = emptyList(),
+    val originRoutineId: JsonElement? = null,
 )
 
 @Serializable
@@ -127,6 +128,7 @@ fun workoutPayload(
     put("id", draft.id)
     put("date", draft.date)
     put("type", draft.type.trim())
+    draft.originRoutineId?.let { put("originRoutineId", it) }
     put("startTime", draft.startTime)
     put(
         "endTime",

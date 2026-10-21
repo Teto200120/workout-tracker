@@ -5,6 +5,20 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+abstract class BundleExerciseCatalog : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val catalog: RegularFileProperty
+    @get:OutputDirectory abstract val outputDirectory: DirectoryProperty
+
+    @TaskAction
+    fun bundle() {
+        val directory = outputDirectory.get().asFile
+        directory.mkdirs()
+        catalog.get().asFile.copyTo(directory.resolve("exercise-catalog.json"), overwrite = true)
+    }
+}
+
 android {
     namespace = "com.hector.workouttracker"
     compileSdk { version = release(37) { minorApiLevel = 0 } }
@@ -12,8 +26,8 @@ android {
         applicationId = "com.hector.workouttracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0-migration"
+        versionCode = 3
+        versionName = "0.3.0-training"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
@@ -26,6 +40,7 @@ android {
     }
 
     testOptions { unitTests.isIncludeAndroidResources = true }
+    sourceSets["test"].resources.srcDir("../../src/data")
     sourceSets["test"].resources.srcDir("../../tests/fixtures/android")
     sourceSets["androidTest"].assets.srcDir("../../tests/fixtures/android")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
@@ -59,4 +74,19 @@ dependencies {
     androidTestImplementation(libs.androidx.test.junit)
     debugImplementation(libs.compose.tooling)
     debugImplementation(libs.compose.test.manifest)
+}
+
+androidComponents.onVariants { variant ->
+    val catalogAssets =
+        tasks.register<BundleExerciseCatalog>(
+            "bundle${variant.name.replaceFirstChar { it.uppercaseChar() }}ExerciseCatalog"
+        ) {
+            catalog.set(
+                rootProject.layout.projectDirectory.file("../src/data/exercise-catalog.json")
+            )
+        }
+    variant.sources.assets?.addGeneratedSourceDirectory(
+        catalogAssets,
+        BundleExerciseCatalog::outputDirectory,
+    )
 }
