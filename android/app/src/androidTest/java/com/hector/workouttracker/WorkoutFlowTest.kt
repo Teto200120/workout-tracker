@@ -475,6 +475,7 @@ class WorkoutFlowTest {
         )
         compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Use saved routine"))
         compose.onNodeWithText("Use saved routine").performClick()
         compose.onNodeWithText("Edited fixture", substring = false).performClick()
         compose.waitUntil(10000) { vm.state.value.draft != null }
