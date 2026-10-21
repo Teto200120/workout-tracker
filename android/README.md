@@ -64,3 +64,10 @@ Run that command from `android/` after the unit-test task. It verifies actual na
 The generated asset task bundles only `src/data/exercise-catalog.json` from the shared PWA snapshot. Native code uses no remote image references. `CatalogTest` and the web contract test compare ranking/filter order, local spelling precedence and reviewed aliases against the same synthetic fixture. Catalog data is disposable reference data; selected names and typed routine origins are the persistence boundary.
 
 `RepositoryTest` additionally emits `app/build/outputs/compatibility/training-export.json`. Verify it with `node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json` from this directory. The device flow covers imported routine launch, alias-guide navigation, filtered exercise search, adding from a guide, resume and export. It does not yet prove true process-death or installed APK upgrade retention.
+
+
+## Installed upgrade and process-stop checks
+
+CI builds version 2 from `qa/upgrade-baseline.txt`, adding only `LifecycleAcceptanceTest` and its synthetic asset to that historical test APK. `qa/verify_lifecycle.py` requires an emulator with neither tracker package installed. It checks matching certificates, kills and relaunches actual app processes, upgrades with `adb install -r`, compares raw logical database checkpoints, resumes/finishes through UI-tree-derived taps, and verifies exactly-once History retention. It clears only the synthetic app state that it installed before the normal Compose flow runs.
+
+Run from `android/` with both builds available: `python3 qa/verify_lifecycle.py --serial emulator-5554 --baseline-dir /path/to/baseline/android`. Then run `node ../scripts/verify-android-lifecycle.mjs app/build/outputs/lifecycle/database/lifecycle-export.json`. Use a fresh disposable emulator. Reports and screenshots are under `app/build/outputs/lifecycle/`. A driver phase is skipped in ordinary connected-test runs; it must be driven by the host to prove a process boundary. See slice C2 in the progress document for scope and physical-device limitations.

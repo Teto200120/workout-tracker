@@ -72,7 +72,19 @@ Local verification results and final CI run links are recorded in the implementa
 
 ### Remaining transition work
 
-1. Finish slice C acceptance: true kill/relaunch recovery and a same-signature APK upgrade retaining profile, history and active drafts. Repository reopen and compatible serialization checks do not replace those device tests.
+1. Automated process-stop and installed-upgrade acceptance is tracked in slice C2 below. Physical S24 Ultra recovery/upgrade acceptance remains a release gate in slice E.
 2. Port routine editing/library management and deliberate starter-library seeding according to `ONBOARDING_AND_ROUTINE_CATALOG.md`. C1 never seeds or replaces imported routines.
 3. Slice D: schedule, complete session/History editing, PR/Stats calculations and remaining settings/haptic/motion preferences, following the existing contracts.
 4. Slice E: physical S24 Ultra testing, large text/TalkBack, performance/offline acceptance and production signing/release. Keep the PWA and a backup until these gates pass.
+
+## Slice C2: installed upgrade and process recovery acceptance
+
+The CI harness in `android/qa/` builds the pinned version-2 app at `1a525e99d6ed65740d5211674437fd02845539d9` and the current app. Historical application source is unchanged; only the shared synthetic instrumentation driver and its fixture are copied into the temporary baseline build. Both app APKs and both test APKs must have the same certificate. The harness reads the current versionCode from its APK, so future version bumps remain covered.
+
+The host requires a fresh disposable emulator. It imports typed-zero fixture records/routine/goals, changes the name/RPE preference, saves a native workout and commits an active draft through the real repositories. It retains an independent host checkpoint of the complete logical database: schema version, raw record/document JSON, revisions, native draft keys, timing fields, notes, ordered duplicate exercises, blank/zero values and set flags.
+
+Acceptance performs actual `am force-stop` and cold task launches, checks that the old PID disappears and a different PID starts, resumes the draft through the rendered UI, and compares the stored snapshot exactly. It then uses `adb install -r` to replace version 2 with the current APK, without uninstalling or clearing data across the upgrade. The old-format draft and all existing records/preferences must survive unchanged. A second current-format draft additionally retains a numeric-zero routine origin across termination. The UI finishes that recovered workout; record comparisons and another cold launch verify that History received exactly one row and the active draft is gone. Its real export must pass the PWA importer and semantic guardrails.
+
+Reports, raw synthetic checkpoints, UI XML, screenshots, package versions, certificate and APK hashes, PID transitions and logs are included in the Android CI artifact. The normal Compose flow runs afterward with fresh synthetic state. The phase driver is skipped when no host phase is supplied. Current run results and screenshot review are recorded in the implementation PR and [Android verification runs](https://github.com/Teto200120/workout-tracker/actions/workflows/android.yml).
+
+This is verification work; application source, schema, design and version remain `0.3.0-training` / versionCode 3. CI uses its shared preview/debug signing identity for both versions. The delivered APK retains its original signing identity; original-key upgrades on the physical S24 Ultra, TalkBack/large text, other Android versions, reboot recovery and power loss while entries are still marked as saving remain separate release checks. Production signing is still pending. Routine editing/library management is the next implementation slice.
