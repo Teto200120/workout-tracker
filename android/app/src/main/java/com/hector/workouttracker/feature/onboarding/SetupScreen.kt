@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
@@ -19,7 +20,7 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
     var name by rememberSaveable { mutableStateOf("") }
     var rpe by rememberSaveable { mutableStateOf(true) }
     LazyColumn(
-        Modifier.fillMaxSize(),
+        Modifier.fillMaxSize().testTag("setup-list"),
         contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {

@@ -88,8 +88,10 @@ class WorkoutFlowTest {
         screenshot("import-preview")
         compose.onNodeWithText("Cancel").performClick()
 
-        compose.onNodeWithText("Your name").performScrollTo().performTextInput("Fixture User")
-        compose.onNodeWithText("Let's begin").performScrollTo().performClick()
+        compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Your name"))
+        compose.onNodeWithText("Your name").performTextInput("Fixture User")
+        compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Let's begin"))
+        compose.onNodeWithText("Let's begin").performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Start workout").fetchSemanticsNodes().isNotEmpty()
         }
@@ -117,6 +119,7 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Volume: 500.0").assertExists()
         screenshot("history")
         compose.onNodeWithText("You").performClick()
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Import PWA backup"))
         nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/fixture.json")
         compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
         compose.waitUntil(10000) {
@@ -130,7 +133,8 @@ class WorkoutFlowTest {
                 .isNotEmpty()
         }
         nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/export.json")
-        compose.onNodeWithText("Export backup").performScrollTo().performClick()
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Export backup"))
+        compose.onNodeWithText("Export backup").performClick()
         compose.waitUntil(10000) {
             compose
                 .onAllNodesWithText("Backup file created. Active workouts are not included.")
