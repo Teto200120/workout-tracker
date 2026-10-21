@@ -4,3 +4,6 @@ test-results/
 coverage/
 # Generated catalog uses the ingestion script formatter and catalog validator.
 src/data/exercise-catalog.json
+
+# Android uses Kotlin/Gradle tooling; generated Room schemas are compiler-owned.
+android/

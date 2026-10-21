@@ -1,6 +1,6 @@
 # Native Android transition instructions
 
-Status: implementation plan, 2026-10-21 UTC (2026-10-20 Eastern). Native implementation has not started. The completed web baseline is recorded in [BASELINE_HANDOFF.md](BASELINE_HANDOFF.md); the finite review dispositions are in [PRE_ANDROID_CHECKLIST.md](PRE_ANDROID_CHECKLIST.md).
+Status: implementation plan, 2026-10-21 UTC (2026-10-20 Eastern). Native implementation has started; see [ANDROID_IMPLEMENTATION.md](ANDROID_IMPLEMENTATION.md) for delivered scope and verification. The completed web baseline is recorded in [BASELINE_HANDOFF.md](BASELINE_HANDOFF.md); the finite review dispositions are in [PRE_ANDROID_CHECKLIST.md](PRE_ANDROID_CHECKLIST.md).
 
 ## Product direction and scope
 

@@ -1,0 +1,48 @@
+# Workout Tracker for Android
+
+Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. PWA import/export, routines, catalog/guides, full analytics and native feedback are subsequent slices, not completed features.
+
+Read [the transition instructions](../docs/ANDROID_TRANSITION.md) and [implementation progress](../docs/ANDROID_IMPLEMENTATION.md) before changing contracts.
+
+## Build and verify
+
+Use a full JDK 17 (not a JRE), Android SDK platform `android-37.0`, build-tools 36.0.0, and the checked-in Gradle wrapper. Set `ANDROID_HOME` or a machine-local `local.properties` with `sdk.dir`. Open this directory in compatible Android Studio, or run:
+
+```sh
+./gradlew checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+./gradlew :app:connectedDebugAndroidTest
+```
+
+`./gradlew formatKotlin` formats Kotlin source and Gradle scripts.
+
+The second command needs a running Android emulator/device. The instrumented flow starts from fresh application data; use a disposable emulator, not a device holding personal workouts. The APK is `app/build/outputs/apk/debug/app-debug.apk`.
+
+From the repository root, `npm run test:unit` also checks the shared Android golden fixture against the actual PWA backup parser and metrics. Android tests read the same `tests/fixtures/android/baseline.json`. This fixture is synthetic; do not commit private workout exports.
+
+## Toolchain
+
+Versions live in `gradle/libs.versions.toml`: AGP 9.1.1 with built-in Kotlin, Kotlin Compose/serialization plugins 2.2.21, KSP 2.3.4, Gradle 9.3.1, Compose BOM 2026.09.00, Material 3 1.5.0-beta01 and Room 2.8.4. The explicit Material version enables the Expressive theme API and is a beta dependency. Keep it isolated in the catalog and revalidate UI/tests before upgrading. Compile SDK 37.0 uses the minor-version DSL; target SDK is 36 and minimum SDK is 26. Compile SDK does not raise the app's minimum Android version.
+
+## Storage ownership
+
+One Room database, `workout-tracker.db`, schema 1:
+
+- `records`: `(kind, idKey)` composite key, untouched JSON payload and revision. Kinds reserve workout/routine/legacy-weight ownership. Tagged IDs preserve numeric versus string identity; nested arrays/extensions remain in the payload. This is deliberately a compatibility-first store; normalize additional query tables only when needed and preserve the original contract.
+- `documents`: named JSON settings/metadata documents and revisions. Foundation uses a native-only minimal `native_profile` document (display name/RPE). Slice B must map it explicitly into the canonical full settings/backup contract, not export it as schema-2 settings.
+- `drafts`: one active native session, payload and revision. This is not a PWA backup draft format. Saving into History and consuming the draft is one transaction. UI edits update immediately and enqueue immutable whole-draft snapshots in order; the UI distinguishes pending persistence. A killed process cannot retain an entry still marked as saving.
+
+Room schemas are exported under `app/schemas/` and must be committed after schema changes. There is no destructive migration fallback. Subsequent schema changes require upgrade tests. Settings and records participating in imports must stay within the same transaction.
+
+A ViewModel owns an ordered write channel and immutable UI state. Repository writes use revision checks; a stale save/discard does not replace current data. The UI never calls Room. No network permission, accounts, remote workout storage or secrets are needed for the foundation.
+
+Session duration uses monotonic time across process recreation on the same boot. After reboot/unknown boot count it falls back to wall time; negative elapsed time becomes zero and duration is bounded to 24 hours. Time away from the app counts toward elapsed duration. Local workout dates are retained; the draft never re-dates itself on resume. The PWA uses pounds; the native entry field also labels pounds and performs no conversion.
+
+## Preview signing and updates
+
+Stable application ID: `com.hector.workouttracker`. The initial preview is versionCode 1 / `0.1.0-foundation`. Subsequent delivered APKs must increase versionCode and reuse their signing identity. Debug APKs are development previews, not the production signing plan. Keep the original PWA and its backup until native migration and signed upgrade checks pass.
+
+CI can restore a persistent preview key from repository secret `ANDROID_DEBUG_KEYSTORE_BASE64`. Without that secret, CI generates an ephemeral debug key and successive CI artifacts are not guaranteed to update one another. Do not advise uninstalling an app containing workouts to fix a certificate mismatch. Production signing and its secure backup must be finalized before daily-use release. Never commit a keystore or passwords.
+
+## Scope boundaries
+
+Current PWA data is untouched and is not automatically visible to Android. Backup parsing/import/export and legacy/future-version handling are not implemented yet. The shared fixture proves only the modeled metric/ID contract and web fixture validity, not a complete Android importer. Native Stats, routine planning and feedback need their own parity gates. User guidance and motion/haptic preference parity follow in those slices. See the progress document for what was actually tested.
