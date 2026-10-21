@@ -249,7 +249,7 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithText("Active workout").assertIsDisplayed()
+        compose.onNodeWithText("ACTIVE WORKOUT").assertIsDisplayed()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         compose.onAllNodesWithText("Exercise guide").onFirst().performScrollTo().performClick()
         compose
