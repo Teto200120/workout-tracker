@@ -87,6 +87,23 @@ class WorkoutFlowTest {
         screenshot("import-preview")
         compose.onNodeWithText("Cancel").performClick()
 
+        // Legacy backups require name setup, but their RPE preference must survive it.
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/legacy.json")
+        compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review backup import").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Import backup").performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Backup imported. Your other saved records were kept.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithTag("setup-list").performScrollToNode(hasTestTag("setup-rpe"))
+        compose.onNodeWithTag("setup-rpe").assertIsOff()
+        screenshot("legacy-onboarding")
+
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Your name"))
         compose.onNodeWithText("Your name").performTextInput("Fixture User")
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Let's begin"))
@@ -114,8 +131,8 @@ class WorkoutFlowTest {
             compose.onAllNodesWithText("History").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("History").performClick()
-        compose.onNodeWithText("Bench Press · 1 set").assertExists()
-        compose.onNodeWithText("Volume: 500.0").assertExists()
+        compose.onAllNodesWithText("Bench Press · 1 set").onFirst().assertExists()
+        compose.onAllNodesWithText("Volume: 500.0").onFirst().assertExists()
         screenshot("history")
         compose.onNodeWithText("You").performClick()
         compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Import PWA backup"))
@@ -156,6 +173,22 @@ class WorkoutFlowTest {
                 it["id"] == JsonPrimitive(0) || it["id"] == JsonPrimitive("0")
             },
         )
+        val native =
+            exported.workouts.single {
+                it["id"] != JsonPrimitive(0) && it["id"] != JsonPrimitive("0")
+            }
+        val nativeSet =
+            native
+                .getValue("exercises")
+                .jsonArray
+                .single()
+                .jsonObject
+                .getValue("sets")
+                .jsonArray
+                .single()
+                .jsonObject
+        assertEquals(JsonPrimitive("100"), nativeSet.getValue("weight"))
+        assertEquals(JsonPrimitive("5"), nativeSet.getValue("reps"))
         assertTrue(pickerActions.contains(Intent.ACTION_OPEN_DOCUMENT))
         assertTrue(pickerActions.contains(Intent.ACTION_CREATE_DOCUMENT))
         screenshot("backup-settings")

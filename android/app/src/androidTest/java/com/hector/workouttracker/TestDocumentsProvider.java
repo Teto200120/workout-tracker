@@ -20,7 +20,7 @@ public class TestDocumentsProvider extends ContentProvider {
 
     private File file(Uri uri) {
         String name = uri.getLastPathSegment();
-        if (!"fixture.json".equals(name) && !"future.json".equals(name) && !"export.json".equals(name)) {
+        if (!"fixture.json".equals(name) && !"future.json".equals(name) && !"legacy.json".equals(name) && !"export.json".equals(name)) {
             throw new IllegalArgumentException("Unknown test document");
         }
         File file = new File(getContext().getFilesDir(), name);
@@ -32,6 +32,10 @@ public class TestDocumentsProvider extends ContentProvider {
                 while ((count = input.read(buffer)) != -1) bytes.write(buffer, 0, count);
                 JSONObject backup = new JSONObject(bytes.toString("UTF-8")).getJSONObject("backup");
                 if ("future.json".equals(name)) backup.put("backupFileVersion", 99);
+                if ("legacy.json".equals(name)) {
+                    backup.put("applicationSchemaVersion", 0);
+                    backup.getJSONObject("settings").put("rpeAware", false);
+                }
                 Files.write(file.toPath(), backup.toString().getBytes(StandardCharsets.UTF_8));
             } catch (Exception error) {
                 throw new IllegalStateException("Test document could not be prepared", error);

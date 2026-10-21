@@ -18,7 +18,7 @@ import com.hector.workouttracker.feature.session.TrackerViewModel
 @Composable
 internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
     var name by rememberSaveable { mutableStateOf("") }
-    var rpe by rememberSaveable { mutableStateOf(true) }
+    var rpe by rememberSaveable(state.profile.trackRpe) { mutableStateOf(state.profile.trackRpe) }
     LazyColumn(
         Modifier.fillMaxSize().testTag("setup-list"),
         contentPadding = PaddingValues(24.dp),
@@ -45,7 +45,12 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Track RPE", Modifier.weight(1f))
-                Switch(rpe, { rpe = it }, enabled = !state.busy)
+                Switch(
+                    rpe,
+                    { rpe = it },
+                    modifier = Modifier.testTag("setup-rpe"),
+                    enabled = !state.busy,
+                )
             }
         }
         item {
