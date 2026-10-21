@@ -16,7 +16,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: () -> Unit) {
+internal fun HomeScreen(
+    state: TrackerState,
+    vm: TrackerViewModel,
+    openRoutines: () -> Unit,
+    openSession: () -> Unit,
+) {
     var opening by rememberSaveable { mutableStateOf(false) }
     var routinesOpen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.draft, opening, state.busy, state.error) {
@@ -103,8 +108,17 @@ internal fun HomeScreen(state: TrackerState, vm: TrackerViewModel, openSession: 
             }
         }
         item {
+            OutlinedButton(
+                onClick = openRoutines,
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+            ) {
+                Text("Manage routines")
+            }
+        }
+        item {
             Text(
-                "Bring your PWA history and routines into the app from You → Import PWA backup. Exercise search and text guides work offline. Routine editing and full Stats are coming next.",
+                "Bring your PWA history and routines into the app from You → Import PWA backup. Routine editing, exercise search and text guides work offline. Full Stats are coming later.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

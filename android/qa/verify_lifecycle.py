@@ -162,7 +162,7 @@ def main():
         assert len(set(certificates)) == 1, "Both versions and test APKs must share one signing certificate"
         summary["certificate_sha256"] = certificates[0]
         summary["apk_sha256"] = {str(p.name) + suffix: hashlib.sha256(p.read_bytes()).hexdigest()
-                                 for p, suffix in ((old_app, "-v2"), (new_app, "-v3"))}
+                                 for p, suffix in ((old_app, "-v2"), (new_app, "-current"))}
         qa.adb("install", "-t", old_app)
         qa.adb("install", "-t", old_test)
         assert qa.installed_version() == 2

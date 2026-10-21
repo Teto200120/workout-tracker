@@ -334,6 +334,163 @@ class WorkoutFlowTest {
             JsonPrimitive(true),
             trainingExport.routines.single().getValue("extension").jsonObject.getValue("keep"),
         )
+        routineEditorFlow(vm)
+    }
+
+    private fun routineEditorFlow(vm: com.hector.workouttracker.feature.session.TrackerViewModel) {
+        fun editorText(text: String) {
+            compose
+                .onNodeWithTag("routine-editor")
+                .performScrollToNode(hasText(text, substring = false))
+            compose.onNodeWithText(text, substring = false).performClick()
+        }
+        fun editorTag(tag: String) {
+            compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performClick()
+        }
+        fun name(value: String) {
+            compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag("routine-name"))
+            compose.onNodeWithTag("routine-name").performTextReplacement(value)
+        }
+        fun waitLibrary() =
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("routine-library").fetchSemanticsNodes().isNotEmpty()
+            }
+        fun openImported() {
+            compose
+                .onNodeWithTag("routine-library")
+                .performScrollToNode(hasTestTag("edit-routine-number:0"))
+            compose.onNodeWithTag("edit-routine-number:0").performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        compose.onNodeWithText("Today", substring = false).performClick()
+        compose.onNodeWithText("Manage routines").performScrollTo().performClick()
+        waitLibrary()
+        openImported()
+        name("Edited fixture")
+        editorTag("routine-change-1")
+        compose.onNodeWithText("Back to routine").performClick() // Cancel changes nothing.
+        editorTag("routine-change-1")
+        compose.onNodeWithTag("exercise-search").performTextInput("Fixture replacement")
+        compose.onNodeWithTag("add-search-name").performClick()
+        editorText("Browse exercises")
+        compose.onNodeWithTag("exercise-search").performTextInput("flat bench press")
+        compose.onNodeWithTag("add-search-name").performClick()
+        compose.onNodeWithText("Keep a repeated exercise?").assertExists()
+        compose.onNodeWithText("Keep both").performClick()
+        editorTag("routine-up-1")
+        editorTag("routine-remove-3")
+        name("Edited fixture")
+        screenshot("routine-editor")
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("routine-name").assertTextContains("Edited fixture")
+        editorText("Save routine")
+        waitLibrary()
+        compose.onNodeWithText("Routine saved.").assertExists()
+        val app = compose.activity.application as TrackerApplication
+        val saved =
+            kotlinx.coroutines.runBlocking {
+                requireNotNull(app.routineRepository.read(JsonPrimitive(0)))
+            }
+        val expected = listOf("Fixture replacement", "Flat Bench Press", "Flat Bench Press")
+        assertEquals(expected, saved.exercises)
+        assertEquals(
+            JsonPrimitive(true),
+            Json.parseToJsonElement(saved.record.payload)
+                .jsonObject
+                .getValue("extension")
+                .jsonObject
+                .getValue("keep"),
+        )
+        openImported()
+        name("Discard me")
+        editorText("Back to routines")
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.onNodeWithTag("routine-name").assertTextContains("Discard me")
+        editorText("Back to routines")
+        compose.onNodeWithText("Discard edits").performClick()
+        waitLibrary()
+        assertEquals(
+            saved,
+            kotlinx.coroutines.runBlocking { app.routineRepository.read(JsonPrimitive(0)) },
+        )
+
+        // A competing save must retain the visible draft until explicit reload/discard.
+        openImported()
+        name("Unsaved stale")
+        kotlinx.coroutines.runBlocking {
+            app.routineRepository.save(
+                com.hector.workouttracker.data.RoutineDraft.edit(saved)
+                    .copy(name = "Latest fixture")
+            )
+        }
+        editorText("Save routine")
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Reload saved routine").fetchSemanticsNodes().isNotEmpty()
+        }
+        name("Unsaved stale")
+        compose.onNodeWithText("Reload saved routine").performClick()
+        compose.onNodeWithText("Reload", substring = false).performClick()
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose.onNodeWithTag("routine-name").assertTextContains("Latest fixture")
+                }
+                .isSuccess
+        }
+        name("Edited fixture")
+        editorText("Save routine")
+        waitLibrary()
+        compose.onNodeWithText("Create routine").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
+        }
+        name(" edited   FIXTURE ")
+        editorText("Save routine")
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Another routine already uses this name.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        name("Native empty")
+        editorText("Save routine")
+        waitLibrary()
+        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Delete Native empty"))
+        compose.onNodeWithText("Delete Native empty").performClick()
+        compose.onNodeWithText("Cancel", substring = false).performClick()
+        compose.onNodeWithText("Delete Native empty").performClick()
+        compose.onNodeWithText("Delete routine", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.routines.size == 1 }
+        screenshot("routine-library")
+        val output =
+            File(compose.activity.getExternalFilesDir(null), "qa/routine-editor-export.json")
+        output.writeText(
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-21T12:00:00Z") }
+        )
+        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithText("Use saved routine").performClick()
+        compose.onNodeWithText("Edited fixture", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.draft != null }
+        val active = vm.state.value.draft!!
+        assertEquals(JsonPrimitive(0), active.originRoutineId)
+        assertEquals(expected, active.exercises.map { it.name })
+        compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithText("Manage routines").performScrollTo().performClick()
+        waitLibrary()
+        compose
+            .onNodeWithTag("routine-library")
+            .performScrollToNode(hasTestTag("delete-routine-number:0"))
+        compose.onNodeWithTag("delete-routine-number:0").performClick()
+        compose.onNodeWithText("Delete routine", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.routines.isEmpty() }
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(4, vm.state.value.workouts.size)
     }
 
     private fun screenshot(name: String) {
