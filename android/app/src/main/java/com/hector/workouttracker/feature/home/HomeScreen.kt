@@ -8,23 +8,41 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.core.schedule.*
 import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.*
 
 @Composable
 internal fun HomeScreen(
     state: TrackerState,
     vm: TrackerViewModel,
     openRoutines: () -> Unit,
+    openSchedule: () -> Unit,
     openSession: () -> Unit,
 ) {
     var opening by rememberSaveable { mutableStateOf(false) }
     var routinesOpen by rememberSaveable { mutableStateOf(false) }
+    var today by remember { mutableStateOf(LocalDate.now()) }
+    val scope = rememberCoroutineScope()
+    LifecycleResumeEffect(Unit) {
+        val job =
+            scope.launch {
+                while (isActive) {
+                    today = LocalDate.now()
+                    delay(30_000)
+                }
+            }
+        onPauseOrDispose { job.cancel() }
+    }
+    val plan = state.schedule?.let { resolveDayPlan(today, it) }
     LaunchedEffect(state.draft, opening, state.busy, state.error) {
         if (opening && state.draft != null) {
             opening = false
@@ -39,7 +57,7 @@ internal fun HomeScreen(
     ) {
         item {
             Heading(
-                LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                today.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
                 "Let's move, ${state.profile.displayName}.",
                 "One set at a time.",
             )
@@ -91,6 +109,56 @@ internal fun HomeScreen(
                             else "Draft saved on this device",
                             style = MaterialTheme.typography.labelMedium,
                         )
+                }
+            }
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Today's plan", style = MaterialTheme.typography.labelLarge)
+                    if (plan != null) {
+                        Text(
+                            plan.title.take(160),
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(plan.note)
+                        if (plan.kind == "gym" && state.draft == null) {
+                            val matches = state.routines.filter { it.name == plan.routine }
+                            if (matches.size == 1)
+                                OutlinedButton(
+                                    onClick = {
+                                        opening = true
+                                        vm.startPlanned(
+                                            matches.single(),
+                                            requireNotNull(state.schedule)[
+                                                today.dayOfWeek.value % 7],
+                                            today,
+                                        )
+                                    },
+                                    enabled = !state.busy,
+                                    modifier =
+                                        Modifier.fillMaxWidth().testTag("start-planned-workout"),
+                                ) {
+                                    Text("Start planned routine")
+                                }
+                            else
+                                Text(
+                                    if (matches.isEmpty())
+                                        "This routine is not in your library. Choose a saved routine or start a fresh workout."
+                                    else
+                                        "Several saved routines share this name. Use saved routine to choose one."
+                                )
+                        }
+                    } else
+                        Text(
+                            if (state.scheduleLoading) "Loading today's plan…"
+                            else "Your plan is unavailable. You can still start a workout."
+                        )
+                    TextButton(onClick = openSchedule, enabled = !state.busy) {
+                        Text("Edit schedule")
+                    }
                 }
             }
         }

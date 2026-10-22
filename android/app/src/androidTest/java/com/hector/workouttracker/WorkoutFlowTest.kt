@@ -604,6 +604,145 @@ class WorkoutFlowTest {
         waitLibrary()
         assertEquals(seeded, vm.state.value.routines)
         assertEquals(active, vm.state.value.draft)
+        scheduleFlow(vm, owner)
+    }
+
+    private fun scheduleFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val original = kotlinx.coroutines.runBlocking { app.scheduleRepository.read() }
+        val active = requireNotNull(vm.state.value.draft)
+        fun scheduleTag(tag: String) {
+            compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed().performClick()
+        }
+        fun kind(index: Int, value: String) {
+            scheduleTag("schedule-kind-$index")
+            compose.onNodeWithTag("choose-kind-$value").performClick()
+        }
+        fun backFromSchedule() {
+            compose
+                .onNodeWithTag("schedule-editor")
+                .performScrollToNode(hasText("Back", substring = false))
+            compose.onNodeWithText("Back", substring = false).performScrollTo().performClick()
+        }
+        fun openSchedule() {
+            compose.onNodeWithTag("home-list").performScrollToNode(hasText("Edit schedule"))
+            compose.onNodeWithText("Edit schedule").performScrollTo().performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("schedule-kind-1").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performClick()
+        openSchedule()
+        kind(0, "soccer")
+        backFromSchedule()
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("schedule-editor").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-0"))
+        compose.onNodeWithTag("schedule-kind-0").assertTextContains("Sunday · Soccer")
+        assertEquals(original, kotlinx.coroutines.runBlocking { app.scheduleRepository.read() })
+        backFromSchedule()
+        compose.onNodeWithText("Discard edits").performClick()
+        openSchedule()
+        for (index in listOf(1, 2, 3, 4, 5, 6, 0)) {
+            kind(index, "gym")
+            scheduleTag("schedule-routine-$index")
+            compose
+                .onNodeWithTag("schedule-routine-options")
+                .performScrollToNode(hasTestTag("choose-schedule-string:starter:v1:Legs"))
+            compose
+                .onNodeWithTag("choose-schedule-string:starter:v1:Legs")
+                .performScrollTo()
+                .performClick()
+        }
+        compose.onNodeWithTag("save-schedule").performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.schedule?.all { it.kind == "gym" && it.routine == "Legs" } == true
+        }
+        assertEquals(active, vm.state.value.draft)
+        compose
+            .onNodeWithTag("schedule-editor")
+            .performScrollToNode(hasText("Back", substring = false))
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Schedule saved.").fetchSemanticsNodes().isNotEmpty()
+        }
+        screenshot("weekly-schedule")
+
+        kind(1, "soccer")
+        kotlinx.coroutines.runBlocking {
+            val base = app.scheduleRepository.read()
+            app.scheduleRepository.save(
+                base.copy(
+                    days =
+                        base.days.mapIndexed { i, day ->
+                            if (i == 1) day.copy(kind = "rest") else day
+                        }
+                )
+            )
+        }
+        compose.onNodeWithTag("save-schedule").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Reload saved schedule").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Reload saved schedule").performClick()
+        compose.onNodeWithText("Reload", substring = false).performClick()
+        compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-1"))
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose.onNodeWithTag("schedule-kind-1").assertTextContains("Monday · Rest")
+                }
+                .isSuccess
+        }
+        compose.onNodeWithTag("schedule-kind-1").assertTextContains("Monday · Rest")
+        kind(1, "gym")
+        compose.onNodeWithTag("save-schedule").performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.schedule?.all { it.kind == "gym" && it.routine == "Legs" } == true
+        }
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose.onNodeWithTag("save-schedule").assertTextContains("Save schedule")
+                    compose.onNodeWithTag("save-schedule").assertIsNotEnabled()
+                }
+                .isSuccess
+        }
+        backFromSchedule()
+        compose.onNodeWithTag("start-planned-workout").assertDoesNotExist()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
+        compose.onNodeWithText("Resume workout").performScrollTo().performClick()
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Discard workout"))
+        compose.onNodeWithText("Discard workout").performScrollTo().performClick()
+        compose.onNodeWithText("Discard", substring = false).performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.draft == null &&
+                compose.onAllNodesWithTag("home-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("start-planned-workout"))
+        screenshot("today-plan")
+        compose
+            .onNodeWithTag("start-planned-workout")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.waitUntil(10000) { vm.state.value.draft?.type == "Legs" }
+        assertEquals(JsonPrimitive("starter:v1:Legs"), vm.state.value.draft!!.originRoutineId)
+        assertEquals(
+            vm.state.value.routines.single { it.name == "Legs" }.exercises,
+            vm.state.value.draft!!.exercises.map { it.name },
+        )
+        assertEquals(4, vm.state.value.workouts.size)
+        val output = File(compose.activity.getExternalFilesDir(null), "qa/schedule-export.json")
+        output.writeText(
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-22T12:00:00Z") }
+        )
     }
 
     private fun screenshot(name: String) {

@@ -17,6 +17,7 @@ import com.hector.workouttracker.feature.backup.ImportDialog
 import com.hector.workouttracker.feature.history.HistoryScreen
 import com.hector.workouttracker.feature.onboarding.SetupScreen
 import com.hector.workouttracker.feature.routines.RoutinesScreen
+import com.hector.workouttracker.feature.schedule.ScheduleScreen
 import com.hector.workouttracker.feature.session.*
 import com.hector.workouttracker.feature.settings.SettingsScreen
 import kotlinx.serialization.json.*
@@ -33,7 +34,7 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
             if (
                 !state.loading &&
                     state.profile.displayName.isNotEmpty() &&
-                    route !in listOf("session", "routines")
+                    route !in listOf("session", "routines", "schedule")
             ) {
                 NavigationBar {
                     listOf("home" to "Today", "history" to "History", "settings" to "You")
@@ -100,13 +101,19 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                                 state,
                                 vm,
                                 { nav.navigate("routines") { launchSingleTop = true } },
+                                { nav.navigate("schedule") { launchSingleTop = true } },
                             ) {
                                 nav.navigate("session") { launchSingleTop = true }
                             }
                         }
                         composable("history") { HistoryScreen(state) }
-                        composable("settings") { SettingsScreen(state, vm) }
+                        composable("settings") {
+                            SettingsScreen(state, vm) {
+                                nav.navigate("schedule") { launchSingleTop = true }
+                            }
+                        }
                         composable("routines") { RoutinesScreen(state, { nav.popBackStack() }) }
+                        composable("schedule") { ScheduleScreen(state, { nav.popBackStack() }) }
                         composable("session") {
                             LaunchedEffect(state.draft, state.busy) {
                                 if (state.draft == null && !state.busy) nav.popBackStack()

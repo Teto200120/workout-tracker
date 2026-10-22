@@ -63,6 +63,9 @@ interface TrackerDao {
     @Query("SELECT * FROM documents WHERE name = :name")
     suspend fun document(name: String): DocumentEntity?
 
+    @Query("SELECT * FROM documents WHERE name = :name")
+    fun observeDocument(name: String): Flow<DocumentEntity?>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertDocument(document: DocumentEntity)
 
