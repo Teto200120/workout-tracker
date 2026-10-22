@@ -20,6 +20,7 @@ import com.hector.workouttracker.feature.routines.RoutinesScreen
 import com.hector.workouttracker.feature.schedule.ScheduleScreen
 import com.hector.workouttracker.feature.session.*
 import com.hector.workouttracker.feature.settings.SettingsScreen
+import com.hector.workouttracker.feature.stats.StatsScreen
 import kotlinx.serialization.json.*
 
 @Composable
@@ -38,7 +39,12 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                     route !in listOf("session", "routines", "schedule", "workout")
             ) {
                 NavigationBar {
-                    listOf("home" to "Today", "history" to "History", "settings" to "You")
+                    listOf(
+                            "home" to "Today",
+                            "history" to "History",
+                            "stats" to "Stats",
+                            "settings" to "You",
+                        )
                         .forEach { (key, label) ->
                             NavigationBarItem(
                                 selected = route == key,
@@ -57,6 +63,7 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                                             when (key) {
                                                 "home" -> R.drawable.ic_home
                                                 "history" -> R.drawable.ic_history
+                                                "stats" -> R.drawable.ic_stats
                                                 else -> R.drawable.ic_person
                                             }
                                         ),
@@ -113,6 +120,7 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                                 nav.navigate("workout") { launchSingleTop = true }
                             }
                         }
+                        composable("stats") { StatsScreen() }
                         composable("workout") {
                             HistoryWorkoutScreen(state, historyVm) { nav.popBackStack() }
                         }

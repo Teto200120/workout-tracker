@@ -112,6 +112,26 @@ internal fun HomeScreen(
                 }
             }
         }
+        state.completion?.let { summary ->
+            item {
+                Card(Modifier.fillMaxWidth().testTag("workout-completion")) {
+                    Column(
+                        Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            "${state.completedName} saved",
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        summary.highlights.forEach { highlight ->
+                            Text(highlight.title, style = MaterialTheme.typography.titleMedium)
+                            Text(highlight.text)
+                        }
+                        TextButton(onClick = vm::dismissCompletion) { Text("Dismiss summary") }
+                    }
+                }
+            }
+        }
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

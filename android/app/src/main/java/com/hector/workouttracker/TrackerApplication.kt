@@ -7,6 +7,7 @@ import com.hector.workouttracker.data.BackupRepository
 import com.hector.workouttracker.data.HistoryRepository
 import com.hector.workouttracker.data.RoutineRepository
 import com.hector.workouttracker.data.ScheduleRepository
+import com.hector.workouttracker.data.StatsRepository
 import com.hector.workouttracker.data.TrackerRepository
 
 class TrackerApplication : Application() {
@@ -18,4 +19,5 @@ class TrackerApplication : Application() {
     val routineRepository by lazy { RoutineRepository(database) }
     val scheduleRepository by lazy { ScheduleRepository(database) }
     val historyRepository by lazy { HistoryRepository(database) }
+    val statsRepository by lazy { StatsRepository(database) }
 }

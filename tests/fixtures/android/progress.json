@@ -1,0 +1,2488 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "today": "2026-10-22",
+      "workouts": [],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 0,
+          "sets": 0,
+          "volume": 0,
+          "avgDuration": 0
+        },
+        "exercises": [],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": false,
+              "status": "Soccer"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 0
+        },
+        "streak": 0,
+        "recent": 0
+      }
+    },
+    {
+      "name": "independent sources and duplicates",
+      "today": "2026-10-22",
+      "workouts": [
+        {
+          "id": 0,
+          "date": "2026-10-22",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-22T12:00:00Z",
+          "exercises": [
+            {
+              "name": " Bench ",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "200",
+                  "reps": "1",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "180",
+                  "reps": "5",
+                  "rpe": "8.5",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "100",
+                  "reps": "20",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "999",
+                  "reps": "99",
+                  "rpe": "",
+                  "done": true,
+                  "warmup": true
+                }
+              ]
+            },
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "20",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            },
+            {
+              "name": "bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "50",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            },
+            {
+              "name": "Bodyweight",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "0",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "",
+                  "reps": "0",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            }
+          ],
+          "durationMinutes": 0
+        },
+        {
+          "id": "0",
+          "date": "2026-10-21",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-21T12:00:00Z",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "150",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": true,
+                  "warmup": false
+                }
+              ]
+            }
+          ],
+          "durationMinutes": 30
+        }
+      ],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 2,
+          "sets": 8,
+          "volume": 7100,
+          "avgDuration": 30
+        },
+        "exercises": [
+          {
+            "name": "bench",
+            "sessions": 1,
+            "sets": 1,
+            "bestWeight": 50,
+            "bestVolume": 500,
+            "bestEstimated1rm": 66.66666666666666,
+            "bestDate": "2026-10-22",
+            "records": {
+              "bestWeight": {
+                "weight": 50,
+                "reps": 10,
+                "estimated1rm": 66.66666666666666,
+                "volume": 500,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "bestVolume": {
+                "weight": 50,
+                "reps": 10,
+                "estimated1rm": 66.66666666666666,
+                "volume": 500,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "estimated1rm": {
+                "weight": 50,
+                "reps": 10,
+                "estimated1rm": 66.66666666666666,
+                "volume": 500,
+                "rpe": "",
+                "date": "2026-10-22"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-22",
+                "type": "Push",
+                "bestWeight": 50,
+                "bestVolume": 500,
+                "estimated1rm": 66.66666666666666,
+                "reps": 10,
+                "records": {
+                  "bestWeight": {
+                    "weight": 50,
+                    "reps": 10,
+                    "estimated1rm": 66.66666666666666,
+                    "volume": 500,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 50,
+                    "reps": 10,
+                    "estimated1rm": 66.66666666666666,
+                    "volume": 500,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 50,
+                    "reps": 10,
+                    "estimated1rm": 66.66666666666666,
+                    "volume": 500,
+                    "rpe": ""
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Bench",
+            "sessions": 2,
+            "sets": 5,
+            "bestWeight": 200,
+            "bestVolume": 2000,
+            "bestEstimated1rm": 210,
+            "bestDate": "2026-10-22",
+            "records": {
+              "bestWeight": {
+                "weight": 200,
+                "reps": 1,
+                "estimated1rm": 206.66666666666669,
+                "volume": 200,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "bestVolume": {
+                "weight": 100,
+                "reps": 20,
+                "estimated1rm": 166.66666666666666,
+                "volume": 2000,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "estimated1rm": {
+                "weight": 180,
+                "reps": 5,
+                "estimated1rm": 210,
+                "volume": 900,
+                "rpe": "8.5",
+                "date": "2026-10-22"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-22",
+                "type": "Push",
+                "bestWeight": 200,
+                "bestVolume": 2000,
+                "estimated1rm": 210,
+                "reps": 5,
+                "records": {
+                  "bestWeight": {
+                    "weight": 200,
+                    "reps": 1,
+                    "estimated1rm": 206.66666666666669,
+                    "volume": 200,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 100,
+                    "reps": 20,
+                    "estimated1rm": 166.66666666666666,
+                    "volume": 2000,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 180,
+                    "reps": 5,
+                    "estimated1rm": 210,
+                    "volume": 900,
+                    "rpe": "8.5"
+                  }
+                }
+              },
+              {
+                "date": "2026-10-22",
+                "type": "Push",
+                "bestWeight": 100,
+                "bestVolume": 2000,
+                "estimated1rm": 166.66666666666666,
+                "reps": 20,
+                "records": {
+                  "bestWeight": {
+                    "weight": 100,
+                    "reps": 20,
+                    "estimated1rm": 166.66666666666666,
+                    "volume": 2000,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 100,
+                    "reps": 20,
+                    "estimated1rm": 166.66666666666666,
+                    "volume": 2000,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 100,
+                    "reps": 20,
+                    "estimated1rm": 166.66666666666666,
+                    "volume": 2000,
+                    "rpe": ""
+                  }
+                }
+              },
+              {
+                "date": "2026-10-21",
+                "type": "Push",
+                "bestWeight": 150,
+                "bestVolume": 1500,
+                "estimated1rm": 200,
+                "reps": 10,
+                "records": {
+                  "bestWeight": {
+                    "weight": 150,
+                    "reps": 10,
+                    "estimated1rm": 200,
+                    "volume": 1500,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 150,
+                    "reps": 10,
+                    "estimated1rm": 200,
+                    "volume": 1500,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 150,
+                    "reps": 10,
+                    "estimated1rm": 200,
+                    "volume": 1500,
+                    "rpe": ""
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Bodyweight",
+            "sessions": 1,
+            "sets": 2,
+            "bestWeight": 0,
+            "bestVolume": 0,
+            "bestEstimated1rm": 0,
+            "bestDate": "",
+            "records": {},
+            "history": []
+          }
+        ],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 0
+        },
+        "streak": 2,
+        "recent": 2
+      }
+    },
+    {
+      "name": "ties keep first supplied source",
+      "today": "2026-10-22",
+      "workouts": [
+        {
+          "id": 2,
+          "date": "2026-10-20",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-20T12:00:00Z",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "200",
+                  "reps": "1",
+                  "rpe": "0",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "date": "2026-10-21",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-21T12:00:00Z",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "200",
+                  "reps": "1",
+                  "rpe": "9",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "100",
+                  "reps": "20",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 2,
+          "sets": 3,
+          "volume": 2400,
+          "avgDuration": 45
+        },
+        "exercises": [
+          {
+            "name": "Bench",
+            "sessions": 2,
+            "sets": 3,
+            "bestWeight": 200,
+            "bestVolume": 2000,
+            "bestEstimated1rm": 206.66666666666669,
+            "bestDate": "2026-10-20",
+            "records": {
+              "bestWeight": {
+                "weight": 200,
+                "reps": 1,
+                "estimated1rm": 206.66666666666669,
+                "volume": 200,
+                "rpe": "0",
+                "date": "2026-10-20"
+              },
+              "bestVolume": {
+                "weight": 100,
+                "reps": 20,
+                "estimated1rm": 166.66666666666666,
+                "volume": 2000,
+                "rpe": "",
+                "date": "2026-10-21"
+              },
+              "estimated1rm": {
+                "weight": 200,
+                "reps": 1,
+                "estimated1rm": 206.66666666666669,
+                "volume": 200,
+                "rpe": "0",
+                "date": "2026-10-20"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-20",
+                "type": "Push",
+                "bestWeight": 200,
+                "bestVolume": 200,
+                "estimated1rm": 206.66666666666669,
+                "reps": 1,
+                "records": {
+                  "bestWeight": {
+                    "weight": 200,
+                    "reps": 1,
+                    "estimated1rm": 206.66666666666669,
+                    "volume": 200,
+                    "rpe": "0"
+                  },
+                  "bestVolume": {
+                    "weight": 200,
+                    "reps": 1,
+                    "estimated1rm": 206.66666666666669,
+                    "volume": 200,
+                    "rpe": "0"
+                  },
+                  "estimated1rm": {
+                    "weight": 200,
+                    "reps": 1,
+                    "estimated1rm": 206.66666666666669,
+                    "volume": 200,
+                    "rpe": "0"
+                  }
+                }
+              },
+              {
+                "date": "2026-10-21",
+                "type": "Push",
+                "bestWeight": 200,
+                "bestVolume": 2000,
+                "estimated1rm": 206.66666666666669,
+                "reps": 1,
+                "records": {
+                  "bestWeight": {
+                    "weight": 200,
+                    "reps": 1,
+                    "estimated1rm": 206.66666666666669,
+                    "volume": 200,
+                    "rpe": "9"
+                  },
+                  "bestVolume": {
+                    "weight": 100,
+                    "reps": 20,
+                    "estimated1rm": 166.66666666666666,
+                    "volume": 2000,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 200,
+                    "reps": 1,
+                    "estimated1rm": 206.66666666666669,
+                    "volume": 200,
+                    "rpe": "9"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 1
+        },
+        "streak": 0,
+        "recent": 2
+      }
+    },
+    {
+      "name": "trim case warmup and blank candidates",
+      "today": "2026-10-22",
+      "workouts": [
+        {
+          "id": "names",
+          "date": "2026-10-22",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-22T12:00:00Z",
+          "exercises": [
+            {
+              "name": " Press﻿",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "10",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            },
+            {
+              "name": "press",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "20",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            },
+            {
+              "name": "No record",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "0",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "10",
+                  "reps": "0",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "",
+                  "reps": "",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                },
+                {
+                  "weight": "100",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 1,
+          "sets": 5,
+          "volume": 300,
+          "avgDuration": 45
+        },
+        "exercises": [
+          {
+            "name": "No record",
+            "sessions": 1,
+            "sets": 3,
+            "bestWeight": 0,
+            "bestVolume": 0,
+            "bestEstimated1rm": 0,
+            "bestDate": "",
+            "records": {},
+            "history": []
+          },
+          {
+            "name": "press",
+            "sessions": 1,
+            "sets": 1,
+            "bestWeight": 20,
+            "bestVolume": 200,
+            "bestEstimated1rm": 26.666666666666664,
+            "bestDate": "2026-10-22",
+            "records": {
+              "bestWeight": {
+                "weight": 20,
+                "reps": 10,
+                "estimated1rm": 26.666666666666664,
+                "volume": 200,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "bestVolume": {
+                "weight": 20,
+                "reps": 10,
+                "estimated1rm": 26.666666666666664,
+                "volume": 200,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "estimated1rm": {
+                "weight": 20,
+                "reps": 10,
+                "estimated1rm": 26.666666666666664,
+                "volume": 200,
+                "rpe": "",
+                "date": "2026-10-22"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-22",
+                "type": "Push",
+                "bestWeight": 20,
+                "bestVolume": 200,
+                "estimated1rm": 26.666666666666664,
+                "reps": 10,
+                "records": {
+                  "bestWeight": {
+                    "weight": 20,
+                    "reps": 10,
+                    "estimated1rm": 26.666666666666664,
+                    "volume": 200,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 20,
+                    "reps": 10,
+                    "estimated1rm": 26.666666666666664,
+                    "volume": 200,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 20,
+                    "reps": 10,
+                    "estimated1rm": 26.666666666666664,
+                    "volume": 200,
+                    "rpe": ""
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "Press",
+            "sessions": 1,
+            "sets": 1,
+            "bestWeight": 10,
+            "bestVolume": 100,
+            "bestEstimated1rm": 13.333333333333332,
+            "bestDate": "2026-10-22",
+            "records": {
+              "bestWeight": {
+                "weight": 10,
+                "reps": 10,
+                "estimated1rm": 13.333333333333332,
+                "volume": 100,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "bestVolume": {
+                "weight": 10,
+                "reps": 10,
+                "estimated1rm": 13.333333333333332,
+                "volume": 100,
+                "rpe": "",
+                "date": "2026-10-22"
+              },
+              "estimated1rm": {
+                "weight": 10,
+                "reps": 10,
+                "estimated1rm": 13.333333333333332,
+                "volume": 100,
+                "rpe": "",
+                "date": "2026-10-22"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-22",
+                "type": "Push",
+                "bestWeight": 10,
+                "bestVolume": 100,
+                "estimated1rm": 13.333333333333332,
+                "reps": 10,
+                "records": {
+                  "bestWeight": {
+                    "weight": 10,
+                    "reps": 10,
+                    "estimated1rm": 13.333333333333332,
+                    "volume": 100,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 10,
+                    "reps": 10,
+                    "estimated1rm": 13.333333333333332,
+                    "volume": 100,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 10,
+                    "reps": 10,
+                    "estimated1rm": 13.333333333333332,
+                    "volume": 100,
+                    "rpe": ""
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": false,
+              "status": "Soccer"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 0
+        },
+        "streak": 1,
+        "recent": 1
+      }
+    },
+    {
+      "name": "spring DST Sunday week and rolling counts",
+      "today": "2026-03-08",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-03-08",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-03-08T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "date": "2026-03-07",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-03-07T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "date": "2026-03-07",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-03-07T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "date": "2026-03-02",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-03-02T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 5,
+          "date": "2026-03-01",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-03-01T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 6,
+          "date": "2026-03-09",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-03-09T12:00:00Z",
+          "exercises": []
+        }
+      ],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 6,
+          "sets": 0,
+          "volume": 0,
+          "avgDuration": 45
+        },
+        "exercises": [],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-03-02",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-03-03",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-03-04",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": false,
+              "status": "Soccer"
+            },
+            {
+              "key": "2026-03-05",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-03-06",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-03-07",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-03-08",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": true,
+              "status": "Logged"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 2
+        },
+        "streak": 2,
+        "recent": 4
+      }
+    },
+    {
+      "name": "fall DST Sunday and zero duration average",
+      "today": "2026-11-01",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-11-01",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-11-01T12:00:00Z",
+          "exercises": [],
+          "durationMinutes": 1
+        },
+        {
+          "id": 2,
+          "date": "2026-10-31",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-31T12:00:00Z",
+          "exercises": [],
+          "durationMinutes": 2
+        },
+        {
+          "id": 3,
+          "date": "2026-10-30",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-30T12:00:00Z",
+          "exercises": [],
+          "durationMinutes": 0
+        }
+      ],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 3,
+          "sets": 0,
+          "volume": 0,
+          "avgDuration": 2
+        },
+        "exercises": [],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-26",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-27",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-28",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": false,
+              "status": "Soccer"
+            },
+            {
+              "key": "2026-10-29",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-10-30",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-31",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-11-01",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": true,
+              "status": "Logged"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 2
+        },
+        "streak": 3,
+        "recent": 3
+      }
+    },
+    {
+      "name": "Monday year boundary yesterday does not extend streak",
+      "today": "2026-01-05",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-01-04",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-01-04T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "date": "2026-01-03",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-01-03T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "date": "2025-12-30",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2025-12-30T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "date": "2025-12-29",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2025-12-29T12:00:00Z",
+          "exercises": []
+        },
+        {
+          "id": 5,
+          "date": "2026-01-06",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-01-06T12:00:00Z",
+          "exercises": []
+        }
+      ],
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 5,
+          "sets": 0,
+          "volume": 0,
+          "avgDuration": 45
+        },
+        "exercises": [],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-01-05",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-01-06",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-01-07",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": false,
+              "status": "Soccer"
+            },
+            {
+              "key": "2026-01-08",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-01-09",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-01-10",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-01-11",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 1
+        },
+        "streak": 0,
+        "recent": 3
+      }
+    },
+    {
+      "name": "completion case insensitive comparison and work volume gain",
+      "today": "2026-10-22",
+      "workouts": [
+        {
+          "id": "old",
+          "date": "2026-10-21",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-21T12:00:00Z",
+          "exercises": [
+            {
+              "name": " bench ",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "completion": {
+        "id": "new",
+        "date": "2026-10-22",
+        "type": "Push",
+        "startTime": "23:45",
+        "endTime": "00:30",
+        "notes": "",
+        "tags": [],
+        "createdAt": "2026-10-22T12:00:00Z",
+        "exercises": [
+          {
+            "name": "Bench",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "110",
+                "reps": "8",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              },
+              {
+                "weight": "50",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          }
+        ]
+      },
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 1,
+          "sets": 1,
+          "volume": 500,
+          "avgDuration": 45
+        },
+        "exercises": [
+          {
+            "name": "bench",
+            "sessions": 1,
+            "sets": 1,
+            "bestWeight": 100,
+            "bestVolume": 500,
+            "bestEstimated1rm": 116.66666666666667,
+            "bestDate": "2026-10-21",
+            "records": {
+              "bestWeight": {
+                "weight": 100,
+                "reps": 5,
+                "estimated1rm": 116.66666666666667,
+                "volume": 500,
+                "rpe": "",
+                "date": "2026-10-21"
+              },
+              "bestVolume": {
+                "weight": 100,
+                "reps": 5,
+                "estimated1rm": 116.66666666666667,
+                "volume": 500,
+                "rpe": "",
+                "date": "2026-10-21"
+              },
+              "estimated1rm": {
+                "weight": 100,
+                "reps": 5,
+                "estimated1rm": 116.66666666666667,
+                "volume": 500,
+                "rpe": "",
+                "date": "2026-10-21"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-21",
+                "type": "Push",
+                "bestWeight": 100,
+                "bestVolume": 500,
+                "estimated1rm": 116.66666666666667,
+                "reps": 5,
+                "records": {
+                  "bestWeight": {
+                    "weight": 100,
+                    "reps": 5,
+                    "estimated1rm": 116.66666666666667,
+                    "volume": 500,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 100,
+                    "reps": 5,
+                    "estimated1rm": 116.66666666666667,
+                    "volume": 500,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 100,
+                    "reps": 5,
+                    "estimated1rm": 116.66666666666667,
+                    "volume": 500,
+                    "rpe": ""
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 0
+        },
+        "streak": 0,
+        "recent": 1,
+        "completion": {
+          "volume": 1380,
+          "sets": 2,
+          "duration": 45,
+          "highlights": [
+            {
+              "type": "PR",
+              "title": "New PR: Bench",
+              "text": "110 × 8 · beat 100 × 5"
+            },
+            {
+              "type": "Volume",
+              "title": "Volume increased",
+              "text": "+880 lb vs last Push"
+            },
+            {
+              "type": "Work",
+              "title": "More work completed",
+              "text": "2 work sets today vs 1 last time"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "completion equal record fallback",
+      "today": "2026-10-22",
+      "workouts": [
+        {
+          "id": "old",
+          "date": "2026-10-21",
+          "type": "Push",
+          "startTime": "23:45",
+          "endTime": "00:30",
+          "notes": "",
+          "tags": [],
+          "createdAt": "2026-10-21T12:00:00Z",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "10",
+                  "rpe": "",
+                  "done": false,
+                  "warmup": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "completion": {
+        "id": "new",
+        "date": "2026-10-22",
+        "type": "Push",
+        "startTime": "23:45",
+        "endTime": "00:30",
+        "notes": "",
+        "tags": [],
+        "createdAt": "2026-10-22T12:00:00Z",
+        "exercises": [
+          {
+            "name": "Bench",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "100",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          }
+        ]
+      },
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 1,
+          "sets": 1,
+          "volume": 1000,
+          "avgDuration": 45
+        },
+        "exercises": [
+          {
+            "name": "Bench",
+            "sessions": 1,
+            "sets": 1,
+            "bestWeight": 100,
+            "bestVolume": 1000,
+            "bestEstimated1rm": 133.33333333333331,
+            "bestDate": "2026-10-21",
+            "records": {
+              "bestWeight": {
+                "weight": 100,
+                "reps": 10,
+                "estimated1rm": 133.33333333333331,
+                "volume": 1000,
+                "rpe": "",
+                "date": "2026-10-21"
+              },
+              "bestVolume": {
+                "weight": 100,
+                "reps": 10,
+                "estimated1rm": 133.33333333333331,
+                "volume": 1000,
+                "rpe": "",
+                "date": "2026-10-21"
+              },
+              "estimated1rm": {
+                "weight": 100,
+                "reps": 10,
+                "estimated1rm": 133.33333333333331,
+                "volume": 1000,
+                "rpe": "",
+                "date": "2026-10-21"
+              }
+            },
+            "history": [
+              {
+                "date": "2026-10-21",
+                "type": "Push",
+                "bestWeight": 100,
+                "bestVolume": 1000,
+                "estimated1rm": 133.33333333333331,
+                "reps": 10,
+                "records": {
+                  "bestWeight": {
+                    "weight": 100,
+                    "reps": 10,
+                    "estimated1rm": 133.33333333333331,
+                    "volume": 1000,
+                    "rpe": ""
+                  },
+                  "bestVolume": {
+                    "weight": 100,
+                    "reps": 10,
+                    "estimated1rm": 133.33333333333331,
+                    "volume": 1000,
+                    "rpe": ""
+                  },
+                  "estimated1rm": {
+                    "weight": 100,
+                    "reps": 10,
+                    "estimated1rm": 133.33333333333331,
+                    "volume": 1000,
+                    "rpe": ""
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": true,
+              "status": "Logged"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 0
+        },
+        "streak": 0,
+        "recent": 1,
+        "completion": {
+          "volume": 1000,
+          "sets": 1,
+          "duration": 45,
+          "highlights": [
+            {
+              "type": "Saved",
+              "title": "Session logged",
+              "text": "Workout completed and saved. Progress still counts even without a PR."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "completion four highlight cap",
+      "today": "2026-10-22",
+      "workouts": [],
+      "completion": {
+        "id": "new",
+        "date": "2026-10-22",
+        "type": "Push",
+        "startTime": "23:45",
+        "endTime": "00:30",
+        "notes": "",
+        "tags": [],
+        "createdAt": "2026-10-22T12:00:00Z",
+        "exercises": [
+          {
+            "name": "A",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "10",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          },
+          {
+            "name": "B",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "10",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          },
+          {
+            "name": "C",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "10",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          },
+          {
+            "name": "D",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "10",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          },
+          {
+            "name": "E",
+            "notes": "",
+            "sets": [
+              {
+                "weight": "10",
+                "reps": "10",
+                "rpe": "",
+                "done": false,
+                "warmup": false
+              }
+            ]
+          }
+        ]
+      },
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "expected": {
+        "totals": {
+          "workouts": 0,
+          "sets": 0,
+          "volume": 0,
+          "avgDuration": 0
+        },
+        "exercises": [],
+        "weekly": {
+          "days": [
+            {
+              "key": "2026-10-19",
+              "label": "M",
+              "title": "Chest / Triceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-20",
+              "label": "T",
+              "title": "Back / Biceps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-21",
+              "label": "W",
+              "title": "Soccer Day",
+              "kind": "soccer",
+              "complete": false,
+              "status": "Soccer"
+            },
+            {
+              "key": "2026-10-22",
+              "label": "T",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            },
+            {
+              "key": "2026-10-23",
+              "label": "F",
+              "title": "Legs",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-24",
+              "label": "S",
+              "title": "Shoulders / Traps",
+              "kind": "gym",
+              "complete": false,
+              "status": "Open"
+            },
+            {
+              "key": "2026-10-25",
+              "label": "S",
+              "title": "Rest Day",
+              "kind": "rest",
+              "complete": false,
+              "status": "Rest"
+            }
+          ],
+          "gymDays": 4,
+          "completedGymDays": 0
+        },
+        "streak": 0,
+        "recent": 0,
+        "completion": {
+          "volume": 500,
+          "sets": 5,
+          "duration": 45,
+          "highlights": [
+            {
+              "type": "PR",
+              "title": "New PR: A",
+              "text": "10 × 10"
+            },
+            {
+              "type": "PR",
+              "title": "New PR: B",
+              "text": "10 × 10"
+            },
+            {
+              "type": "PR",
+              "title": "New PR: C",
+              "text": "10 × 10"
+            },
+            {
+              "type": "PR",
+              "title": "New PR: D",
+              "text": "10 × 10"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

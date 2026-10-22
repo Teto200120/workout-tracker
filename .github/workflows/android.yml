@@ -8,6 +8,7 @@ on:
       - "src/data/exercise-catalog.json"
       - "src/js/catalog/**"
       - "src/js/domain/schedule.js"
+      - "src/js/domain/workout-metrics.js"
       - "src/js/core/constants.js"
       - "tests/fixtures/android/**"
       - "tests/unit/android-contract.test.js"
@@ -19,6 +20,7 @@ on:
       - "scripts/verify-android-starters.mjs"
       - "scripts/verify-android-schedule.mjs"
       - "scripts/verify-android-history.mjs"
+      - "scripts/generate-android-progress.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
@@ -27,6 +29,7 @@ on:
       - "src/data/exercise-catalog.json"
       - "src/js/catalog/**"
       - "src/js/domain/schedule.js"
+      - "src/js/domain/workout-metrics.js"
       - "src/js/core/constants.js"
       - "tests/fixtures/android/**"
       - "tests/unit/android-contract.test.js"
@@ -38,6 +41,7 @@ on:
       - "scripts/verify-android-starters.mjs"
       - "scripts/verify-android-schedule.mjs"
       - "scripts/verify-android-history.mjs"
+      - "scripts/generate-android-progress.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -75,6 +79,7 @@ jobs:
       - name: Build, test persistence and lint
         run: |
           node ../scripts/generate-android-starters.mjs --check
+          node ../scripts/generate-android-progress.mjs --check
           ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
       - name: Build the pinned version-2 upgrade baseline
         run: bash qa/build_upgrade_baseline.sh
