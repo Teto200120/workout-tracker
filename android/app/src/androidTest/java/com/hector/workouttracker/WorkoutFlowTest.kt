@@ -138,7 +138,6 @@ class WorkoutFlowTest {
 
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Your name"))
         compose.onNodeWithText("Your name").performTextInput("Fixture User")
-        compose.onNodeWithText("Your name").performImeAction()
         closeSoftKeyboard()
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Let's begin"))
         compose.onNodeWithText("Let's begin").performClick()
@@ -367,7 +366,6 @@ class WorkoutFlowTest {
         fun name(value: String) {
             compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag("routine-name"))
             compose.onNodeWithTag("routine-name").performTextReplacement(value)
-            compose.onNodeWithTag("routine-name").performImeAction()
             closeSoftKeyboard()
         }
         fun waitLibrary() =
@@ -401,7 +399,6 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Back to routine").performClick() // Cancel changes nothing.
         editorTag("routine-change-1")
         compose.onNodeWithTag("exercise-search").performTextReplacement("Fixture replacement")
-        compose.onNodeWithTag("exercise-search").performImeAction()
         closeSoftKeyboard()
         compose
             .onNodeWithTag("add-search-name")
@@ -410,7 +407,6 @@ class WorkoutFlowTest {
             .performClick()
         editorText("Browse exercises")
         compose.onNodeWithTag("exercise-search").performTextReplacement("flat bench press")
-        compose.onNodeWithTag("exercise-search").performImeAction()
         closeSoftKeyboard()
         compose
             .onNodeWithTag("add-search-name")
