@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -200,6 +201,7 @@ private fun RoutineEditor(
     back: () -> Unit,
     save: () -> Unit,
 ) {
+    val focus = LocalFocusManager.current
     var picker by rememberSaveable { mutableStateOf(false) }
     var replacing by rememberSaveable { mutableIntStateOf(-1) }
     var duplicate by rememberSaveable { mutableStateOf<String?>(null) }
@@ -236,6 +238,7 @@ private fun RoutineEditor(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(
                             onClick = {
+                                focus.clearFocus()
                                 replacing = index
                                 picker = true
                             },
@@ -291,6 +294,7 @@ private fun RoutineEditor(
         item {
             OutlinedButton(
                 onClick = {
+                    focus.clearFocus()
                     replacing = -1
                     picker = true
                 },

@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.platform.app.InstrumentationRegistry
 import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.designsystem.TrackerTheme
@@ -137,6 +138,8 @@ class WorkoutFlowTest {
 
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Your name"))
         compose.onNodeWithText("Your name").performTextInput("Fixture User")
+        compose.onNodeWithText("Your name").performImeAction()
+        closeSoftKeyboard()
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Let's begin"))
         compose.onNodeWithText("Let's begin").performClick()
         compose.waitUntil(10000) {
@@ -363,7 +366,8 @@ class WorkoutFlowTest {
         }
         fun name(value: String) {
             compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag("routine-name"))
-            compose.onNodeWithTag("routine-name").performTextReplacement(value)
+            compose.onNodeWithTag("routine-name").performTextReplacement(value).performImeAction()
+            closeSoftKeyboard()
         }
         fun waitLibrary() =
             compose.waitUntil(10000) {
@@ -395,14 +399,22 @@ class WorkoutFlowTest {
         editorTag("routine-change-1")
         compose.onNodeWithText("Back to routine").performClick() // Cancel changes nothing.
         editorTag("routine-change-1")
-        compose.onNodeWithTag("exercise-search").performTextReplacement("Fixture replacement")
+        compose
+            .onNodeWithTag("exercise-search")
+            .performTextReplacement("Fixture replacement")
+            .performImeAction()
+        closeSoftKeyboard()
         compose
             .onNodeWithTag("add-search-name")
             .performScrollTo()
             .assertIsDisplayed()
             .performClick()
         editorText("Browse exercises")
-        compose.onNodeWithTag("exercise-search").performTextReplacement("flat bench press")
+        compose
+            .onNodeWithTag("exercise-search")
+            .performTextReplacement("flat bench press")
+            .performImeAction()
+        closeSoftKeyboard()
         compose
             .onNodeWithTag("add-search-name")
             .performScrollTo()
@@ -555,12 +567,7 @@ class WorkoutFlowTest {
     }
 
     private fun screenshot(name: String) {
-        compose.runOnIdle {
-            val input =
-                compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
-                    as android.view.inputmethod.InputMethodManager
-            input.hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
-        }
+        closeSoftKeyboard()
         compose.waitForIdle()
         val directory =
             File(
