@@ -96,3 +96,9 @@ Today displays the saved local-date plan. Soccer/rest stay separate from gym log
 Schedule writes update only the canonical settings document. Other preferences, unknown root/schedule/day fields, profile, goals, History and active drafts remain untouched. No-op saves preserve the exact payload/revision. A revision plus raw-payload fingerprint fences stale writers; large extension payloads never enter saved-instance state. Room remains schema 1 and backup remains envelope 3/schema 2.
 
 `ScheduleRepositoryTest` covers PWA local-date golden fixtures, no-op/rollback, concurrent settings saves, imports/profile conflicts, legacy profiles, bounded state, database reopen and planned-start fences. Verify its actual export with `node ../scripts/verify-android-schedule.mjs app/build/outputs/compatibility/schedule-export.json`. CI checks the device export with `--device` and covers discard, rotation, save/reload, active-workout isolation and planned launch. Physical S24/accessibility/system-bar acceptance remains pending.
+
+### Saved workout details and editing (0.7.0)
+
+Open **History → Full workout → Edit workout** to review or change a saved session. Changes require **Save changes**. Back confirms discarding unsaved changes; deletion requires confirmation. Past-workout edits are independent of an active session. Clear duration to use start/end times. Imported fields outside the editor remain intact. Stale saves/deletes require an explicit reload.
+
+Finishing a session previews its set counts, volume and elapsed time and offers quick tags. These tags remain in the active draft until the session is saved or discarded. The original preview signing identity is retained for updates. Keep the PWA and a backup until physical-device and release acceptance are complete.

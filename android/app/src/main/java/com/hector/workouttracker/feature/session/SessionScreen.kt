@@ -1,5 +1,7 @@
 package com.hector.workouttracker.feature.session
 
+import android.os.SystemClock
+import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,14 +12,18 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.domain.workoutMetrics
 import com.hector.workouttracker.feature.catalog.ExerciseGuide
 import com.hector.workouttracker.feature.catalog.ExercisePicker
+import com.hector.workouttracker.feature.history.WorkoutTags
+import java.time.ZoneId
 
 @Composable
 internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -> Unit) {
@@ -244,12 +250,44 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             },
             dismissButton = { TextButton(onClick = { discard = false }) { Text("Keep workout") } },
         )
-    if (finish)
+    if (finish) {
+        val context = LocalContext.current
+        val duration =
+            elapsedMillis(
+                draft,
+                System.currentTimeMillis(),
+                SystemClock.elapsedRealtime(),
+                Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1),
+            ) / 60000
+        val metrics =
+            workoutMetrics(
+                workoutPayload(draft, System.currentTimeMillis(), duration, ZoneId.systemDefault())
+            )
         AlertDialog(
             onDismissRequest = { finish = false },
             title = { Text("Save to History?") },
             text = {
-                Text("Your sets and notes will be saved, and this active workout will close.")
+                LazyColumn(
+                    Modifier.heightIn(max = 360.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    item {
+                        Text(
+                            "${metrics.workingSets} working sets · ${metrics.completedSets} completed · ${metrics.duration.toInt()} min"
+                        )
+                        Text(
+                            "Volume: ${String.format(java.util.Locale.US, "%.1f", metrics.volume)} lb"
+                        )
+                        Text(
+                            "Your sets, notes and tags will be saved, and this active workout will close."
+                        )
+                    }
+                    item {
+                        WorkoutTags(draft.tags, !state.busy) { tags ->
+                            vm.edit { it.copy(tags = tags) }
+                        }
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
@@ -263,4 +301,5 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             },
             dismissButton = { TextButton(onClick = { finish = false }) { Text("Keep editing") } },
         )
+    }
 }

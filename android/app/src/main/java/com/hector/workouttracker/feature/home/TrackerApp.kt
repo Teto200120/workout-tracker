@@ -14,7 +14,7 @@ import androidx.navigation.compose.*
 import com.hector.workouttracker.R
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.feature.backup.ImportDialog
-import com.hector.workouttracker.feature.history.HistoryScreen
+import com.hector.workouttracker.feature.history.*
 import com.hector.workouttracker.feature.onboarding.SetupScreen
 import com.hector.workouttracker.feature.routines.RoutinesScreen
 import com.hector.workouttracker.feature.schedule.ScheduleScreen
@@ -25,6 +25,7 @@ import kotlinx.serialization.json.*
 @Composable
 fun TrackerApp(vm: TrackerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val historyVm: HistoryViewModel = viewModel()
     state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
@@ -34,7 +35,7 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
             if (
                 !state.loading &&
                     state.profile.displayName.isNotEmpty() &&
-                    route !in listOf("session", "routines", "schedule")
+                    route !in listOf("session", "routines", "schedule", "workout")
             ) {
                 NavigationBar {
                     listOf("home" to "Today", "history" to "History", "settings" to "You")
@@ -106,7 +107,15 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                                 nav.navigate("session") { launchSingleTop = true }
                             }
                         }
-                        composable("history") { HistoryScreen(state) }
+                        composable("history") {
+                            HistoryScreen(state) { record ->
+                                historyVm.open(record)
+                                nav.navigate("workout") { launchSingleTop = true }
+                            }
+                        }
+                        composable("workout") {
+                            HistoryWorkoutScreen(state, historyVm) { nav.popBackStack() }
+                        }
                         composable("settings") {
                             SettingsScreen(state, vm) {
                                 nav.navigate("schedule") { launchSingleTop = true }

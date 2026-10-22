@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.hector.workouttracker.core.database.TrackerDatabase
 import com.hector.workouttracker.data.BackupRepository
+import com.hector.workouttracker.data.HistoryRepository
 import com.hector.workouttracker.data.RoutineRepository
 import com.hector.workouttracker.data.ScheduleRepository
 import com.hector.workouttracker.data.TrackerRepository
@@ -16,4 +17,5 @@ class TrackerApplication : Application() {
     val backups by lazy { BackupRepository(database) }
     val routineRepository by lazy { RoutineRepository(database) }
     val scheduleRepository by lazy { ScheduleRepository(database) }
+    val historyRepository by lazy { HistoryRepository(database) }
 }
