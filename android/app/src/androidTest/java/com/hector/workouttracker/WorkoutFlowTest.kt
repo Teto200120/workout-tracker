@@ -153,6 +153,7 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Add exercise").performScrollTo().performClick()
         compose.onNodeWithText("Weight (lb)").performScrollTo().performTextInput("100")
         compose.onNodeWithText("Reps").performScrollTo().performTextInput("5")
+        closeSoftKeyboard()
         screenshot("session")
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performClick()
@@ -872,7 +873,6 @@ class WorkoutFlowTest {
     }
 
     private fun screenshot(name: String) {
-        closeSoftKeyboard()
         compose.waitForIdle()
         val directory =
             File(

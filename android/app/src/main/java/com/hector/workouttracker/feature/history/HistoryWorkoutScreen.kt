@@ -3,6 +3,7 @@ package com.hector.workouttracker.feature.history
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -79,6 +80,8 @@ private fun HistoryField(
 internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, back: () -> Unit) {
     val editor by vm.state.collectAsStateWithLifecycle()
     val draft = editor.draft
+    val list = rememberLazyListState()
+    LaunchedEffect(editor.editing, draft?.id) { list.scrollToItem(0) }
     var discard by rememberSaveable { mutableStateOf(false) }
     var delete by rememberSaveable { mutableStateOf(false) }
     var reload by rememberSaveable { mutableStateOf(false) }
@@ -121,6 +124,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
         }
         LazyColumn(
             Modifier.weight(1f).testTag("history-workout"),
+            state = list,
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
