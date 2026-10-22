@@ -34,6 +34,9 @@ internal fun ExercisePicker(
     state: TrackerState,
     onDismiss: () -> Unit,
     onAdd: (String) -> Boolean,
+    returnLabel: String = "Back to workout",
+    addLabel: String = "Add to workout",
+    selectionVerb: String = "Add",
 ) {
     val focus = LocalFocusManager.current
     var query by rememberSaveable { mutableStateOf("") }
@@ -73,7 +76,7 @@ internal fun ExercisePicker(
     CatalogWindow(close) {
         val guideName = guide
         if (guideName != null) {
-            GuideContent(guideName, catalog, close, onAdd = { add(guideName) })
+            GuideContent(guideName, catalog, close, onAdd = { add(guideName) }, addLabel = addLabel)
         } else {
             LazyColumn(
                 Modifier.fillMaxSize().testTag("exercise-picker"),
@@ -81,7 +84,7 @@ internal fun ExercisePicker(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
-                    TextButton(onClick = onDismiss) { Text("Back to workout") }
+                    TextButton(onClick = onDismiss) { Text(returnLabel) }
                     Heading(
                         "Exercise library",
                         "Find your next move.",
@@ -141,7 +144,7 @@ internal fun ExercisePicker(
                             enabled = !state.busy && !accepted,
                             modifier = Modifier.fillMaxWidth().testTag("add-search-name"),
                         ) {
-                            Text("Add ${catalog.canonicalName(query, local)}")
+                            Text("$selectionVerb ${catalog.canonicalName(query, local)}")
                         }
                 }
                 item { Text("Your exercises", style = MaterialTheme.typography.titleLarge) }
@@ -156,6 +159,7 @@ internal fun ExercisePicker(
                             !state.busy && !accepted,
                             { add(name) },
                             { guide = name },
+                            selectionVerb,
                         )
                     }
                     if (results!!.local.size > localLimit)
@@ -199,6 +203,7 @@ internal fun ExercisePicker(
                                 !state.busy && !accepted,
                                 { add(exercise.name) },
                                 { guide = exercise.name },
+                                selectionVerb,
                             )
                         }
                         if ((results?.catalog?.size ?: 0) > limit)
@@ -253,13 +258,16 @@ private fun ExerciseOption(
     enabled: Boolean,
     onAdd: () -> Unit,
     onGuide: () -> Unit,
+    selectionVerb: String,
 ) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(name, style = MaterialTheme.typography.titleMedium)
             Text(detail, style = MaterialTheme.typography.bodySmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = onAdd, enabled = enabled) { Text("Add $name") }
+                FilledTonalButton(onClick = onAdd, enabled = enabled) {
+                    Text("$selectionVerb $name")
+                }
                 TextButton(onClick = onGuide) { Text("Guide for $name") }
             }
         }
@@ -277,6 +285,7 @@ private fun GuideContent(
     catalog: ExerciseCatalog?,
     onBack: () -> Unit,
     onAdd: (() -> Unit)? = null,
+    addLabel: String = "Add to workout",
 ) {
     val exercise = remember(name, catalog) { catalog?.guide(name) }
     LazyColumn(
@@ -299,7 +308,7 @@ private fun GuideContent(
                     onClick = onAdd,
                     modifier = Modifier.fillMaxWidth().testTag("add-from-guide"),
                 ) {
-                    Text("Add to workout")
+                    Text(addLabel)
                 }
             }
         if (exercise == null || exercise.instructions.isEmpty())

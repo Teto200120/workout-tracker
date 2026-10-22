@@ -34,8 +34,14 @@ interface TrackerDao {
     )
     suspend fun updateRecord(kind: String, idKey: String, expected: Long, payload: String): Int
 
+    @Query("DELETE FROM records WHERE kind = :kind AND idKey = :idKey AND revision = :expected")
+    suspend fun deleteRecord(kind: String, idKey: String, expected: Long): Int
+
     @Query("SELECT * FROM records WHERE kind = :kind ORDER BY idKey")
     fun observeRecords(kind: String): Flow<List<RecordEntity>>
+
+    @Query("SELECT * FROM records WHERE kind = :kind ORDER BY idKey")
+    suspend fun recordsOfKind(kind: String): List<RecordEntity>
 
     @Query("SELECT * FROM records WHERE kind = :kind AND idKey = :idKey")
     suspend fun record(kind: String, idKey: String): RecordEntity?

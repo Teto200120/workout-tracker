@@ -12,6 +12,7 @@ on:
       - "scripts/verify-android-roundtrip.mjs"
       - "scripts/verify-android-training.mjs"
       - "scripts/verify-android-lifecycle.mjs"
+      - "scripts/verify-android-routines.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
@@ -24,6 +25,7 @@ on:
       - "scripts/verify-android-roundtrip.mjs"
       - "scripts/verify-android-training.mjs"
       - "scripts/verify-android-lifecycle.mjs"
+      - "scripts/verify-android-routines.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -66,6 +68,7 @@ jobs:
         run: |
           node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
           node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json
+          node ../scripts/verify-android-routines.mjs app/build/outputs/compatibility/routine-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -86,6 +89,7 @@ jobs:
             ./gradlew --no-daemon -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true :app:connectedDebugAndroidTest;
             native_status=$?;
             adb pull /sdcard/Android/data/com.hector.workouttracker/files/qa app/build/outputs/screenshots;
+            if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-routines.mjs app/build/outputs/screenshots/routine-editor-export.json --device || exit $?; fi;
             exit "$native_status"
             '
       - name: Upload preview APK and verification reports

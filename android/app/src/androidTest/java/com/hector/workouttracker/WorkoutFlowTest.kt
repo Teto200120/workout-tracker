@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.platform.app.InstrumentationRegistry
 import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.designsystem.TrackerTheme
@@ -36,6 +37,16 @@ class WorkoutFlowTest {
         } catch (failure: Throwable) {
             runCatching { screenshot("failure") }
             throw failure
+        }
+    }
+
+    // Reuse this composition path after Activity recreation so the test registry and
+    // saveable navigation keys match the original test content.
+    private fun installTestContent(activity: MainActivity, owner: ActivityResultRegistryOwner) {
+        activity.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                TrackerTheme { TrackerApp() }
+            }
         }
     }
 
@@ -68,11 +79,7 @@ class WorkoutFlowTest {
             object : ActivityResultRegistryOwner {
                 override val activityResultRegistry = registry
             }
-        compose.activity.setContent {
-            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                TrackerTheme { TrackerApp() }
-            }
-        }
+        installTestContent(compose.activity, owner)
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Import PWA backup").fetchSemanticsNodes().isNotEmpty()
         }
@@ -131,6 +138,7 @@ class WorkoutFlowTest {
 
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Your name"))
         compose.onNodeWithText("Your name").performTextInput("Fixture User")
+        closeSoftKeyboard()
         compose.onNodeWithTag("setup-list").performScrollToNode(hasText("Let's begin"))
         compose.onNodeWithText("Let's begin").performClick()
         compose.waitUntil(10000) {
@@ -334,15 +342,225 @@ class WorkoutFlowTest {
             JsonPrimitive(true),
             trainingExport.routines.single().getValue("extension").jsonObject.getValue("keep"),
         )
+        routineEditorFlow(vm, owner)
+    }
+
+    private fun routineEditorFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        fun editorText(text: String) {
+            compose
+                .onNodeWithTag("routine-editor")
+                .performScrollToNode(hasText(text, substring = false))
+            compose
+                .onNodeWithText(text, substring = false)
+                .performScrollTo()
+                .assertIsDisplayed()
+                .performClick()
+        }
+        fun editorTag(tag: String) {
+            compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed().performClick()
+        }
+        fun name(value: String) {
+            compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag("routine-name"))
+            compose.onNodeWithTag("routine-name").performTextReplacement(value)
+            closeSoftKeyboard()
+        }
+        fun waitLibrary() =
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("routine-library").fetchSemanticsNodes().isNotEmpty()
+            }
+        fun openImported() {
+            compose
+                .onNodeWithTag("routine-library")
+                .performScrollToNode(hasTestTag("edit-routine-number:0"))
+            compose
+                .onNodeWithTag("edit-routine-number:0")
+                .performScrollTo()
+                .assertIsDisplayed()
+                .performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        compose.onNodeWithText("Today", substring = false).performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
+        compose
+            .onNodeWithText("Manage routines")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        waitLibrary()
+        openImported()
+        name("Edited fixture")
+        editorTag("routine-change-1")
+        compose.onNodeWithText("Back to routine").performClick() // Cancel changes nothing.
+        editorTag("routine-change-1")
+        compose.onNodeWithTag("exercise-search").performTextReplacement("Fixture replacement")
+        closeSoftKeyboard()
+        compose
+            .onNodeWithTag("add-search-name")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        editorText("Browse exercises")
+        compose.onNodeWithTag("exercise-search").performTextReplacement("flat bench press")
+        closeSoftKeyboard()
+        compose
+            .onNodeWithTag("add-search-name")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Keep a repeated exercise?")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithText("Keep a repeated exercise?").assertExists()
+        compose.onNodeWithText("Keep both").performClick()
+        editorTag("routine-up-1")
+        editorTag("routine-remove-3")
+        name("Edited fixture")
+        screenshot("routine-editor")
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("routine-name").assertTextContains("Edited fixture")
+        editorText("Save routine")
+        waitLibrary()
+        compose.onNodeWithText("Routine saved.").assertExists()
+        compose.waitUntil(10000) { vm.state.value.routines.any { it.name == "Edited fixture" } }
+        val app = compose.activity.application as TrackerApplication
+        val saved =
+            kotlinx.coroutines.runBlocking {
+                requireNotNull(app.routineRepository.read(JsonPrimitive(0)))
+            }
+        val expected = listOf("Fixture replacement", "Flat Bench Press", "Flat Bench Press")
+        assertEquals(expected, saved.exercises)
+        assertEquals(
+            JsonPrimitive(true),
+            Json.parseToJsonElement(saved.record.payload)
+                .jsonObject
+                .getValue("extension")
+                .jsonObject
+                .getValue("keep"),
+        )
+        openImported()
+        name("Discard me")
+        editorText("Back to routines")
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.onNodeWithTag("routine-name").assertTextContains("Discard me")
+        editorText("Back to routines")
+        compose.onNodeWithText("Discard edits").performClick()
+        waitLibrary()
+        assertEquals(
+            saved,
+            kotlinx.coroutines.runBlocking { app.routineRepository.read(JsonPrimitive(0)) },
+        )
+
+        // A competing save must retain the visible draft until explicit reload/discard.
+        openImported()
+        name("Unsaved stale")
+        kotlinx.coroutines.runBlocking {
+            app.routineRepository.save(
+                com.hector.workouttracker.data.RoutineDraft.edit(saved)
+                    .copy(name = "Latest fixture")
+            )
+        }
+        editorText("Save routine")
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Reload saved routine").fetchSemanticsNodes().isNotEmpty()
+        }
+        name("Unsaved stale")
+        compose.onNodeWithText("Reload saved routine").performClick()
+        compose.onNodeWithText("Reload", substring = false).performClick()
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose.onNodeWithTag("routine-name").assertTextContains("Latest fixture")
+                }
+                .isSuccess
+        }
+        name("Edited fixture")
+        editorText("Save routine")
+        waitLibrary()
+        compose.onNodeWithText("Create routine").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
+        }
+        name(" edited   FIXTURE ")
+        editorText("Save routine")
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Another routine already uses this name.")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        name("Native empty")
+        editorText("Save routine")
+        waitLibrary()
+        compose.waitUntil(10000) { vm.state.value.routines.any { it.name == "Native empty" } }
+        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Delete Native empty"))
+        compose
+            .onNodeWithText("Delete Native empty")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.onNodeWithText("Cancel", substring = false).performClick()
+        compose
+            .onNodeWithText("Delete Native empty")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.onNodeWithText("Delete routine", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.routines.size == 1 }
+        screenshot("routine-library")
+        val output =
+            File(compose.activity.getExternalFilesDir(null), "qa/routine-editor-export.json")
+        output.writeText(
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-21T12:00:00Z") }
+        )
+        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Use saved routine"))
+        compose
+            .onNodeWithText("Use saved routine")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.onNodeWithText("Edited fixture", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.draft != null }
+        val active = vm.state.value.draft!!
+        assertEquals(JsonPrimitive(0), active.originRoutineId)
+        assertEquals(expected, active.exercises.map { it.name })
+        compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
+        compose
+            .onNodeWithText("Manage routines")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        waitLibrary()
+        compose
+            .onNodeWithTag("routine-library")
+            .performScrollToNode(hasTestTag("delete-routine-number:0"))
+        compose
+            .onNodeWithTag("delete-routine-number:0")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.onNodeWithText("Delete routine", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.routines.isEmpty() }
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(4, vm.state.value.workouts.size)
     }
 
     private fun screenshot(name: String) {
-        compose.runOnIdle {
-            val input =
-                compose.activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)
-                    as android.view.inputmethod.InputMethodManager
-            input.hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
-        }
+        closeSoftKeyboard()
         compose.waitForIdle()
         val directory =
             File(
