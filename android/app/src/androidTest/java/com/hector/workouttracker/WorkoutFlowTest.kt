@@ -342,11 +342,15 @@ class WorkoutFlowTest {
             compose
                 .onNodeWithTag("routine-editor")
                 .performScrollToNode(hasText(text, substring = false))
-            compose.onNodeWithText(text, substring = false).performClick()
+            compose
+                .onNodeWithText(text, substring = false)
+                .performScrollTo()
+                .assertIsDisplayed()
+                .performClick()
         }
         fun editorTag(tag: String) {
             compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag(tag))
-            compose.onNodeWithTag(tag).performClick()
+            compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed().performClick()
         }
         fun name(value: String) {
             compose.onNodeWithTag("routine-editor").performScrollToNode(hasTestTag("routine-name"))
@@ -360,14 +364,22 @@ class WorkoutFlowTest {
             compose
                 .onNodeWithTag("routine-library")
                 .performScrollToNode(hasTestTag("edit-routine-number:0"))
-            compose.onNodeWithTag("edit-routine-number:0").performClick()
+            compose
+                .onNodeWithTag("edit-routine-number:0")
+                .performScrollTo()
+                .assertIsDisplayed()
+                .performClick()
             compose.waitUntil(10000) {
                 compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
             }
         }
         compose.onNodeWithText("Today", substring = false).performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
-        compose.onNodeWithText("Manage routines").performClick()
+        compose
+            .onNodeWithText("Manage routines")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         waitLibrary()
         openImported()
         name("Edited fixture")
@@ -375,10 +387,24 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Back to routine").performClick() // Cancel changes nothing.
         editorTag("routine-change-1")
         compose.onNodeWithTag("exercise-search").performTextReplacement("Fixture replacement")
-        compose.onNodeWithTag("add-search-name").performClick()
+        compose
+            .onNodeWithTag("add-search-name")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         editorText("Browse exercises")
         compose.onNodeWithTag("exercise-search").performTextReplacement("flat bench press")
-        compose.onNodeWithTag("add-search-name").performClick()
+        compose
+            .onNodeWithTag("add-search-name")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Keep a repeated exercise?")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
         compose.onNodeWithText("Keep a repeated exercise?").assertExists()
         compose.onNodeWithText("Keep both").performClick()
         editorTag("routine-up-1")
@@ -464,9 +490,17 @@ class WorkoutFlowTest {
         waitLibrary()
         compose.waitUntil(10000) { vm.state.value.routines.any { it.name == "Native empty" } }
         compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Delete Native empty"))
-        compose.onNodeWithText("Delete Native empty").performClick()
+        compose
+            .onNodeWithText("Delete Native empty")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         compose.onNodeWithText("Cancel", substring = false).performClick()
-        compose.onNodeWithText("Delete Native empty").performClick()
+        compose
+            .onNodeWithText("Delete Native empty")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         compose.onNodeWithText("Delete routine", substring = false).performClick()
         compose.waitUntil(10000) { vm.state.value.routines.size == 1 }
         screenshot("routine-library")
@@ -478,7 +512,11 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Use saved routine"))
-        compose.onNodeWithText("Use saved routine").performClick()
+        compose
+            .onNodeWithText("Use saved routine")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         compose.onNodeWithText("Edited fixture", substring = false).performClick()
         compose.waitUntil(10000) { vm.state.value.draft != null }
         val active = vm.state.value.draft!!
@@ -486,12 +524,20 @@ class WorkoutFlowTest {
         assertEquals(expected, active.exercises.map { it.name })
         compose.onNodeWithText("Back to Today").performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
-        compose.onNodeWithText("Manage routines").performClick()
+        compose
+            .onNodeWithText("Manage routines")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         waitLibrary()
         compose
             .onNodeWithTag("routine-library")
             .performScrollToNode(hasTestTag("delete-routine-number:0"))
-        compose.onNodeWithTag("delete-routine-number:0").performClick()
+        compose
+            .onNodeWithTag("delete-routine-number:0")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         compose.onNodeWithText("Delete routine", substring = false).performClick()
         compose.waitUntil(10000) { vm.state.value.routines.isEmpty() }
         assertEquals(active, vm.state.value.draft)
