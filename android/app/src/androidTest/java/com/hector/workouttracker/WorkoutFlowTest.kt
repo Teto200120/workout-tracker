@@ -160,11 +160,16 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Weight (lb)").performScrollTo().assertTextContains("100")
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
         compose.onNodeWithText("Finish workout").performClick()
+        compose.onNodeWithTag("workout-tag-Good session").performScrollTo().performClick()
+        screenshot("completion-summary")
         compose.onNodeWithText("Save workout").performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("History").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("History").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Bench Press · 1 set").fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onAllNodesWithText("Bench Press · 1 set").onFirst().assertExists()
         compose.onAllNodesWithText("Volume: 500.0").onFirst().assertExists()
         screenshot("history")
@@ -223,6 +228,7 @@ class WorkoutFlowTest {
                 .jsonObject
         assertEquals(JsonPrimitive("100"), nativeSet.getValue("weight"))
         assertEquals(JsonPrimitive("5"), nativeSet.getValue("reps"))
+        assertEquals(JsonArray(listOf(JsonPrimitive("Good session"))), native.getValue("tags"))
         assertTrue(pickerActions.contains(Intent.ACTION_OPEN_DOCUMENT))
         assertTrue(pickerActions.contains(Intent.ACTION_CREATE_DOCUMENT))
         screenshot("backup-settings")
@@ -743,6 +749,126 @@ class WorkoutFlowTest {
         output.writeText(
             kotlinx.coroutines.runBlocking { app.backups.export("2026-10-22T12:00:00Z") }
         )
+        historyFlow(vm, owner)
+    }
+
+    private fun historyFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = requireNotNull(vm.state.value.draft)
+        val original =
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
+        fun tag(name: String) {
+            compose.onNodeWithTag("history-workout").performScrollToNode(hasTestTag(name))
+            compose.onNodeWithTag(name).performScrollTo()
+        }
+        fun field(name: String, value: String) {
+            tag(name)
+            compose.onNodeWithTag(name).performTextReplacement(value)
+            closeSoftKeyboard()
+        }
+        fun back() {
+            compose.onNodeWithTag("history-workout").performScrollToNode(hasText("Back to History"))
+            compose.onNodeWithText("Back to History").performScrollTo().performClick()
+        }
+        fun open() {
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithText("Full workout").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose
+                .onNodeWithTag("history-list")
+                .performScrollToNode(hasTestTag("open-history-number:0"))
+            compose.onNodeWithTag("open-history-number:0").performScrollTo().performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("edit-history-workout").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithTag("edit-history-workout").performScrollTo().performClick()
+        }
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performScrollTo().performClick()
+        compose.onNodeWithText("History").performClick()
+        open()
+        field("history-notes", "Unsaved History note")
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("history-workout").fetchSemanticsNodes().isNotEmpty()
+        }
+        tag("history-notes")
+        compose.onNodeWithTag("history-notes").assertTextContains("Unsaved History note")
+        assertEquals(
+            original,
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) },
+        )
+        back()
+        compose.onNodeWithText("Keep editing").performClick()
+        back()
+        compose.onNodeWithText("Discard edits").performClick()
+        open()
+        field("history-name", "Reviewed workout")
+        field("history-notes", "History reviewed")
+        field("history-duration", "")
+        tag("workout-tag-Good session")
+        compose.onNodeWithTag("workout-tag-Good session").performClick()
+        field("history-reps-0-0", "6")
+        compose.onNodeWithTag("save-history-workout").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("edit-history-workout").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("history-workout").performScrollToNode(hasText("Back to History"))
+        screenshot("history-details")
+        val edited =
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
+        assertEquals("Reviewed workout", edited.values.type)
+        assertEquals("History reviewed", edited.values.notes)
+        assertEquals("6", edited.values.exercises.first().sets.first().reps)
+        assertEquals(active, vm.state.value.draft)
+        File(compose.activity.getExternalFilesDir(null), "qa/history-export.json")
+            .writeText(
+                kotlinx.coroutines.runBlocking { app.backups.export("2026-10-22T12:00:00Z") }
+            )
+        compose.onNodeWithTag("edit-history-workout").performScrollTo().performClick()
+        field("history-name", "Retained stale edit")
+        kotlinx.coroutines.runBlocking {
+            app.historyRepository.save(
+                edited.copy(values = edited.values.copy(notes = "External saved note"))
+            )
+        }
+        compose.onNodeWithTag("save-history-workout").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Reload saved workout").fetchSemanticsNodes().isNotEmpty()
+        }
+        tag("history-name")
+        compose.onNodeWithTag("history-name").assertTextContains("Retained stale edit")
+        screenshot("history-conflict")
+        compose.onNodeWithText("Reload saved workout").performClick()
+        compose.onNodeWithText("Reload", substring = false).performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("edit-history-workout").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("history-workout").performScrollToNode(hasText("External saved note"))
+        compose.onNodeWithText("External saved note").assertExists()
+        tag("delete-history-workout")
+        compose.onNodeWithTag("delete-history-workout").performClick()
+        compose.onNodeWithText("Cancel", substring = false).performClick()
+        assertNotNull(
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }
+        )
+        tag("delete-history-workout")
+        compose.onNodeWithTag("delete-history-workout").performClick()
+        compose.onNodeWithText("Delete", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.workouts.size == 3 }
+        assertNull(kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) })
+        assertNotNull(
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive("0")) }
+        )
+        assertEquals(active, vm.state.value.draft)
+        back()
+        compose.onNodeWithText("Today").performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
+        compose.onNodeWithText("Resume workout").assertIsDisplayed()
     }
 
     private fun screenshot(name: String) {

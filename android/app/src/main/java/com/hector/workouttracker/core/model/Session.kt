@@ -23,6 +23,7 @@ data class SessionDraft(
     val notes: String = "",
     val exercises: List<Exercise> = emptyList(),
     val originRoutineId: JsonElement? = null,
+    val tags: List<String> = emptyList(),
 )
 
 @Serializable
@@ -67,6 +68,8 @@ fun visibleName(value: String, maxCodePoints: Int): Boolean =
 
 fun sessionError(draft: SessionDraft): String? {
     if (!visibleName(draft.type, 80)) return "Enter a workout name (up to 80 characters)."
+    if (draft.tags.size > 32 || draft.tags.any { !visibleName(it, 80) })
+        return "Use up to 32 tags of 80 characters each."
     if (draft.notes.length > 4000) return "Workout notes are too long."
     if (draft.exercises.isEmpty()) return "Add an exercise before saving."
     if (draft.exercises.size > 100) return "A workout can contain up to 100 exercises."
@@ -136,7 +139,7 @@ fun workoutPayload(
     )
     put("durationMinutes", durationMinutes)
     put("notes", draft.notes)
-    put("tags", JsonArray(emptyList()))
+    put("tags", JsonArray(draft.tags.map(::JsonPrimitive)))
     put("createdAt", Instant.ofEpochMilli(draft.startedAt).toString())
     put(
         "exercises",
