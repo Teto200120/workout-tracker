@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hector.workouttracker.core.catalog.StarterLibrary
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.data.*
 import com.hector.workouttracker.feature.catalog.ExercisePicker
@@ -34,7 +35,9 @@ internal fun RoutinesScreen(
             if (draft?.changed == true) discard = true else vm.close()
         }
     }
-    BackHandler(draft != null || state.busy) { closeEditor() }
+    BackHandler(draft != null || state.starters != null || state.busy) {
+        if (state.starters != null) vm.cancelStarters() else closeEditor()
+    }
     Column(Modifier.fillMaxSize()) {
         if (!state.restorable)
             Text("Save before leaving the app to keep these edits.", Modifier.padding(16.dp))
@@ -55,7 +58,16 @@ internal fun RoutinesScreen(
                 }
             }
         }
-        if (draft == null) {
+        val starters = state.starters
+        if (starters != null) {
+            StarterPreview(
+                starters,
+                state.busy,
+                library.routines.isEmpty(),
+                vm::cancelStarters,
+                vm::addStarters,
+            )
+        } else if (draft == null) {
             LazyColumn(
                 Modifier.fillMaxSize().testTag("routine-library"),
                 contentPadding = PaddingValues(20.dp),
@@ -87,10 +99,23 @@ internal fun RoutinesScreen(
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
-                if (library.routines.isEmpty())
+                if (library.routines.isEmpty()) {
                     item {
                         Text("Build your first routine or import your saved routines from You.")
+                        OutlinedButton(
+                            onClick = { library.catalog?.let(vm::previewStarters) },
+                            enabled = !state.busy && library.catalog != null,
+                            modifier = Modifier.fillMaxWidth().testTag("preview-starter-routines"),
+                        ) {
+                            Text("See starter routines")
+                        }
+                        if (library.catalogLoading) Text("Loading offline starter routines…")
+                        else if (library.catalog == null)
+                            Text(
+                                "Starter routines are unavailable. You can still create a routine."
+                            )
                     }
+                }
                 items(library.routines, key = { it.record.idKey }) { routine ->
                     Card(Modifier.fillMaxWidth()) {
                         Column(
@@ -189,6 +214,69 @@ internal fun RoutinesScreen(
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
         )
+    }
+}
+
+@Composable
+private fun StarterPreview(
+    starters: StarterLibrary,
+    busy: Boolean,
+    emptyLibrary: Boolean,
+    back: () -> Unit,
+    add: () -> Unit,
+) {
+    Column(Modifier.fillMaxSize()) {
+        LazyColumn(
+            Modifier.weight(1f).testTag("starter-preview"),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item {
+                TextButton(onClick = back, enabled = !busy) { Text("Back to routines") }
+                Heading(
+                    "Starter routines",
+                    "A place to start.",
+                    "Add six routines to your empty library, then make them your own. Your workouts and active session stay as they are.",
+                )
+            }
+            items(starters.routines, key = { it.id }) { routine ->
+                Card(Modifier.fillMaxWidth()) {
+                    Column(
+                        Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(routine.name, style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            if (routine.exercises.isEmpty())
+                                "An empty routine for your own exercises."
+                            else routine.exercises.joinToString("\n")
+                        )
+                    }
+                }
+            }
+            item {
+                Text(
+                    "Exercise selections: Free Exercise DB · Unlicense. You can edit or delete these routines afterward.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+        if (!emptyLibrary)
+            Text(
+                "Your library now contains routines. Go back to review them.",
+                Modifier.padding(horizontal = 20.dp),
+            )
+        Button(
+            onClick = add,
+            enabled = !busy && emptyLibrary,
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(20.dp)
+                    .heightIn(min = 56.dp)
+                    .testTag("add-starter-routines"),
+        ) {
+            Text(if (busy) "Adding…" else "Add 6 routines")
+        }
     }
 }
 

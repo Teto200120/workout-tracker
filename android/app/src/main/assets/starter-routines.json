@@ -1,0 +1,121 @@
+{
+  "formatVersion": 1,
+  "sourceRevision": "b0eed061e1c832b3ed815fbaa4b45b3cdc14df49",
+  "routines": [
+    {
+      "id": "starter:v1:Chest / Triceps",
+      "name": "Chest / Triceps",
+      "exercises": [
+        {
+          "catalogId": "free-exercise-db:Barbell_Bench_Press_-_Medium_Grip",
+          "name": "Barbell Bench Press - Medium Grip"
+        },
+        {
+          "catalogId": "free-exercise-db:Decline_Dumbbell_Bench_Press",
+          "name": "Decline Dumbbell Bench Press"
+        },
+        {
+          "catalogId": "free-exercise-db:Cable_Crossover",
+          "name": "Cable Crossover"
+        },
+        {
+          "catalogId": "free-exercise-db:Cable_Incline_Triceps_Extension",
+          "name": "Cable Incline Triceps Extension"
+        }
+      ]
+    },
+    {
+      "id": "starter:v1:Back / Biceps",
+      "name": "Back / Biceps",
+      "exercises": [
+        {
+          "catalogId": "free-exercise-db:Kneeling_High_Pulley_Row",
+          "name": "Kneeling High Pulley Row"
+        },
+        {
+          "catalogId": "free-exercise-db:Seated_Cable_Rows",
+          "name": "Seated Cable Rows"
+        },
+        {
+          "catalogId": "free-exercise-db:Alternate_Hammer_Curl",
+          "name": "Alternate Hammer Curl"
+        },
+        {
+          "catalogId": "free-exercise-db:Cable_Hammer_Curls_-_Rope_Attachment",
+          "name": "Cable Hammer Curls - Rope Attachment"
+        }
+      ]
+    },
+    {
+      "id": "starter:v1:Legs",
+      "name": "Legs",
+      "exercises": [
+        {
+          "catalogId": "free-exercise-db:Barbell_Full_Squat",
+          "name": "Barbell Full Squat"
+        },
+        {
+          "catalogId": "free-exercise-db:Romanian_Deadlift",
+          "name": "Romanian Deadlift"
+        },
+        {
+          "catalogId": "free-exercise-db:Chair_Squat",
+          "name": "Chair Squat"
+        },
+        {
+          "catalogId": "free-exercise-db:Calf_Press",
+          "name": "Calf Press"
+        }
+      ]
+    },
+    {
+      "id": "starter:v1:Shoulders / Traps",
+      "name": "Shoulders / Traps",
+      "exercises": [
+        {
+          "catalogId": "free-exercise-db:Arnold_Dumbbell_Press",
+          "name": "Arnold Dumbbell Press"
+        },
+        {
+          "catalogId": "free-exercise-db:Alternating_Deltoid_Raise",
+          "name": "Alternating Deltoid Raise"
+        },
+        {
+          "catalogId": "free-exercise-db:Reverse_Machine_Flyes",
+          "name": "Reverse Machine Flyes"
+        },
+        {
+          "catalogId": "free-exercise-db:Barbell_Shrug",
+          "name": "Barbell Shrug"
+        }
+      ]
+    },
+    {
+      "id": "starter:v1:Soccer / Conditioning",
+      "name": "Soccer / Conditioning",
+      "exercises": [
+        {
+          "catalogId": "free-exercise-db:90_90_Hamstring",
+          "name": "90/90 Hamstring"
+        },
+        {
+          "catalogId": "free-exercise-db:Bench_Jump",
+          "name": "Bench Jump"
+        },
+        {
+          "catalogId": "free-exercise-db:Double_Leg_Butt_Kick",
+          "name": "Double Leg Butt Kick"
+        },
+        {
+          "catalogId": "free-exercise-db:All_Fours_Quad_Stretch",
+          "name": "All Fours Quad Stretch"
+        }
+      ]
+    },
+    {
+      "id": "starter:v1:Custom",
+      "name": "Custom",
+      "exercises": []
+    }
+  ]
+}

@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.hector.workouttracker.TrackerApplication
+import com.hector.workouttracker.core.catalog.ExerciseCatalog
+import com.hector.workouttracker.core.catalog.StarterLibrary
 import com.hector.workouttracker.core.model.trackerJson
 import com.hector.workouttracker.data.*
 import kotlinx.coroutines.CancellationException
@@ -21,6 +23,7 @@ data class RoutineEditorState(
     val conflict: Boolean = false,
     val message: String? = null,
     val restorable: Boolean = true,
+    val starters: StarterLibrary? = null,
 )
 
 class RoutineViewModel(application: Application, private val saved: SavedStateHandle) :
@@ -36,6 +39,43 @@ class RoutineViewModel(application: Application, private val saved: SavedStateHa
             )
         )
     val state = mutable.asStateFlow()
+
+    fun previewStarters(catalog: ExerciseCatalog) {
+        if (state.value.busy || state.value.draft != null || state.value.starters != null) return
+        run {
+            val library =
+                withContext(Dispatchers.IO) {
+                    try {
+                        getApplication<Application>()
+                            .assets
+                            .open("starter-routines.json")
+                            .bufferedReader()
+                            .use { StarterLibrary.parse(it.readText(), catalog) }
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        throw IllegalStateException(
+                            "Starter routines are unavailable. You can still create a routine.",
+                            error,
+                        )
+                    }
+                }
+            mutable.value = state.value.copy(starters = library)
+        }
+    }
+
+    fun cancelStarters() {
+        if (!state.value.busy) mutable.value = state.value.copy(starters = null, error = null)
+    }
+
+    fun addStarters() {
+        val library = state.value.starters ?: return
+        run {
+            val count = repository.seedStarters(library)
+            mutable.value =
+                state.value.copy(starters = null, message = "$count starter routines added.")
+        }
+    }
 
     private fun draft(value: RoutineDraft?) {
         val snapshot = value?.restorationState()

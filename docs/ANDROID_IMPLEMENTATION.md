@@ -73,7 +73,7 @@ Local verification results and final CI run links are recorded in the implementa
 ### Remaining transition work
 
 1. Automated process-stop and installed-upgrade acceptance is tracked in slice C2 below. Physical S24 Ultra recovery/upgrade acceptance remains a release gate in slice E.
-2. Routine editing/library management is covered by D1 below. Deliberate starter-library seeding remains a separate step; native code never automatically seeds or replaces imported routines.
+2. Routine editing/library management is covered by D1 below. Explicit empty-library starter seeding is covered by D2; native code never automatically seeds or replaces imported routines.
 3. Slice D: schedule, complete session/History editing, PR/Stats calculations and remaining settings/haptic/motion preferences, following the existing contracts.
 4. Slice E: physical S24 Ultra testing, large text/TalkBack, performance/offline acceptance and production signing/release. Keep the PWA and a backup until these gates pass.
 
@@ -100,3 +100,16 @@ Preview: versionCode 4 / `0.4.0-routines`. Room schema stays 1; backup envelope/
 - Five additional Room tests cover competing names, stale import/edit/delete/preview fences, typed-zero IDs, capacity, active-draft/History/document retention, raw extension preservation, no-op saves, validation and bounded state serialization. A real edited native export is checked by the PWA parser. The expanded Compose flow exercises picker cancellation/replacement, duplicate confirmation, reorder/remove, Activity recreation, discard, stale-save reload, name conflicts, empty creation/deletion, routine launch and deletion during an active session. CI retains its screenshots and a second native export for PWA validation.
 
 Local and accelerated-emulator results are recorded in the implementation PR. The existing installed-upgrade/process-stop harness also runs against version 4. Deliver previews with the original preview signing key; CI artifacts may use an ephemeral identity. Physical S24 update acceptance, accessibility, starter-library seeding, schedule/History/PR/Stats/settings parity and production signing remain separate steps. No PWA runtime behavior or Cloudflare deployment changes are part of this slice.
+
+D1 merged in [PR #35](https://github.com/Teto200120/workout-tracker/pull/35) at `bb804d9`. The accepted head passed 33 native tests, the full Compose editor flow, all seven installed-upgrade/process-recovery phases and 238 web unit / 124 browser / 18 backend tests. The delivered 0.4.0 preview retained the original signing identity. A post-recreation/dialog library capture showed system-bar appearance that still needs device review; automated success does not close physical visual/accessibility acceptance.
+
+## Slice D2: explicit starter routines
+
+Preview: versionCode 5 / `0.5.0-starters`. Room schema 1 and backup envelope/schema 3/2 remain unchanged.
+
+- An empty library offers See starter routines, with a complete six-routine preview and explicit Add 6 routines. Back/cancel writes nothing. Startup, onboarding, imports and upgrades never seed automatically. If any routine exists, the offer is hidden and the transaction rejects seeding. A competing writer cannot be overwritten. Deleting the entire library permits another deliberate seed; no deleted routine is resurrected by app launch.
+- The five four-exercise programs and empty Custom routine use the actual PWA builder and its existing `starter:v1:<name>` IDs. A generated bundled manifest records disposable catalog references and source revision. CI/web contract checks reject drift from the shared builder; Android validates exact catalog IDs/names and instructions before preview. No second exercise catalog, authored fallback program, runtime download or Node build dependency is added. Only routine names, ordered exercise names, IDs and timestamps enter saved data.
+- All six inserts commit in one Room transaction. Repeat taps/concurrent attempts cannot insert another library; failures roll back every insert. History, goals/settings/metadata, imported extensions and active workout snapshots remain untouched. A seed invalidates an outstanding import preview through the existing database fingerprint, just like any routine-library mutation.
+- Five native tests cover catalog mismatch/unavailability, ownership, concurrency, rollback/retry, database reopen and retention of non-routine state. Unit and device exports are checked with the real PWA parser. The Compose flow covers preview cancellation, explicit addition during an active workout, hidden repeat action and recreation without another seed.
+
+Current validation results and artifact provenance are recorded in the implementation PR. The installed version-2→current upgrade/recovery harness remains a merge gate. Deliver the accepted APK with the original preview identity. Physical S24 update, large text/TalkBack, post-rotation system bars, schedule/History/PR/Stats/settings parity and production signing remain outstanding. The next bounded feature step is schedule planning; this slice makes no PWA runtime or Cloudflare deployment changes.
