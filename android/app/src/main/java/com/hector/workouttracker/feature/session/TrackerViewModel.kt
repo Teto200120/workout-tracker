@@ -11,11 +11,13 @@ import com.hector.workouttracker.core.backup.*
 import com.hector.workouttracker.core.catalog.ExerciseCatalog
 import com.hector.workouttracker.core.database.RecordEntity
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.core.schedule.ScheduleDay
 import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.data.SavedRoutine
 import com.hector.workouttracker.data.localExerciseNames
 import com.hector.workouttracker.data.routineSnapshot
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +37,8 @@ data class TrackerState(
     val localNames: List<String> = emptyList(),
     val catalog: ExerciseCatalog? = null,
     val catalogLoading: Boolean = true,
+    val schedule: List<ScheduleDay>? = null,
+    val scheduleLoading: Boolean = true,
     val busy: Boolean = false,
     val editVersion: Long = 0,
     val savedVersion: Long = 0,
@@ -63,6 +67,23 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         )
 
     init {
+        viewModelScope.launch {
+            (application as TrackerApplication)
+                .scheduleRepository
+                .schedule
+                .catch {
+                    mutable.update {
+                        it.copy(
+                            scheduleLoading = false,
+                            error =
+                                "Your schedule could not be loaded. Fresh workouts and saved routines are still available.",
+                        )
+                    }
+                }
+                .collect { days ->
+                    mutable.update { it.copy(schedule = days, scheduleLoading = false) }
+                }
+        }
         viewModelScope.launch {
             for (command in commands) {
                 try {
@@ -233,7 +254,12 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun start(routine: SavedRoutine? = null) {
+    fun start(routine: SavedRoutine? = null) = startSession(routine, null)
+
+    fun startPlanned(routine: SavedRoutine, day: ScheduleDay, date: LocalDate) =
+        startSession(routine, day to date)
+
+    private fun startSession(routine: SavedRoutine?, planned: Pair<ScheduleDay, LocalDate>?) {
         if (state.value.busy || state.value.draft != null || state.value.loading) return
         mutable.update { it.copy(busy = true) }
         enqueue {
@@ -245,7 +271,15 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     ZoneId.systemDefault(),
                 )
             val draft =
-                if (routine == null) empty else repository.startRoutine(routine.record, empty)
+                if (routine == null) empty
+                else if (planned == null) repository.startRoutine(routine.record, empty)
+                else
+                    repository.startPlannedRoutine(
+                        routine.record,
+                        planned.first,
+                        planned.second,
+                        empty,
+                    )
             draftRevision = if (routine == null) repository.start(draft) else 1L
             mutable.update {
                 it.copy(

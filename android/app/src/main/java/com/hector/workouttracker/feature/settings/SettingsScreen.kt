@@ -17,7 +17,7 @@ import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 
 @Composable
-internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
+internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel, openSchedule: () -> Unit) {
     var name by
         rememberSaveable(state.profile.displayName) { mutableStateOf(state.profile.displayName) }
     var rpe by rememberSaveable(state.profile.trackRpe) { mutableStateOf(state.profile.trackRpe) }
@@ -55,6 +55,15 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
             }
         }
         item { HorizontalDivider() }
+        item {
+            OutlinedButton(
+                onClick = openSchedule,
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Edit weekly schedule")
+            }
+        }
         item { BackupControls(state, vm) }
         item {
             Text(
@@ -64,7 +73,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel) {
         }
         item {
             Text(
-                "Native Android preview. Workouts and drafts are stored locally. Routine planning and full analytics are not available in this build; imported routines and goals are preserved for future versions."
+                "Native Android preview. Workouts, routines and weekly plans work offline. Full analytics and remaining History/settings features are still being built; imported goals and preferences are preserved."
             )
         }
         item {

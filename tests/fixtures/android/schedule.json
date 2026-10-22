@@ -1,0 +1,382 @@
+{
+  "cases": [
+    {
+      "name": "Sunday boundary",
+      "date": "2026-07-12",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "rest",
+        "title": "Rest Day",
+        "routine": "Custom",
+        "note": "No gym workout scheduled. Optional recovery, mobility, or custom workout."
+      }
+    },
+    {
+      "name": "Monday boundary",
+      "date": "2026-07-13",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "gym",
+        "title": "Chest / Triceps",
+        "routine": "Chest / Triceps",
+        "note": "Suggested from your Monday schedule."
+      }
+    },
+    {
+      "name": "Soccer",
+      "date": "2026-07-15",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "soccer",
+        "title": "Soccer Day",
+        "routine": "Custom",
+        "note": "Soccer is treated separately, since you do not track it as a gym workout here."
+      }
+    },
+    {
+      "name": "Rest",
+      "date": "2026-10-22",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "rest",
+        "title": "Rest Day",
+        "routine": "Custom",
+        "note": "No gym workout scheduled. Optional recovery, mobility, or custom workout."
+      }
+    },
+    {
+      "name": "Year boundary",
+      "date": "2027-01-01",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "gym",
+        "title": "Legs",
+        "routine": "Legs",
+        "note": "Suggested from your Friday schedule."
+      }
+    },
+    {
+      "name": "DST local date",
+      "date": "2026-11-01",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "rest",
+        "title": "Rest Day",
+        "routine": "Custom",
+        "note": "No gym workout scheduled. Optional recovery, mobility, or custom workout."
+      }
+    },
+    {
+      "name": "Saved exact name",
+      "date": "2026-07-13",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Exact Name"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "gym",
+        "title": "Exact Name",
+        "routine": "Exact Name",
+        "note": "Suggested from your Monday schedule."
+      }
+    },
+    {
+      "name": "Blank name fallback",
+      "date": "2026-07-13",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": ""
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "gym",
+        "title": "Chest / Triceps",
+        "routine": "Chest / Triceps",
+        "note": "Suggested from your Monday schedule."
+      }
+    },
+    {
+      "name": "Custom soccer",
+      "date": "2026-07-13",
+      "settings": {
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "soccer",
+            "routine": "Preserved name"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        }
+      },
+      "expected": {
+        "kind": "soccer",
+        "title": "Soccer Day",
+        "routine": "Preserved name",
+        "note": "Soccer is treated separately, since you do not track it as a gym workout here."
+      }
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import androidx.room.withTransaction
 import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.database.*
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.core.schedule.*
+import java.time.LocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
@@ -84,6 +86,36 @@ class TrackerRepository(private val db: TrackerDatabase) {
                 )
             start(draft)
             draft
+        }
+
+    /** Plan and unique exact-name match are rechecked in the same transaction as draft creation. */
+    suspend fun startPlannedRoutine(
+        selected: RecordEntity,
+        expected: ScheduleDay,
+        date: LocalDate,
+        empty: SessionDraft,
+    ): SessionDraft =
+        db.withTransaction {
+            check(empty.date == date.toString()) {
+                "Today changed. Review your plan before starting."
+            }
+            val settings =
+                dao.document("settings")?.let {
+                    trackerJson.parseToJsonElement(it.payload).jsonObject
+                } ?: BackupCodec.defaultSettings
+            val days = scheduleDays(settings)
+            val plan = resolveDayPlan(date, days)
+            val routine = routineSnapshot(selected)
+            if (
+                days[date.dayOfWeek.value % 7] != expected ||
+                    plan.kind != "gym" ||
+                    plan.routine != routine.name ||
+                    dao.recordsOfKind("routine").count {
+                        routineSnapshot(it).name == plan.routine
+                    } != 1
+            )
+                throw WriteConflict()
+            startRoutine(selected, empty)
         }
 
     suspend fun saveDraft(draft: SessionDraft, expected: Long): Long {

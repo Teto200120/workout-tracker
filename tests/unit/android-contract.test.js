@@ -10,6 +10,33 @@ import {
 import { validateImportedApplicationData } from "../../src/js/domain/input-guardrails.js";
 import { prepareBackupImport } from "../../src/js/schema/migrations.js";
 import { buildCatalogStarterRoutines } from "../../src/js/catalog/starter-routines.js";
+import { resolveWorkoutDay } from "../../src/js/domain/schedule.js";
+import {
+  DEFAULT_APP_SETTINGS,
+  DEFAULT_SCHEDULE,
+  DAY_LABELS,
+} from "../../src/js/core/constants.js";
+
+test("Native local-date schedule fixtures match the actual PWA resolver", () => {
+  const fixture = JSON.parse(
+    readFileSync(
+      new URL("../fixtures/android/schedule.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  for (const item of fixture.cases)
+    assert.deepEqual(
+      resolveWorkoutDay(
+        item.date,
+        item.settings,
+        DEFAULT_SCHEDULE,
+        DEFAULT_APP_SETTINGS,
+        DAY_LABELS,
+      ),
+      item.expected,
+      item.name,
+    );
+});
 
 const fixture = JSON.parse(
   readFileSync(
