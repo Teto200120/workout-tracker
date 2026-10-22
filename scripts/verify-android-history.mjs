@@ -37,7 +37,7 @@ assert.deepEqual(
 assert.deepEqual(data.goals, fixture.goals);
 if (!process.argv.includes("--device")) {
   assert.deepEqual(data.settings, fixture.settings);
-  assert.deepEqual(data.templates, fixture.templates);
+  assert.deepEqual(data.routines, fixture.templates);
 }
 console.log(
   "Native History export passes the PWA importer: reviewed fields, nested extensions, typed IDs and other records retained.",
