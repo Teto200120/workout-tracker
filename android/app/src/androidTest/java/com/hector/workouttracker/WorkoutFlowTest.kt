@@ -39,6 +39,16 @@ class WorkoutFlowTest {
         }
     }
 
+    // Reuse this composition path after Activity recreation so the test registry and
+    // saveable navigation keys match the original test content.
+    private fun installTestContent(activity: MainActivity, owner: ActivityResultRegistryOwner) {
+        activity.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                TrackerTheme { TrackerApp() }
+            }
+        }
+    }
+
     private fun workoutFlow() {
         val testContext = InstrumentationRegistry.getInstrumentation().context
         val fixture =
@@ -68,11 +78,7 @@ class WorkoutFlowTest {
             object : ActivityResultRegistryOwner {
                 override val activityResultRegistry = registry
             }
-        compose.activity.setContent {
-            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                TrackerTheme { TrackerApp() }
-            }
-        }
+        installTestContent(compose.activity, owner)
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Import PWA backup").fetchSemanticsNodes().isNotEmpty()
         }
@@ -334,10 +340,13 @@ class WorkoutFlowTest {
             JsonPrimitive(true),
             trainingExport.routines.single().getValue("extension").jsonObject.getValue("keep"),
         )
-        routineEditorFlow(vm)
+        routineEditorFlow(vm, owner)
     }
 
-    private fun routineEditorFlow(vm: com.hector.workouttracker.feature.session.TrackerViewModel) {
+    private fun routineEditorFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
         fun editorText(text: String) {
             compose
                 .onNodeWithTag("routine-editor")
@@ -412,6 +421,7 @@ class WorkoutFlowTest {
         name("Edited fixture")
         screenshot("routine-editor")
         compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
         }
