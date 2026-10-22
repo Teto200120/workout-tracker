@@ -557,6 +557,53 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) { vm.state.value.routines.isEmpty() }
         assertEquals(active, vm.state.value.draft)
         assertEquals(4, vm.state.value.workouts.size)
+
+        // Previewing/cancelling an empty-library seed writes nothing, including during a session.
+        val historyBeforeSeed = vm.state.value.workouts
+        fun previewStarters() {
+            compose
+                .onNodeWithTag("routine-library")
+                .performScrollToNode(hasTestTag("preview-starter-routines"))
+            compose
+                .onNodeWithTag("preview-starter-routines")
+                .performScrollTo()
+                .assertIsEnabled()
+                .performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("starter-preview").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        previewStarters()
+        screenshot("starter-preview")
+        assertTrue(vm.state.value.routines.isEmpty())
+        compose.onNodeWithTag("starter-preview").performScrollToNode(hasText("Back to routines"))
+        compose.onNodeWithText("Back to routines").performClick()
+        waitLibrary()
+        assertTrue(vm.state.value.routines.isEmpty())
+        previewStarters()
+        compose.onNodeWithTag("add-starter-routines").assertIsDisplayed().performClick()
+        waitLibrary()
+        compose.waitUntil(10000) { vm.state.value.routines.size == 6 }
+        compose.onNodeWithTag("preview-starter-routines").assertDoesNotExist()
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(historyBeforeSeed, vm.state.value.workouts)
+        val seeded = vm.state.value.routines
+        assertEquals(6, seeded.map { it.id }.distinct().size)
+        assertEquals(0, seeded.single { it.name == "Custom" }.exercises.size)
+        val starterOutput =
+            File(compose.activity.getExternalFilesDir(null), "qa/starter-export.json")
+        starterOutput.writeText(
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-22T12:00:00Z") }
+        )
+        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Create routine"))
+        screenshot("starter-library")
+
+        // Recreating the screen keeps the committed library without seeding another copy.
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        waitLibrary()
+        assertEquals(seeded, vm.state.value.routines)
+        assertEquals(active, vm.state.value.draft)
     }
 
     private fun screenshot(name: String) {

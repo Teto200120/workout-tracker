@@ -9,6 +9,7 @@ import {
 } from "../../src/js/domain/workout-metrics.js";
 import { validateImportedApplicationData } from "../../src/js/domain/input-guardrails.js";
 import { prepareBackupImport } from "../../src/js/schema/migrations.js";
+import { buildCatalogStarterRoutines } from "../../src/js/catalog/starter-routines.js";
 
 const fixture = JSON.parse(
   readFileSync(
@@ -65,6 +66,29 @@ const catalog = JSON.parse(
     "utf8",
   ),
 );
+test("Android starter manifest matches the real PWA builder and stable seed IDs", () => {
+  const manifest = JSON.parse(
+    readFileSync(
+      new URL(
+        "../../android/app/src/main/assets/starter-routines.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const starter = buildCatalogStarterRoutines(catalog.exercises);
+  assert.equal(starter.ok, true);
+  assert.equal(manifest.formatVersion, 1);
+  assert.equal(manifest.sourceRevision, catalog.metadata.sourceRevision);
+  assert.deepEqual(manifest.routines, [
+    ...starter.routines.map(({ name, exercises }) => ({
+      id: `starter:v1:${name}`,
+      name,
+      exercises: exercises.map(({ catalogId, name }) => ({ catalogId, name })),
+    })),
+    { id: "starter:v1:Custom", name: "Custom", exercises: [] },
+  ]);
+});
 const { mergeLocalAndCatalogResults, resolveCatalogCanonicalName } =
   await import("../../src/js/catalog/catalog-search.js");
 const { createExerciseCatalogResolver } =

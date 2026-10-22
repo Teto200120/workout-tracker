@@ -1,6 +1,7 @@
 package com.hector.workouttracker.data
 
 import androidx.room.withTransaction
+import com.hector.workouttracker.core.catalog.StarterLibrary
 import com.hector.workouttracker.core.database.*
 import com.hector.workouttracker.core.model.*
 import java.security.MessageDigest
@@ -86,6 +87,26 @@ class RoutineRepository(private val db: TrackerDatabase) {
 
     suspend fun read(id: JsonElement): SavedRoutine? =
         dao.record("routine", typedIdKey(id))?.let(::routineSnapshot)
+
+    /** Explicit empty-library seeding. Never replace an imported or user-owned record. */
+    suspend fun seedStarters(library: StarterLibrary, now: String = Instant.now().toString()): Int =
+        db.withTransaction {
+            check(dao.recordsOfKind("routine").isEmpty()) {
+                "Your routine library changed. Existing routines were kept. Go back to review them."
+            }
+            library.routines.forEach { routine ->
+                val id = JsonPrimitive(routine.id)
+                val payload = buildJsonObject {
+                    put("id", id)
+                    put("name", routine.name)
+                    put("exercises", JsonArray(routine.exercises.map(::JsonPrimitive)))
+                    put("createdAt", now)
+                    put("updatedAt", now)
+                }
+                dao.insertRecord(RecordEntity("routine", typedIdKey(id), payload.toString()))
+            }
+            library.routines.size
+        }
 
     suspend fun save(draft: RoutineDraft, now: String = Instant.now().toString()): SavedRoutine =
         db.withTransaction {

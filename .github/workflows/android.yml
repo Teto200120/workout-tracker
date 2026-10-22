@@ -13,6 +13,8 @@ on:
       - "scripts/verify-android-training.mjs"
       - "scripts/verify-android-lifecycle.mjs"
       - "scripts/verify-android-routines.mjs"
+      - "scripts/generate-android-starters.mjs"
+      - "scripts/verify-android-starters.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
@@ -26,6 +28,8 @@ on:
       - "scripts/verify-android-training.mjs"
       - "scripts/verify-android-lifecycle.mjs"
       - "scripts/verify-android-routines.mjs"
+      - "scripts/generate-android-starters.mjs"
+      - "scripts/verify-android-starters.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -61,7 +65,9 @@ jobs:
             printf '%s' "$PREVIEW_KEY" | base64 --decode > "$HOME/.android/debug.keystore"
           fi
       - name: Build, test persistence and lint
-        run: ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
+        run: |
+          node ../scripts/generate-android-starters.mjs --check
+          ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
       - name: Build the pinned version-2 upgrade baseline
         run: bash qa/build_upgrade_baseline.sh
       - name: Verify native export with the PWA importer
@@ -69,6 +75,7 @@ jobs:
           node ../scripts/verify-android-roundtrip.mjs app/build/outputs/compatibility/native-export.json
           node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json
           node ../scripts/verify-android-routines.mjs app/build/outputs/compatibility/routine-export.json
+          node ../scripts/verify-android-starters.mjs app/build/outputs/compatibility/starter-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -90,6 +97,7 @@ jobs:
             native_status=$?;
             adb pull /sdcard/Android/data/com.hector.workouttracker/files/qa app/build/outputs/screenshots;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-routines.mjs app/build/outputs/screenshots/routine-editor-export.json --device || exit $?; fi;
+            if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-starters.mjs app/build/outputs/screenshots/starter-export.json || exit $?; fi;
             exit "$native_status"
             '
       - name: Upload preview APK and verification reports
