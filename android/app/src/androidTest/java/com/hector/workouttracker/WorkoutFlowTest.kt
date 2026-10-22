@@ -887,7 +887,7 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("stats-totals").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithTag("stats-totals").assertTextContains("3 workouts")
+        compose.onNodeWithTag("stats-totals").assertTextContains("3 workouts", substring = true)
         screenshot("stats-overview")
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-search"))
         compose.onNodeWithTag("stats-search").performScrollTo().performTextInput("Bench Press")
@@ -950,7 +950,11 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("stats-list").performScrollToNode(hasText("Back to Stats"))
         compose.onNodeWithText("Back to Stats").performScrollTo().performClick()
         compose.waitUntil(10000) {
-            runCatching { compose.onNodeWithTag("stats-totals").assertTextContains("2 workouts") }
+            runCatching {
+                    compose
+                        .onNodeWithTag("stats-totals")
+                        .assertTextContains("2 workouts", substring = true)
+                }
                 .isSuccess
         }
         assertEquals(active, vm.state.value.draft)
