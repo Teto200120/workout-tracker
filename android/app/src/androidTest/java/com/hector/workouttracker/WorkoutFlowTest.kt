@@ -374,10 +374,10 @@ class WorkoutFlowTest {
         editorTag("routine-change-1")
         compose.onNodeWithText("Back to routine").performClick() // Cancel changes nothing.
         editorTag("routine-change-1")
-        compose.onNodeWithTag("exercise-search").performTextInput("Fixture replacement")
+        compose.onNodeWithTag("exercise-search").performTextReplacement("Fixture replacement")
         compose.onNodeWithTag("add-search-name").performClick()
         editorText("Browse exercises")
-        compose.onNodeWithTag("exercise-search").performTextInput("flat bench press")
+        compose.onNodeWithTag("exercise-search").performTextReplacement("flat bench press")
         compose.onNodeWithTag("add-search-name").performClick()
         compose.onNodeWithText("Keep a repeated exercise?").assertExists()
         compose.onNodeWithText("Keep both").performClick()
@@ -393,6 +393,7 @@ class WorkoutFlowTest {
         editorText("Save routine")
         waitLibrary()
         compose.onNodeWithText("Routine saved.").assertExists()
+        compose.waitUntil(10000) { vm.state.value.routines.any { it.name == "Edited fixture" } }
         val app = compose.activity.application as TrackerApplication
         val saved =
             kotlinx.coroutines.runBlocking {
@@ -461,6 +462,7 @@ class WorkoutFlowTest {
         name("Native empty")
         editorText("Save routine")
         waitLibrary()
+        compose.waitUntil(10000) { vm.state.value.routines.any { it.name == "Native empty" } }
         compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Delete Native empty"))
         compose.onNodeWithText("Delete Native empty").performClick()
         compose.onNodeWithText("Cancel", substring = false).performClick()
