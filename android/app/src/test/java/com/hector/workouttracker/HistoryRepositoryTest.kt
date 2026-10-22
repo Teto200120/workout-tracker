@@ -353,5 +353,6 @@ class HistoryRepositoryTest {
         assertEquals(300.0, workoutMetrics(w).volume, 0.0)
         assertEquals(1, workoutMetrics(w).workingSets)
         BackupCodec.parse(BackupRepository(db).export("2026-10-22T12:00:00Z"))
+        Unit
     }
 }
