@@ -101,7 +101,8 @@ class StatsRepositoryTest {
                                     it.copy(
                                         sets =
                                             it.sets.mapIndexed { i, s ->
-                                                if (i == 0) s.copy(weight = "150") else s
+                                                if (i == 0) s.copy(weight = "150", reps = "5")
+                                                else s
                                             }
                                     )
                                 }
@@ -124,12 +125,13 @@ class StatsRepositoryTest {
             )
             val schedules = ScheduleRepository(db)
             val plan = schedules.read()
-            schedules.save(plan.copy(days = plan.days.map { it.copy(kind = "rest") }))
-            await { it.goal == 6 && it.weekly.gymDays == 0 }
+            schedules.save(plan.copy(days = plan.days.map { it.copy(kind = "gym") }))
+            await { it.goal == 6 && it.weekly.gymDays == 7 }
             val b = BackupRepository(db)
             b.confirm(b.preview(fixture()))
             await {
                 it.totals.workouts == 2 &&
+                    it.weekly.gymDays == 0 &&
                     it.exercises.single { e -> e.name == "Bench Press" }.bestWeight == 100.0
             }
             dates.value = LocalDate.parse("2050-01-01")

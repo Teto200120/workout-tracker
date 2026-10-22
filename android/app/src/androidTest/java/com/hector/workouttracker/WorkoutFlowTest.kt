@@ -926,7 +926,8 @@ class WorkoutFlowTest {
                                     it.copy(
                                         sets =
                                             it.sets.mapIndexed { i, s ->
-                                                if (i == 0) s.copy(weight = "150") else s
+                                                if (i == 0) s.copy(weight = "150", reps = "5")
+                                                else s
                                             }
                                     )
                                 }
