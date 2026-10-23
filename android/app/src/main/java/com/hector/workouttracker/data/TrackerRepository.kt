@@ -8,6 +8,7 @@ import com.hector.workouttracker.core.schedule.*
 import com.hector.workouttracker.domain.*
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -26,6 +27,7 @@ class TrackerRepository(private val db: TrackerDatabase) {
                 document?.let { trackerJson.decodeFromString<Profile>(it.payload) to it.revision }
                     ?: (Profile() to 0L)
             }
+            .distinctUntilChanged()
             .flowOn(Dispatchers.Default)
     val workouts = dao.observeRecords("workout")
     val routines = dao.observeRecords("routine")

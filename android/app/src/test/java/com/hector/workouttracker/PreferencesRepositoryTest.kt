@@ -137,7 +137,7 @@ class PreferencesRepositoryTest {
         assertEquals(draft, db.trackerDao().draft())
         assertEquals("8", tracker.readDraft()!!.first.exercises.single().sets.single().rpe)
         val out = File("build/outputs/compatibility/preferences-export.json")
-        out.parentFile.mkdirs()
+        requireNotNull(out.parentFile).mkdirs()
         out.writeText(backups.export("2026-10-23T00:00:00Z"))
         db.close()
         db =
@@ -196,7 +196,7 @@ class PreferencesRepositoryTest {
         val schedule = ScheduleRepository(db)
         val stale = preferences.read()
         val plan = schedule.read()
-        schedule.save(plan.copy(days = plan.days.map { it.copy(kind = "rest") }))
+        schedule.save(plan.copy(days = plan.days.map { it.copy(kind = "gym") }))
         rejects { preferences.save(edited(stale)) }
         val stalePlan = schedule.read()
         preferences.save(edited(preferences.read()))

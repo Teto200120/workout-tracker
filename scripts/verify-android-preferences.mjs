@@ -33,7 +33,7 @@ if (!process.argv.includes("--device")) {
   });
   assert.deepEqual(data.workouts, fixture.workouts);
   assert.deepEqual(data.routines, fixture.templates);
-  assert.deepEqual(data.weights, fixture.weights);
+  assert.deepEqual(data.legacyWeights, fixture.weights);
 } else {
   assert.equal(data.settings.displayName, "Native preferences");
   assert.equal(data.settings.compoundMin, 7);

@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.model.visibleName
 import com.hector.workouttracker.data.*
+import java.math.BigDecimal
 
 @Composable
 internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = viewModel()) {
@@ -71,6 +73,11 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                         values.displayName,
                         { value -> vm.edit { it.copy(displayName = value) } },
                         label = { Text("Your name") },
+                        isError = !visibleName(values.displayName.trim(), 80),
+                        supportingText = {
+                            if (!visibleName(values.displayName.trim(), 80))
+                                Text("Enter a name up to 80 characters.")
+                        },
                         singleLine = true,
                         enabled = !state.busy,
                         modifier = Modifier.fillMaxWidth().testTag("preference-name"),
@@ -289,10 +296,29 @@ private fun PreferenceNumber(
     modifier: Modifier = Modifier,
     change: (String) -> Unit,
 ) {
+    val number = value.takeIf { it.length <= 32 }?.trim()?.replace(',', '.')?.toBigDecimalOrNull()
+    val minimum = if (key == "defaultWeightJump") BigDecimal("0.5") else BigDecimal.ONE
+    val maximum = if (key == "weeklyGoal") BigDecimal(100) else BigDecimal(1000)
+    val places = if (key == "defaultWeightJump") 2 else 0
+    val invalid =
+        value.length > 32 ||
+            !Regex("[0-9]+([.,][0-9]+)?").matches(value.trim()) ||
+            number == null ||
+            number < minimum ||
+            number > maximum ||
+            number.stripTrailingZeros().scale() > places
     OutlinedTextField(
         value,
         change,
         label = { Text(label) },
+        isError = invalid,
+        supportingText = {
+            if (invalid)
+                Text(
+                    if (places == 0) "Enter a whole number from $minimum to $maximum."
+                    else "Enter $minimum–$maximum, up to 2 decimals."
+                )
+        },
         singleLine = true,
         enabled = enabled,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
