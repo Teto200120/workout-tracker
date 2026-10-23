@@ -191,3 +191,15 @@ test("Native progression fixtures match the actual PWA training rules", () => {
     "--check",
   ]);
 });
+
+test("Native backup-age fixtures match the actual PWA helpers", () => {
+  execFileSync(process.execPath, [
+    fileURLToPath(
+      new URL(
+        "../../scripts/generate-android-backup-status.mjs",
+        import.meta.url,
+      ),
+    ),
+    "--check",
+  ]);
+});

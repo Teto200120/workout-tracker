@@ -25,6 +25,9 @@ on:
       - "scripts/generate-android-progress.mjs"
       - "scripts/generate-android-training-rules.mjs"
       - "scripts/verify-android-progression.mjs"
+      - "scripts/generate-android-backup-status.mjs"
+      - "scripts/verify-android-guidance.mjs"
+      - "src/js/application/backup.js"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
@@ -50,6 +53,9 @@ on:
       - "scripts/generate-android-progress.mjs"
       - "scripts/generate-android-training-rules.mjs"
       - "scripts/verify-android-progression.mjs"
+      - "scripts/generate-android-backup-status.mjs"
+      - "scripts/verify-android-guidance.mjs"
+      - "src/js/application/backup.js"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -89,6 +95,7 @@ jobs:
           node ../scripts/generate-android-starters.mjs --check
           node ../scripts/generate-android-progress.mjs --check
           node ../scripts/generate-android-training-rules.mjs --check
+          node ../scripts/generate-android-backup-status.mjs --check
           ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
       - name: Build the pinned version-2 upgrade baseline
         run: bash qa/build_upgrade_baseline.sh
@@ -102,6 +109,7 @@ jobs:
           node ../scripts/verify-android-history.mjs app/build/outputs/compatibility/history-export.json
           node ../scripts/verify-android-preferences.mjs app/build/outputs/compatibility/preferences-export.json
           node ../scripts/verify-android-progression.mjs app/build/outputs/compatibility/progression-export.json
+          node ../scripts/verify-android-guidance.mjs app/build/outputs/compatibility/guidance-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -128,6 +136,7 @@ jobs:
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-history.mjs app/build/outputs/screenshots/history-export.json --device || exit $?; fi;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-preferences.mjs app/build/outputs/screenshots/preferences-export.json --device || exit $?; fi;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-progression.mjs app/build/outputs/screenshots/progression-export.json --device || exit $?; fi;
+            if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-guidance.mjs app/build/outputs/screenshots/guidance-export.json --device || exit $?; fi;
             exit "$native_status"
             '
       - name: Upload preview APK and verification reports

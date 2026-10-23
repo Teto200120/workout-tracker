@@ -19,6 +19,7 @@ import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.designsystem.TrackerTheme
 import com.hector.workouttracker.feature.home.TrackerApp
 import java.io.File
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
 import org.junit.Rule
@@ -1237,6 +1238,125 @@ class WorkoutFlowTest {
             .writeText(
                 kotlinx.coroutines.runBlocking { app.backups.export("2026-10-23T13:00:00Z") }
             )
+        backupGuidanceFlow(vm, owner)
+    }
+
+    private fun backupGuidanceFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val records = vm.state.value.workouts
+        compose
+            .onNodeWithTag("home-list")
+            .performScrollToNode(hasText("Start workout", substring = false))
+        compose.onNodeWithText("Start workout", substring = false).performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.draft != null && !vm.state.value.pending && !vm.state.value.busy
+        }
+        compose.onNodeWithText("Workout name").performTextReplacement("Guidance keeps this draft")
+        closeSoftKeyboard()
+        compose.waitUntil(10000) { !vm.state.value.pending }
+        val active = vm.state.value.draft
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(hasTestTag("read-tip-activeWorkoutBasics"))
+        compose.onNodeWithTag("read-tip-activeWorkoutBasics").performClick()
+        screenshot("guidance-inline")
+        compose.onNodeWithTag("dismiss-tip-activeWorkoutBasics").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithTag("help-tip-activeWorkoutBasics")
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
+        compose.onNodeWithText("Back to Today").performClick()
+        compose.onNodeWithText("You", substring = false).performClick()
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("open-help"))
+        compose.onNodeWithTag("open-help").performClick()
+        compose
+            .onNodeWithTag("help-list")
+            .performScrollToNode(hasTestTag("help-read-activeWorkoutBasics"))
+        compose.onNodeWithTag("help-read-activeWorkoutBasics").performClick()
+        compose.onNodeWithTag("help-replay-activeWorkoutBasics").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            kotlinx.coroutines.runBlocking {
+                com.hector.workouttracker.domain.guidanceVisible(
+                    app.guidanceRepository.progress.first(),
+                    "activeWorkoutBasics",
+                )
+            }
+        }
+        assertEquals(active, vm.state.value.draft)
+        screenshot("guidance-help")
+        val progress = kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() }
+        val beforeStatus = vm.state.value.backup
+        compose.onNodeWithTag("help-list").performScrollToNode(hasTestTag("reset-guidance"))
+        compose.onNodeWithTag("reset-guidance").performClick()
+        compose.onNodeWithText("Keep guidance").performClick()
+        assertEquals(
+            progress,
+            kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() },
+        )
+        compose.onNodeWithTag("reset-guidance").performClick()
+        compose.onNodeWithText("Reset tips", substring = false).performClick()
+        compose.waitUntil(10000) {
+            kotlinx.coroutines.runBlocking {
+                app.guidanceRepository.progress.first()["experiences"]?.jsonObject?.values?.all {
+                    it.jsonObject["status"]?.jsonPrimitive?.content == "unseen"
+                } == true
+            }
+        }
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(records, vm.state.value.workouts)
+        assertEquals(beforeStatus, vm.state.value.backup)
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("help-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("help-list").performScrollToNode(hasText("Back to You"))
+        compose.onNodeWithText("Back to You").performClick()
+        fun export() {
+            compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Export backup"))
+            compose.onNodeWithText("Export backup").performClick()
+        }
+        nextUri = null
+        export()
+        compose.waitForIdle()
+        assertEquals(beforeStatus, vm.state.value.backup)
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/fail.json")
+        export()
+        compose.waitUntil(10000) { !vm.state.value.busy && vm.state.value.error != null }
+        assertEquals(beforeStatus, vm.state.value.backup)
+        assertEquals(active, vm.state.value.draft)
+        compose.onNodeWithText("Dismiss", substring = false).performClick()
+        nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/export.json")
+        export()
+        compose.waitUntil(10000) {
+            !vm.state.value.busy &&
+                vm.state.value.backup?.lastExportedAt != beforeStatus?.lastExportedAt
+        }
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("backup-status"))
+        compose
+            .onNode(hasText("Current") and hasAnyAncestor(hasTestTag("backup-status")))
+            .assertExists()
+        screenshot("backup-reminder")
+        val text =
+            compose.activity.contentResolver.openInputStream(nextUri!!)!!.bufferedReader().use {
+                it.readText()
+            }
+        val saved = BackupCodec.parse(text)
+        assertEquals(3, saved.workouts.size)
+        assertEquals(
+            JsonPrimitive(vm.state.value.backup!!.lastExportedAt),
+            saved.metadata!!.getValue("lastExportedAt"),
+        )
+        assertFalse(text.contains("native_guidance"))
+        assertFalse(text.contains("Guidance keeps this draft"))
+        assertEquals(active, vm.state.value.draft)
+        File(compose.activity.getExternalFilesDir(null), "qa/guidance-export.json").writeText(text)
     }
 
     private fun screenshot(name: String) {

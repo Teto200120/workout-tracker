@@ -15,6 +15,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.hector.workouttracker.core.catalog.*
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.visibleName
+import com.hector.workouttracker.feature.help.HelpTip
 import com.hector.workouttracker.feature.session.TrackerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -302,6 +303,7 @@ private fun GuideContent(
                     style = MaterialTheme.typography.labelLarge,
                 )
         }
+        item { HelpTip("exerciseGuideBasics") }
         if (onAdd != null)
             item {
                 Button(

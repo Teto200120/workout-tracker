@@ -55,7 +55,7 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
         }
         item {
             Text(
-                "RPE records how hard a set felt. You can change this later.",
+                "RPE records how hard a set felt: 8 means about two good reps left, 9 about one, and 10 no good reps left. You can leave it blank and change tracking later.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

@@ -20,6 +20,7 @@ internal fun SettingsScreen(
     vm: TrackerViewModel,
     openSchedule: () -> Unit,
     openPreferences: () -> Unit,
+    openHelp: () -> Unit,
 ) {
     LazyColumn(
         Modifier.fillMaxSize().testTag("settings-list"),
@@ -50,6 +51,14 @@ internal fun SettingsScreen(
         }
         item { BackupControls(state, vm) }
         item {
+            OutlinedButton(
+                onClick = openHelp,
+                modifier = Modifier.fillMaxWidth().testTag("open-help"),
+            ) {
+                Text("Help & guidance")
+            }
+        }
+        item {
             Text(
                 "Workout Tracker ${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.titleMedium,
@@ -57,7 +66,7 @@ internal fun SettingsScreen(
         }
         item {
             Text(
-                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Backup reminders, feedback and final release checks are still being built."
+                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Backup reminders and help are available in You. Feedback and final release checks are still being built."
             )
         }
         item {

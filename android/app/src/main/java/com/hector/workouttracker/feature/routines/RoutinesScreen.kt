@@ -17,6 +17,7 @@ import com.hector.workouttracker.core.catalog.StarterLibrary
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.data.*
 import com.hector.workouttracker.feature.catalog.ExercisePicker
+import com.hector.workouttracker.feature.help.HelpTip
 import com.hector.workouttracker.feature.session.TrackerState
 
 @Composable
@@ -319,6 +320,7 @@ private fun RoutineEditor(
                 modifier = Modifier.fillMaxWidth().testTag("routine-name"),
             )
         }
+        item { HelpTip("routineEditorBasics") }
         items(draft.exercises.withIndex().toList(), key = { it.index }) { (index, name) ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

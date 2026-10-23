@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.domain.*
+import com.hector.workouttracker.feature.help.HelpTip
 import java.util.Locale
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.jsonPrimitive
@@ -68,6 +69,7 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
                 "Saved workouts only. Your active session is not included.",
             )
         }
+        if (selected == null) item { HelpTip("statsBasics") }
         if (state.loading) item { CircularProgressIndicator() }
         state.error?.let { message ->
             item {
