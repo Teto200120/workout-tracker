@@ -33,11 +33,11 @@ import kotlinx.serialization.json.*
 fun TrackerApp(vm: TrackerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val historyVm: HistoryViewModel = viewModel()
-    state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"
     InteractionTheme(state.interactions) {
+        state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
         Scaffold(
             bottomBar = {
                 if (
