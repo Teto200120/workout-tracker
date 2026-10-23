@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -17,10 +15,12 @@ import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 
 @Composable
-internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel, openSchedule: () -> Unit) {
-    var name by
-        rememberSaveable(state.profile.displayName) { mutableStateOf(state.profile.displayName) }
-    var rpe by rememberSaveable(state.profile.trackRpe) { mutableStateOf(state.profile.trackRpe) }
+internal fun SettingsScreen(
+    state: TrackerState,
+    vm: TrackerViewModel,
+    openSchedule: () -> Unit,
+    openPreferences: () -> Unit,
+) {
     LazyColumn(
         Modifier.fillMaxSize().testTag("settings-list"),
         contentPadding = PaddingValues(24.dp),
@@ -28,30 +28,14 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel, openSched
     ) {
         item { Heading("Make it yours", "You") }
         item {
-            OutlinedTextField(
-                name,
-                { name = it },
-                label = { Text("Your name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.busy,
-            )
-        }
-        item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Track RPE", Modifier.weight(1f))
-                Switch(rpe, { rpe = it }, enabled = !state.busy)
-            }
-        }
-        item {
+            Text(state.profile.displayName, style = MaterialTheme.typography.titleLarge)
+            Text(if (state.profile.trackRpe) "RPE tracking on" else "RPE tracking off")
             Button(
-                onClick = { vm.saveProfile(name, rpe) },
-                enabled =
-                    visibleName(name, 80) &&
-                        !state.busy &&
-                        (name.trim() != state.profile.displayName || rpe != state.profile.trackRpe),
+                onClick = openPreferences,
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Save preferences")
+                Text("Edit preferences & goal")
             }
         }
         item { HorizontalDivider() }
@@ -73,7 +57,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel, openSched
         }
         item {
             Text(
-                "Native Android preview. Workouts, routines and weekly plans work offline. Full analytics and remaining History/settings features are still being built; imported goals and preferences are preserved."
+                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Native progression suggestions, feedback and final release checks are still being built."
             )
         }
         item {

@@ -106,3 +106,9 @@ Finishing a session previews its set counts, volume and elapsed time and offers 
 ### Progress (0.8.0)
 
 Open **Stats** for totals, the rolling seven-day goal, calendar-week activity and personal records. Search an exercise and choose **View progress** for each record's source set/date and the last seven entries. Best load, best set volume and estimated 1RM are independent; warm-ups are excluded. Stats use saved workouts only and update after History changes. Finishing a session shows a dismissible saved-result card on Today after the transaction succeeds.
+
+### Preferences (0.9.0)
+
+Open **You → Edit preferences & goal** for your name, weekly goal, RPE, haptics and animations. **Progression defaults** expands the load jump and rep ranges; native progression suggestions are still being built. Changes apply only after **Save preferences**. Back confirms discarding edits; stale changes offer an explicit reload. Changing RPE preserves all existing values. Your weekly goal updates Stats immediately after saving.
+
+The editor transaction preserves imported extensions, schedules and unrelated records. No-op/equivalent numeric entries preserve stored documents. App animations and haptics honor the saved toggles and Android system settings; keyboard/system UI and loading indicators are outside decorative app motion. Eight JVM/Room tests and the full Compose/upgrade acceptance gates cover this slice. Verify actual exports with `node ../scripts/verify-android-preferences.mjs app/build/outputs/compatibility/preferences-export.json`; device exports use `--device`.
