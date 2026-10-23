@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.designsystem.LocalCompletionFeedback
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.data.SetCopyRequest
 import com.hector.workouttracker.domain.workoutMetrics
 import com.hector.workouttracker.feature.catalog.ExerciseGuide
 import com.hector.workouttracker.feature.catalog.ExercisePicker
@@ -30,6 +31,7 @@ import java.time.ZoneId
 internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -> Unit) {
     val draft = state.draft ?: return
     val completionFeedback = LocalCompletionFeedback.current
+    var copyRequest by remember { mutableStateOf<SetCopyRequest?>(null) }
     var exerciseName by rememberSaveable { mutableStateOf("") }
     var discard by rememberSaveable { mutableStateOf(false) }
     var finish by rememberSaveable { mutableStateOf(false) }
@@ -72,6 +74,12 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                 ) {
                     Text(exercise.name, style = MaterialTheme.typography.titleLarge)
                     TextButton(onClick = { guide = exercise.name }) { Text("Exercise guide") }
+                    TrainingGuidanceCard(state, exercise, vm) { target ->
+                        vm.setCopyRequest(exercise.key, target)?.let { request ->
+                            if (request.replacesInput) copyRequest = request
+                            else vm.applySets(request)
+                        }
+                    }
                     exercise.sets.forEachIndexed { index, set ->
                         key(set.key) {
                             fun changeSet(transform: (WorkingSet) -> WorkingSet) {
@@ -113,7 +121,11 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     if (state.profile.trackRpe)
                                         OutlinedTextField(
                                             set.rpe,
-                                            { v -> changeSet { it.copy(rpe = v) } },
+                                            { v ->
+                                                changeSet {
+                                                    it.copy(rpe = v, historicalRpeZero = false)
+                                                }
+                                            },
                                             label = { Text("RPE") },
                                             singleLine = true,
                                             keyboardOptions =
@@ -236,6 +248,33 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     }
     if (picker) ExercisePicker(state, onDismiss = { picker = false }, onAdd = vm::addExercise)
     guide?.let { name -> ExerciseGuide(name, state.catalog, onDismiss = { guide = null }) }
+    copyRequest?.let { request ->
+        AlertDialog(
+            onDismissRequest = { copyRequest = null },
+            title = { Text("Replace entered sets?") },
+            text = {
+                Text(
+                    if (request.target)
+                        "Replace the sets for ${request.exercise.name} with the suggested working sets? Previous RPE values are copied and completion starts unchecked."
+                    else
+                        "Replace the sets for ${request.exercise.name} with its last logged sets, including warm-ups and RPE? Completion starts unchecked."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        copyRequest = null
+                        vm.applySets(request)
+                    }
+                ) {
+                    Text("Replace sets")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { copyRequest = null }) { Text("Keep entered sets") }
+            },
+        )
+    }
     if (discard)
         AlertDialog(
             onDismissRequest = { discard = false },

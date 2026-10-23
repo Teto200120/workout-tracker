@@ -1,0 +1,2109 @@
+{
+  "cases": [
+    {
+      "label": "no sets",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "-",
+        "repsText": "Log clean work sets",
+        "reason": "6-10 rep range · build a baseline first",
+        "targetSets": []
+      }
+    },
+    {
+      "label": "warmups only",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "45",
+          "reps": "10",
+          "rpe": "",
+          "done": false,
+          "warmup": true
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "-",
+        "repsText": "Log clean work sets",
+        "reason": "6-10 rep range · build a baseline first",
+        "targetSets": []
+      }
+    },
+    {
+      "label": "empty rows",
+      "name": "Unknown",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "",
+          "reps": "",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 8,
+        "max": 12,
+        "increment": 5,
+        "type": "general"
+      },
+      "target": {
+        "weight": "-",
+        "repsText": "Log clean work sets",
+        "reason": "8-12 rep range · build a baseline first",
+        "targetSets": []
+      }
+    },
+    {
+      "label": "compound top",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "",
+          "done": true,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "105 lb",
+        "repsText": "6 / 6 reps",
+        "reason": "6-10 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "105",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "105",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "lowest reps first",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "6",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "7",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "8 / 7 / 7 reps",
+        "reason": "6-10 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "8",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "7",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "7",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "hard RPE",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "9",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "10 / 10 reps",
+        "reason": "6-10 range · last RPE 9.0, progress carefully",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "10",
+            "rpe": "9",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "10",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "very hard RPE",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "9.5",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "10 / 8 reps",
+        "reason": "6-10 range · last RPE 9.5, repeat and clean it up",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "10",
+            "rpe": "9.5",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "8",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "hard RPE disabled",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": false,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "10",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "105 lb",
+        "repsText": "6 reps",
+        "reason": "6-10 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "105",
+            "reps": "6",
+            "rpe": "10",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "warmups excluded",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "999",
+          "reps": "100",
+          "rpe": "",
+          "done": false,
+          "warmup": true
+        },
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "105 lb",
+        "repsText": "6 reps",
+        "reason": "6-10 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "105",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "isolation precedence",
+      "name": "Leg Curl Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "20",
+          "reps": "20",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 12,
+        "max": 20,
+        "increment": 5,
+        "type": "isolation"
+      },
+      "target": {
+        "weight": "25 lb",
+        "repsText": "12 reps",
+        "reason": "12-20 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "25",
+            "reps": "12",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "pull classification",
+      "name": "Cable Row",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "40",
+          "reps": "12",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 8,
+        "max": 12,
+        "increment": 5,
+        "type": "compound pull"
+      },
+      "target": {
+        "weight": "45 lb",
+        "repsText": "8 reps",
+        "reason": "8-12 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "45",
+            "reps": "8",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "pull-up classification",
+      "name": "Pull-up",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 8,
+        "max": 12,
+        "increment": 5,
+        "type": "compound pull"
+      },
+      "target": {
+        "weight": "-",
+        "repsText": "9 reps",
+        "reason": "8-12 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "",
+            "reps": "9",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "general profile",
+      "name": "Custom movement",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "50",
+          "reps": "12",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 8,
+        "max": 12,
+        "increment": 5,
+        "type": "general"
+      },
+      "target": {
+        "weight": "55 lb",
+        "repsText": "8 reps",
+        "reason": "8-12 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "55",
+            "reps": "8",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "custom increment and range",
+      "name": "Bench Press",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 2.5,
+        "compoundMin": 5,
+        "compoundMax": 8,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 5,
+        "max": 8,
+        "increment": 2.5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "102.5 lb",
+        "repsText": "5 reps",
+        "reason": "5-8 range · top reached, add 2.5 lb",
+        "targetSets": [
+          {
+            "weight": "102.5",
+            "reps": "5",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "most common load",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "120",
+          "reps": "5",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "9",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "9 / 9 reps",
+        "reason": "6-10 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "9",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "9",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "load count tie retains first",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "120",
+          "reps": "5",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "120 lb",
+        "repsText": "6 reps",
+        "reason": "6-10 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "120",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "distinct textual loads group numerically",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100.0",
+          "reps": "7",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "80",
+          "reps": "9",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "8 / 8 reps",
+        "reason": "6-10 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "8",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "8",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "numeric versus string zero",
+      "name": "Custom",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": 0,
+          "reps": 0,
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "0",
+          "reps": "0",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "",
+          "reps": "5",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 8,
+        "max": 12,
+        "increment": 5,
+        "type": "general"
+      },
+      "target": {
+        "weight": "-",
+        "repsText": "6 reps",
+        "reason": "8-12 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "0",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "",
+            "reps": "5",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "numeric zero weight with reps",
+      "name": "Custom",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": 0,
+          "reps": 8,
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 8,
+        "max": 12,
+        "increment": 5,
+        "type": "general"
+      },
+      "target": {
+        "weight": "-",
+        "repsText": "9 reps",
+        "reason": "8-12 range · build reps first",
+        "targetSets": [
+          {
+            "weight": 0,
+            "reps": "9",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "blank reps stay blank",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "9 reps",
+        "reason": "6-10 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "9",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "all blank reps",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        },
+        {
+          "weight": "100",
+          "reps": "",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "7 / 6 reps",
+        "reason": "6-10 range · build reps first",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "7",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          },
+          {
+            "weight": "100",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "legacy RPE zero and extensions",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "10",
+          "rpe": 0,
+          "done": false,
+          "warmup": false,
+          "extension": {
+            "keep": [
+              0,
+              null
+            ]
+          }
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "105 lb",
+        "repsText": "6 reps",
+        "reason": "6-10 range · top reached, add 5 lb",
+        "targetSets": [
+          {
+            "weight": "105",
+            "reps": "6",
+            "rpe": 0,
+            "done": false,
+            "warmup": false,
+            "extension": {
+              "keep": [
+                0,
+                null
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "label": "binary rounding",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "8.35",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "9 reps",
+        "reason": "6-10 range · avg RPE 8.3",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "9",
+            "rpe": "8.35",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "rounding tie",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 5,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "100",
+          "reps": "8",
+          "rpe": "8.25",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 5,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "100 lb",
+        "repsText": "9 reps",
+        "reason": "6-10 range · avg RPE 8.3",
+        "targetSets": [
+          {
+            "weight": "100",
+            "reps": "9",
+            "rpe": "8.25",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    },
+    {
+      "label": "unsafe target remains derived",
+      "name": "Bench",
+      "settings": {
+        "displayName": null,
+        "schedule": {
+          "0": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "1": {
+            "kind": "gym",
+            "routine": "Chest / Triceps"
+          },
+          "2": {
+            "kind": "gym",
+            "routine": "Back / Biceps"
+          },
+          "3": {
+            "kind": "soccer",
+            "routine": "Custom"
+          },
+          "4": {
+            "kind": "rest",
+            "routine": "Custom"
+          },
+          "5": {
+            "kind": "gym",
+            "routine": "Legs"
+          },
+          "6": {
+            "kind": "gym",
+            "routine": "Shoulders / Traps"
+          }
+        },
+        "defaultWeightJump": 1000,
+        "compoundMin": 6,
+        "compoundMax": 10,
+        "pullMin": 8,
+        "pullMax": 12,
+        "isolationMin": 12,
+        "isolationMax": 20,
+        "generalMin": 8,
+        "generalMax": 12,
+        "rpeAware": true,
+        "haptics": true,
+        "animations": true
+      },
+      "sets": [
+        {
+          "weight": "10000",
+          "reps": "10",
+          "rpe": "",
+          "done": false,
+          "warmup": false
+        }
+      ],
+      "profile": {
+        "min": 6,
+        "max": 10,
+        "increment": 1000,
+        "type": "compound"
+      },
+      "target": {
+        "weight": "11000 lb",
+        "repsText": "6 reps",
+        "reason": "6-10 range · top reached, add 1000 lb",
+        "targetSets": [
+          {
+            "weight": "11000",
+            "reps": "6",
+            "rpe": "",
+            "done": false,
+            "warmup": false
+          }
+        ]
+      }
+    }
+  ]
+}

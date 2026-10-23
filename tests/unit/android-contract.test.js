@@ -179,3 +179,15 @@ test("Native progress fixtures match the real PWA records, completion and calend
     { env: { ...process.env, TZ: "America/New_York" } },
   );
 });
+
+test("Native progression fixtures match the actual PWA training rules", () => {
+  execFileSync(process.execPath, [
+    fileURLToPath(
+      new URL(
+        "../../scripts/generate-android-training-rules.mjs",
+        import.meta.url,
+      ),
+    ),
+    "--check",
+  ]);
+});

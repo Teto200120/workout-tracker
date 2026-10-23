@@ -1101,6 +1101,142 @@ class WorkoutFlowTest {
                 kotlinx.coroutines.runBlocking { app.backups.export("2026-10-23T00:00:00Z") }
             )
         assertEquals(active, vm.state.value.draft)
+        progressionFlow(vm, owner)
+    }
+
+    private fun progressionFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = requireNotNull(vm.state.value.draft)
+        val sourceRecord =
+            vm.state.value.workouts.first { row ->
+                Json.parseToJsonElement(row.payload)
+                    .jsonObject
+                    .getValue("exercises")
+                    .jsonArray
+                    .any { it.jsonObject.getValue("name").jsonPrimitive.content == "Bench Press" }
+            }
+        val sourceId = Json.parseToJsonElement(sourceRecord.payload).jsonObject.getValue("id")
+        kotlinx.coroutines.runBlocking {
+            val source = app.historyRepository.read(sourceId)!!
+            app.historyRepository.save(
+                source.copy(
+                    values =
+                        source.values.copy(
+                            exercises =
+                                source.values.exercises.map { exercise ->
+                                    if (exercise.name == "Bench Press")
+                                        exercise.copy(
+                                            sets =
+                                                exercise.sets.take(1).map {
+                                                    it.copy(
+                                                        weight = "100",
+                                                        reps = "10",
+                                                        rpe = "8",
+                                                        done = false,
+                                                        warmup = false,
+                                                    )
+                                                }
+                                        )
+                                    else exercise
+                                }
+                        )
+                )
+            )
+        }
+        compose.onNodeWithText("Today", substring = false).performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
+        compose.onNodeWithText("Resume workout").performScrollTo().performClick()
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(hasText("Exercise name", substring = false))
+        compose
+            .onNodeWithText("Exercise name", substring = false)
+            .performScrollTo()
+            .performTextInput("Bench Press")
+        closeSoftKeyboard()
+        compose.onNodeWithText("Add exercise", substring = false).performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.draft!!.exercises.size == active.exercises.size + 1 &&
+                vm.state.value.guidance["Bench Press"]?.target?.weight == "102.5 lb"
+        }
+        val key = vm.state.value.draft!!.exercises.last().key
+        fun click(tag: String) {
+            compose.onNodeWithTag("session-list").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+        }
+        fun entry() = vm.state.value.draft!!.exercises.last()
+        fun awaitEntry(weight: String, reps: String) {
+            compose.waitUntil(10000) {
+                !vm.state.value.busy &&
+                    !vm.state.value.pending &&
+                    entry().sets.singleOrNull()?.let { it.weight == weight && it.reps == reps } ==
+                        true
+            }
+        }
+        click("review-last-$key")
+        compose.onNodeWithText("1. 100 lb × 10 · RPE 8 · Working").assertExists()
+        compose.onNodeWithText("Done", substring = false).performClick()
+        compose
+            .onNodeWithTag("training-target-$key")
+            .assertTextContains("102.5 lb", substring = true)
+        screenshot("training-guidance")
+        click("use-last-$key")
+        awaitEntry("100", "10")
+        assertFalse(entry().sets.single().done)
+        assertEquals("8", entry().sets.single().rpe)
+        val last = vm.state.value.draft
+        click("use-target-$key")
+        compose.onNodeWithText("Keep entered sets").performClick()
+        assertEquals(last, vm.state.value.draft)
+        click("use-target-$key")
+        compose.onNodeWithText("Replace sets", substring = false).performClick()
+        awaitEntry("102.5", "7")
+        val target = vm.state.value.draft
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty() &&
+                vm.state.value.guidance["Bench Press"] != null
+        }
+        assertEquals(target, vm.state.value.draft)
+        click("use-last-$key")
+        val oldBasis = vm.state.value.guidanceBasis
+        kotlinx.coroutines.runBlocking {
+            val source = app.historyRepository.read(sourceId)!!
+            app.historyRepository.save(
+                source.copy(values = source.values.copy(notes = "Changed during copy review"))
+            )
+        }
+        compose.onNodeWithText("Replace sets", substring = false).performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.error?.startsWith("History, preferences or this exercise changed.") ==
+                true && !vm.state.value.busy
+        }
+        assertEquals(target, vm.state.value.draft)
+        screenshot("training-conflict")
+        compose.onNodeWithText("Dismiss", substring = false).performClick()
+        compose.waitUntil(10000) { vm.state.value.guidanceBasis != oldBasis }
+        click("use-target-$key")
+        compose.onNodeWithText("Replace sets", substring = false).performClick()
+        awaitEntry("102.5", "7")
+        assertEquals(active.exercises, vm.state.value.draft!!.exercises.dropLast(1))
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(hasText("Finish workout", substring = false))
+        compose.onNodeWithText("Finish workout", substring = false).performScrollTo().performClick()
+        compose.onNodeWithText("Save workout", substring = false).performClick()
+        compose.waitUntil(10000) {
+            vm.state.value.draft == null &&
+                !vm.state.value.busy &&
+                vm.state.value.workouts.size == 3
+        }
+        File(compose.activity.getExternalFilesDir(null), "qa/progression-export.json")
+            .writeText(
+                kotlinx.coroutines.runBlocking { app.backups.export("2026-10-23T13:00:00Z") }
+            )
     }
 
     private fun screenshot(name: String) {

@@ -57,7 +57,7 @@ internal fun SettingsScreen(
         }
         item {
             Text(
-                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Native progression suggestions, feedback and final release checks are still being built."
+                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Backup reminders, feedback and final release checks are still being built."
             )
         }
         item {
