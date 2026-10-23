@@ -13,6 +13,7 @@ import com.hector.workouttracker.core.database.RecordEntity
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.core.schedule.ScheduleDay
 import com.hector.workouttracker.data.ImportPreview
+import com.hector.workouttracker.data.InteractionPreferences
 import com.hector.workouttracker.data.SavedRoutine
 import com.hector.workouttracker.data.localExerciseNames
 import com.hector.workouttracker.data.routineSnapshot
@@ -30,6 +31,7 @@ import kotlinx.coroutines.withContext
 /** All writes have one owner. UI values update immediately; snapshots queue in order. */
 data class TrackerState(
     val loading: Boolean = true,
+    val interactions: InteractionPreferences = InteractionPreferences(),
     val profile: Profile = Profile(),
     val setupRpe: Boolean = true,
     val draft: SessionDraft? = null,
@@ -70,6 +72,34 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         )
 
     init {
+        viewModelScope.launch {
+            (application as TrackerApplication)
+                .preferencesRepository
+                .interactions
+                .catch {
+                    mutable.update {
+                        it.copy(
+                            error =
+                                "Interaction preferences could not be loaded. Reopen the app to retry."
+                        )
+                    }
+                }
+                .collect { value -> mutable.update { it.copy(interactions = value) } }
+        }
+        viewModelScope.launch {
+            repository.profileChanges
+                .catch {
+                    mutable.update {
+                        it.copy(
+                            error = "Your profile could not be refreshed. Reopen the app to retry."
+                        )
+                    }
+                }
+                .collect { (profile, revision) ->
+                    profileRevision = revision
+                    mutable.update { it.copy(profile = profile, setupRpe = profile.trackRpe) }
+                }
+        }
         viewModelScope.launch {
             (application as TrackerApplication)
                 .scheduleRepository

@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.LocalCompletionFeedback
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.domain.workoutMetrics
 import com.hector.workouttracker.feature.catalog.ExerciseGuide
@@ -28,6 +29,7 @@ import java.time.ZoneId
 @Composable
 internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -> Unit) {
     val draft = state.draft ?: return
+    val completionFeedback = LocalCompletionFeedback.current
     var exerciseName by rememberSaveable { mutableStateOf("") }
     var discard by rememberSaveable { mutableStateOf(false) }
     var finish by rememberSaveable { mutableStateOf(false) }
@@ -131,6 +133,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                                 role = Role.Checkbox,
                                                 onValueChange = { v ->
                                                     changeSet { it.copy(done = v) }
+                                                    if (v) completionFeedback()
                                                 },
                                             ),
                                         verticalAlignment = Alignment.CenterVertically,

@@ -1,6 +1,6 @@
 # Workout Tracker for Android
 
-Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. The migration bridge adds reviewed PWA JSON import and compatible export. Imported routine launch and offline catalog search/text guides are available. Routine creation/editing/reordering/deletion are available from Today → Manage routines. Empty libraries can explicitly preview and add the six PWA starter routines. Weekly schedule editing and Today plan suggestions work offline. Full analytics and native feedback remain subsequent slices. See the progress document for current verification status.
+Native Kotlin/Compose implementation in the existing PWA repository. The first foundation supports local profile/RPE setup, Today/History/You navigation, custom-exercise sessions, working/warm-up/completed set entry, durable draft resume and saving a workout into History. The migration bridge adds reviewed PWA JSON import and compatible export. Imported routine launch and offline catalog search/text guides are available. Routine creation/editing/reordering/deletion are available from Today → Manage routines. Empty libraries can explicitly preview and add the six PWA starter routines. Weekly schedule editing and Today plan suggestions work offline. Saved-workout editing, personal records, Stats and preferences are available. Native progression guidance, backup reminders/education and feedback remain later slices. See the progress document for current verification status.
 
 Read [the transition instructions](../docs/ANDROID_TRANSITION.md) and [implementation progress](../docs/ANDROID_IMPLEMENTATION.md) before changing contracts.
 
@@ -45,7 +45,7 @@ CI can restore a persistent preview key from repository secret `ANDROID_DEBUG_KE
 
 ## Scope boundaries
 
-Current PWA data is untouched and is not automatically visible to Android. Export a JSON backup from the PWA, then choose **Import PWA backup** in native setup or You, review the preview and confirm. Finish/save the PWA session before exporting; active sessions do not transfer. Finish or discard an active native session before importing. Current and supported legacy backups merge by typed ID; changed matching IDs are replaced, unrelated records remain. Export uses the same current PWA envelope. Keep the browser backup until you verify record counts and representative workouts. Raw rescue files are diagnostic files and cannot be imported here. Native Stats and feedback need their own parity gates. User guidance and motion/haptic preference parity follow in those slices. See the progress document for what was actually tested.
+Current PWA data is untouched and is not automatically visible to Android. Export a JSON backup from the PWA, then choose **Import PWA backup** in native setup or You, review the preview and confirm. Finish/save the PWA session before exporting; active sessions do not transfer. Finish or discard an active native session before importing. Current and supported legacy backups merge by typed ID; changed matching IDs are replaced, unrelated records remain. Export uses the same current PWA envelope. Keep the browser backup until you verify record counts and representative workouts. Raw rescue files are diagnostic files and cannot be imported here. Stats and preference verification are recorded in the progress document. Native progression guidance, backup reminders/education and feedback still need their own acceptance gates. See the progress document for what was actually tested.
 
 
 ## Migration verification
@@ -63,7 +63,7 @@ Run that command from `android/` after the unit-test task. It verifies actual na
 
 The generated asset task bundles only `src/data/exercise-catalog.json` from the shared PWA snapshot. Native code uses no remote image references. `CatalogTest` and the web contract test compare ranking/filter order, local spelling precedence and reviewed aliases against the same synthetic fixture. Catalog data is disposable reference data; selected names and typed routine origins are the persistence boundary.
 
-`RepositoryTest` additionally emits `app/build/outputs/compatibility/training-export.json`. Verify it with `node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json` from this directory. The device flow covers imported routine launch, alias-guide navigation, filtered exercise search, adding from a guide, resume and export. It does not yet prove true process-death or installed APK upgrade retention.
+`RepositoryTest` additionally emits `app/build/outputs/compatibility/training-export.json`. Verify it with `node ../scripts/verify-android-training.mjs app/build/outputs/compatibility/training-export.json` from this directory. The device flow covers imported routine launch, alias-guide navigation, filtered exercise search, adding from a guide, resume and export. True process-death and installed APK upgrade retention are covered by the separate host-driven acceptance harness below.
 
 
 ## Installed upgrade and process-stop checks
@@ -106,3 +106,9 @@ Finishing a session previews its set counts, volume and elapsed time and offers 
 ### Progress (0.8.0)
 
 Open **Stats** for totals, the rolling seven-day goal, calendar-week activity and personal records. Search an exercise and choose **View progress** for each record's source set/date and the last seven entries. Best load, best set volume and estimated 1RM are independent; warm-ups are excluded. Stats use saved workouts only and update after History changes. Finishing a session shows a dismissible saved-result card on Today after the transaction succeeds.
+
+### Preferences (0.9.0)
+
+Open **You → Edit preferences & goal** for your name, weekly goal, RPE, haptics and animations. **Progression defaults** expands the load jump and rep ranges; native progression suggestions are still being built. Changes apply only after **Save preferences**. Back confirms discarding edits; stale changes offer an explicit reload. Changing RPE preserves all existing values. Your weekly goal updates Stats immediately after saving.
+
+The editor transaction preserves imported extensions, schedules and unrelated records. No-op/equivalent numeric entries preserve stored documents. App animations and haptics honor the saved toggles and Android system settings; keyboard/system UI and loading indicators are outside decorative app motion. Eight JVM/Room tests and the full Compose/upgrade acceptance gates cover this slice. Verify actual exports with `node ../scripts/verify-android-preferences.mjs app/build/outputs/compatibility/preferences-export.json`; device exports use `--device`.

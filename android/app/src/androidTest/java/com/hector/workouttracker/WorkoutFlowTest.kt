@@ -961,6 +961,146 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Today", substring = false).performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
+        preferencesFlow(vm, owner)
+    }
+
+    private fun preferencesFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = vm.state.value.draft
+        val history = vm.state.value.workouts
+        val original = kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }
+        fun field(key: String, value: String) {
+            compose
+                .onNodeWithTag("preferences-editor")
+                .performScrollToNode(hasTestTag("preference-$key"))
+            compose.onNodeWithTag("preference-$key").performScrollTo().performTextReplacement(value)
+            closeSoftKeyboard()
+        }
+        fun open() {
+            compose.onNode(hasText("You", substring = false) and hasClickAction()).performClick()
+            compose
+                .onNodeWithTag("settings-list")
+                .performScrollToNode(hasText("Edit preferences & goal"))
+            compose.onNodeWithText("Edit preferences & goal").performScrollTo().performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("preference-name").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
+        fun back() {
+            compose.onNodeWithTag("preferences-editor").performScrollToNode(hasText("Back to You"))
+            compose.onNodeWithText("Back to You").performScrollTo().performClick()
+        }
+        open()
+        field("name", "Unsaved preferences")
+        back()
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("preferences-editor").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithTag("preferences-editor")
+            .performScrollToNode(hasTestTag("preference-name"))
+        compose.onNodeWithTag("preference-name").assertTextContains("Unsaved preferences")
+        assertEquals(original, kotlinx.coroutines.runBlocking { app.preferencesRepository.read() })
+        back()
+        compose.onNodeWithText("Discard edits").performClick()
+        open()
+        field("name", "Native preferences")
+        field("weeklyGoal", "0")
+        compose.onNodeWithTag("save-preferences").assertIsNotEnabled()
+        field("weeklyGoal", "6")
+        for (key in listOf("rpe", "haptics", "animations")) {
+            compose
+                .onNodeWithTag("preferences-editor")
+                .performScrollToNode(hasTestTag("preference-$key"))
+            compose.onNodeWithTag("preference-$key").performScrollTo().performClick()
+        }
+        compose
+            .onNodeWithTag("preferences-editor")
+            .performScrollToNode(hasTestTag("progression-preferences"))
+        compose.onNodeWithTag("progression-preferences").performScrollTo().performClick()
+        field("defaultWeightJump", "2.5")
+        field("compoundMin", "7")
+        compose.onNodeWithTag("save-preferences").performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Preferences saved.").fetchSemanticsNodes().isNotEmpty() &&
+                vm.state.value.profile.displayName == "Native preferences"
+        }
+        assertEquals(!original.values.trackRpe, vm.state.value.profile.trackRpe)
+        val saved = kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }
+        assertEquals("6", saved.values.weeklyGoal)
+        assertEquals("2.5", saved.values.numbers.getValue("defaultWeightJump"))
+        compose.waitUntil(10000) {
+            vm.state.value.interactions.animations == !original.values.animations &&
+                vm.state.value.interactions.haptics == !original.values.haptics
+        }
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(history, vm.state.value.workouts)
+        screenshot("preferences-saved")
+        field("name", "Retained preference edit")
+        kotlinx.coroutines.runBlocking {
+            val plan = app.scheduleRepository.read()
+            val oldDay = plan.days[0]
+            app.scheduleRepository.save(
+                plan.copy(
+                    days =
+                        plan.days.mapIndexed { index, day ->
+                            if (index == 0)
+                                day.copy(kind = if (oldDay.kind == "soccer") "rest" else "soccer")
+                            else day
+                        }
+                )
+            )
+        }
+        compose.onNodeWithTag("save-preferences").performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Reload saved preferences")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithTag("preference-name").assertTextContains("Retained preference edit")
+        screenshot("preferences-conflict")
+        compose.onNodeWithText("Reload saved preferences").performClick()
+        compose.onNodeWithText("Reload", substring = false).performClick()
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose
+                        .onNodeWithTag("preference-name")
+                        .assertTextContains("Native preferences")
+                }
+                .isSuccess
+        }
+        field("weeklyGoal", "15")
+        compose.onNodeWithTag("save-preferences").performClick()
+        compose.onNodeWithText("Keep editing").performClick()
+        assertEquals(
+            "6",
+            kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }.values.weeklyGoal,
+        )
+        field("weeklyGoal", "6")
+        back()
+        compose.onNodeWithText("Stats", substring = false).performClick()
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-goal"))
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose
+                        .onNodeWithTag("stats-goal")
+                        .assertTextContains("/ 6 workouts", substring = true)
+                }
+                .isSuccess
+        }
+        screenshot("preferences-goal")
+        File(compose.activity.getExternalFilesDir(null), "qa/preferences-export.json")
+            .writeText(
+                kotlinx.coroutines.runBlocking { app.backups.export("2026-10-23T00:00:00Z") }
+            )
+        assertEquals(active, vm.state.value.draft)
     }
 
     private fun screenshot(name: String) {

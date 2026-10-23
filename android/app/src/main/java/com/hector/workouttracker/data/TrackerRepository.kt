@@ -7,6 +7,10 @@ import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.core.schedule.*
 import com.hector.workouttracker.domain.*
 import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
@@ -17,6 +21,14 @@ class WriteConflict :
 
 class TrackerRepository(private val db: TrackerDatabase) {
     private val dao = db.trackerDao()
+    val profileChanges =
+        dao.observeDocument("native_profile")
+            .map { document ->
+                document?.let { trackerJson.decodeFromString<Profile>(it.payload) to it.revision }
+                    ?: (Profile() to 0L)
+            }
+            .distinctUntilChanged()
+            .flowOn(Dispatchers.Default)
     val workouts = dao.observeRecords("workout")
     val routines = dao.observeRecords("routine")
 
