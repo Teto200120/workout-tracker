@@ -91,11 +91,21 @@ class TrackerRepository(private val db: TrackerDatabase) {
             val current = dao.record("routine", selected.idKey) ?: throw WriteConflict()
             if (selected.kind != "routine" || current != selected) throw WriteConflict()
             val routine = routineSnapshot(current)
+            val history = trainingSnapshot(dao)
             val draft =
                 empty.copy(
                     type = routine.name,
                     originRoutineId = routine.id,
-                    exercises = routine.exercises.map { Exercise(name = it) },
+                    exercises =
+                        routine.exercises.map { name ->
+                            val last = history.guidance(name).last?.sets.orEmpty()
+                            Exercise(
+                                name = name,
+                                sets =
+                                    if (last.isEmpty()) listOf(WorkingSet())
+                                    else copiedTrainingSets(last),
+                            )
+                        },
                 )
             start(draft)
             draft

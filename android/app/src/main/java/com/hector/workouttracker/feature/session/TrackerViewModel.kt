@@ -15,9 +15,11 @@ import com.hector.workouttracker.core.schedule.ScheduleDay
 import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.data.InteractionPreferences
 import com.hector.workouttracker.data.SavedRoutine
+import com.hector.workouttracker.data.SetCopyRequest
 import com.hector.workouttracker.data.localExerciseNames
 import com.hector.workouttracker.data.routineSnapshot
 import com.hector.workouttracker.domain.CompletionSummary
+import com.hector.workouttracker.domain.TrainingGuidance
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -32,6 +34,9 @@ import kotlinx.coroutines.withContext
 data class TrackerState(
     val loading: Boolean = true,
     val interactions: InteractionPreferences = InteractionPreferences(),
+    val guidance: Map<String, TrainingGuidance> = emptyMap(),
+    val guidanceBasis: String? = null,
+    val guidanceError: String? = null,
     val profile: Profile = Profile(),
     val setupRpe: Boolean = true,
     val draft: SessionDraft? = null,
@@ -57,6 +62,7 @@ data class TrackerState(
 
 class TrackerViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as TrackerApplication).repository
+    private val progression = (application as TrackerApplication).progressionRepository
     private val backups = (application as TrackerApplication).backups
     private val mutable = MutableStateFlow(TrackerState())
     val state = mutable.asStateFlow()
@@ -71,7 +77,10 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             -1,
         )
 
+    private var guidanceJob: kotlinx.coroutines.Job? = null
+
     init {
+        observeGuidance()
         viewModelScope.launch {
             (application as TrackerApplication)
                 .preferencesRepository
@@ -187,6 +196,82 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
             mutable.update { it.copy(catalog = catalog, catalogLoading = false) }
+        }
+    }
+
+    fun observeGuidance() {
+        guidanceJob?.cancel()
+        mutable.update { it.copy(guidanceError = null) }
+        guidanceJob =
+            viewModelScope.launch {
+                progression
+                    .observe(
+                        state
+                            .map { it.draft?.exercises?.map { e -> e.name }.orEmpty() }
+                            .distinctUntilChanged()
+                    )
+                    .catch {
+                        mutable.update {
+                            it.copy(
+                                guidance = emptyMap(),
+                                guidanceBasis = null,
+                                guidanceError =
+                                    "Guidance could not be loaded. Your entered sets are available.",
+                            )
+                        }
+                    }
+                    .collect { (source, guidance) ->
+                        mutable.update {
+                            it.copy(
+                                guidance = guidance,
+                                guidanceBasis = source.basis,
+                                guidanceError = null,
+                            )
+                        }
+                    }
+            }
+    }
+
+    fun setCopyRequest(key: String, target: Boolean): SetCopyRequest? {
+        val current = state.value
+        val draft = current.draft ?: return null
+        val exercise = draft.exercises.find { it.key == key } ?: return null
+        val guide = current.guidance[exercise.name] ?: return null
+        val basis = current.guidanceBasis ?: return null
+        if (
+            current.busy ||
+                (if (target) guide.target.targetSets else guide.last?.sets.orEmpty()).isEmpty()
+        )
+            return null
+        return SetCopyRequest(draft, exercise, basis, target)
+    }
+
+    fun applySets(request: SetCopyRequest) {
+        val current = state.value
+        if (current.busy) return
+        if (current.draft != request.draft) {
+            mutable.update {
+                it.copy(
+                    error =
+                        "This workout changed. Your sets were kept. Review the guidance and choose again."
+                )
+            }
+            return
+        }
+        mutable.update { it.copy(busy = true) }
+        enqueue {
+            val changed = progression.apply(request, draftRevision)
+            draftRevision += 1
+            val version = current.editVersion + 1
+            mutable.update {
+                it.copy(
+                    draft = changed,
+                    busy = false,
+                    error = null,
+                    editVersion = version,
+                    savedVersion = version,
+                )
+            }
         }
     }
 

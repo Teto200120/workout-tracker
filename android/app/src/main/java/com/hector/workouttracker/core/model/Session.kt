@@ -42,6 +42,7 @@ data class WorkingSet(
     val rpe: String = "",
     val done: Boolean = false,
     val warmup: Boolean = false,
+    val historicalRpeZero: Boolean = false,
 )
 
 @Serializable data class Profile(val displayName: String = "", val trackRpe: Boolean = true)
@@ -77,28 +78,37 @@ fun sessionError(draft: SessionDraft): String? {
         if (!visibleName(exercise.name, 120)) return "Check the exercise name."
         if (exercise.sets.isEmpty() || exercise.sets.size > 200) return "Check the number of sets."
         exercise.sets.forEach { set ->
-            for ((label, value) in
-                listOf("Weight" to set.weight, "Reps" to set.reps, "RPE" to set.rpe)) {
-                if (value.isBlank()) continue
-                val number = value.toDoubleOrNull()
-                if (
-                    number == null ||
-                        !number.isFinite() ||
-                        number < 0 ||
-                        number > (if (label == "RPE") 10.0 else 10000.0)
-                )
-                    return "$label must be a valid number within range."
-                if (label == "Reps" && number % 1.0 != 0.0) return "Reps must be a whole number."
-                if (label == "RPE" && number < 1) return "RPE must be between 1 and 10, or empty."
+            setEntryError(set)?.let {
+                return it
             }
         }
     }
+
     if (
         draft.exercises.none { e ->
             e.sets.any { it.reps.toDoubleOrNull()?.let { n -> n > 0 } == true }
         }
     )
         return "Enter repetitions for at least one set."
+    return null
+}
+
+/** Historical zero is retained only on copied rows; editing RPE clears its provenance. */
+fun setEntryError(set: WorkingSet): String? {
+    for ((label, value) in listOf("Weight" to set.weight, "Reps" to set.reps, "RPE" to set.rpe)) {
+        if (value.isBlank()) continue
+        val number = value.toDoubleOrNull()
+        if (
+            number == null ||
+                !number.isFinite() ||
+                number < 0 ||
+                number > (if (label == "RPE") 10.0 else 10000.0)
+        )
+            return "$label must be a valid number within range."
+        if (label == "Reps" && number % 1.0 != 0.0) return "Reps must be a whole number."
+        if (label == "RPE" && number < 1 && !(number == 0.0 && set.historicalRpeZero))
+            return "RPE must be between 1 and 10, or empty."
+    }
     return null
 }
 

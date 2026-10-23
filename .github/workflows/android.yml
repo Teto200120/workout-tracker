@@ -9,6 +9,7 @@ on:
       - "src/js/catalog/**"
       - "src/js/domain/schedule.js"
       - "src/js/domain/workout-metrics.js"
+      - "src/js/domain/training-rules.js"
       - "src/js/core/constants.js"
       - "tests/fixtures/android/**"
       - "tests/unit/android-contract.test.js"
@@ -22,6 +23,8 @@ on:
       - "scripts/verify-android-history.mjs"
       - "scripts/verify-android-preferences.mjs"
       - "scripts/generate-android-progress.mjs"
+      - "scripts/generate-android-training-rules.mjs"
+      - "scripts/verify-android-progression.mjs"
       - ".github/workflows/android.yml"
   push:
     branches: [main, "android/**"]
@@ -31,6 +34,7 @@ on:
       - "src/js/catalog/**"
       - "src/js/domain/schedule.js"
       - "src/js/domain/workout-metrics.js"
+      - "src/js/domain/training-rules.js"
       - "src/js/core/constants.js"
       - "tests/fixtures/android/**"
       - "tests/unit/android-contract.test.js"
@@ -44,6 +48,8 @@ on:
       - "scripts/verify-android-history.mjs"
       - "scripts/verify-android-preferences.mjs"
       - "scripts/generate-android-progress.mjs"
+      - "scripts/generate-android-training-rules.mjs"
+      - "scripts/verify-android-progression.mjs"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -82,6 +88,7 @@ jobs:
         run: |
           node ../scripts/generate-android-starters.mjs --check
           node ../scripts/generate-android-progress.mjs --check
+          node ../scripts/generate-android-training-rules.mjs --check
           ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
       - name: Build the pinned version-2 upgrade baseline
         run: bash qa/build_upgrade_baseline.sh
@@ -94,6 +101,7 @@ jobs:
           node ../scripts/verify-android-schedule.mjs app/build/outputs/compatibility/schedule-export.json
           node ../scripts/verify-android-history.mjs app/build/outputs/compatibility/history-export.json
           node ../scripts/verify-android-preferences.mjs app/build/outputs/compatibility/preferences-export.json
+          node ../scripts/verify-android-progression.mjs app/build/outputs/compatibility/progression-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -119,6 +127,7 @@ jobs:
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-schedule.mjs app/build/outputs/screenshots/schedule-export.json --device || exit $?; fi;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-history.mjs app/build/outputs/screenshots/history-export.json --device || exit $?; fi;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-preferences.mjs app/build/outputs/screenshots/preferences-export.json --device || exit $?; fi;
+            if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-progression.mjs app/build/outputs/screenshots/progression-export.json --device || exit $?; fi;
             exit "$native_status"
             '
       - name: Upload preview APK and verification reports

@@ -147,7 +147,7 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                     }
                     if (advanced)
                         Text(
-                            "These defaults transfer with your backup. Native progression suggestions are still being built."
+                            "These defaults control suggested loads and rep ranges. Suggestions use your saved working sets and RPE preference."
                         )
                 }
                 if (advanced) {

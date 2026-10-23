@@ -180,7 +180,9 @@ class RepositoryTest {
             )
             assertEquals(3, started.exercises.map { it.key }.toSet().size)
             assertTrue(
-                started.exercises.all { it.notes.isEmpty() && it.sets.single().reps.isEmpty() }
+                started.exercises.all {
+                    it.notes.isEmpty() && it.sets.single().reps == if (id.isString) "5" else ""
+                }
             )
             db.close()
             reopen()
