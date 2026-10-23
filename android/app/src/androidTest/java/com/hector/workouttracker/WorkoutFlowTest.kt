@@ -254,7 +254,12 @@ class WorkoutFlowTest {
                 .isNotEmpty()
         }
         compose.onNodeWithText("Today").performClick()
-        compose.onNodeWithText("Use saved routine").performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Use saved routine"))
+        compose
+            .onNodeWithText("Use saved routine")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
         screenshot("routine-chooser")
         compose.onNodeWithText("Training fixture").performClick()
         val vm =
@@ -1303,9 +1308,11 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Reset tips", substring = false).performClick()
         compose.waitUntil(10000) {
             kotlinx.coroutines.runBlocking {
-                app.guidanceRepository.progress.first()["experiences"]?.jsonObject?.values?.all {
-                    it.jsonObject["status"]?.jsonPrimitive?.content == "unseen"
-                } == true
+                val records = app.guidanceRepository.progress.first()["experiences"]?.jsonObject
+                com.hector.workouttracker.domain.guidanceTopics.all { topic ->
+                    records?.get(topic.id)?.jsonObject?.get("status")?.jsonPrimitive?.content ==
+                        "unseen"
+                }
             }
         }
         assertEquals(active, vm.state.value.draft)
