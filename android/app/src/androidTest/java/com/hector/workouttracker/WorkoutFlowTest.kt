@@ -980,7 +980,7 @@ class WorkoutFlowTest {
             closeSoftKeyboard()
         }
         fun open() {
-            compose.onNodeWithText("You", substring = false).performClick()
+            compose.onNode(hasText("You", substring = false) and hasClickAction()).performClick()
             compose
                 .onNodeWithTag("settings-list")
                 .performScrollToNode(hasText("Edit preferences & goal"))
