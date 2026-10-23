@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.core.schedule.*
+import com.hector.workouttracker.feature.help.HelpTip
 import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
 import java.time.LocalDate
@@ -112,6 +113,7 @@ internal fun HomeScreen(
                 }
             }
         }
+        item { HelpTip("homeTour") }
         state.completion?.let { summary ->
             item {
                 Card(Modifier.fillMaxWidth().testTag("workout-completion")) {
@@ -207,7 +209,7 @@ internal fun HomeScreen(
         }
         item {
             Text(
-                "Bring your PWA history and routines into the app from You → Import PWA backup. Routine editing, exercise search and text guides work offline. Full Stats are coming later.",
+                "Bring your PWA history and routines into the app from You → Import PWA backup. Routine editing, exercise search and text guides work offline. History, Stats and training guidance also work offline. Help & guidance is available from You.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

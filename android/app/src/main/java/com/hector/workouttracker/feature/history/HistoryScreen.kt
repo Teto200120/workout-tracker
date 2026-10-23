@@ -12,6 +12,7 @@ import com.hector.workouttracker.core.database.RecordEntity
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.domain.workoutMetrics
+import com.hector.workouttracker.feature.help.HelpTip
 import com.hector.workouttracker.feature.session.TrackerState
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +43,7 @@ internal fun HistoryScreen(state: TrackerState, open: (RecordEntity) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { Heading("Your progress", "History", "Saved and imported workouts.") }
+        item { HelpTip("historyBasics") }
         if (workouts == null) item { CircularProgressIndicator() }
         if (workouts?.isEmpty() == true)
             item { Text("Your first workout starts the story. Saved sessions will appear here.") }

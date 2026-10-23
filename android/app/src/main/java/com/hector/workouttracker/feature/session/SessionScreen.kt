@@ -24,6 +24,7 @@ import com.hector.workouttracker.data.SetCopyRequest
 import com.hector.workouttracker.domain.workoutMetrics
 import com.hector.workouttracker.feature.catalog.ExerciseGuide
 import com.hector.workouttracker.feature.catalog.ExercisePicker
+import com.hector.workouttracker.feature.help.HelpTip
 import com.hector.workouttracker.feature.history.WorkoutTags
 import java.time.ZoneId
 
@@ -66,6 +67,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        item { HelpTip("activeWorkoutBasics") }
         items(draft.exercises, key = { it.key }) { exercise ->
             Card {
                 Column(
@@ -231,6 +233,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                 enabled = !state.busy,
             )
         }
+        if (state.profile.trackRpe) item { HelpTip("rpeBasics") }
         item {
             Button(
                 onClick = { finish = true },

@@ -31,6 +31,7 @@ internal fun BackupControls(state: TrackerState, vm: TrackerViewModel, firstRun:
             if (firstRun) "Bring your workouts with you" else "Your backup",
             style = MaterialTheme.typography.titleLarge,
         )
+        if (!firstRun) BackupStatusCard(state.backup)
         Text(
             "In the PWA, finish and save any active workout, then export a JSON backup. Choose that file here to review it before importing. This is a one-time copy, not ongoing sync."
         )
@@ -97,7 +98,7 @@ internal fun ImportDialog(preview: ImportPreview, confirm: () -> Unit, cancel: (
                     "Goals: ${if (preview.goalsSupplied) "replace with backup" else "keep existing"}\nBackup metadata: ${if (preview.metadataSupplied) "replace with backup" else "keep existing"}"
                 )
                 Text(
-                    "Imported routines and goals are preserved and included in exports. Their native screens are still being built. RPE preferences never erase historical RPE values."
+                    "Imported routines and goals are available in Routines and Stats, and included in exports. RPE preferences never erase historical RPE values. Guidance preferences stay on this device."
                 )
             }
         },

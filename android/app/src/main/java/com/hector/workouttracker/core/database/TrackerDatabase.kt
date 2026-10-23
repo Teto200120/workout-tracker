@@ -25,6 +25,9 @@ data class DraftEntity(
 
 @Dao
 interface TrackerDao {
+    @Query("SELECT EXISTS(SELECT 1 FROM records WHERE kind IN ('workout', 'legacy-weight'))")
+    fun observeBackupData(): Flow<Boolean>
+
     @Query("SELECT * FROM records ORDER BY kind, idKey") suspend fun records(): List<RecordEntity>
 
     @Query("SELECT * FROM documents ORDER BY name") suspend fun documents(): List<DocumentEntity>

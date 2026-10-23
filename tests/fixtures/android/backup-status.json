@@ -1,0 +1,91 @@
+{
+  "zone": "America/New_York",
+  "now": "2026-03-09T12:00:00Z",
+  "cases": [
+    {
+      "lastExportedAt": null,
+      "days": null,
+      "text": "No backup exported yet"
+    },
+    {
+      "lastExportedAt": "",
+      "days": null,
+      "text": "No backup exported yet"
+    },
+    {
+      "lastExportedAt": "invalid",
+      "days": null,
+      "text": "No backup exported yet"
+    },
+    {
+      "lastExportedAt": "2026-03-09T12:00:00Z",
+      "days": 0,
+      "text": "Last backup: today"
+    },
+    {
+      "lastExportedAt": "2026-03-09T13:00:00Z",
+      "days": 0,
+      "text": "Last backup: today"
+    },
+    {
+      "lastExportedAt": "2026-03-08T12:00:01Z",
+      "days": 0,
+      "text": "Last backup: today"
+    },
+    {
+      "lastExportedAt": "2026-03-08T12:00:00Z",
+      "days": 1,
+      "text": "Last backup: yesterday"
+    },
+    {
+      "lastExportedAt": "2026-03-07T12:00:00Z",
+      "days": 2,
+      "text": "Last backup: 2 days ago"
+    },
+    {
+      "lastExportedAt": "2026-02-23T12:00:01Z",
+      "days": 13,
+      "text": "Last backup: 13 days ago"
+    },
+    {
+      "lastExportedAt": "2026-02-23T12:00:00Z",
+      "days": 14,
+      "text": "Last backup: 14 days ago"
+    },
+    {
+      "lastExportedAt": "2026-02-07T12:00:01Z",
+      "days": 29,
+      "text": "Last backup: 29 days ago"
+    },
+    {
+      "lastExportedAt": "2026-02-07T12:00:00Z",
+      "days": 30,
+      "text": "Last backup: 30 days ago"
+    },
+    {
+      "lastExportedAt": "2026-01-01T00:00:00Z",
+      "days": 67,
+      "text": "Last backup: 67 days ago"
+    },
+    {
+      "lastExportedAt": "2026-03-08",
+      "days": 1,
+      "text": "Last backup: yesterday"
+    },
+    {
+      "lastExportedAt": "2026-03-07T08:00:00",
+      "days": 1,
+      "text": "Last backup: yesterday"
+    },
+    {
+      "lastExportedAt": "2026-03-08T07:00:00-05:00",
+      "days": 1,
+      "text": "Last backup: yesterday"
+    },
+    {
+      "lastExportedAt": "2026-03-08T12:00:00+00:00",
+      "days": 1,
+      "text": "Last backup: yesterday"
+    }
+  ]
+}

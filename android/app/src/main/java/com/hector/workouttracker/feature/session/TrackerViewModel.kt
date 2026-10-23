@@ -18,6 +18,7 @@ import com.hector.workouttracker.data.SavedRoutine
 import com.hector.workouttracker.data.SetCopyRequest
 import com.hector.workouttracker.data.localExerciseNames
 import com.hector.workouttracker.data.routineSnapshot
+import com.hector.workouttracker.domain.BackupSnapshot
 import com.hector.workouttracker.domain.CompletionSummary
 import com.hector.workouttracker.domain.TrainingGuidance
 import java.time.Instant
@@ -53,6 +54,7 @@ data class TrackerState(
     val error: String? = null,
     val importPreview: ImportPreview? = null,
     val backupMessage: String? = null,
+    val backup: BackupSnapshot? = null,
     val completion: CompletionSummary? = null,
     val completedName: String? = null,
 ) {
@@ -81,6 +83,11 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         observeGuidance()
+        viewModelScope.launch {
+            backups.status
+                .catch { mutable.update { it.copy(backup = null) } }
+                .collect { value -> mutable.update { it.copy(backup = value) } }
+        }
         viewModelScope.launch {
             (application as TrackerApplication)
                 .preferencesRepository
@@ -359,18 +366,23 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
         if (state.value.busy || state.value.loading) return
         mutable.update { it.copy(busy = true, error = null, backupMessage = "Creating backup…") }
         enqueue {
-            withContext(Dispatchers.IO) {
-                val encoded = backups.export(Instant.now().toString())
-                val resolver = getApplication<Application>().contentResolver
-                val output =
-                    resolver.openOutputStream(uri, "wt")
-                        ?: error("The destination could not be opened.")
-                output.use { it.write(encoded.toByteArray(Charsets.UTF_8)) }
-            }
+            val metadataSaved =
+                withContext(Dispatchers.IO) {
+                    backups.writeExport(Instant.now().toString()) { encoded ->
+                        val resolver = getApplication<Application>().contentResolver
+                        val output =
+                            resolver.openOutputStream(uri, "wt")
+                                ?: error("The destination could not be opened.")
+                        output.use { it.write(encoded.toByteArray(Charsets.UTF_8)) }
+                    }
+                }
             mutable.update {
                 it.copy(
                     busy = false,
-                    backupMessage = "Backup file created. Active workouts are not included.",
+                    backupMessage =
+                        if (metadataSaved) "Backup file created. Active workouts are not included."
+                        else
+                            "Backup file created, but its reminder could not be updated. Keep the file; you do not need to export again.",
                 )
             }
         }

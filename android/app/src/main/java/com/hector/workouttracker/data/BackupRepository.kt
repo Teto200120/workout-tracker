@@ -4,7 +4,12 @@ import androidx.room.withTransaction
 import com.hector.workouttracker.core.backup.*
 import com.hector.workouttracker.core.database.*
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.domain.BackupSnapshot
 import java.security.MessageDigest
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
 data class ImportCounts(val added: Int, val replaced: Int, val unchanged: Int)
@@ -29,6 +34,54 @@ internal constructor(
 class BackupRepository(private val db: TrackerDatabase) {
     private val dao = db.trackerDao()
 
+    val status: Flow<BackupSnapshot> =
+        combine(dao.observeBackupData(), dao.observeDocument("backup_meta")) { hasData, meta ->
+                BackupSnapshot(
+                    hasData,
+                    meta?.let {
+                        trackerJson
+                            .parseToJsonElement(it.payload)
+                            .jsonObject["lastExportedAt"]
+                            ?.takeUnless { value -> value is JsonNull }
+                            ?.jsonPrimitive
+                            ?.content
+                    },
+                )
+            }
+            .flowOn(Dispatchers.Default)
+
+    /**
+     * The writer must return only after closing its output. Failed/cancelled writes never refresh
+     * reminders.
+     */
+    suspend fun writeExport(exportedAt: String, write: suspend (String) -> Unit): Boolean {
+        val encoded = export(exportedAt)
+        write(encoded)
+        return try {
+            withContext(Dispatchers.IO) {
+                db.withTransaction {
+                    val before = dao.document("backup_meta")
+                    val old =
+                        before?.let { trackerJson.parseToJsonElement(it.payload).jsonObject }
+                            ?: JsonObject(emptyMap())
+                    val next = JsonObject(old + ("lastExportedAt" to JsonPrimitive(exportedAt)))
+                    if (before == null)
+                        dao.insertDocument(DocumentEntity("backup_meta", next.toString()))
+                    else if (
+                        next != old &&
+                            dao.updateDocument(before.name, before.revision, next.toString()) != 1
+                    )
+                        throw WriteConflict()
+                }
+            }
+            true
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private data class Snapshot(
         val records: List<RecordEntity>,
         val documents: List<DocumentEntity>,
@@ -50,12 +103,14 @@ class BackupRepository(private val db: TrackerDatabase) {
             add(it.revision.toString())
             add(it.payload)
         }
-        documents.forEach {
-            add("document")
-            add(it.name)
-            add(it.revision.toString())
-            add(it.payload)
-        }
+        documents
+            .filter { it.name != "native_guidance" }
+            .forEach {
+                add("document")
+                add(it.name)
+                add(it.revision.toString())
+                add(it.payload)
+            }
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
