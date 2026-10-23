@@ -13,7 +13,7 @@ for (const forbidden of [
   "draft",
 ])
   assert.equal(JSON.stringify(root).includes(`"${forbidden}"`), false);
-assert.ok(data.metadata.lastExportedAt);
+assert.ok(data.backupMeta.lastExportedAt);
 if (!process.argv.includes("--device")) {
   const source = JSON.parse(
     readFileSync(
