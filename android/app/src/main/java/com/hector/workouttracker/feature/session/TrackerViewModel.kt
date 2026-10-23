@@ -16,6 +16,7 @@ import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.data.SavedRoutine
 import com.hector.workouttracker.data.localExerciseNames
 import com.hector.workouttracker.data.routineSnapshot
+import com.hector.workouttracker.domain.CompletionSummary
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -45,6 +46,8 @@ data class TrackerState(
     val error: String? = null,
     val importPreview: ImportPreview? = null,
     val backupMessage: String? = null,
+    val completion: CompletionSummary? = null,
+    val completedName: String? = null,
 ) {
     val pending: Boolean
         get() = editVersion != savedVersion
@@ -159,6 +162,10 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
 
     private fun enqueue(command: suspend () -> Unit) {
         commands.trySend(command)
+    }
+
+    fun dismissCompletion() {
+        mutable.update { it.copy(completion = null, completedName = null) }
     }
 
     fun clearError() {
@@ -288,6 +295,8 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     error = null,
                     editVersion = 0,
                     savedVersion = 0,
+                    completion = null,
+                    completedName = null,
                 )
             }
         }
@@ -338,14 +347,23 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             val wallNow = System.currentTimeMillis()
             val duration =
                 elapsedMillis(draft, wallNow, SystemClock.elapsedRealtime(), boot()) / 60000
-            repository.finish(
-                draft,
-                draftRevision,
-                workoutPayload(draft, wallNow, duration, ZoneId.systemDefault()),
-            )
+            val summary =
+                repository.finish(
+                    draft,
+                    draftRevision,
+                    workoutPayload(draft, wallNow, duration, ZoneId.systemDefault()),
+                )
             draftRevision = 0
             mutable.update {
-                it.copy(draft = null, busy = false, error = null, editVersion = 0, savedVersion = 0)
+                it.copy(
+                    draft = null,
+                    busy = false,
+                    error = null,
+                    editVersion = 0,
+                    savedVersion = 0,
+                    completion = summary,
+                    completedName = draft.type,
+                )
             }
         }
     }

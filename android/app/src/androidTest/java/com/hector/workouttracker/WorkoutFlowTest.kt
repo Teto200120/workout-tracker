@@ -167,6 +167,10 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("History").fetchSemanticsNodes().isNotEmpty()
         }
+        compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("workout-completion"))
+        compose.onNodeWithTag("workout-completion").assertExists()
+        screenshot("completion-result")
+        compose.onNodeWithText("Dismiss summary").performScrollTo().performClick()
         compose.onNodeWithText("History").performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Bench Press · 1 set").fetchSemanticsNodes().isNotEmpty()
@@ -868,6 +872,93 @@ class WorkoutFlowTest {
         assertEquals(active, vm.state.value.draft)
         back()
         compose.onNodeWithText("Today").performClick()
+        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
+        compose.onNodeWithText("Resume workout").assertIsDisplayed()
+        statsFlow(vm, owner)
+    }
+
+    private fun statsFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = vm.state.value.draft
+        compose.onNodeWithText("Stats", substring = false).performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("stats-totals").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("stats-totals").assertTextContains("3 workouts", substring = true)
+        screenshot("stats-overview")
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-search"))
+        compose.onNodeWithTag("stats-search").performScrollTo().performTextInput("Bench Press")
+        closeSoftKeyboard()
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-exercise-Bench Press"))
+        compose.onNodeWithTag("stats-exercise-Bench Press").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Best load: 100.0 lb").fetchSemanticsNodes().isNotEmpty()
+        }
+        screenshot("stats-records")
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-metric-bestVolume"))
+        compose.onNodeWithTag("stats-metric-bestVolume").performScrollTo().performClick()
+        compose.onNodeWithTag("stats-metric-estimated1rm").performScrollTo().performClick()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("stats-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-metric-estimated1rm"))
+        compose.onNodeWithTag("stats-metric-estimated1rm").assertIsSelected()
+        val base =
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive("0")) }!!
+        kotlinx.coroutines.runBlocking {
+            app.historyRepository.save(
+                base.copy(
+                    values =
+                        base.values.copy(
+                            exercises =
+                                base.values.exercises.map {
+                                    it.copy(
+                                        sets =
+                                            it.sets.mapIndexed { i, s ->
+                                                if (i == 0) s.copy(weight = "150", reps = "5")
+                                                else s
+                                            }
+                                    )
+                                }
+                        )
+                )
+            )
+        }
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-record-bestWeight"))
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Best load: 150.0 lb").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Best load: 150.0 lb").assertExists()
+        screenshot("stats-live-update")
+        assertEquals(active, vm.state.value.draft)
+        kotlinx.coroutines.runBlocking {
+            app.historyRepository.delete(app.historyRepository.read(JsonPrimitive("0"))!!)
+        }
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasText("Back to Stats"))
+        compose.onNodeWithText("Back to Stats").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            runCatching {
+                    compose
+                        .onNodeWithTag("stats-totals")
+                        .assertTextContains("2 workouts", substring = true)
+                }
+                .isSuccess
+        }
+        assertEquals(active, vm.state.value.draft)
+        compose.onNodeWithText("Today", substring = false).performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
     }

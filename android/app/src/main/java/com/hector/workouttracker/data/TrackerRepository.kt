@@ -5,6 +5,7 @@ import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.database.*
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.core.schedule.*
+import com.hector.workouttracker.domain.*
 import java.time.LocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
@@ -129,12 +130,22 @@ class TrackerRepository(private val db: TrackerDatabase) {
             require(sessionError(draft) == null) { sessionError(draft) ?: "Check the workout." }
             val current = dao.draft() ?: throw WriteConflict()
             if (current.sessionId != draft.id || current.revision != expected) throw WriteConflict()
+            val summary =
+                completionSummary(
+                    payload,
+                    interchangeOrder(
+                        dao.recordsOfKind("workout").map {
+                            trackerJson.parseToJsonElement(it.payload).jsonObject
+                        }
+                    ),
+                )
             // One atomic transaction: History insert and draft consumption. Repeat finish cannot
             // duplicate.
             dao.insertRecord(
                 RecordEntity("workout", typedIdKey(payload.getValue("id")), payload.toString())
             )
             if (dao.deleteDraft(draft.id, expected) != 1) throw WriteConflict()
+            summary
         }
 
     suspend fun discard(id: String, expected: Long) {

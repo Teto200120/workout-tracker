@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import {
   workoutVolume,
   totalSets,
@@ -163,4 +165,17 @@ test("Native catalog fixtures match PWA search, local precedence and reviewed gu
   const prepared = prepareBackupImport(backup);
   assert.deepEqual(prepared.data.routines, backup.templates);
   assert.equal(validateImportedApplicationData(prepared.data).valid, true);
+});
+
+test("Native progress fixtures match the real PWA records, completion and calendar calculations", () => {
+  execFileSync(
+    process.execPath,
+    [
+      fileURLToPath(
+        new URL("../../scripts/generate-android-progress.mjs", import.meta.url),
+      ),
+      "--check",
+    ],
+    { env: { ...process.env, TZ: "America/New_York" } },
+  );
 });

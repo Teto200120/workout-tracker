@@ -102,3 +102,7 @@ Schedule writes update only the canonical settings document. Other preferences, 
 Open **History → Full workout → Edit workout** to review or change a saved session. Changes require **Save changes**. Back confirms discarding unsaved changes; deletion requires confirmation. Past-workout edits are independent of an active session. Clear duration to use start/end times. Imported fields outside the editor remain intact. Stale saves/deletes require an explicit reload.
 
 Finishing a session previews its set counts, volume and elapsed time and offers quick tags. These tags remain in the active draft until the session is saved or discarded. The original preview signing identity is retained for updates. Keep the PWA and a backup until physical-device and release acceptance are complete.
+
+### Progress (0.8.0)
+
+Open **Stats** for totals, the rolling seven-day goal, calendar-week activity and personal records. Search an exercise and choose **View progress** for each record's source set/date and the last seven entries. Best load, best set volume and estimated 1RM are independent; warm-ups are excluded. Stats use saved workouts only and update after History changes. Finishing a session shows a dismissible saved-result card on Today after the transaction succeeds.
