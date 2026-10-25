@@ -3,12 +3,15 @@ package com.hector.workouttracker.feature.help
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.domain.*
@@ -121,8 +124,15 @@ internal fun HelpScreen(back: () -> Unit) {
     if (reset)
         AlertDialog(
             onDismissRequest = { reset = false },
+            modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth(),
+            properties = DialogProperties(usePlatformDefaultWidth = false),
             title = { Text("Reset guidance?") },
-            text = { Text("Show known tips again without changing workout or profile data.") },
+            text = {
+                Text(
+                    "Show known tips again without changing workout or profile data.",
+                    Modifier.testTag("help-reset-content").verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

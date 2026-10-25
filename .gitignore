@@ -11,5 +11,6 @@ android/**/build/
 android/local.properties
 *.jks
 *.keystore
+*.p12
 
 android/qa/__pycache__/

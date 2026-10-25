@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.core.designsystem.Heading
@@ -29,6 +32,8 @@ internal fun ScheduleScreen(
     var reload by rememberSaveable { mutableStateOf(false) }
     var kindDay by rememberSaveable { mutableIntStateOf(-1) }
     var routineDay by rememberSaveable { mutableIntStateOf(-1) }
+    val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
+    val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     fun leave() {
         if (!state.busy) {
             if (draft?.changed == true) discard = true else back()
@@ -136,9 +141,11 @@ internal fun ScheduleScreen(
     if (kindDay >= 0)
         AlertDialog(
             onDismissRequest = { kindDay = -1 },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("${scheduleDayNames[kindDay]} activity") },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     scheduleKinds.forEach { kind ->
                         TextButton(
                             onClick = {
@@ -157,6 +164,8 @@ internal fun ScheduleScreen(
     if (routineDay >= 0)
         AlertDialog(
             onDismissRequest = { routineDay = -1 },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("${scheduleDayNames[routineDay]} routine") },
             text = {
                 LazyColumn(Modifier.testTag("schedule-routine-options")) {
@@ -190,8 +199,15 @@ internal fun ScheduleScreen(
     if (discard)
         AlertDialog(
             onDismissRequest = { discard = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Discard schedule edits?") },
-            text = { Text("Your saved schedule has not changed.") },
+            text = {
+                Text(
+                    "Your saved schedule has not changed.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -207,8 +223,15 @@ internal fun ScheduleScreen(
     if (reload)
         AlertDialog(
             onDismissRequest = { reload = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Reload saved schedule?") },
-            text = { Text("This replaces your unsaved plan with the latest saved settings.") },
+            text = {
+                Text(
+                    "This replaces your unsaved plan with the latest saved settings.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

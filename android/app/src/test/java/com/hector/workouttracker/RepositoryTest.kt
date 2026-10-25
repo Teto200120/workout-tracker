@@ -95,6 +95,99 @@ class RepositoryTest {
     }
 
     @Test
+    fun collapsedDraftSurvivesReopenAndStaleWritersWithoutChangingSavedData() = runBlocking {
+        val original =
+            draft()
+                .copy(
+                    id = "session-flow-fixture",
+                    originRoutineId = JsonPrimitive("0"),
+                    exercises = draft().exercises + Exercise(name = "Second lift"),
+                )
+        repository.start(original)
+        val opened = original.openExercise(original.exercises[1].key)
+        repository.saveDraft(opened, 1)
+        try {
+            repository.saveDraft(original, 1)
+            fail("Stale writer replaced collapse state")
+        } catch (_: WriteConflict) {}
+        db.close()
+        reopen()
+        assertEquals(opened to 2L, repository.readDraft())
+        assertTrue(db.trackerDao().records().isEmpty())
+        val canonical = workoutPayload(opened, 110000, 0, ZoneId.of("UTC"))
+        assertEquals(workoutPayload(original, 110000, 0, ZoneId.of("UTC")), canonical)
+        repository.finish(opened, 2, canonical)
+        val export = BackupRepository(db).export("2026-10-23T18:00:00Z")
+        assertFalse(export.contains("collapsed"))
+        val output = java.io.File("build/outputs/compatibility/session-flow-export.json")
+        requireNotNull(output.parentFile).mkdirs()
+        output.writeText(export)
+    }
+
+    @Test
+    fun exerciseOrderSurvivesReopenStaleWritesFinishAndExport() = runBlocking {
+        val original =
+            draft()
+                .copy(
+                    id = "session-order-fixture",
+                    originRoutineId = JsonPrimitive(0),
+                    notes = "Workout order retained",
+                    tags = listOf("Good session"),
+                    exercises =
+                        listOf(
+                            Exercise(
+                                key = "a",
+                                name = "Repeated lift",
+                                notes = "First",
+                                sets = listOf(WorkingSet(weight = "", reps = "5")),
+                            ),
+                            Exercise(
+                                key = "b",
+                                name = "Repeated lift",
+                                notes = "Second",
+                                sets =
+                                    listOf(
+                                        WorkingSet(
+                                            weight = "0",
+                                            reps = "8",
+                                            rpe = "9",
+                                            done = true,
+                                            warmup = true,
+                                        )
+                                    ),
+                            ),
+                        ),
+                )
+        repository.start(original)
+        val moved = original.moveExercise("b", -1)
+        repository.saveDraft(moved, 1)
+        try {
+            repository.saveDraft(original, 1)
+            fail("Stale order replaced the saved order")
+        } catch (_: WriteConflict) {}
+        db.close()
+        reopen()
+        assertEquals(moved to 2L, repository.readDraft())
+        val canonical = workoutPayload(moved, 110000, 0, ZoneId.of("UTC"))
+        assertEquals(
+            listOf("Second", "First"),
+            canonical.getValue("exercises").jsonArray.map {
+                it.jsonObject.getValue("notes").jsonPrimitive.content
+            },
+        )
+        repository.finish(moved, 2, canonical)
+        assertNull(repository.readDraft())
+        val export = BackupRepository(db).export("2026-10-23T18:00:00Z")
+        assertEquals(
+            canonical,
+            com.hector.workouttracker.core.backup.BackupCodec.parse(export).workouts.single(),
+        )
+        val output = java.io.File("build/outputs/compatibility/session-order-export.json")
+        requireNotNull(output.parentFile).mkdirs()
+        output.writeText(export)
+    }
+
+    @Test
     fun failedHistoryInsertRollsBackDraftConsumption() = runBlocking {
         val d = draft()
         repository.start(d)

@@ -27,6 +27,10 @@ on:
       - "scripts/verify-android-progression.mjs"
       - "scripts/generate-android-backup-status.mjs"
       - "scripts/verify-android-guidance.mjs"
+      - "scripts/generate-android-history-filters.mjs"
+      - "scripts/generate-android-insights.mjs"
+      - "scripts/generate-android-data-actions.mjs"
+      - "scripts/verify-android-data-actions.mjs"
       - "src/js/application/backup.js"
       - ".github/workflows/android.yml"
   push:
@@ -55,6 +59,10 @@ on:
       - "scripts/verify-android-progression.mjs"
       - "scripts/generate-android-backup-status.mjs"
       - "scripts/verify-android-guidance.mjs"
+      - "scripts/generate-android-history-filters.mjs"
+      - "scripts/generate-android-insights.mjs"
+      - "scripts/generate-android-data-actions.mjs"
+      - "scripts/verify-android-data-actions.mjs"
       - "src/js/application/backup.js"
       - ".github/workflows/android.yml"
 
@@ -96,6 +104,9 @@ jobs:
           node ../scripts/generate-android-progress.mjs --check
           node ../scripts/generate-android-training-rules.mjs --check
           node ../scripts/generate-android-backup-status.mjs --check
+          node ../scripts/generate-android-history-filters.mjs --check
+          node ../scripts/generate-android-insights.mjs --check
+          node ../scripts/generate-android-data-actions.mjs --check
           ./gradlew --no-daemon checkKotlinFormat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
       - name: Build the pinned version-2 upgrade baseline
         run: bash qa/build_upgrade_baseline.sh
@@ -110,6 +121,8 @@ jobs:
           node ../scripts/verify-android-preferences.mjs app/build/outputs/compatibility/preferences-export.json
           node ../scripts/verify-android-progression.mjs app/build/outputs/compatibility/progression-export.json
           node ../scripts/verify-android-guidance.mjs app/build/outputs/compatibility/guidance-export.json
+          node ../scripts/verify-android-data-actions.mjs reset app/build/outputs/compatibility/settings-reset-export.json
+          node ../scripts/verify-android-data-actions.mjs clear app/build/outputs/compatibility/data-cleared-export.json
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -137,13 +150,48 @@ jobs:
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-preferences.mjs app/build/outputs/screenshots/preferences-export.json --device || exit $?; fi;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-progression.mjs app/build/outputs/screenshots/progression-export.json --device || exit $?; fi;
             if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-guidance.mjs app/build/outputs/screenshots/guidance-export.json --device || exit $?; fi;
+            if [ "$native_status" -eq 0 ]; then node ../scripts/verify-android-data-actions.mjs reset app/build/outputs/screenshots/settings-reset-export.json --device || exit $?; fi;
             exit "$native_status"
             '
-      - name: Upload preview APK and verification reports
+      - name: Build and sign the release preview
+        if: github.event_name == 'push'
+        env:
+          RELEASE_KEY: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          test -n "$RELEASE_KEY" && test -n "$RELEASE_STORE_PASSWORD" && test -n "$RELEASE_KEY_PASSWORD" && test -n "$RELEASE_KEY_ALIAS"
+          umask 077
+          signing_dir=$(mktemp -d "$RUNNER_TEMP/workout-signing.XXXXXX")
+          trap 'rm -rf "$signing_dir"' EXIT
+          printf '%s' "$RELEASE_KEY" | base64 --decode > "$signing_dir/release.p12"
+          ./gradlew --no-daemon :app:assembleRelease
+          destination=app/build/outputs/signed-preview
+          mkdir -p "$destination"
+          apk="$destination/WorkoutTracker-0.12.0-preview.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign --ks "$signing_dir/release.p12" --ks-key-alias "$RELEASE_KEY_ALIAS" --ks-pass env:RELEASE_STORE_PASSWORD --key-pass env:RELEASE_KEY_PASSWORD --out "$apk" app/build/outputs/apk/release/app-release-unsigned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk" > "$destination/SIGNATURE.txt"
+          grep -F "Signer #1 certificate SHA-256 digest: $(cat qa/release-certificate.sha256)" "$destination/SIGNATURE.txt"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$apk" > "$destination/MANIFEST.txt"
+          grep -F "versionCode='12' versionName='0.12.0-preview'" "$destination/MANIFEST.txt"
+          ! grep -q '^application-debuggable' "$destination/MANIFEST.txt"
+          (cd "$destination" && sha256sum WorkoutTracker-0.12.0-preview.apk > SHA256SUMS)
+          printf 'commit=%s\nrun=https://github.com/%s/actions/runs/%s\nversionCode=12\nversionName=0.12.0-preview\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > "$destination/PROVENANCE.txt"
+      - name: Upload signed release preview
+        if: success() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: workout-tracker-android-release-preview
+          path: android/app/build/outputs/signed-preview/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload verification reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: workout-tracker-android-preview
+          name: workout-tracker-android-verification
           path: |
             android/app/build/outputs/apk/debug/*.apk
             android/app/build/reports/

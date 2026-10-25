@@ -100,7 +100,24 @@ class LifecycleAcceptanceTest {
                     val current =
                         trackerJson.decodeFromJsonElement(
                             SessionDraft.serializer(),
-                            JsonObject(base + ("originRoutineId" to JsonPrimitive(0))),
+                            JsonObject(
+                                base +
+                                    mapOf(
+                                        "originRoutineId" to JsonPrimitive(0),
+                                        "exercises" to
+                                            JsonArray(
+                                                base.getValue("exercises").jsonArray.mapIndexed {
+                                                    index,
+                                                    value ->
+                                                    JsonObject(
+                                                        value.jsonObject +
+                                                            ("collapsed" to
+                                                                JsonPrimitive(index != 1))
+                                                    )
+                                                }
+                                            ),
+                                    )
+                            ),
                         )
                     repository.start(current)
                     repository.saveDraft(
@@ -237,6 +254,17 @@ class LifecycleAcceptanceTest {
         assertEquals("7.5", draft.first.exercises.first().sets[1].rpe)
         assertTrue(draft.first.exercises.first().sets.first().warmup)
         assertFalse(draft.first.exercises.first().sets[1].done)
+        // JSON keeps this assertion compilable against the historical version-2 model.
+        val encoded =
+            trackerJson.encodeToJsonElement(SessionDraft.serializer(), draft.first).jsonObject
+        if (encoded.containsKey("originRoutineId")) {
+            assertEquals(
+                listOf(true, false, true),
+                encoded.getValue("exercises").jsonArray.map {
+                    (it.jsonObject["collapsed"] as? JsonPrimitive)?.booleanOrNull ?: false
+                },
+            )
+        }
     }
 
     private suspend fun verifyFinished(db: TrackerDatabase, repository: TrackerRepository) {

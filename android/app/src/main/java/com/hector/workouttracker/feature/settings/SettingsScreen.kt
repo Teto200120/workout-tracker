@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.BuildConfig
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
+import com.hector.workouttracker.data.DataAction
 import com.hector.workouttracker.feature.backup.BackupControls
 import com.hector.workouttracker.feature.session.TrackerState
 import com.hector.workouttracker.feature.session.TrackerViewModel
@@ -21,7 +22,11 @@ internal fun SettingsScreen(
     openSchedule: () -> Unit,
     openPreferences: () -> Unit,
     openHelp: () -> Unit,
+    openFeedback: () -> Unit,
 ) {
+    state.dataActionReview?.let {
+        DataActionDialog(it, vm::cancelDataAction, vm::confirmDataAction)
+    }
     LazyColumn(
         Modifier.fillMaxSize().testTag("settings-list"),
         contentPadding = PaddingValues(24.dp),
@@ -59,6 +64,37 @@ internal fun SettingsScreen(
             }
         }
         item {
+            OutlinedButton(
+                onClick = openFeedback,
+                modifier = Modifier.fillMaxWidth().testTag("open-feedback"),
+            ) {
+                Text("Beta feedback")
+            }
+        }
+        item {
+            Text("Manage local data", style = MaterialTheme.typography.titleLarge)
+            Text(
+                "Reset settings keeps your saved records. Clear local data starts over on this device."
+            )
+            state.maintenanceMessage?.let { Text(it, Modifier.testTag("maintenance-message")) }
+            if (state.pending)
+                Text("Wait for your workout entries to finish saving before continuing.")
+            OutlinedButton(
+                onClick = { vm.reviewDataAction(DataAction.RESET_SETTINGS) },
+                enabled = !state.busy && !state.pending && state.importPreview == null,
+                modifier = Modifier.fillMaxWidth().testTag("review-reset-settings"),
+            ) {
+                Text("Reset app settings")
+            }
+            OutlinedButton(
+                onClick = { vm.reviewDataAction(DataAction.CLEAR_DATA) },
+                enabled = !state.busy && !state.pending && state.importPreview == null,
+                modifier = Modifier.fillMaxWidth().testTag("review-clear-data"),
+            ) {
+                Text("Clear local data")
+            }
+        }
+        item {
             Text(
                 "Workout Tracker ${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.titleMedium,
@@ -66,7 +102,7 @@ internal fun SettingsScreen(
         }
         item {
             Text(
-                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Backup reminders and help are available in You. Feedback and final release checks are still being built."
+                "Native Android preview. Workouts, routines, weekly plans, History, Stats and preferences work offline. Backup reminders, help and browser feedback are available in You. Final release checks are still open."
             )
         }
         item {

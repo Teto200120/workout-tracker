@@ -1,0 +1,8 @@
+# The offline shell hashes the exact deployed asset bytes on Windows and CI.
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.webmanifest text eol=lf
+*.svg text eol=lf
+/manifest.json text eol=lf
+src/data/*.json text eol=lf

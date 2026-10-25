@@ -19,6 +19,18 @@ import {
   DAY_LABELS,
 } from "../../src/js/core/constants.js";
 
+test("Native History filtering fixtures match the actual PWA renderer", () => {
+  execFileSync(process.execPath, [
+    fileURLToPath(
+      new URL(
+        "../../scripts/generate-android-history-filters.mjs",
+        import.meta.url,
+      ),
+    ),
+    "--check",
+  ]);
+});
+
 test("Native local-date schedule fixtures match the actual PWA resolver", () => {
   const fixture = JSON.parse(
     readFileSync(
@@ -197,6 +209,27 @@ test("Native backup-age fixtures match the actual PWA helpers", () => {
     fileURLToPath(
       new URL(
         "../../scripts/generate-android-backup-status.mjs",
+        import.meta.url,
+      ),
+    ),
+    "--check",
+  ]);
+});
+
+test("Native strength insights and recent previews match the actual PWA renderer", () => {
+  execFileSync(process.execPath, [
+    fileURLToPath(
+      new URL("../../scripts/generate-android-insights.mjs", import.meta.url),
+    ),
+    "--check",
+  ]);
+});
+
+test("Native data-action fixtures match the actual PWA settings reset", () => {
+  execFileSync(process.execPath, [
+    fileURLToPath(
+      new URL(
+        "../../scripts/generate-android-data-actions.mjs",
         import.meta.url,
       ),
     ),

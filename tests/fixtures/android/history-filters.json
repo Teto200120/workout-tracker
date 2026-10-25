@@ -1,0 +1,597 @@
+{
+  "workouts": [
+    {
+      "date": "2026-10-20",
+      "type": "Upper",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-20T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": 0,
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "Bench Press",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        },
+        {
+          "name": "Row",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-20",
+      "type": "Lower",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-20T13:00:00.000Z",
+      "extension": { "retained": true },
+      "id": "0",
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "Squat",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        },
+        {
+          "name": "bench press",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "type": "upper",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-21T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": 12,
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "Bench Press (Barbell)",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-19",
+      "type": "Upper",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-19T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": "12",
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "Deadlift",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "type": "Imported / deleted routine",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-22T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": "unicode",
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "İSTANBUL Press",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        },
+        {
+          "name": "ΟΣ Row",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        },
+        {
+          "name": "INCLINE Press",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "type": "Custom",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-23T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": "empty",
+      "durationMinutes": 0,
+      "exercises": []
+    },
+    {
+      "date": "2026-10-20",
+      "type": "Upper",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-20T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": "tie-a",
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "Row",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        },
+        {
+          "name": "Row",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-20",
+      "type": "Upper",
+      "startTime": "23:50",
+      "endTime": "00:10",
+      "notes": "Only in notes: triceps",
+      "tags": ["calves"],
+      "createdAt": "2026-10-20T12:00:00.000Z",
+      "extension": { "retained": true },
+      "id": "tie-b",
+      "durationMinutes": 0,
+      "exercises": [
+        {
+          "name": "Deadlift",
+          "notes": "",
+          "sets": [
+            {
+              "weight": "100",
+              "reps": "5",
+              "rpe": "8",
+              "done": false,
+              "warmup": false,
+              "extension": { "source": "fixture" }
+            },
+            {
+              "weight": "20",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": true
+            },
+            {
+              "weight": "0",
+              "reps": "10",
+              "rpe": "",
+              "done": true,
+              "warmup": false
+            }
+          ],
+          "extension": { "keep": 1 }
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "all records, newest first and stable ties",
+      "routine": null,
+      "search": "",
+      "ids": ["empty", "unicode", 12, "0", 0, "tie-a", "tie-b", "12"]
+    },
+    {
+      "name": "exact routine",
+      "routine": "Upper",
+      "search": "",
+      "ids": [0, "tie-a", "tie-b", "12"]
+    },
+    {
+      "name": "routine case stays distinct",
+      "routine": "upper",
+      "search": "",
+      "ids": [12]
+    },
+    {
+      "name": "missing routine",
+      "routine": "Missing",
+      "search": "",
+      "ids": []
+    },
+    {
+      "name": "historical routine name",
+      "routine": "Imported / deleted routine",
+      "search": "",
+      "ids": ["unicode"]
+    },
+    {
+      "name": "case-insensitive substring",
+      "routine": null,
+      "search": "BENCH",
+      "ids": [12, "0", 0]
+    },
+    {
+      "name": "trim search",
+      "routine": null,
+      "search": "  bEnCh  ",
+      "ids": [12, "0", 0]
+    },
+    {
+      "name": "empty search",
+      "routine": null,
+      "search": " \t\n ",
+      "ids": ["empty", "unicode", 12, "0", 0, "tie-a", "tie-b", "12"]
+    },
+    {
+      "name": "ECMAScript nonbreaking and BOM whitespace",
+      "routine": null,
+      "search": "﻿ BENCH　",
+      "ids": [12, "0", 0]
+    },
+    {
+      "name": "combined matches",
+      "routine": "Upper",
+      "search": "bench",
+      "ids": [0]
+    },
+    {
+      "name": "combined no match",
+      "routine": "Lower",
+      "search": "deadlift",
+      "ids": []
+    },
+    {
+      "name": "match any exercise",
+      "routine": "Upper",
+      "search": "row",
+      "ids": [0, "tie-a"]
+    },
+    {
+      "name": "do not duplicate repeated exercise rows",
+      "routine": null,
+      "search": "row",
+      "ids": ["unicode", 0, "tie-a"]
+    },
+    {
+      "name": "notes are not exercise names",
+      "routine": null,
+      "search": "triceps",
+      "ids": []
+    },
+    {
+      "name": "tags are not exercise names",
+      "routine": null,
+      "search": "calves",
+      "ids": []
+    },
+    {
+      "name": "routine names are not exercise names",
+      "routine": null,
+      "search": "lower",
+      "ids": []
+    },
+    {
+      "name": "do not resolve catalog aliases",
+      "routine": null,
+      "search": "Barbell Bench Press",
+      "ids": []
+    },
+    {
+      "name": "punctuation is literal",
+      "routine": null,
+      "search": "(BARBELL)",
+      "ids": [12]
+    },
+    {
+      "name": "locale-independent Latin I",
+      "routine": null,
+      "search": "incline",
+      "ids": ["unicode"]
+    },
+    {
+      "name": "Unicode expanding lowercase",
+      "routine": null,
+      "search": "i̇stanbul",
+      "ids": ["unicode"]
+    },
+    {
+      "name": "Unicode contextual lowercase",
+      "routine": null,
+      "search": "ος",
+      "ids": ["unicode"]
+    },
+    {
+      "name": "no matches",
+      "routine": null,
+      "search": "not an exercise",
+      "ids": []
+    }
+  ]
+}

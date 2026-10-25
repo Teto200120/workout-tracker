@@ -89,8 +89,13 @@ class RoutineRepository(private val db: TrackerDatabase) {
         dao.record("routine", typedIdKey(id))?.let(::routineSnapshot)
 
     /** Explicit empty-library seeding. Never replace an imported or user-owned record. */
-    suspend fun seedStarters(library: StarterLibrary, now: String = Instant.now().toString()): Int =
+    suspend fun seedStarters(
+        library: StarterLibrary,
+        now: String = Instant.now().toString(),
+        initialRevision: Long = 1,
+    ): Int =
         db.withTransaction {
+            require(initialRevision > 0)
             check(dao.recordsOfKind("routine").isEmpty()) {
                 "Your routine library changed. Existing routines were kept. Go back to review them."
             }
@@ -103,7 +108,9 @@ class RoutineRepository(private val db: TrackerDatabase) {
                     put("createdAt", now)
                     put("updatedAt", now)
                 }
-                dao.insertRecord(RecordEntity("routine", typedIdKey(id), payload.toString()))
+                dao.insertRecord(
+                    RecordEntity("routine", typedIdKey(id), payload.toString(), initialRevision)
+                )
             }
             library.routines.size
         }

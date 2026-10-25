@@ -19,6 +19,8 @@ data class StatsSnapshot(
     val recent: Int,
     val goal: Int,
     val today: String,
+    val insights: List<ProgressInsight>,
+    val recentSessions: List<RecentSession>,
 )
 
 /** Read-only derivation from one coherent Room snapshot; no analytics are stored in backups. */
@@ -55,14 +57,17 @@ class StatsRepository(private val db: TrackerDatabase) {
                         ?.doubleOrNull
                         ?.toInt()
                 } ?: 4
+            val exercises = buildExerciseStats(workouts)
             StatsSnapshot(
                 progressTotals(workouts),
-                buildExerciseStats(workouts),
+                exercises,
                 weeklyActivity(workouts, today, schedule),
                 workoutStreak(workouts, today),
                 recentWorkoutCount(workouts, today),
                 goal,
                 today.toString(),
+                progressInsights(workouts, exercises, today, limit = 6),
+                recentSessions(workouts),
             )
         }
 

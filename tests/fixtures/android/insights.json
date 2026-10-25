@@ -1,0 +1,2454 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "workouts": [],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [],
+      "detail": []
+    },
+    {
+      "name": "first entry does not create a PR insight",
+      "workouts": [
+        {
+          "id": 0,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": []
+    },
+    {
+      "name": "recent PR before trend and same-type volume",
+      "workouts": [
+        {
+          "id": 0,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": "0",
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "150",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z",
+          "durationMinutes": 0
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "150 × 5 · 175.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +50 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+250 lb vs Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "-"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "150 × 5 · 175.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +50 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+250 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "PR boundary includes sixty calendar days",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-01-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-08-24",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-08-24T12:00:00Z"
+        },
+        {
+          "id": 3,
+          "date": "2026-08-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Squat",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "150",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-08-23T12:00:00Z"
+        },
+        {
+          "id": 4,
+          "date": "2026-01-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Squat",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-01T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "110 × 5 · 128.3 est. 1RM · Aug 24, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Squat is trending up",
+          "meta": "2 recent sessions · +50 lb since Jan 1, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +10 lb since Jan 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Aug 24, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Aug 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Jan 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "110 × 5 · 128.3 est. 1RM · Aug 24, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Squat is trending up",
+          "meta": "2 recent sessions · +50 lb since Jan 1, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +10 lb since Jan 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "old PR omitted, upward trend retained",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-01-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-08-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "120",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-08-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +20 lb since Jan 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Aug 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Jan 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +20 lb since Jan 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "latest seven entries exclude old trend endpoint",
+      "workouts": [
+        {
+          "id": 0,
+          "date": "2026-10-10",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1000",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-10T12:00:00Z"
+        },
+        {
+          "id": 1,
+          "date": "2026-10-11",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "101",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-11T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-12",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "102",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-12T12:00:00Z"
+        },
+        {
+          "id": 3,
+          "date": "2026-10-13",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "103",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-13T12:00:00Z"
+        },
+        {
+          "id": 4,
+          "date": "2026-10-14",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "104",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-14T12:00:00Z"
+        },
+        {
+          "id": 5,
+          "date": "2026-10-15",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "105",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-15T12:00:00Z"
+        },
+        {
+          "id": 6,
+          "date": "2026-10-16",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "106",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-16T12:00:00Z"
+        },
+        {
+          "id": 7,
+          "date": "2026-10-17",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "107",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-17T12:00:00Z"
+        },
+        {
+          "id": 8,
+          "date": "2026-10-18",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "108",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-18T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "7 recent sessions · +6 lb since Oct 12, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 18, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 17, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 16, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "7 recent sessions · +6 lb since Oct 12, 2026"
+        }
+      ]
+    },
+    {
+      "name": "PR dedup after two candidate slots and six detail insights",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Squat",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "150",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-21",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Squat",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "175",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-21T12:00:00Z"
+        },
+        {
+          "id": 3,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "120",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Squat",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "200",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Squat",
+          "meta": "200 × 5 · 233.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "120 × 5 · 140.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Squat is trending up",
+          "meta": "3 recent sessions · +50 lb since Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 21, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Squat",
+          "meta": "200 × 5 · 233.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "120 × 5 · 140.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Squat is trending up",
+          "meta": "3 recent sessions · +50 lb since Oct 1, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "3 recent sessions · +20 lb since Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "same exercise PRs deduplicate without refilling",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-22",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "120",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-22T12:00:00Z"
+        },
+        {
+          "id": 3,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "130",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "130 × 5 · 151.7 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "3 recent sessions · +30 lb since Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 22, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "130 × 5 · 151.7 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "3 recent sessions · +30 lb since Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "same date PR ordering by score",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "A",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "B",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "A",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "B",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "200",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: B",
+          "meta": "200 × 5 · 233.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: A",
+          "meta": "110 × 5 · 128.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "B is trending up",
+          "meta": "2 recent sessions · +100 lb since Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: B",
+          "meta": "200 × 5 · 233.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: A",
+          "meta": "110 × 5 · 128.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "B is trending up",
+          "meta": "2 recent sessions · +100 lb since Oct 1, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "A is trending up",
+          "meta": "2 recent sessions · +10 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+550 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "declining load but estimated gain retains zero or negative trend",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "95",
+                  "reps": "12",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "95 × 12 · 133.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · -5 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+1040 lb vs Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "95 × 12 · 133.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · -5 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+1040 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "flat trend and volume below threshold omitted",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z",
+          "durationMinutes": 60
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": []
+    },
+    {
+      "name": "volume threshold 249",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Zero reps don't set PRs",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1000",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Other exercise",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1249",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": []
+    },
+    {
+      "name": "volume threshold 250",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Zero reps don't set PRs",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1000",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Other exercise",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1250",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+250 lb vs Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+250 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "volume threshold -249",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Zero reps don't set PRs",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1000",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Other exercise",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "751",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": []
+    },
+    {
+      "name": "volume threshold -250",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Zero reps don't set PRs",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1000",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Other exercise",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "750",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "volume",
+          "title": "Push volume dipped",
+          "meta": "-250 lb vs Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "volume",
+          "title": "Push volume dipped",
+          "meta": "-250 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "volume compares exact type and skips other routines",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-22",
+          "type": "push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "500",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-22T12:00:00Z"
+        },
+        {
+          "id": 3,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "50",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "500 × 5 · 583.3 est. 1RM · Oct 22, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume dipped",
+          "meta": "-250 lb vs Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "push",
+          "summary": "Oct 22, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "500 × 5 · 583.3 est. 1RM · Oct 22, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume dipped",
+          "meta": "-250 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "warmups bodyweight incomplete sets repeated names and escaping",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "A & <B>",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Bodyweight",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "0",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "A & <B>",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "120",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "A & <B>",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "150",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Warmup",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1000",
+                  "reps": "10",
+                  "warmup": true,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Bodyweight",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "0",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: A & <B>",
+          "meta": "150 × 5 · 175.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "A & <B> is trending up",
+          "meta": "3 recent sessions · +50 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+850 lb vs Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 4 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: A & <B>",
+          "meta": "150 × 5 · 175.0 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "A & <B> is trending up",
+          "meta": "3 recent sessions · +50 lb since Oct 1, 2026"
+        },
+        {
+          "type": "volume",
+          "title": "Push volume increased",
+          "meta": "+850 lb vs Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "three newest preserve stable timestamp ties and typed IDs",
+      "workouts": [
+        {
+          "id": 0,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z",
+          "durationMinutes": 0
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z",
+          "durationMinutes": 30
+        },
+        {
+          "id": "0",
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z",
+          "durationMinutes": 60
+        },
+        {
+          "id": "old",
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z",
+          "durationMinutes": 90
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 0 exercises",
+          "duration": "-"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 0 exercises",
+          "duration": "30m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 0 exercises",
+          "duration": "1h"
+        }
+      ],
+      "detail": []
+    },
+    {
+      "name": "future entries follow the existing PWA cutoff without a new upper bound",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-24",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "120",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-24T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "120 × 5 · 140.0 est. 1RM · Oct 24, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +20 lb since Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 24, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "120 × 5 · 140.0 est. 1RM · Oct 24, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +20 lb since Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "binary decimal rounding for PR and signed load trend",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Small lift",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1",
+                  "reps": "15",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Load delta",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Small lift",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "1.7",
+                  "reps": "15",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Load delta",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "3.55",
+                  "reps": "1",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Load delta",
+          "meta": "3.55 × 1 · 3.7 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: Small lift",
+          "meta": "1.7 × 15 · 2.5 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Load delta is trending up",
+          "meta": "2 recent sessions · +2.5 lb since Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 2 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Load delta",
+          "meta": "3.55 × 1 · 3.7 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: Small lift",
+          "meta": "1.7 × 15 · 2.5 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Load delta is trending up",
+          "meta": "2 recent sessions · +2.5 lb since Oct 1, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Small lift is trending up",
+          "meta": "2 recent sessions · +0.7 lb since Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "case and accent distinct names keep PWA English tie order",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-10-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Á Press",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Z Press",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-10-23",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Á Press",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            },
+            {
+              "name": "Z Press",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-10-23T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Á Press",
+          "meta": "110 × 5 · 128.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: bench",
+          "meta": "110 × 5 · 128.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Á Press is trending up",
+          "meta": "2 recent sessions · +10 lb since Oct 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Oct 23, 2026 - 4 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Oct 1, 2026 - 4 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Á Press",
+          "meta": "110 × 5 · 128.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "pr",
+          "title": "New PR: bench",
+          "meta": "110 × 5 · 128.3 est. 1RM · Oct 23, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Á Press is trending up",
+          "meta": "2 recent sessions · +10 lb since Oct 1, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "bench is trending up",
+          "meta": "2 recent sessions · +10 lb since Oct 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "estimated gain trend boundary at load 57",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-01-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "57",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-01-02",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "57",
+                  "reps": "6",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-02T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Jan 2, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Jan 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": []
+    },
+    {
+      "name": "estimated gain trend boundary at load 60",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-01-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "60",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-01-02",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "60",
+                  "reps": "6",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-02T12:00:00Z"
+        }
+      ],
+      "today": "2026-10-23",
+      "preview": [
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +0 lb since Jan 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Jan 2, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Jan 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +0 lb since Jan 1, 2026"
+        }
+      ]
+    },
+    {
+      "name": "calendar cutoff crosses spring DST",
+      "today": "2026-03-09",
+      "workouts": [
+        {
+          "id": 1,
+          "date": "2026-01-01",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "100",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-01T12:00:00Z"
+        },
+        {
+          "id": 2,
+          "date": "2026-01-08",
+          "type": "Push",
+          "exercises": [
+            {
+              "name": "Bench",
+              "notes": "",
+              "sets": [
+                {
+                  "weight": "110",
+                  "reps": "5",
+                  "warmup": false,
+                  "done": false,
+                  "rpe": ""
+                }
+              ]
+            }
+          ],
+          "startTime": "23:30",
+          "endTime": "00:45",
+          "createdAt": "2026-01-08T12:00:00Z"
+        }
+      ],
+      "preview": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "110 × 5 · 128.3 est. 1RM · Jan 8, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +10 lb since Jan 1, 2026"
+        }
+      ],
+      "recent": [
+        {
+          "type": "Push",
+          "summary": "Jan 8, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        },
+        {
+          "type": "Push",
+          "summary": "Jan 1, 2026 - 1 exercises",
+          "duration": "1h 15m"
+        }
+      ],
+      "detail": [
+        {
+          "type": "pr",
+          "title": "New PR: Bench",
+          "meta": "110 × 5 · 128.3 est. 1RM · Jan 8, 2026"
+        },
+        {
+          "type": "trend",
+          "title": "Bench is trending up",
+          "meta": "2 recent sessions · +10 lb since Jan 1, 2026"
+        }
+      ]
+    }
+  ]
+}

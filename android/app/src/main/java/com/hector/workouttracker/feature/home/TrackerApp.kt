@@ -1,5 +1,6 @@
 package com.hector.workouttracker.feature.home
 
+import android.content.Intent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -9,16 +10,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import com.hector.workouttracker.MainActivity
 import com.hector.workouttracker.R
 import com.hector.workouttracker.core.designsystem.InteractionTheme
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.feature.backup.ImportDialog
+import com.hector.workouttracker.feature.feedback.FeedbackScreen
 import com.hector.workouttracker.feature.help.*
 import com.hector.workouttracker.feature.history.*
 import com.hector.workouttracker.feature.onboarding.SetupScreen
@@ -33,8 +37,27 @@ import kotlinx.serialization.json.*
 @Composable
 fun TrackerApp(vm: TrackerViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val historyVm: HistoryViewModel = viewModel()
-    val helpVm: HelpViewModel = viewModel()
+    val context = LocalContext.current
+    LaunchedEffect(state.restartAfterClear) {
+        if (state.restartAfterClear) {
+            vm.consumeClearRestart()
+            // Finish the old task and its editor ViewModel stores after the atomic clear.
+            context.startActivity(
+                Intent(context, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            )
+        }
+    }
+    // The durable epoch also rejects old navigation restoration after process death mid-clear.
+    key(state.dataEpoch) { TrackerAppContent(state, vm) }
+}
+
+@Composable
+private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
+    val historyVm: HistoryViewModel =
+        viewModel(key = if (state.dataEpoch == "initial") null else "history:${state.dataEpoch}")
+    val helpVm: HelpViewModel =
+        viewModel(key = if (state.dataEpoch == "initial") null else "help:${state.dataEpoch}")
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"
@@ -54,6 +77,7 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                                     "workout",
                                     "preferences",
                                     "help",
+                                    "feedback",
                                 )
                     ) {
                         NavigationBar {
@@ -95,7 +119,12 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                     }
                 }
             ) { padding ->
-                Column(Modifier.fillMaxSize().padding(padding).imePadding()) {
+                Column(
+                    Modifier.fillMaxSize()
+                        .padding(padding)
+                        .consumeWindowInsets(padding)
+                        .imePadding()
+                ) {
                     state.error?.let { message ->
                         Card(
                             Modifier.fillMaxWidth().padding(12.dp),
@@ -161,9 +190,11 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
                                         { nav.navigate("schedule") { launchSingleTop = true } },
                                         { nav.navigate("preferences") { launchSingleTop = true } },
                                         { nav.navigate("help") { launchSingleTop = true } },
+                                        { nav.navigate("feedback") { launchSingleTop = true } },
                                     )
                                 }
                                 composable("help") { HelpScreen { nav.popBackStack() } }
+                                composable("feedback") { FeedbackScreen({ nav.popBackStack() }) }
                                 composable("preferences") {
                                     PreferencesScreen({ nav.popBackStack() })
                                 }

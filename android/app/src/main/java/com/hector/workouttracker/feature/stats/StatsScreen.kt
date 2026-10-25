@@ -49,6 +49,7 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var metric by rememberSaveable { mutableStateOf("bestWeight") }
     var query by rememberSaveable { mutableStateOf("") }
+    var allInsights by rememberSaveable { mutableStateOf(false) }
     BackHandler(selected != null) { selected = null }
     val list = rememberLazyListState()
     LaunchedEffect(selected) { list.scrollToItem(0) }
@@ -96,6 +97,71 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
                             style = MaterialTheme.typography.bodySmall,
                         )
                         Text("${snapshot.streak} consecutive days ending today")
+                    }
+                }
+            }
+            item {
+                Text(
+                    "Strength snapshot",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag("stats-strength-heading"),
+                )
+                Text(
+                    "Recent PRs, rising trends and changes against the previous workout of the same type."
+                )
+                if (snapshot.insights.isEmpty()) {
+                    Text("Keep logging sessions", style = MaterialTheme.typography.titleMedium)
+                    Text("Strength trends will appear here once you have a few sessions logged.")
+                }
+            }
+            items(
+                if (allInsights) snapshot.insights else snapshot.insights.take(3),
+                key = { "insight:${it.type}:${it.title}" },
+            ) { insight ->
+                OutlinedCard(
+                    Modifier.fillMaxWidth()
+                        .testTag("stats-insight-${insight.type}-${insight.title}")
+                ) {
+                    Column(
+                        Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(insight.title, style = MaterialTheme.typography.titleMedium)
+                        Text(insight.meta)
+                    }
+                }
+            }
+            if (snapshot.insights.size > 3)
+                item {
+                    TextButton(
+                        onClick = { allInsights = !allInsights },
+                        modifier = Modifier.testTag("stats-insights-toggle"),
+                    ) {
+                        Text(if (allInsights) "Show fewer insights" else "View all insights")
+                    }
+                }
+            item {
+                Text(
+                    "Recent sessions",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag("stats-recent-heading"),
+                )
+                Text("The three newest saved workouts. Full details are in History.")
+                if (snapshot.recentSessions.isEmpty())
+                    Text("No sessions yet. Logged workouts will appear here.")
+            }
+            items(snapshot.recentSessions, key = { "recent:${it.id}" }) { session ->
+                OutlinedCard(Modifier.fillMaxWidth().testTag("stats-recent-${session.id}")) {
+                    Column(
+                        Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(session.type, style = MaterialTheme.typography.titleMedium)
+                        Text("${session.date} · ${session.exercises} exercises")
+                        Text(
+                            if (session.duration == 0.0) "Duration: —"
+                            else "${progressNumber(session.duration)} min"
+                        )
                     }
                 }
             }

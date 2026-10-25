@@ -4,7 +4,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.core.designsystem.Heading
@@ -32,6 +35,8 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
     var warning by rememberSaveable { mutableStateOf(false) }
     var advanced by rememberSaveable { mutableStateOf(false) }
     val list = rememberLazyListState()
+    val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
+    val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     fun leave() {
         if (!state.busy) {
             if (draft?.changed == true) discard = true else back()
@@ -231,8 +236,15 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
     if (discard)
         AlertDialog(
             onDismissRequest = { discard = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Discard preference edits?") },
-            text = { Text("Your saved preferences have not changed.") },
+            text = {
+                Text(
+                    "Your saved preferences have not changed.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -248,10 +260,13 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
     if (reload)
         AlertDialog(
             onDismissRequest = { reload = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Reload saved preferences?") },
             text = {
                 Text(
-                    "This replaces your unsaved entries with the latest saved preferences and goal."
+                    "This replaces your unsaved entries with the latest saved preferences and goal.",
+                    Modifier.verticalScroll(rememberScrollState()),
                 )
             },
             confirmButton = {
@@ -269,9 +284,14 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
     if (warning)
         AlertDialog(
             onDismissRequest = { warning = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Review these values") },
             text = {
-                Text(values?.let(::preferencesWarning) ?: "Review your goal and rep ranges.")
+                Text(
+                    values?.let(::preferencesWarning) ?: "Review your goal and rep ranges.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
             },
             confirmButton = {
                 TextButton(

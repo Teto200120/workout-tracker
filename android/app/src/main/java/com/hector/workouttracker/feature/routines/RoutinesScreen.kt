@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.core.catalog.StarterLibrary
@@ -31,6 +34,8 @@ internal fun RoutinesScreen(
     var discard by rememberSaveable { mutableStateOf(false) }
     var reload by rememberSaveable { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<SavedRoutine?>(null) }
+    val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
+    val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     fun closeEditor() {
         if (!state.busy) {
             if (draft?.changed == true) discard = true else vm.close()
@@ -162,8 +167,15 @@ internal fun RoutinesScreen(
     if (discard)
         AlertDialog(
             onDismissRequest = { discard = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Discard routine edits?") },
-            text = { Text("Your saved routine has not changed.") },
+            text = {
+                Text(
+                    "Your saved routine has not changed.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -179,8 +191,15 @@ internal fun RoutinesScreen(
     if (reload)
         AlertDialog(
             onDismissRequest = { reload = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Reload saved routine?") },
-            text = { Text("This replaces your unsaved edits with the latest saved routine.") },
+            text = {
+                Text(
+                    "This replaces your unsaved edits with the latest saved routine.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -196,10 +215,13 @@ internal fun RoutinesScreen(
     deleting?.let { routine ->
         AlertDialog(
             onDismissRequest = { deleting = null },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Delete ${routine.name}?") },
             text = {
                 Text(
-                    "Saved workouts and any active session will remain. Schedule references keep their existing names."
+                    "Saved workouts and any active session will remain. Schedule references keep their existing names.",
+                    Modifier.verticalScroll(rememberScrollState()),
                 )
             },
             confirmButton = {
@@ -426,8 +448,15 @@ private fun RoutineEditor(
     duplicate?.let { name ->
         AlertDialog(
             onDismissRequest = { duplicate = null },
+            modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth(),
+            properties = DialogProperties(usePlatformDefaultWidth = false),
             title = { Text("Keep a repeated exercise?") },
-            text = { Text("This routine already contains $name. Keep both rows?") },
+            text = {
+                Text(
+                    "This routine already contains $name. Keep both rows?",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

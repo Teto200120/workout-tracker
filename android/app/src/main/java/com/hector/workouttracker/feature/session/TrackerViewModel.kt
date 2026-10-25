@@ -9,9 +9,12 @@ import androidx.lifecycle.viewModelScope
 import com.hector.workouttracker.TrackerApplication
 import com.hector.workouttracker.core.backup.*
 import com.hector.workouttracker.core.catalog.ExerciseCatalog
+import com.hector.workouttracker.core.catalog.StarterLibrary
 import com.hector.workouttracker.core.database.RecordEntity
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.core.schedule.ScheduleDay
+import com.hector.workouttracker.data.DataAction
+import com.hector.workouttracker.data.DataActionReview
 import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.data.InteractionPreferences
 import com.hector.workouttracker.data.SavedRoutine
@@ -57,6 +60,10 @@ data class TrackerState(
     val backup: BackupSnapshot? = null,
     val completion: CompletionSummary? = null,
     val completedName: String? = null,
+    val dataActionReview: DataActionReview? = null,
+    val maintenanceMessage: String? = null,
+    val dataEpoch: String = "initial",
+    val restartAfterClear: Boolean = false,
 ) {
     val pending: Boolean
         get() = editVersion != savedVersion
@@ -66,6 +73,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     private val repository = (application as TrackerApplication).repository
     private val progression = (application as TrackerApplication).progressionRepository
     private val backups = (application as TrackerApplication).backups
+    private val maintenance = (application as TrackerApplication).dataMaintenance
     private val mutable = MutableStateFlow(TrackerState())
     val state = mutable.asStateFlow()
     private val commands = Channel<suspend () -> Unit>(Channel.UNLIMITED)
@@ -83,6 +91,17 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         observeGuidance()
+        viewModelScope.launch {
+            maintenance.epochs
+                .catch {
+                    mutable.update {
+                        it.copy(
+                            error = "Local data state could not be loaded. Reopen the app to retry."
+                        )
+                    }
+                }
+                .collect { epoch -> mutable.update { it.copy(dataEpoch = epoch) } }
+        }
         viewModelScope.launch {
             backups.status
                 .catch { mutable.update { it.copy(backup = null) } }
@@ -156,6 +175,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             val profile = repository.readProfile()
             profileRevision = profile.second
             val draft = repository.readDraft()
+            val epoch = maintenance.currentEpoch()
             draftRevision = draft?.second ?: 0L
             mutable.update {
                 it.copy(
@@ -163,6 +183,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                     profile = profile.first,
                     setupRpe = profile.first.trackRpe,
                     draft = draft?.first,
+                    dataEpoch = epoch,
                 )
             }
         }
@@ -337,6 +358,123 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     fun cancelImport() {
         mutable.update {
             it.copy(importPreview = null, backupMessage = "Import cancelled. No data changed.")
+        }
+    }
+
+    fun reviewDataAction(action: DataAction) {
+        val current = state.value
+        if (current.loading || current.busy || current.importPreview != null) return
+        if (current.pending) {
+            mutable.update {
+                it.copy(
+                    error =
+                        "Wait for your workout entries to save, or retry saving, before managing local data."
+                )
+            }
+            return
+        }
+        mutable.update { it.copy(busy = true, error = null, maintenanceMessage = null) }
+        enqueue {
+            val review =
+                try {
+                    withContext(Dispatchers.IO) { maintenance.review(action) }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    mutable.update {
+                        it.copy(
+                            busy = false,
+                            error = "The review could not be loaded. No data changed. Try again.",
+                        )
+                    }
+                    return@enqueue
+                }
+            mutable.update { it.copy(busy = false, dataActionReview = review) }
+        }
+    }
+
+    fun cancelDataAction() {
+        if (!state.value.busy) mutable.update { it.copy(dataActionReview = null) }
+    }
+
+    fun consumeClearRestart() {
+        mutable.update { it.copy(restartAfterClear = false) }
+    }
+
+    fun confirmDataAction() {
+        val current = state.value
+        val review = current.dataActionReview ?: return
+        if (current.busy || current.pending) return
+        mutable.update { it.copy(busy = true, dataActionReview = null, error = null) }
+        enqueue {
+            val result =
+                try {
+                    withContext(Dispatchers.IO) {
+                        val starters =
+                            if (review.action == DataAction.CLEAR_DATA) {
+                                val catalog = state.value.catalog ?: error("Catalog unavailable")
+                                getApplication<Application>()
+                                    .assets
+                                    .open("starter-routines.json")
+                                    .bufferedReader()
+                                    .use { StarterLibrary.parse(it.readText(), catalog) }
+                            } else null
+                        maintenance.confirm(review, starters)
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    mutable.update {
+                        it.copy(
+                            busy = false,
+                            error =
+                                if (error is com.hector.workouttracker.data.DataReviewChanged)
+                                    error.message
+                                else
+                                    "This action could not be completed. Your previous local data was kept. Review the action and try again.",
+                        )
+                    }
+                    return@enqueue
+                }
+            profileRevision = result.profileRevision
+            if (review.action == DataAction.CLEAR_DATA) {
+                draftRevision = 0
+                mutable.update {
+                    it.copy(
+                        profile = result.profile,
+                        setupRpe = result.profile.trackRpe,
+                        draft = null,
+                        workouts = emptyList(),
+                        routines = emptyList(),
+                        localNames = emptyList(),
+                        guidance = emptyMap(),
+                        guidanceBasis = null,
+                        guidanceError = null,
+                        editVersion = 0,
+                        savedVersion = 0,
+                        completion = null,
+                        completedName = null,
+                        importPreview = null,
+                        backupMessage = null,
+                        backup = null,
+                        maintenanceMessage = null,
+                        busy = false,
+                        error = null,
+                        dataEpoch = result.epoch,
+                        restartAfterClear = true,
+                    )
+                }
+            } else
+                mutable.update {
+                    it.copy(
+                        profile = result.profile,
+                        setupRpe = result.profile.trackRpe,
+                        busy = false,
+                        error = null,
+                        maintenanceMessage =
+                            "Settings reset. Your name, weekly goal, saved records, guidance and active workout were kept.",
+                    )
+                }
         }
     }
 

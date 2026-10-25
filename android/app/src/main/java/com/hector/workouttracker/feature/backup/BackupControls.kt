@@ -8,7 +8,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.hector.workouttracker.data.ImportCounts
 import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.feature.session.*
@@ -65,10 +67,12 @@ internal fun BackupControls(state: TrackerState, vm: TrackerViewModel, firstRun:
 internal fun ImportDialog(preview: ImportPreview, confirm: () -> Unit, cancel: () -> Unit) {
     AlertDialog(
         onDismissRequest = cancel,
+        modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth(),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text("Review backup import") },
         text = {
             Column(
-                Modifier.verticalScroll(rememberScrollState()),
+                Modifier.testTag("import-review-content").verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Text(

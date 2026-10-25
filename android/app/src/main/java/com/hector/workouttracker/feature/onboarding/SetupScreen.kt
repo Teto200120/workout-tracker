@@ -2,12 +2,16 @@ package com.hector.workouttracker.feature.onboarding
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.*
@@ -43,14 +47,20 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
             )
         }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.heightIn(min = 48.dp)
+                    .testTag("setup-rpe")
+                    .semantics { contentDescription = "Track RPE" }
+                    .toggleable(
+                        rpe,
+                        enabled = !state.busy,
+                        role = Role.Switch,
+                        onValueChange = vm::setSetupRpe,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text("Track RPE", Modifier.weight(1f))
-                Switch(
-                    rpe,
-                    vm::setSetupRpe,
-                    modifier = Modifier.testTag("setup-rpe"),
-                    enabled = !state.busy,
-                )
+                Switch(rpe, null, enabled = !state.busy)
             }
         }
         item {

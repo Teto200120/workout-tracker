@@ -13,10 +13,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.platform.app.InstrumentationRegistry
 import com.hector.workouttracker.core.backup.BackupCodec
 import com.hector.workouttracker.core.designsystem.TrackerTheme
+import com.hector.workouttracker.core.model.openExercise
+import com.hector.workouttracker.core.model.trackerJson
 import com.hector.workouttracker.feature.home.TrackerApp
 import java.io.File
 import kotlinx.coroutines.flow.first
@@ -95,6 +99,10 @@ class WorkoutFlowTest {
                 .isNotEmpty()
         }
         compose.onNodeWithText("Dismiss").performClick()
+        val importApp = compose.activity.application as TrackerApplication
+        val beforeImportReview =
+            kotlinx.coroutines.runBlocking { importApp.backups.export("2026-10-25T00:00:00Z") }
+        val beforeImportDraft = kotlinx.coroutines.runBlocking { importApp.repository.readDraft() }
         nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/fixture.json")
         compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
         compose.waitUntil(10000) {
@@ -102,7 +110,31 @@ class WorkoutFlowTest {
         }
         compose.onNodeWithText("Workouts: 2 new, 0 replaced, 0 unchanged").assertExists()
         screenshot("import-preview")
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review backup import").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Workouts: 2 new, 0 replaced, 0 unchanged").assertExists()
+        for (explanation in
+            listOf(
+                "Matching IDs with changed content will be replaced. Number IDs and text IDs remain distinct. Other saved records are kept.",
+                "Supplied settings will replace your preferences.",
+                "Imported routines and goals are available in Routines and Stats, and included in exports. RPE preferences never erase historical RPE values. Guidance preferences stay on this device.",
+            )) {
+            compose.onNodeWithTag("import-review-content").performScrollToNode(hasText(explanation))
+            compose.onNodeWithText(explanation).assertIsDisplayed()
+        }
+        screenshot("import-preview-restored")
         compose.onNodeWithText("Cancel").performClick()
+        assertEquals(
+            beforeImportReview,
+            kotlinx.coroutines.runBlocking { importApp.backups.export("2026-10-25T00:00:00Z") },
+        )
+        assertEquals(
+            beforeImportDraft,
+            kotlinx.coroutines.runBlocking { importApp.repository.readDraft() },
+        )
 
         // Legacy backups require name setup, but their RPE preference must survive it.
         nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/legacy.json")
@@ -119,6 +151,15 @@ class WorkoutFlowTest {
         }
         compose.onNodeWithTag("setup-list").performScrollToNode(hasTestTag("setup-rpe"))
         compose.onNodeWithTag("setup-rpe").assertIsOff()
+        compose.onNodeWithTag("setup-rpe").assertContentDescriptionEquals("Track RPE")
+        compose
+            .onNodeWithTag("setup-rpe")
+            .assert(
+                SemanticsMatcher.expectValue(
+                    androidx.compose.ui.semantics.SemanticsProperties.Role,
+                    androidx.compose.ui.semantics.Role.Switch,
+                )
+            )
         screenshot("legacy-onboarding")
         // Re-import must reset an unsaved toggle even when the stored preference is unchanged.
         compose.onNodeWithTag("setup-rpe").performClick().assertIsOn()
@@ -309,10 +350,14 @@ class WorkoutFlowTest {
             .onFirst()
             .performScrollTo()
             .performTextInput("8")
+        sessionKeyboardViewport()
+        closeSoftKeyboard()
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performClick()
         compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
+        activeOrderFlow(vm, owner)
+        activeExerciseFlow(vm, owner)
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
         compose.onNodeWithText("Finish workout").performClick()
         compose.onNodeWithText("Save workout").performClick()
@@ -470,6 +515,13 @@ class WorkoutFlowTest {
         openImported()
         name("Discard me")
         editorText("Back to routines")
+        compose.onNodeWithText("Your saved routine has not changed.").assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Discard routine edits?").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Your saved routine has not changed.").assertIsDisplayed()
         compose.onNodeWithText("Keep editing").performClick()
         compose.onNodeWithTag("routine-name").assertTextContains("Discard me")
         editorText("Back to routines")
@@ -494,6 +546,18 @@ class WorkoutFlowTest {
             compose.onAllNodesWithText("Reload saved routine").fetchSemanticsNodes().isNotEmpty()
         }
         name("Unsaved stale")
+        compose.onNodeWithText("Reload saved routine").performClick()
+        compose
+            .onNodeWithText("This replaces your unsaved edits with the latest saved routine.")
+            .assertIsDisplayed()
+        val latestRoutine =
+            kotlinx.coroutines.runBlocking { app.routineRepository.read(JsonPrimitive(0)) }
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.onNodeWithTag("routine-name").assertTextContains("Unsaved stale")
+        assertEquals(
+            latestRoutine,
+            kotlinx.coroutines.runBlocking { app.routineRepository.read(JsonPrimitive(0)) },
+        )
         compose.onNodeWithText("Reload saved routine").performClick()
         compose.onNodeWithText("Reload", substring = false).performClick()
         compose.waitUntil(10000) {
@@ -655,8 +719,26 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performClick()
         openSchedule()
+        scheduleTag("schedule-kind-1")
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Monday activity").fetchSemanticsNodes().isNotEmpty()
+        }
+        for (value in listOf("gym", "soccer", "rest")) {
+            compose.onNodeWithTag("choose-kind-$value").assertIsDisplayed()
+        }
+        compose.onNodeWithText("Cancel", substring = false).performClick()
+        assertEquals(original, kotlinx.coroutines.runBlocking { app.scheduleRepository.read() })
         kind(0, "soccer")
         backFromSchedule()
+        compose.onNodeWithText("Your saved schedule has not changed.").assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Discard schedule edits?").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Your saved schedule has not changed.").assertIsDisplayed()
         compose.onNodeWithText("Keep editing").performClick()
         compose.activityRule.scenario.recreate()
         compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
@@ -709,6 +791,18 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Reload saved schedule").fetchSemanticsNodes().isNotEmpty()
         }
+        compose.onNodeWithText("Reload saved schedule").performClick()
+        compose
+            .onNodeWithText("This replaces your unsaved plan with the latest saved settings.")
+            .assertIsDisplayed()
+        val latestSchedule = kotlinx.coroutines.runBlocking { app.scheduleRepository.read() }
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-1"))
+        compose.onNodeWithTag("schedule-kind-1").assertTextContains("Monday · Soccer")
+        assertEquals(
+            latestSchedule,
+            kotlinx.coroutines.runBlocking { app.scheduleRepository.read() },
+        )
         compose.onNodeWithText("Reload saved schedule").performClick()
         compose.onNodeWithText("Reload", substring = false).performClick()
         compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-1"))
@@ -769,8 +863,6 @@ class WorkoutFlowTest {
     ) {
         val app = compose.activity.application as TrackerApplication
         val active = requireNotNull(vm.state.value.draft)
-        val original =
-            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
         fun tag(name: String) {
             compose.onNodeWithTag("history-workout").performScrollToNode(hasTestTag(name))
             compose.onNodeWithTag(name).performScrollTo()
@@ -800,6 +892,9 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performScrollTo().performClick()
         compose.onNodeWithText("History").performClick()
+        historyFiltersFlow(vm, owner)
+        val original =
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
         open()
         field("history-notes", "Unsaved History note")
         compose.activityRule.scenario.recreate()
@@ -824,6 +919,29 @@ class WorkoutFlowTest {
         tag("workout-tag-Good session")
         compose.onNodeWithTag("workout-tag-Good session").performClick()
         field("history-reps-0-0", "6")
+        val originalSet = original.values.exercises.first().sets.first()
+        val exerciseName = original.values.exercises.first().name
+        for ((key, label, checked) in
+            listOf(
+                Triple("completed", "Completed", originalSet.done),
+                Triple("warmup", "Warm-up", originalSet.warmup),
+            )) {
+            val control = "history-$key-0-0"
+            tag(control)
+            val node = compose.onNodeWithTag(control)
+            node.assertContentDescriptionEquals("$label, exercise 1, $exerciseName, set 1")
+            node.assert(
+                SemanticsMatcher.expectValue(
+                    androidx.compose.ui.semantics.SemanticsProperties.Role,
+                    androidx.compose.ui.semantics.Role.Checkbox,
+                )
+            )
+            if (checked) node.assertIsOn() else node.assertIsOff()
+            node.performClick()
+            if (checked) node.assertIsOff() else node.assertIsOn()
+            node.performClick()
+            if (checked) node.assertIsOn() else node.assertIsOff()
+        }
         compose.onNodeWithTag("save-history-workout").performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("edit-history-workout").fetchSemanticsNodes().isNotEmpty()
@@ -895,6 +1013,38 @@ class WorkoutFlowTest {
         }
         compose.onNodeWithTag("stats-totals").assertTextContains("3 workouts", substring = true)
         screenshot("stats-overview")
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-strength-heading"))
+        compose.onNodeWithText("Strength snapshot").assertExists()
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-recent-heading"))
+        compose.onNodeWithTag("stats-recent-heading").performScrollTo().assertIsDisplayed()
+        screenshot("stats-recent-sessions")
+        val recent =
+            com.hector.workouttracker.domain
+                .sortedWorkouts(
+                    com.hector.workouttracker.domain.interchangeOrder(
+                        vm.state.value.workouts.map {
+                            trackerJson.parseToJsonElement(it.payload).jsonObject
+                        }
+                    )
+                )
+                .take(3)
+        assertEquals(3, recent.size)
+        // The preceding History acceptance deliberately deleted numeric zero.
+        assertFalse(recent.any { it["id"] == JsonPrimitive(0) })
+        assertTrue(recent.any { it["id"] == JsonPrimitive("0") })
+        for (workout in recent) {
+            val tag = "stats-recent-${workout.getValue("id")}"
+            compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).assertExists()
+            compose
+                .onNode(
+                    hasText(workout.getValue("type").jsonPrimitive.content) and
+                        hasAnyAncestor(hasTestTag(tag))
+                )
+                .assertExists()
+        }
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-search"))
         compose.onNodeWithTag("stats-search").performScrollTo().performTextInput("Bench Press")
         closeSoftKeyboard()
@@ -927,6 +1077,7 @@ class WorkoutFlowTest {
                 base.copy(
                     values =
                         base.values.copy(
+                            date = java.time.LocalDate.now().toString(),
                             exercises =
                                 base.values.exercises.map {
                                     it.copy(
@@ -936,7 +1087,7 @@ class WorkoutFlowTest {
                                                 else s
                                             }
                                     )
-                                }
+                                },
                         )
                 )
             )
@@ -950,11 +1101,30 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Best load: 150.0 lb").assertExists()
         screenshot("stats-live-update")
         assertEquals(active, vm.state.value.draft)
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasText("Back to Stats"))
+        compose.onNodeWithText("Back to Stats").performScrollTo().performClick()
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-insight-pr-New PR: Bench Press"))
+        compose.onNodeWithText("New PR: Bench Press").assertExists()
+        compose
+            .onNodeWithTag("stats-insight-pr-New PR: Bench Press")
+            .performScrollTo()
+            .assertIsDisplayed()
+        screenshot("stats-strength-live-update")
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("stats-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-insight-pr-New PR: Bench Press"))
+        compose.onNodeWithText("New PR: Bench Press").assertExists()
         kotlinx.coroutines.runBlocking {
             app.historyRepository.delete(app.historyRepository.read(JsonPrimitive("0"))!!)
         }
-        compose.onNodeWithTag("stats-list").performScrollToNode(hasText("Back to Stats"))
-        compose.onNodeWithText("Back to Stats").performScrollTo().performClick()
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-totals"))
         compose.waitUntil(10000) {
             runCatching {
                     compose
@@ -1002,6 +1172,17 @@ class WorkoutFlowTest {
         open()
         field("name", "Unsaved preferences")
         back()
+        compose.onNodeWithText("Your saved preferences have not changed.").assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodesWithText("Discard preference edits?")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        compose.onNodeWithText("Your saved preferences have not changed.").assertIsDisplayed()
+        screenshot("preferences-discard-restored")
         compose.onNodeWithText("Keep editing").performClick()
         compose.activityRule.scenario.recreate()
         compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
@@ -1063,6 +1244,8 @@ class WorkoutFlowTest {
                 )
             )
         }
+        val concurrentPreferences =
+            kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }
         compose.onNodeWithTag("save-preferences").performClick()
         compose.waitUntil(10000) {
             compose
@@ -1072,6 +1255,18 @@ class WorkoutFlowTest {
         }
         compose.onNodeWithTag("preference-name").assertTextContains("Retained preference edit")
         screenshot("preferences-conflict")
+        compose.onNodeWithText("Reload saved preferences").performClick()
+        compose
+            .onNodeWithText(
+                "This replaces your unsaved entries with the latest saved preferences and goal."
+            )
+            .assertIsDisplayed()
+        compose.onNodeWithText("Keep editing").performClick()
+        compose.onNodeWithTag("preference-name").assertTextContains("Retained preference edit")
+        assertEquals(
+            concurrentPreferences,
+            kotlinx.coroutines.runBlocking { app.preferencesRepository.read() },
+        )
         compose.onNodeWithText("Reload saved preferences").performClick()
         compose.onNodeWithText("Reload", substring = false).performClick()
         compose.waitUntil(10000) {
@@ -1084,7 +1279,27 @@ class WorkoutFlowTest {
         }
         field("weeklyGoal", "15")
         compose.onNodeWithTag("save-preferences").performClick()
+        compose
+            .onNodeWithText(
+                "This goal or rep range is unusually high. Review the numbers before saving."
+            )
+            .assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Review these values").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithText(
+                "This goal or rep range is unusually high. Review the numbers before saving."
+            )
+            .assertIsDisplayed()
+        screenshot("preferences-warning-restored")
         compose.onNodeWithText("Keep editing").performClick()
+        compose
+            .onNodeWithTag("preferences-editor")
+            .performScrollToNode(hasTestTag("preference-weeklyGoal"))
+        compose.onNodeWithTag("preference-weeklyGoal").assertTextContains("15")
         assertEquals(
             "6",
             kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }.values.weeklyGoal,
@@ -1197,6 +1412,7 @@ class WorkoutFlowTest {
         click("use-target-$key")
         compose.onNodeWithText("Keep entered sets").performClick()
         assertEquals(last, vm.state.value.draft)
+        assertEquals(last, kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first)
         click("use-target-$key")
         compose.onNodeWithText("Replace sets", substring = false).performClick()
         awaitEntry("102.5", "7")
@@ -1297,13 +1513,33 @@ class WorkoutFlowTest {
         screenshot("guidance-help")
         val progress = kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() }
         val beforeStatus = vm.state.value.backup
+        val beforeHelpReview =
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-25T12:00:00Z") }
+        val beforeHelpDraft = kotlinx.coroutines.runBlocking { app.repository.readDraft() }
         compose.onNodeWithTag("help-list").performScrollToNode(hasTestTag("reset-guidance"))
         compose.onNodeWithTag("reset-guidance").performClick()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Reset guidance?").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithText("Show known tips again without changing workout or profile data.")
+            .assertIsDisplayed()
+        screenshot("guidance-reset-review-restored")
         compose.onNodeWithText("Keep guidance").performClick()
         assertEquals(
             progress,
             kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() },
         )
+        assertEquals(
+            beforeHelpReview,
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-25T12:00:00Z") },
+        )
+        assertEquals(beforeHelpDraft, kotlinx.coroutines.runBlocking { app.repository.readDraft() })
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(records, vm.state.value.workouts)
+        assertEquals(beforeStatus, vm.state.value.backup)
         compose.onNodeWithTag("reset-guidance").performClick()
         compose.onNodeWithText("Reset tips", substring = false).performClick()
         compose.waitUntil(10000) {
@@ -1364,6 +1600,507 @@ class WorkoutFlowTest {
         assertFalse(text.contains("Guidance keeps this draft"))
         assertEquals(active, vm.state.value.draft)
         File(compose.activity.getExternalFilesDir(null), "qa/guidance-export.json").writeText(text)
+        settingsResetFlow(vm, owner)
+    }
+
+    private fun sessionKeyboardViewport() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val key = "show_ime_with_hard_keyboard"
+        val original =
+            android.provider.Settings.Secure.getString(compose.activity.contentResolver, key)
+        fun setting(value: String?) {
+            val command =
+                if (value == null) "settings delete secure $key"
+                else "settings put secure $key $value"
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(
+                    instrumentation.uiAutomation.executeShellCommand(command)
+                )
+                .use { it.readBytes() }
+        }
+        try {
+            // Exercise a real IME even on emulators configured with a hardware keyboard.
+            setting("1")
+            val field = compose.onAllNodesWithText("Reps", substring = false).onFirst()
+            field.performScrollTo().performClick()
+            val decor = compose.activity.window.decorView
+            compose.waitUntil(10000) {
+                ViewCompat.getRootWindowInsets(decor)?.isVisible(WindowInsetsCompat.Type.ime()) ==
+                    true
+            }
+            compose.waitUntil(10000) {
+                val ime =
+                    ViewCompat.getRootWindowInsets(decor)!!.getInsets(WindowInsetsCompat.Type.ime())
+                val viewport =
+                    compose.onNodeWithTag("session-list").fetchSemanticsNode().boundsInWindow
+                kotlin.math.abs(viewport.bottom - (decor.height - ime.bottom)) <= 2f
+            }
+            val ime =
+                ViewCompat.getRootWindowInsets(decor)!!.getInsets(WindowInsetsCompat.Type.ime())
+            val bounds = field.fetchSemanticsNode().boundsInWindow
+            assertTrue(
+                "Focused set entry remains above the keyboard",
+                bounds.bottom <= decor.height - ime.bottom + 2f,
+            )
+            field.assertTextContains("8")
+            screenshot("session-keyboard-viewport")
+        } finally {
+            closeSoftKeyboard()
+            setting(original)
+        }
+    }
+
+    private fun settingsResetFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = vm.state.value.draft
+        val storedActive = kotlinx.coroutines.runBlocking { app.repository.readDraft() }
+        val epoch = kotlinx.coroutines.runBlocking { app.dataMaintenance.currentEpoch() }
+        val progress = kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() }
+        val backup = vm.state.value.backup
+        fun exported() =
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-24T12:00:00Z") }
+        fun open(tag: String) {
+            compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+            compose.waitUntil(10000) {
+                vm.state.value.dataActionReview != null && !vm.state.value.busy
+            }
+        }
+        val before = exported()
+        open("review-clear-data")
+        val clearReview = vm.state.value.dataActionReview
+        assertTrue(vm.state.value.dataActionReview!!.hasDraft)
+        screenshot("clear-data-review")
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("data-action-review").fetchSemanticsNodes().isNotEmpty()
+        }
+        assertSame(clearReview, vm.state.value.dataActionReview)
+        for (warning in
+            listOf(
+                "Your active workout and all its entered sets will also be removed.",
+                "Remove your profile, custom preferences, weekly goal, backup reminder and guidance progress. Restore the six starter routines, then return to setup.",
+                "This cannot be undone in the app. Export a backup first if you want to keep saved records. Backups do not include the active workout. Files you already exported and your PWA data stay unchanged.",
+            )) {
+            compose.onNodeWithTag("data-action-content").performScrollToNode(hasText(warning))
+            compose.onNodeWithText(warning).assertIsDisplayed()
+        }
+        screenshot("clear-data-review-restored")
+        compose.onNodeWithTag("cancel-data-action").performClick()
+        assertEquals(before, exported())
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(storedActive, kotlinx.coroutines.runBlocking { app.repository.readDraft() })
+        assertEquals(epoch, kotlinx.coroutines.runBlocking { app.dataMaintenance.currentEpoch() })
+        open("review-reset-settings")
+        val resetReview = vm.state.value.dataActionReview
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("data-action-review").fetchSemanticsNodes().isNotEmpty()
+        }
+        assertSame(resetReview, vm.state.value.dataActionReview)
+        for (warning in
+            listOf(
+                "Restore the default weekly schedule, load jump, rep ranges, RPE tracking, haptics and animations.",
+                "Keep your display name, weekly goal, workouts, routines, legacy weight records, backup reminder, guidance and active workout, including entered RPE values.",
+            )) {
+            compose.onNodeWithTag("data-action-content").performScrollToNode(hasText(warning))
+            compose.onNodeWithText(warning).assertIsDisplayed()
+        }
+        screenshot("settings-reset-review-restored")
+        compose.onNodeWithTag("cancel-data-action").performClick()
+        assertEquals(before, exported())
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(storedActive, kotlinx.coroutines.runBlocking { app.repository.readDraft() })
+        assertEquals(epoch, kotlinx.coroutines.runBlocking { app.dataMaintenance.currentEpoch() })
+        assertEquals(
+            progress,
+            kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() },
+        )
+        assertEquals(backup, vm.state.value.backup)
+
+        open("review-reset-settings")
+        val old = kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }
+        kotlinx.coroutines.runBlocking {
+            app.preferencesRepository.save(
+                old.copy(
+                    values =
+                        old.values.copy(
+                            numbers = old.values.numbers + ("defaultWeightJump" to "7.5")
+                        )
+                )
+            )
+        }
+        val external = exported()
+        compose.onNodeWithTag("confirm-data-action").performClick()
+        compose.waitUntil(10000) {
+            !vm.state.value.busy &&
+                vm.state.value.error?.contains("changed after this review") == true
+        }
+        assertEquals(external, exported())
+        assertEquals(active, vm.state.value.draft)
+        compose.onNodeWithText("Dismiss", substring = false).performClick()
+
+        val preferences = kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }
+        open("review-reset-settings")
+        screenshot("settings-reset-review")
+        compose.onNodeWithTag("confirm-data-action").performClick()
+        compose.runOnIdle { vm.confirmDataAction() } // The reviewed command was already consumed.
+        compose.waitUntil(10000) {
+            !vm.state.value.busy && vm.state.value.maintenanceMessage != null
+        }
+        val saved = kotlinx.coroutines.runBlocking { app.preferencesRepository.read() }
+        assertEquals(preferences.values.displayName, saved.values.displayName)
+        assertEquals(preferences.values.weeklyGoal, saved.values.weeklyGoal)
+        assertTrue(saved.values.trackRpe)
+        assertTrue(saved.values.haptics)
+        assertTrue(saved.values.animations)
+        val after = exported()
+        val oldData = BackupCodec.parse(external)
+        val newData = BackupCodec.parse(after)
+        assertEquals(
+            JsonObject(
+                BackupCodec.defaultSettings +
+                    ("displayName" to JsonPrimitive(saved.values.displayName))
+            ),
+            newData.settings,
+        )
+        assertEquals(oldData.workouts, newData.workouts)
+        assertEquals(oldData.routines, newData.routines)
+        assertEquals(oldData.weights, newData.weights)
+        assertEquals(oldData.goals, newData.goals)
+        assertEquals(oldData.metadata, newData.metadata)
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(active, kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first)
+        assertEquals(
+            progress,
+            kotlinx.coroutines.runBlocking { app.guidanceRepository.progress.first() },
+        )
+        assertEquals(backup, vm.state.value.backup)
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("settings-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithTag("settings-list")
+            .performScrollToNode(hasTestTag("maintenance-message"))
+        compose.onNodeWithTag("maintenance-message").performScrollTo().assertIsDisplayed()
+        screenshot("settings-reset-complete")
+        File(compose.activity.getExternalFilesDir(null), "qa/settings-reset-export.json")
+            .writeText(after)
+        feedbackFlow(vm, owner)
+    }
+
+    private fun feedbackFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = vm.state.value.draft
+        val before = kotlinx.coroutines.runBlocking { app.backups.export("2026-10-24T12:00:00Z") }
+        compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("open-feedback"))
+        compose.onNodeWithTag("open-feedback").performClick()
+        compose.onNodeWithText("Beta feedback").assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("feedback-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithTag("feedback-list")
+            .performScrollToNode(hasTestTag("open-feedback-browser"))
+        screenshot("feedback-browser-handoff")
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        var launched: Intent? = null
+        val monitor =
+            object : android.app.Instrumentation.ActivityMonitor() {
+                override fun onStartActivity(
+                    intent: Intent
+                ): android.app.Instrumentation.ActivityResult? {
+                    if (intent.action != Intent.ACTION_VIEW) return null
+                    launched = intent
+                    // Verify the real production intent without sending a report or leaving the
+                    // test.
+                    return android.app.Instrumentation.ActivityResult(
+                        Activity.RESULT_CANCELED,
+                        null,
+                    )
+                }
+            }
+        instrumentation.addMonitor(monitor)
+        try {
+            compose.onNodeWithTag("open-feedback-browser").performClick()
+            compose.runOnIdle {
+                assertEquals(
+                    "https://teto200120.github.io/workout-tracker/?feedback=android",
+                    requireNotNull(launched).dataString,
+                )
+                assertNull(launched!!.extras)
+            }
+        } finally {
+            instrumentation.removeMonitor(monitor)
+        }
+        compose.onNodeWithTag("feedback-list").performScrollToIndex(0)
+        compose.onNodeWithText("Back to You").performClick()
+        compose.onNodeWithTag("settings-list").assertExists()
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(active, kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first)
+        assertEquals(
+            before,
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-24T12:00:00Z") },
+        )
+    }
+
+    private fun activeExerciseFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val original = requireNotNull(vm.state.value.draft)
+        val workouts = vm.state.value.workouts
+        val first = original.exercises.first()
+        val second = original.exercises[1]
+        val set = first.sets.first()
+        assertFalse(set.warmup)
+        fun scroll(tag: String) {
+            compose.onNodeWithTag("session-list").performScrollToNode(hasTestTag(tag))
+        }
+        fun click(tag: String) {
+            scroll(tag)
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+            compose.waitUntil(10000) { !vm.state.value.pending }
+        }
+        scroll("session-set-${set.key}")
+        compose
+            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
+            .performTextReplacement("9")
+        closeSoftKeyboard()
+        compose
+            .onNode(hasText("Completed") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
+            .performScrollTo()
+            .performClick()
+        compose.waitUntil(10000) { !vm.state.value.pending }
+        val entered = requireNotNull(vm.state.value.draft)
+        assertEquals("9", entered.exercises.first().sets.first().reps)
+        assertTrue(entered.exercises.first().sets.first().done)
+        click("next-session-${first.key}")
+        val advanced = entered.openExercise(second.key)
+        assertEquals(advanced, vm.state.value.draft)
+        assertEquals(
+            advanced,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+        compose.onAllNodes(isFocused()).assertCountEquals(0)
+        scroll("session-summary-${first.key}")
+        compose.onNodeWithText("Set 1: 9 reps").assertExists()
+        screenshot("session-collapsed-summary")
+
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        scroll("session-expanded-${second.key}")
+        compose.onNodeWithTag("session-expanded-${second.key}").assertExists()
+        assertEquals(advanced, vm.state.value.draft)
+        click("toggle-session-${first.key}")
+        scroll("session-set-${set.key}")
+        compose
+            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
+            .assertTextContains("9")
+        compose
+            .onNode(hasText("Completed") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
+            .assertIsOn()
+        original.exercises.forEach { exercise -> click("next-session-${exercise.key}") }
+        compose.onNodeWithText("Save to History?").assertExists()
+        compose.onNodeWithText("Keep editing").performClick()
+        assertEquals(workouts, vm.state.value.workouts)
+        val reviewed = requireNotNull(vm.state.value.draft)
+        assertTrue(reviewed.exercises.all { it.collapsed })
+        assertEquals(
+            com.hector.workouttracker.core.model.workoutPayload(
+                entered,
+                110000,
+                0,
+                java.time.ZoneId.of("UTC"),
+            ),
+            com.hector.workouttracker.core.model.workoutPayload(
+                reviewed,
+                110000,
+                0,
+                java.time.ZoneId.of("UTC"),
+            ),
+        )
+        screenshot("session-review-cancelled")
+        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Discard workout"))
+        compose.onNodeWithText("Discard workout").performScrollTo().performClick()
+        compose
+            .onNodeWithText("This removes the active draft. Saved History stays intact.")
+            .assertIsDisplayed()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithText("Discard this workout?").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithText("This removes the active draft. Saved History stays intact.")
+            .assertIsDisplayed()
+        screenshot("session-discard-review-restored")
+        compose.onNodeWithText("Keep workout").performClick()
+        assertEquals(reviewed, vm.state.value.draft)
+        assertEquals(
+            reviewed,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+        assertEquals(workouts, vm.state.value.workouts)
+        // Restore the synthetic fixture for the existing full training/export flow.
+        compose.runOnIdle { vm.edit { original } }
+        compose.waitUntil(10000) { !vm.state.value.pending }
+        assertEquals(
+            original,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+    }
+
+    private fun activeOrderFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val original = requireNotNull(vm.state.value.draft)
+        val target = original.exercises[2]
+        fun move(direction: String) {
+            val tag = "move-session-$direction-${target.key}"
+            compose.onNodeWithTag("session-list").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+            compose.waitUntil(10000) { !vm.state.value.pending }
+        }
+        move("up")
+        move("up")
+        val expected =
+            original.copy(
+                exercises = listOf(target) + original.exercises.filterNot { it.key == target.key }
+            )
+        assertEquals(expected, vm.state.value.draft)
+        assertEquals(
+            expected,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+        compose.onNodeWithTag("move-session-up-${target.key}").assertIsNotEnabled()
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(hasTestTag("session-position-${target.key}"))
+        compose
+            .onNodeWithTag("session-position-${target.key}")
+            .assertTextEquals("Exercise 1 of ${original.exercises.size}")
+        assertEquals(expected, vm.state.value.draft)
+        screenshot("session-reordered")
+        move("down")
+        move("down")
+        assertEquals(original, vm.state.value.draft)
+        assertEquals(
+            original,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+    }
+
+    private fun historyFiltersFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val active = vm.state.value.draft
+        val before = kotlinx.coroutines.runBlocking { app.backups.export("2026-10-23T12:00:00Z") }
+        fun scroll(tag: String) {
+            compose.onNodeWithTag("history-list").performScrollToNode(hasTestTag(tag))
+        }
+        fun search(value: String) {
+            scroll("history-search")
+            compose.onNodeWithTag("history-search").performTextReplacement(value)
+            closeSoftKeyboard()
+        }
+        fun count(value: Int) {
+            val text = "$value ${if (value == 1) "workout" else "workouts"} found"
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithTag("history-list").fetchSemanticsNodes().isNotEmpty()
+            }
+            compose.onNodeWithTag("history-list").performScrollToIndex(0)
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+            }
+            scroll("history-result-count")
+            compose.onNodeWithTag("history-result-count").assertTextEquals(text)
+        }
+        scroll("history-routine-filter")
+        compose.onNodeWithTag("history-routine-filter").performClick()
+        compose
+            .onNodeWithTag("history-routine-options")
+            .performScrollToNode(hasTestTag("history-filter-Compatibility fixture"))
+        compose.onNodeWithTag("history-filter-Compatibility fixture").performClick()
+        search("  bEnCh  ")
+        count(2)
+        scroll("open-history-number:0")
+        compose.onNodeWithTag("open-history-number:0").assertExists()
+        scroll("open-history-string:0")
+        compose.onNodeWithTag("open-history-string:0").assertExists()
+        scroll("history-search")
+        screenshot("history-filtered")
+
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        count(2)
+        scroll("history-search")
+        compose.onNodeWithTag("history-search").assertTextContains("  bEnCh  ")
+        compose
+            .onNodeWithTag("history-routine-filter")
+            .assertTextEquals("Routine: Compatibility fixture")
+        compose.onNodeWithText("Today").performClick()
+        compose.onNodeWithText("History").performClick()
+        count(2)
+        scroll("open-history-number:0")
+        compose.onNodeWithTag("open-history-number:0").performClick()
+        compose.onNodeWithTag("history-workout").performScrollToNode(hasText("Back to History"))
+        compose.onNodeWithText("Back to History").performClick()
+        count(2)
+
+        val original =
+            kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
+        kotlinx.coroutines.runBlocking {
+            app.historyRepository.save(
+                original.copy(values = original.values.copy(type = "Filter changed"))
+            )
+        }
+        count(1)
+        scroll("open-history-string:0")
+        compose.onNodeWithTag("open-history-string:0").assertExists()
+        compose.onNodeWithTag("open-history-number:0").assertDoesNotExist()
+        kotlinx.coroutines.runBlocking {
+            val current = app.historyRepository.read(JsonPrimitive(0))!!
+            app.historyRepository.save(current.copy(values = original.values))
+        }
+        count(2)
+        search("deadlift")
+        count(0)
+        compose.onNodeWithTag("history-list").performScrollToNode(hasText("No workouts found"))
+        compose.onNodeWithText("Try a different routine filter or exercise search.").assertExists()
+        screenshot("history-no-matches")
+        scroll("history-clear-filters")
+        compose.onNodeWithTag("history-clear-filters").performClick()
+        count(vm.state.value.workouts.size)
+        assertEquals(active, vm.state.value.draft)
+        assertEquals(
+            before,
+            kotlinx.coroutines.runBlocking { app.backups.export("2026-10-23T12:00:00Z") },
+        )
     }
 
     private fun screenshot(name: String) {

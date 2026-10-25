@@ -109,7 +109,7 @@ class Acceptance:
         self.capture(label)
         if draft:
             self.click("Resume workout")
-            self.wait_text("Recovery fixture")
+            self.wait_session()
             self.capture(label + "-session")
 
     def checkpoint_copy(self, label, expected=None):
@@ -123,6 +123,10 @@ class Acceptance:
     def installed_version(self):
         text = self.adb("shell", "dumpsys", "package", APP)
         return int(re.search(r"\bversionCode=(\d+)", text).group(1))
+
+    def wait_session(self):
+        # Current drafts restore the active exercise, which can put the header offscreen.
+        self.wait_text("Recovery fixture" if self.installed_version() == 2 else "Collapse exercise")
 
 
 def certificate(apk):
@@ -177,7 +181,7 @@ def main():
         assert qa.installed_version() == current_version
         qa.launch()
         qa.click("Resume workout")
-        qa.wait_text("Recovery fixture")
+        qa.wait_session()
         qa.capture("current-upgraded-session")
         qa.phase("verify", current_version, "current-upgrade-retained")
         qa.checkpoint_copy("current-after-upgrade", old_checkpoint)
@@ -188,7 +192,7 @@ def main():
         qa.checkpoint_copy("current-after-kill", current_checkpoint)
         qa.launch()
         qa.click("Resume workout")
-        qa.wait_text("Recovery fixture")
+        qa.wait_session()
         qa.click("Finish workout", scroll=True)
         qa.wait_text("Save workout")
         qa.click("Save workout")

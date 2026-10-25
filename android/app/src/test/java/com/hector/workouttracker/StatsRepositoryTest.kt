@@ -64,6 +64,11 @@ class StatsRepositoryTest {
         val active = dao.draft()
         val snapshot = StatsRepository(db).read(date)
         assertEquals(2, snapshot.totals.workouts)
+        assertEquals(2, snapshot.recentSessions.size)
+        assertEquals(
+            setOf(JsonPrimitive(0), JsonPrimitive("0")),
+            snapshot.recentSessions.map { it.id }.toSet(),
+        )
         assertEquals(6, snapshot.goal)
         assertEquals(records, dao.records())
         assertEquals(documents, dao.documents())
@@ -109,9 +114,18 @@ class StatsRepositoryTest {
                         )
                 )
             )
-            await { it.exercises.single { e -> e.name == "Bench Press" }.bestWeight == 150.0 }
+            await {
+                it.exercises.single { e -> e.name == "Bench Press" }.bestWeight == 150.0 &&
+                    it.insights.any { insight ->
+                        insight.title == "New PR: Bench Press" && insight.meta.contains("150 × 5")
+                    }
+            }
             history.delete(history.read(JsonPrimitive(0))!!)
-            await { it.totals.workouts == 1 }
+            await {
+                it.totals.workouts == 1 &&
+                    it.recentSessions.single().id == JsonPrimitive("0") &&
+                    it.insights.isEmpty()
+            }
             val dao = db.trackerDao()
             val goal = dao.document("goals")!!
             dao.updateDocument(
@@ -136,6 +150,7 @@ class StatsRepositoryTest {
             }
             dates.value = LocalDate.parse("2050-01-01")
             val future = await { it.today == "2050-01-01" }
+            assertTrue(future.insights.none { it.type == "pr" })
             assertEquals(0, future.recent)
             assertEquals(0, future.streak)
         } finally {

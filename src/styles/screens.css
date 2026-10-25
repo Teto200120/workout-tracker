@@ -1455,6 +1455,26 @@ body:has(#settings.active) #settings .muted {
   scroll-margin-top: 112px;
 }
 
+body.hosted-feedback #appShell > header,
+body.hosted-feedback #appShell > .tabs,
+body.hosted-feedback #feedback .profile-subpage-back,
+body.hosted-feedback #feedback .profile-subpage-spacer {
+  display: none !important;
+}
+
+body.hosted-feedback #feedback .profile-subpage-header {
+  position: static;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.hosted-feedback .feedback-form-intro {
+  flex-wrap: wrap;
+}
+
+body.hosted-feedback .feedback-form-intro > div {
+  flex: 1 1 12rem;
+}
+
 .feedback-form-card,
 .feedback-outbox-card {
   margin-bottom: 14px;

@@ -9,7 +9,10 @@ window.addEventListener("tracker-storage-unavailable", () => {
   );
 });
 
-init().catch((error) => {
+init({
+  feedbackOnly:
+    new URLSearchParams(window.location.search).get("feedback") === "android",
+}).catch((error) => {
   console.error("Tracker startup failed:", error);
   const message = startupFailureMessage(error);
   showStartupFailure(message);

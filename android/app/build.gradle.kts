@@ -26,8 +26,8 @@ android {
         applicationId = "com.hector.workouttracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.11.0-guidance"
+        versionCode = 12
+        versionName = "0.12.0-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {

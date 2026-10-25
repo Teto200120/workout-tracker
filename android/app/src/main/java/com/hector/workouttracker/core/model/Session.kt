@@ -32,6 +32,7 @@ data class Exercise(
     val name: String,
     val notes: String = "",
     val sets: List<WorkingSet> = listOf(WorkingSet()),
+    val collapsed: Boolean = false,
 )
 
 @Serializable

@@ -63,7 +63,11 @@ import {
   importData,
   renderBackupStatus,
 } from "./screens/backup.js";
-import { bindFeedbackActions, renderFeedback } from "./screens/feedback.js";
+import {
+  bindFeedbackActions,
+  renderFeedback,
+  openHostedFeedback,
+} from "./screens/feedback.js";
 import { bindHistoryActions, renderHistory } from "./screens/history.js";
 import { bindProfileActions, renderProfile } from "./screens/profile.js";
 import {
@@ -583,7 +587,14 @@ export async function renderAll({
   return true;
 }
 
-export async function init() {
+export async function init({ feedbackOnly = false } = {}) {
+  // The Android handoff uses only the existing browser feedback outbox. It must
+  // not require a second profile or initialize/migrate browser workout data.
+  if (feedbackOnly) {
+    openHostedFeedback();
+    showApplicationShell();
+    return;
+  }
   await openDatabase();
   enableDataRecovery();
   await ensureCurrentApplicationSchema();

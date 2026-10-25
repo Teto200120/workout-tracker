@@ -4,15 +4,22 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hector.workouttracker.core.designsystem.Heading
 import com.hector.workouttracker.core.model.visibleName
@@ -88,6 +95,8 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
     var picker by rememberSaveable { mutableStateOf(false) }
     var replacement by rememberSaveable { mutableStateOf<String?>(null) }
     var newTag by rememberSaveable { mutableStateOf("") }
+    val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
+    val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     fun leave() {
         if (editor.busy) return
         if (draft?.changed == true) discard = true
@@ -374,19 +383,49 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
                                         ) { v ->
                                             change { it.copy(rpe = v) }
                                         }
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Checkbox(
-                                                set.done,
-                                                { v -> change { it.copy(done = v) } },
-                                                enabled = enabled,
-                                            )
-                                            Text("Completed")
-                                            Checkbox(
-                                                set.warmup,
-                                                { v -> change { it.copy(warmup = v) } },
-                                                enabled = enabled,
-                                            )
-                                            Text("Warm-up")
+                                        FlowRow(
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Row(
+                                                Modifier.heightIn(min = 48.dp)
+                                                    .testTag("history-completed-$i-$j")
+                                                    .semantics {
+                                                        contentDescription =
+                                                            "Completed, exercise ${i + 1}, ${e.name}, set ${j + 1}"
+                                                    }
+                                                    .toggleable(
+                                                        set.done,
+                                                        enabled = enabled,
+                                                        role = Role.Checkbox,
+                                                        onValueChange = { v ->
+                                                            change { it.copy(done = v) }
+                                                        },
+                                                    ),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Checkbox(set.done, null, enabled = enabled)
+                                                Text("Completed")
+                                            }
+                                            Row(
+                                                Modifier.heightIn(min = 48.dp)
+                                                    .testTag("history-warmup-$i-$j")
+                                                    .semantics {
+                                                        contentDescription =
+                                                            "Warm-up, exercise ${i + 1}, ${e.name}, set ${j + 1}"
+                                                    }
+                                                    .toggleable(
+                                                        set.warmup,
+                                                        enabled = enabled,
+                                                        role = Role.Checkbox,
+                                                        onValueChange = { v ->
+                                                            change { it.copy(warmup = v) }
+                                                        },
+                                                    ),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                Checkbox(set.warmup, null, enabled = enabled)
+                                                Text("Warm-up")
+                                            }
                                         }
                                         TextButton(
                                             onClick = {
@@ -489,8 +528,15 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
     if (discard)
         AlertDialog(
             onDismissRequest = { discard = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Discard these edits?") },
-            text = { Text("The saved workout and active session stay unchanged.") },
+            text = {
+                Text(
+                    "The saved workout and active session stay unchanged.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -507,8 +553,15 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
     if (reload)
         AlertDialog(
             onDismissRequest = { reload = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Reload saved workout?") },
-            text = { Text("This replaces your visible values with the latest saved workout.") },
+            text = {
+                Text(
+                    "This replaces your visible values with the latest saved workout.",
+                    Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -524,10 +577,13 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
     if (delete)
         AlertDialog(
             onDismissRequest = { delete = false },
+            modifier = dialogModifier,
+            properties = dialogProperties,
             title = { Text("Delete this workout?") },
             text = {
                 Text(
-                    "This permanently removes this saved workout. Your active session and routines stay intact."
+                    "This permanently removes this saved workout. Your active session and routines stay intact.",
+                    Modifier.verticalScroll(rememberScrollState()),
                 )
             },
             confirmButton = {

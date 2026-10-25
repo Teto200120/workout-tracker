@@ -25,6 +25,12 @@ data class DraftEntity(
 
 @Dao
 interface TrackerDao {
+    @Query("DELETE FROM records") suspend fun clearRecords()
+
+    @Query("DELETE FROM documents") suspend fun clearDocuments()
+
+    @Query("DELETE FROM drafts") suspend fun clearDrafts()
+
     @Query("SELECT EXISTS(SELECT 1 FROM records WHERE kind IN ('workout', 'legacy-weight'))")
     fun observeBackupData(): Flow<Boolean>
 

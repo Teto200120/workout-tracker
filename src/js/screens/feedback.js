@@ -24,6 +24,7 @@ let service = createFeedbackService({ outbox, transport });
 let screenshot = null;
 let actionsBound = false;
 let screenshotPending = false;
+let submittingReportId = null;
 
 const CATEGORY_LABELS = Object.freeze({
   bug: "Something is broken",
@@ -343,6 +344,7 @@ function pendingReportElement(report) {
   remove.type = "button";
   remove.dataset.feedbackAction = "delete";
   remove.textContent = "Delete";
+  retry.disabled = remove.disabled = report.id === submittingReportId;
   actions.append(retry, remove);
 
   article.append(heading, message, metadata, state, actions);
@@ -407,8 +409,12 @@ async function handleSubmit(event) {
   $("feedbackForm").setAttribute("aria-busy", "true");
   setText("feedbackFormStatus", "Saving the report on this device...");
   try {
-    const result = await service.submit(draft);
+    const report = await service.queue(draft);
+    submittingReportId = report.id;
     clearFormAfterQueue();
+    // Show the durable copy while browser verification is still in progress.
+    renderFeedback();
+    const result = await service.retry(report.id);
     if (result.sent) {
       setText(
         "feedbackFormStatus",
@@ -429,6 +435,8 @@ async function handleSubmit(event) {
   } catch (error) {
     setText("feedbackFormStatus", error.message);
   } finally {
+    submittingReportId = null;
+    renderFeedback();
     submit.disabled = false;
     $("feedbackForm").setAttribute("aria-busy", "false");
   }
@@ -492,6 +500,22 @@ export function bindFeedbackActions() {
     clearScreenshot(),
   );
   $("feedbackOutboxList")?.addEventListener("click", handleOutboxAction);
+}
+
+export function openHostedFeedback() {
+  document.body.classList.add("hosted-feedback");
+  document.title = "Android Feedback · Workout Tracker";
+  document.querySelectorAll(".screen").forEach((screen) => {
+    screen.classList.toggle("active", screen.id === "feedback");
+  });
+  document.querySelector("#feedback .profile-subpage-title > p").textContent =
+    "Report an Android issue here. Include your app version and the steps to reproduce it. Reports are saved in this browser, separate from Android workouts. Close this tab to return to the Android app.";
+  document.querySelector("#feedbackDiagnosticsList li").textContent =
+    "Browser page version";
+  document.querySelector("#feedback .feedback-check-row small").textContent =
+    "These describe this browser page, not the Android app. Android workout data and diagnostics are not attached.";
+  bindFeedbackActions();
+  renderFeedback();
 }
 
 export function setFeedbackTransport(nextTransport) {

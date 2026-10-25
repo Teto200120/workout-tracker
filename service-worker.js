@@ -1,4 +1,4 @@
-const CACHE_NAME = "hector-workout-tracker-pwa-0.4.0-75a8e37fe006ca32";
+const CACHE_NAME = "hector-workout-tracker-pwa-0.4.0-0e8b34801e04bf8c";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -103,15 +103,15 @@ const SHELL_INTEGRITY = {
   "./src/styles/session-layout.css":
     "sha256-IXQv3k1GX4A9m+9BVf7U1Co/qHFJ8gATxgfPscXdF6Q=",
   "./src/styles/screens.css":
-    "sha256-g/RaWgwgBnGEfq+5d+zOA1d2Pe2/JCbEiLpDHHnUi7A=",
+    "sha256-S9Cw2PMZN7ed0eD1Ci1i7cORmJRslpoPeXoem8qS4/I=",
   "./src/styles/motion.css":
     "sha256-d3CHjH9RIgOVsqXtRTLBzrhD5z6sw2jCxxkBpYeS+mE=",
   "./src/styles/today-components.css":
     "sha256-ymEys2hAMLAao5niy/IiIkqc2ZqWmwZGotaybZTfcaQ=",
   "./src/styles/session-components.css":
     "sha256-UGz1TUfJgbNZDXW9d/n3NyDltiQ3/AjPHenvWKw7U94=",
-  "./src/js/main.js": "sha256-r7/Y0i3epr+TpkOAbzMfD0Me4deUsdu445eIZoQJAl4=",
-  "./src/js/router.js": "sha256-kWTEVKkl9UTazSNhTnvSp4tS8UkVpRnO0tC4aiUqjb0=",
+  "./src/js/main.js": "sha256-RlHY0qZ8hUSFRUa1iMoORErOdeIjh9WCn1IEafzOVDE=",
+  "./src/js/router.js": "sha256-R5zy67a1REum9gOm5oQwOvVnvDmg5A+iuCWxa1hO/tM=",
   "./src/js/application/backup.js":
     "sha256-YnGAYpR8uiMJdP6qGTYBJsTW8piUkG9q7tsC+gsiYNs=",
   "./src/js/application/deadline.js":
@@ -237,7 +237,7 @@ const SHELL_INTEGRITY = {
   "./src/js/screens/backup.js":
     "sha256-I4nZ86qJ0k+Ze1dl5QKzOPapXNIV/0WDYh2JK1PmxEU=",
   "./src/js/screens/feedback.js":
-    "sha256-evC9iV6Y/CIsFDqj0oHLTZwLbk5i1ionb8MrUvc9phQ=",
+    "sha256-0mWHXJjDSU0kHrl+GRR/MZgCfYuc6eKf+jam2XoLDSw=",
   "./src/js/screens/profile.js":
     "sha256-Bxt1TdMGTF3YujsTISoXJxWhW/gEPB5LWFLEXTW5vEI=",
   "./src/js/screens/onboarding.js":
