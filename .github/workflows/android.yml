@@ -82,6 +82,13 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install pinned fixture-verification tools
+        working-directory: .
+        run: npm ci --ignore-scripts
       - uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: "13114758"
