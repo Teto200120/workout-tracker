@@ -167,3 +167,37 @@ internal fun HelpScreen(back: () -> Unit) {
             dismissButton = { TextButton(onClick = { reset = false }) { Text("Keep guidance") } },
         )
 }
+
+/** Small optional entry used by the screens imported from the PWA. */
+@Composable
+internal fun CompactHelpTip(id: String, label: String) {
+    val vm = LocalHelp.current ?: return
+    val state by vm.state.collectAsStateWithLifecycle()
+    if (state.loading || !guidanceVisible(state.progress, id)) return
+    var expanded by rememberSaveable(id) { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        TextButton(
+            onClick = { expanded = !expanded },
+            modifier = Modifier.testTag("read-tip-$id"),
+        ) {
+            Icon(TrackerIcons.Help, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(if (expanded) "Close tip" else label)
+        }
+        if (expanded) {
+            Text(
+                guidanceTopics.first { it.id == id }.text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(
+                onClick = { vm.complete(id) },
+                enabled = !state.busy,
+                modifier = Modifier.testTag("dismiss-tip-$id"),
+            ) {
+                Text("Got it")
+            }
+        }
+        state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    }
+}

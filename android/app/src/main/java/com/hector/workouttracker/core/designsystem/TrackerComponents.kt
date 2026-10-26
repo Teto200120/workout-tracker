@@ -7,10 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathBuilder
 import androidx.compose.ui.graphics.vector.path
@@ -43,6 +45,17 @@ private fun symbol(name: String, draw: PathBuilder.() -> Unit) =
         .build()
 
 internal object TrackerIcons {
+    val Search =
+        symbol("Search") {
+            moveTo(10.5f, 3f)
+            curveTo(6.36f, 3f, 3f, 6.36f, 3f, 10.5f)
+            curveTo(3f, 14.64f, 6.36f, 18f, 10.5f, 18f)
+            curveTo(14.64f, 18f, 18f, 14.64f, 18f, 10.5f)
+            curveTo(18f, 6.36f, 14.64f, 3f, 10.5f, 3f)
+            close()
+            moveTo(16f, 16f)
+            lineTo(21f, 21f)
+        }
     val Add =
         symbol("Add") {
             moveTo(12f, 5f)
@@ -264,3 +277,17 @@ internal fun WeekStrip(days: List<ActivityDay>, today: String) {
         }
     }
 }
+
+/** Tonal canvas for the screens imported one at a time from the PWA. */
+@Composable
+internal fun trackerScreenBackground(): Brush =
+    Brush.verticalGradient(
+        if (MaterialTheme.colorScheme.background.luminance() < .5f)
+            listOf(Color(0xFF1B334D), Color(0xFF0C1E31), Color(0xFF070F1C))
+        else listOf(Color(0xFFF1F5FA), MaterialTheme.colorScheme.background)
+    )
+
+@Composable
+internal fun trackerPanelColor(): Color =
+    if (MaterialTheme.colorScheme.background.luminance() < .5f) Color(0xFF22354F)
+    else Color(0xFFE5EDF7)

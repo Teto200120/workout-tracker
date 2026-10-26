@@ -1,11 +1,14 @@
 package com.hector.workouttracker.feature.history
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -13,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -21,11 +26,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.core.model.visibleName
 import com.hector.workouttracker.data.*
 import com.hector.workouttracker.feature.catalog.ExercisePicker
 import com.hector.workouttracker.feature.session.TrackerState
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 internal val quickWorkoutTags =
     listOf(
@@ -67,12 +75,22 @@ private fun HistoryField(
     tag: String,
     numeric: Boolean = false,
     lines: Boolean = false,
+    onPickDate: (() -> Unit)? = null,
     change: (String) -> Unit,
 ) {
     OutlinedTextField(
         value,
         change,
-        label = { Text(label) },
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        shape = RoundedCornerShape(16.dp),
+        trailingIcon =
+            if (onPickDate != null) {
+                {
+                    IconButton(onClick = onPickDate, enabled = enabled) {
+                        Icon(TrackerIcons.Calendar, "Choose workout date")
+                    }
+                }
+            } else null,
         enabled = enabled,
         singleLine = !lines,
         keyboardOptions =
@@ -95,6 +113,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
     var picker by rememberSaveable { mutableStateOf(false) }
     var replacement by rememberSaveable { mutableStateOf<String?>(null) }
     var newTag by rememberSaveable { mutableStateOf("") }
+    var datePicker by rememberSaveable { mutableStateOf(false) }
     val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
     val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     fun leave() {
@@ -113,7 +132,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
             it.copy(exercises = it.exercises.map { e -> if (e.key == key) change(e) else e })
         }
     }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(trackerScreenBackground())) {
         editor.error?.let { error ->
             Card(
                 Modifier.fillMaxWidth().padding(12.dp),
@@ -139,10 +158,12 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
         ) {
             item {
                 TextButton(onClick = { leave() }, enabled = enabled) { Text("Back to History") }
-                Heading(
+                Text(
                     if (editor.editing) "Edit saved workout" else "Saved workout",
-                    values?.type ?: "History",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
+                Text(values?.type ?: "History", style = MaterialTheme.typography.headlineMedium)
                 editor.message?.let { Text(it) }
                 if (!editor.restorable)
                     Text(
@@ -157,7 +178,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
             else {
                 item {
                     if (editor.editing)
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        HistorySection {
                             HistoryField(values.type, "Workout name", enabled, "history-name") { v
                                 ->
                                 vm.edit { it.copy(type = v) }
@@ -167,6 +188,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
                                 "Date (YYYY-MM-DD)",
                                 enabled,
                                 "history-date",
+                                onPickDate = { datePicker = true },
                             ) { v ->
                                 vm.edit { it.copy(date = v) }
                             }
@@ -226,7 +248,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
                             }
                         }
                     else
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HistorySection {
                             Text(values.date)
                             Text(
                                 "${values.startTime.ifEmpty { "—" }} → ${values.endTime.ifEmpty { "—" }}"
@@ -238,7 +260,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
                             )
                             if (values.notes.isNotEmpty()) Text(values.notes)
                             if (values.tags.isNotEmpty()) Text(values.tags.joinToString(" · "))
-                            TextButton(
+                            FilledTonalButton(
                                 onClick = vm::beginEditing,
                                 enabled = enabled,
                                 modifier = Modifier.testTag("edit-history-workout"),
@@ -333,7 +355,14 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
                     }
                     e.sets.forEachIndexed { j, set ->
                         item(key = "set:${e.key}:${set.key}") {
-                            Card(Modifier.fillMaxWidth()) {
+                            Card(
+                                Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors =
+                                    CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                                border =
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                            ) {
                                 Column(
                                     Modifier.padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -484,7 +513,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
                             enabled = enabled,
                             modifier = Modifier.testTag("delete-history-workout"),
                         ) {
-                            Text("Delete workout")
+                            Text("Delete workout", color = MaterialTheme.colorScheme.error)
                         }
                     }
             }
@@ -492,6 +521,7 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
         if (editor.editing && values != null)
             Button(
                 onClick = vm::save,
+                shape = RoundedCornerShape(20.dp),
                 enabled = enabled && draft?.changed == true,
                 modifier =
                     Modifier.fillMaxWidth()
@@ -501,6 +531,52 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
             ) {
                 Text(if (editor.busy) "Saving…" else "Save changes")
             }
+    }
+    if (datePicker && values != null) {
+        val selected =
+            runCatching {
+                    LocalDate.parse(values.date)
+                        .takeIf { it.year in 1..9999 }
+                        ?.let { it.toEpochDay() * 86_400_000L }
+                }
+                .getOrNull()
+        val pickerState =
+            rememberDatePickerState(initialSelectedDateMillis = selected, yearRange = 1..9999)
+        val calendarHeight =
+            (with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() } *
+                    .6f)
+                .coerceAtLeast(160.dp)
+        DatePickerDialog(
+            onDismissRequest = { datePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pickerState.selectedDateMillis?.let { millis ->
+                            vm.edit {
+                                it.copy(
+                                    date =
+                                        Instant.ofEpochMilli(millis)
+                                            .atZone(ZoneOffset.UTC)
+                                            .toLocalDate()
+                                            .toString()
+                                )
+                            }
+                        }
+                        datePicker = false
+                    },
+                    enabled = pickerState.selectedDateMillis != null,
+                ) {
+                    Text("Use date")
+                }
+            },
+            dismissButton = { TextButton(onClick = { datePicker = false }) { Text("Cancel") } },
+        ) {
+            DatePicker(
+                pickerState,
+                modifier =
+                    Modifier.heightIn(max = calendarHeight).verticalScroll(rememberScrollState()),
+            )
+        }
     }
     if (picker)
         ExercisePicker(
@@ -598,4 +674,20 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
             },
             dismissButton = { TextButton(onClick = { delete = false }) { Text("Cancel") } },
         )
+}
+
+@Composable
+private fun HistorySection(content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content,
+        )
+    }
 }

@@ -23,6 +23,7 @@ import androidx.navigation.compose.*
 import com.hector.workouttracker.MainActivity
 import com.hector.workouttracker.R
 import com.hector.workouttracker.core.designsystem.InteractionTheme
+import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.feature.backup.ImportDialog
 import com.hector.workouttracker.feature.feedback.FeedbackScreen
@@ -70,15 +71,19 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
         InteractionTheme(state.interactions) {
             state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
             val brandedVisible =
-                route in listOf("home", "session") &&
+                route in listOf("home", "session", "history", "workout") &&
                     !state.loading &&
                     state.profile.displayName.isNotEmpty()
             Scaffold(
                 modifier =
                     if (brandedVisible)
                         Modifier.background(
-                            if (route == "session") sessionBackgroundBrush()
-                            else homeBackgroundBrush()
+                            when (route) {
+                                "session" -> sessionBackgroundBrush()
+                                "history",
+                                "workout" -> trackerScreenBackground()
+                                else -> homeBackgroundBrush()
+                            }
                         )
                     else Modifier,
                 containerColor =

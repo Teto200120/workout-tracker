@@ -228,7 +228,10 @@ class WorkoutFlowTest {
             compose.onAllNodesWithText("Bench Press · 1 set").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onAllNodesWithText("Bench Press · 1 set").onFirst().assertExists()
-        compose.onAllNodesWithText("Volume: 500.0").onFirst().assertExists()
+        compose
+            .onAllNodes(hasText("500.0") and hasText("Volume · lb × reps"))
+            .onFirst()
+            .assertExists()
         screenshot("history")
         compose.onNodeWithText("You").performClick()
         compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Import PWA backup"))
@@ -953,6 +956,19 @@ class WorkoutFlowTest {
         val original =
             kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
         open()
+        // Applying the calendar's current selection preserves the exact date without a timezone
+        // shift.
+        tag("history-date")
+        compose.onNodeWithContentDescription("Choose workout date").performClick()
+        compose.onNodeWithText("Use date").performClick()
+        compose.onNodeWithTag("history-date").assertTextContains(original.values.date)
+        // The interchange format accepts year zero; the calendar must not crash or replace it.
+        field("history-date", "0000-01-01")
+        compose.onNodeWithContentDescription("Choose workout date").performClick()
+        compose.onNodeWithText("Use date").assertIsNotEnabled()
+        compose.onNodeWithText("Cancel", substring = false).performClick()
+        compose.onNodeWithTag("history-date").assertTextContains("0000-01-01")
+        field("history-date", original.values.date)
         field("history-notes", "Unsaved History note")
         compose.activityRule.scenario.recreate()
         compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
