@@ -201,8 +201,14 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Reps").performScrollTo().performTextInput("5")
         closeSoftKeyboard()
         screenshot("session")
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
-        compose.onNodeWithText("Back to Today").performClick()
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performClick()
         compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithText("Weight (lb)").performScrollTo().assertTextContains("100")
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
@@ -367,8 +373,14 @@ class WorkoutFlowTest {
             .performTextInput("8")
         sessionKeyboardViewport()
         closeSoftKeyboard()
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
-        compose.onNodeWithText("Back to Today").performClick()
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performClick()
         compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         activeOrderFlow(vm, owner)
@@ -622,8 +634,14 @@ class WorkoutFlowTest {
         output.writeText(
             kotlinx.coroutines.runBlocking { app.backups.export("2026-10-21T12:00:00Z") }
         )
-        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
-        compose.onNodeWithText("Back to Today").performClick()
+        compose
+            .onNodeWithTag("routine-library")
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("home-routine-chooser"))
         compose
             .onNodeWithTag("home-routine-chooser")
@@ -641,7 +659,9 @@ class WorkoutFlowTest {
         val active = vm.state.value.draft!!
         assertEquals(JsonPrimitive(0), active.originRoutineId)
         assertEquals(expected, active.exercises.map { it.name })
-        compose.onNodeWithText("Back to Today").performClick()
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performClick()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
         compose
             .onNodeWithText("Manage routines")
@@ -739,8 +759,14 @@ class WorkoutFlowTest {
                 compose.onAllNodesWithTag("schedule-kind-1").fetchSemanticsNodes().isNotEmpty()
             }
         }
-        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
-        compose.onNodeWithText("Back to Today").performClick()
+        compose
+            .onNodeWithTag("routine-library")
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performClick()
         openSchedule()
         scheduleTag("schedule-kind-1")
         compose.activityRule.scenario.recreate()
@@ -913,8 +939,15 @@ class WorkoutFlowTest {
             }
             compose.onNodeWithTag("edit-history-workout").performScrollTo().performClick()
         }
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
-        compose.onNodeWithText("Back to Today").performScrollTo().performClick()
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performScrollTo()
+            .performClick()
         compose.onNodeWithText("History").performClick()
         historyFiltersFlow(vm, owner)
         val original =
@@ -1511,8 +1544,14 @@ class WorkoutFlowTest {
                 .fetchSemanticsNodes()
                 .isEmpty()
         }
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Back to Today"))
-        compose.onNodeWithText("Back to Today").performClick()
+        compose
+            .onNodeWithTag("session-list")
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
+        compose
+            .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
+            .performClick()
         compose.onNodeWithText("You", substring = false).performClick()
         compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("open-help"))
         compose.onNodeWithTag("open-help").performClick()
@@ -1894,6 +1933,24 @@ class WorkoutFlowTest {
             compose.onNodeWithTag(tag).performScrollTo().performClick()
             compose.waitUntil(10000) { !vm.state.value.pending }
         }
+        // A stepper on another expanded exercise must move the primary action to that set.
+        val secondSet = second.sets.first()
+        scroll("session-set-${secondSet.key}")
+        compose
+            .onNode(
+                hasContentDescription("Increase Reps") and
+                    hasAnyAncestor(hasTestTag("session-set-${secondSet.key}"))
+            )
+            .performScrollTo()
+            .performClick()
+        compose.waitUntil(10000) { !vm.state.value.pending }
+        compose.onNodeWithTag("complete-current-set").assertTextContains(second.name)
+        compose
+            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${secondSet.key}")))
+            .performTextReplacement(secondSet.reps)
+        closeSoftKeyboard()
+        compose.waitUntil(10000) { !vm.state.value.pending }
+        assertEquals(original, vm.state.value.draft)
         scroll("session-set-${set.key}")
         compose
             .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
@@ -1928,6 +1985,7 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("session-expanded-${second.key}").assertExists()
         assertEquals(advanced, vm.state.value.draft)
         click("toggle-session-${first.key}")
+        click("review-all-sets-${first.key}")
         scroll("session-set-${set.key}")
         compose
             .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))

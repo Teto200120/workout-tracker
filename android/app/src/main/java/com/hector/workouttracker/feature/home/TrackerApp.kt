@@ -69,13 +69,21 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
     CompositionLocalProvider(LocalHelp provides helpVm) {
         InteractionTheme(state.interactions) {
             state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
-            val homeVisible =
-                route == "home" && !state.loading && state.profile.displayName.isNotEmpty()
+            val brandedVisible =
+                route in listOf("home", "session") &&
+                    !state.loading &&
+                    state.profile.displayName.isNotEmpty()
             Scaffold(
                 modifier =
-                    if (homeVisible) Modifier.background(homeBackgroundBrush()) else Modifier,
+                    if (brandedVisible)
+                        Modifier.background(
+                            if (route == "session") sessionBackgroundBrush()
+                            else homeBackgroundBrush()
+                        )
+                    else Modifier,
                 containerColor =
-                    if (homeVisible) Color.Transparent else MaterialTheme.colorScheme.background,
+                    if (brandedVisible) Color.Transparent else MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.onBackground,
                 bottomBar = {
                     if (
                         !state.loading &&

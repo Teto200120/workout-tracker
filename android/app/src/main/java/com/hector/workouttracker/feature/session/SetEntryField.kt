@@ -1,11 +1,18 @@
 package com.hector.workouttracker.feature.session
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hector.workouttracker.core.designsystem.TrackerIcons
 import java.math.BigDecimal
@@ -22,6 +29,7 @@ internal fun SetEntryField(
     enabled: Boolean = true,
     maximum: Double = 10000.0,
     minimum: Double = 0.0,
+    onFocused: () -> Unit = {},
 ) {
     val number = if (value.isBlank()) 0.0 else value.toDoubleOrNull()
     val valid =
@@ -34,31 +42,82 @@ internal fun SetEntryField(
         val next = ((number ?: 0.0) + direction * step).coerceIn(minimum, maximum)
         onValueChange(BigDecimal.valueOf(next).stripTrailingZeros().toPlainString())
     }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        OutlinedTextField(
+    val stacked = LocalDensity.current.fontScale >= 1.5f
+    @Composable
+    fun Entry(modifier: Modifier) {
+        TextField(
             value,
             onValueChange,
-            label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+            label = {
+                Text(
+                    label,
+                    Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Center,
+                )
+            },
             singleLine = true,
+            textStyle =
+                MaterialTheme.typography.headlineSmall.copy(
+                    textAlign = TextAlign.Center,
+                    fontFeatureSettings = "tnum",
+                ),
             keyboardOptions = keyboardOptions,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors =
+                TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .07f),
+                    unfocusedContainerColor =
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = .04f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+            modifier =
+                modifier.heightIn(min = 68.dp).onFocusChanged { if (it.isFocused) onFocused() },
         )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            FilledTonalIconButton(
-                onClick = { adjust(-1) },
-                enabled = enabled && valid && (number ?: 0.0) > minimum,
-                modifier = Modifier.size(48.dp),
-            ) {
-                Icon(TrackerIcons.Remove, "Decrease $label")
-            }
-            FilledTonalIconButton(
-                onClick = { adjust(1) },
-                enabled = enabled && valid && (number ?: maximum) < maximum,
-                modifier = Modifier.size(48.dp),
-            ) {
-                Icon(TrackerIcons.Add, "Increase $label")
-            }
+    }
+    @Composable
+    fun Step(direction: Int) {
+        OutlinedIconButton(
+            onClick = {
+                onFocused()
+                adjust(direction)
+            },
+            enabled =
+                enabled &&
+                    valid &&
+                    if (direction < 0) (number ?: 0.0) > minimum else (number ?: maximum) < maximum,
+            border =
+                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .24f)),
+            colors =
+                IconButtonDefaults.outlinedIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .04f)
+                ),
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                if (direction < 0) TrackerIcons.Remove else TrackerIcons.Add,
+                "${if(direction < 0) "Decrease" else "Increase"} $label",
+            )
         }
     }
+    if (stacked)
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Entry(Modifier.fillMaxWidth())
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Step(-1)
+                Step(1)
+            }
+        }
+    else
+        Row(
+            modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Step(-1)
+            Entry(Modifier.weight(1f))
+            Step(1)
+        }
 }
