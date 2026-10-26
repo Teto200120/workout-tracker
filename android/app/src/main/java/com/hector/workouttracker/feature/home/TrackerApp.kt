@@ -5,12 +5,14 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -67,7 +69,13 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
     CompositionLocalProvider(LocalHelp provides helpVm) {
         InteractionTheme(state.interactions) {
             state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
+            val homeVisible =
+                route == "home" && !state.loading && state.profile.displayName.isNotEmpty()
             Scaffold(
+                modifier =
+                    if (homeVisible) Modifier.background(homeBackgroundBrush()) else Modifier,
+                containerColor =
+                    if (homeVisible) Color.Transparent else MaterialTheme.colorScheme.background,
                 bottomBar = {
                     if (
                         !state.loading &&
@@ -141,7 +149,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                             }
                         }
                     }
-                }
+                },
             ) { padding ->
                 Column(
                     Modifier.fillMaxSize()

@@ -187,6 +187,10 @@ class WorkoutFlowTest {
             compose.onAllNodesWithText("Start workout").fetchSemanticsNodes().isNotEmpty()
         }
         screenshot("today")
+        compose.onNodeWithTag("home-routine-chooser").performScrollTo().performClick()
+        compose
+            .onNode(hasText("Quick workout") and hasAnyAncestor(hasTestTag("home-routine-options")))
+            .performClick()
         compose.onNodeWithText("Start workout").performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Exercise name").fetchSemanticsNodes().isNotEmpty()
@@ -295,14 +299,25 @@ class WorkoutFlowTest {
                 .isNotEmpty()
         }
         compose.onNodeWithText("Today").performClick()
-        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Use saved routine"))
+        compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("home-routine-chooser"))
         compose
-            .onNodeWithText("Use saved routine")
+            .onNodeWithTag("home-routine-chooser")
             .performScrollTo()
             .assertIsDisplayed()
             .performClick()
         screenshot("routine-chooser")
-        compose.onNodeWithText("Training fixture").performClick()
+        compose
+            .onNode(
+                hasText("Training fixture") and hasAnyAncestor(hasTestTag("home-routine-options"))
+            )
+            .performClick()
+        // Selecting previews a routine; only the persistent primary action starts it.
+        assertNull(
+            kotlinx.coroutines.runBlocking {
+                (compose.activity.application as TrackerApplication).repository.readDraft()
+            }
+        )
+        compose.onNodeWithText("Start workout").performClick()
         val vm =
             compose.runOnIdle {
                 androidx.lifecycle
@@ -609,13 +624,19 @@ class WorkoutFlowTest {
         )
         compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Back to Today"))
         compose.onNodeWithText("Back to Today").performClick()
-        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Use saved routine"))
+        compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("home-routine-chooser"))
         compose
-            .onNodeWithText("Use saved routine")
+            .onNodeWithTag("home-routine-chooser")
             .performScrollTo()
             .assertIsDisplayed()
             .performClick()
-        compose.onNodeWithText("Edited fixture", substring = false).performClick()
+        compose
+            .onNode(
+                hasText("Edited fixture") and hasAnyAncestor(hasTestTag("home-routine-options"))
+            )
+            .performClick()
+        assertNull(vm.state.value.draft)
+        compose.onNodeWithText("Start workout").performClick()
         compose.waitUntil(10000) { vm.state.value.draft != null }
         val active = vm.state.value.draft!!
         assertEquals(JsonPrimitive(0), active.originRoutineId)
@@ -829,8 +850,8 @@ class WorkoutFlowTest {
         }
         backFromSchedule()
         compose.onNodeWithTag("start-planned-workout").assertDoesNotExist()
-        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
-        compose.onNodeWithText("Resume workout").performScrollTo().performClick()
+        compose.onNodeWithText("Resume workout").assertIsDisplayed()
+        compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithTag("session-list").performScrollToNode(hasText("Discard workout"))
         compose.onNodeWithText("Discard workout").performScrollTo().performClick()
         compose.onNodeWithText("Discard", substring = false).performClick()
@@ -838,13 +859,14 @@ class WorkoutFlowTest {
             vm.state.value.draft == null &&
                 compose.onAllNodesWithTag("home-list").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("start-planned-workout"))
-        screenshot("today-plan")
+        compose.onNodeWithTag("home-routine-chooser").performScrollTo().performClick()
         compose
-            .onNodeWithTag("start-planned-workout")
+            .onNode(hasText("Legs") and hasAnyAncestor(hasTestTag("home-routine-options")))
             .performScrollTo()
-            .assertIsDisplayed()
             .performClick()
+        compose.onNodeWithTag("start-planned-workout").assertIsDisplayed()
+        screenshot("today-plan")
+        compose.onNodeWithTag("start-planned-workout").assertIsDisplayed().performClick()
         compose.waitUntil(10000) { vm.state.value.draft?.type == "Legs" }
         assertEquals(JsonPrimitive("starter:v1:Legs"), vm.state.value.draft!!.originRoutineId)
         assertEquals(
@@ -998,7 +1020,6 @@ class WorkoutFlowTest {
         assertEquals(active, vm.state.value.draft)
         back()
         compose.onNodeWithText("Today").performClick()
-        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         statsFlow(vm, owner)
     }
@@ -1137,7 +1158,6 @@ class WorkoutFlowTest {
         }
         assertEquals(active, vm.state.value.draft)
         compose.onNodeWithText("Today", substring = false).performClick()
-        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         preferencesFlow(vm, owner)
     }
@@ -1370,8 +1390,8 @@ class WorkoutFlowTest {
             )
         }
         compose.onNodeWithText("Today", substring = false).performClick()
-        compose.onNodeWithTag("home-list").performScrollToNode(hasText("Resume workout"))
-        compose.onNodeWithText("Resume workout").performScrollTo().performClick()
+        compose.onNodeWithText("Resume workout").assertIsDisplayed()
+        compose.onNodeWithText("Resume workout").performClick()
         compose
             .onNodeWithTag("session-list")
             .performScrollToNode(hasText("Exercise name", substring = false))
@@ -1470,9 +1490,7 @@ class WorkoutFlowTest {
     ) {
         val app = compose.activity.application as TrackerApplication
         val records = vm.state.value.workouts
-        compose
-            .onNodeWithTag("home-list")
-            .performScrollToNode(hasText("Start workout", substring = false))
+        compose.onNodeWithText("Start workout", substring = false).assertIsDisplayed()
         compose.onNodeWithText("Start workout", substring = false).performClick()
         compose.waitUntil(10000) {
             vm.state.value.draft != null && !vm.state.value.pending && !vm.state.value.busy
