@@ -4,7 +4,7 @@ Status: implementation plan, 2026-10-21 UTC (2026-10-20 Eastern). Native impleme
 
 ## APK delivery requirement
 
-For every delivered Android preview, publish the signed APK to this repository with its matching source, checksum and remote download link. Follow [android/releases/README.md](../android/releases/README.md). This is the user's standing delivery preference; local-only APKs and expiring CI artifacts are insufficient. Keep private signing material outside Git.
+For every delivered Android preview, publish the signed APK to this repository and to a GitHub Release with its matching source, checksum and remote download link. Attach the APK and checksum as release assets; use a prerelease for previews. Follow [android/releases/README.md](../android/releases/README.md). This is the user's standing delivery preference; local-only APKs and expiring CI artifacts are insufficient. Keep private signing material outside Git.
 
 ## Product direction and scope
 

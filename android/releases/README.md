@@ -1,6 +1,6 @@
 # Android APK downloads
 
-Latest: [WorkoutTracker 0.13.0-preview APK](WorkoutTracker-0.13.0-preview.apk?raw=true).
+Latest: [v13 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.13.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.13.0-preview/WorkoutTracker-0.13.0-preview.apk).
 
 This is the signed, non-debuggable native UI preview (version code 13). It uses the permanent signing identity and can update the permanently signed v12 installation. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
 
@@ -12,4 +12,4 @@ Validation: 103 JVM tests pass; Android lint has zero errors and 10 warnings; th
 
 ## Future Android deliveries
 
-At the user's request, every future delivered Android preview must include its signed APK in this repository so it is remotely downloadable. Add the versioned APK here, update this latest-download link and SHA256SUMS, and commit/push it with its matching source. Verify its version, non-debuggable flag, permanent signing certificate and checksum before publishing. Include the remote APK download URL in the handoff. Do not rely solely on local files or expiring CI artifacts. Never commit signing keys or credentials.
+At the user's request, every future delivered Android preview must include its signed APK in this repository so it is remotely downloadable. Add the versioned APK here, update this latest-download link and SHA256SUMS, and commit/push it with its matching source. Verify its version, non-debuggable flag, permanent signing certificate and checksum before publishing. Also publish a GitHub Release (prerelease for previews) targeting the matching source commit, with the signed APK and SHA256SUMS attached as release assets. Include both the GitHub Release page and direct APK asset download URL in the handoff. Do not rely solely on local files or expiring CI artifacts. Never commit signing keys or credentials.
