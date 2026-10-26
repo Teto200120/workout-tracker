@@ -61,7 +61,7 @@ internal fun HistoryScreen(state: TrackerState, open: (RecordEntity) -> Unit) {
     LazyColumn(
         Modifier.fillMaxSize().testTag("history-list"),
         state = list,
-        contentPadding = PaddingValues(24.dp),
+        contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { Heading("Your progress", "History", "Saved and imported workouts.") }
@@ -133,18 +133,21 @@ internal fun HistoryScreen(state: TrackerState, open: (RecordEntity) -> Unit) {
                 ) {
                     Text(
                         workout.getValue("type").jsonPrimitive.content,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineSmall,
                     )
                     Text(
                         workout.getValue("date").jsonPrimitive.content,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        "${metrics.workingSets} working ${if (metrics.workingSets == 1) "set" else "sets"} · ${metrics.completedSets} completed · ${metrics.duration.toInt()} min"
+                        "${metrics.workingSets} working ${if (metrics.workingSets == 1) "set" else "sets"} · ${metrics.completedSets} completed · ${metrics.duration.toInt()} min",
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
                         "Volume: ${String.format(Locale.US, "%.1f", metrics.volume)}",
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     TextButton(
                         onClick = {
@@ -159,7 +162,9 @@ internal fun HistoryScreen(state: TrackerState, open: (RecordEntity) -> Unit) {
                     workout.getValue("exercises").jsonArray.forEach { exercise ->
                         val e = exercise.jsonObject
                         Text(
-                            "${e.getValue("name").jsonPrimitive.content} · ${e.getValue("sets").jsonArray.size} ${if (e.getValue("sets").jsonArray.size == 1) "set" else "sets"}"
+                            "${e.getValue("name").jsonPrimitive.content} · ${e.getValue("sets").jsonArray.size} ${if (e.getValue("sets").jsonArray.size == 1) "set" else "sets"}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

@@ -315,7 +315,7 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithText("ACTIVE WORKOUT").assertIsDisplayed()
+        compose.onNodeWithText("Active workout").assertIsDisplayed()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         compose.onAllNodesWithText("Exercise guide").onFirst().performScrollTo().performClick()
         compose
@@ -585,15 +585,17 @@ class WorkoutFlowTest {
         editorText("Save routine")
         waitLibrary()
         compose.waitUntil(10000) { vm.state.value.routines.any { it.name == "Native empty" } }
-        compose.onNodeWithTag("routine-library").performScrollToNode(hasText("Delete Native empty"))
         compose
-            .onNodeWithText("Delete Native empty")
+            .onNodeWithTag("routine-library")
+            .performScrollToNode(hasContentDescription("Delete Native empty"))
+        compose
+            .onNodeWithContentDescription("Delete Native empty")
             .performScrollTo()
             .assertIsDisplayed()
             .performClick()
         compose.onNodeWithText("Cancel", substring = false).performClick()
         compose
-            .onNodeWithText("Delete Native empty")
+            .onNodeWithContentDescription("Delete Native empty")
             .performScrollTo()
             .assertIsDisplayed()
             .performClick()

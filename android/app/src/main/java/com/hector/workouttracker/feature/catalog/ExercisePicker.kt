@@ -88,7 +88,7 @@ internal fun ExercisePicker(
                     TextButton(onClick = onDismiss) { Text(returnLabel) }
                     Heading(
                         "Exercise library",
-                        "Find your next move.",
+                        "Exercises",
                         "Your saved names come first. All guides work offline.",
                     )
                 }

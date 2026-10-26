@@ -64,7 +64,7 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
         ) {
             item {
                 TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back to You") }
-                Heading("Preferences", "Make it yours.", "Save changes when you're ready.")
+                Heading("Your training", "Preferences", "Save changes when you're ready.")
                 state.message?.let { Text(it) }
                 if (!state.restorable) Text("Save before leaving the app to keep these edits.")
                 if (values == null) {

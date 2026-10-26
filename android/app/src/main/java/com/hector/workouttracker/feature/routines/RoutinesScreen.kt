@@ -12,6 +12,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,8 +84,8 @@ internal fun RoutinesScreen(
                 item {
                     TextButton(onClick = back, enabled = !state.busy) { Text("Back to Today") }
                     Heading(
-                        "Your routines",
-                        "Make it your own.",
+                        "Your training",
+                        "Routines",
                         "Plan exercises here, then start from Today.",
                     )
                     state.message?.let { Text(it, Modifier.padding(top = 12.dp)) }
@@ -128,7 +130,7 @@ internal fun RoutinesScreen(
                             Modifier.padding(20.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Text(routine.name, style = MaterialTheme.typography.titleLarge)
+                            Text(routine.name, style = MaterialTheme.typography.headlineSmall)
                             Text(
                                 "${routine.exercises.size} exercises",
                                 style = MaterialTheme.typography.labelLarge,
@@ -143,17 +145,23 @@ internal fun RoutinesScreen(
                                     onClick = { vm.open(routine) },
                                     enabled = !state.busy,
                                     modifier =
-                                        Modifier.testTag("edit-routine-${routine.record.idKey}"),
+                                        Modifier.testTag("edit-routine-${routine.record.idKey}")
+                                            .semantics {
+                                                contentDescription = "Edit ${routine.name}"
+                                            },
                                 ) {
-                                    Text("Edit ${routine.name}")
+                                    Text("Edit")
                                 }
                                 TextButton(
                                     onClick = { deleting = routine },
                                     enabled = !state.busy,
                                     modifier =
-                                        Modifier.testTag("delete-routine-${routine.record.idKey}"),
+                                        Modifier.testTag("delete-routine-${routine.record.idKey}")
+                                            .semantics {
+                                                contentDescription = "Delete ${routine.name}"
+                                            },
                                 ) {
-                                    Text("Delete ${routine.name}")
+                                    Text("Delete")
                                 }
                             }
                         }
@@ -268,7 +276,7 @@ private fun StarterPreview(
                         Modifier.padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(routine.name, style = MaterialTheme.typography.titleLarge)
+                        Text(routine.name, style = MaterialTheme.typography.headlineSmall)
                         Text(
                             if (routine.exercises.isEmpty())
                                 "An empty routine for your own exercises."

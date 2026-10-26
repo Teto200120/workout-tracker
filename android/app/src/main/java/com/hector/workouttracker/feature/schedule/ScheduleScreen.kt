@@ -60,8 +60,8 @@ internal fun ScheduleScreen(
             item {
                 TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back") }
                 Heading(
+                    "Your training",
                     "Weekly schedule",
-                    "Find your rhythm.",
                     "Choose gym, soccer or rest days. Changes apply to future workouts after you save.",
                 )
                 state.message?.let { Text(it) }
@@ -78,7 +78,7 @@ internal fun ScheduleScreen(
                     val day = draft.days[index]
                     Card(Modifier.fillMaxWidth()) {
                         Column(
-                            Modifier.padding(20.dp),
+                            Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(

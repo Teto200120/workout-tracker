@@ -13,7 +13,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.feature.backup.BackupControls
 import com.hector.workouttracker.feature.session.TrackerState
@@ -26,14 +26,40 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
     LazyColumn(
         Modifier.fillMaxSize().testTag("setup-list"),
         contentPadding = PaddingValues(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Heading(
-                "Workout Tracker",
-                "Make room for progress.",
-                "Your workouts stay on this device. Start with a name and make it yours.",
-            )
+            Card(
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = TrackerPalette.Navy,
+                        contentColor = TrackerPalette.OnNavy,
+                    ),
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Icon(
+                        TrackerIcons.Workout,
+                        null,
+                        Modifier.size(40.dp),
+                        tint = TrackerPalette.Coral,
+                    )
+                    Text(
+                        "WORKOUT TRACKER",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TrackerPalette.Coral,
+                    )
+                    Text("Make room for progress.", style = MaterialTheme.typography.headlineLarge)
+                    Text(
+                        "Your workouts stay on this device. Start with a name and make it yours.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TrackerPalette.MutedNavy,
+                    )
+                }
+            }
         }
         item { BackupControls(state, vm, firstRun = true) }
         item {

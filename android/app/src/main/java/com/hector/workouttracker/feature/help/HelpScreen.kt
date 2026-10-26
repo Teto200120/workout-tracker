@@ -8,12 +8,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.TrackerIcons
 import com.hector.workouttracker.domain.*
 
 internal val LocalHelp = staticCompositionLocalOf<HelpViewModel?> { null }
@@ -26,11 +28,30 @@ internal fun HelpTip(id: String) {
     if (state.loading || !guidanceVisible(state.progress, id)) return
     val topic = guidanceTopics.first { it.id == id }
     var expanded by rememberSaveable(id) { mutableStateOf(false) }
-    OutlinedCard(Modifier.fillMaxWidth().testTag("help-tip-$id")) {
+    Card(
+        Modifier.fillMaxWidth().testTag("help-tip-$id"),
+        colors =
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Tip · ${topic.title}", style = MaterialTheme.typography.titleSmall)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    TrackerIcons.Help,
+                    null,
+                    Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    "Tip · ${topic.title}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             if (expanded) Text(topic.text, style = MaterialTheme.typography.bodySmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(
                     onClick = { expanded = !expanded },
                     modifier = Modifier.testTag("read-tip-$id"),

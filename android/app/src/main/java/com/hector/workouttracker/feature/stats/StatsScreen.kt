@@ -14,7 +14,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.*
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.domain.*
 import com.hector.workouttracker.feature.help.HelpTip
 import java.util.Locale
@@ -50,6 +50,7 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
     var metric by rememberSaveable { mutableStateOf("bestWeight") }
     var query by rememberSaveable { mutableStateOf("") }
     var allInsights by rememberSaveable { mutableStateOf(false) }
+    var weekDetails by rememberSaveable { mutableStateOf(false) }
     BackHandler(selected != null) { selected = null }
     val list = rememberLazyListState()
     LaunchedEffect(selected) { list.scrollToItem(0) }
@@ -70,7 +71,6 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
                 "Saved workouts only. Your active session is not included.",
             )
         }
-        if (selected == null) item { HelpTip("statsBasics") }
         if (state.loading) item { CircularProgressIndicator() }
         state.error?.let { message ->
             item {
@@ -90,16 +90,39 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
                             "${snapshot.totals.workouts} workouts · ${snapshot.totals.sets} working sets",
                             modifier = Modifier.testTag("stats-totals"),
                         )
-                        Text("Total volume: ${decimal(snapshot.totals.volume)} lb × reps")
-                        Text("Average duration: ${snapshot.totals.avgDuration} min")
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            MetricTile(
+                                "${snapshot.totals.workouts}",
+                                "Workouts",
+                                Modifier.weight(1f),
+                            )
+                            MetricTile(
+                                "${snapshot.totals.sets}",
+                                "Working sets",
+                                Modifier.weight(1f),
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            MetricTile(
+                                decimal(snapshot.totals.volume),
+                                "Volume · lb × reps",
+                                Modifier.weight(1f),
+                            )
+                            MetricTile("${snapshot.streak}", "Streak · days", Modifier.weight(1f))
+                        }
+                        Text(
+                            "Average duration: ${snapshot.totals.avgDuration} min",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                         Text(
                             "Average uses sessions with a nonzero duration.",
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Text("${snapshot.streak} consecutive days ending today")
                     }
                 }
             }
+            item { HelpTip("statsBasics") }
             item {
                 Text(
                     "Strength snapshot",
@@ -191,14 +214,22 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
                     "${snapshot.weekly.completedGymDays} / ${snapshot.weekly.gymDays} planned gym days logged"
                 )
             }
-            items(snapshot.weekly.days, key = { "day:${it.key}" }) { day ->
-                OutlinedCard(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(
-                            "${day.key}${if(day.key == snapshot.today) " · Today" else ""}",
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                        Text("${day.status} · ${day.title}")
+            item {
+                WeekStrip(snapshot.weekly.days, snapshot.today)
+                TextButton(onClick = { weekDetails = !weekDetails }) {
+                    Text(if (weekDetails) "Hide weekly details" else "Weekly details")
+                }
+            }
+            if (weekDetails) {
+                items(snapshot.weekly.days, key = { "day:${it.key}" }) { day ->
+                    OutlinedCard(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(
+                                "${day.key}${if(day.key == snapshot.today) " · Today" else ""}",
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                            Text("${day.status} · ${day.title}")
+                        }
                     }
                 }
             }

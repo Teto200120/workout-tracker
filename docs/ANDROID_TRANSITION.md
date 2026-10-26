@@ -2,6 +2,10 @@
 
 Status: implementation plan, 2026-10-21 UTC (2026-10-20 Eastern). Native implementation has started; see [ANDROID_IMPLEMENTATION.md](ANDROID_IMPLEMENTATION.md) for delivered scope and verification. The completed web baseline is recorded in [BASELINE_HANDOFF.md](BASELINE_HANDOFF.md); the finite review dispositions are in [PRE_ANDROID_CHECKLIST.md](PRE_ANDROID_CHECKLIST.md).
 
+## APK delivery requirement
+
+For every delivered Android preview, publish the signed APK to this repository with its matching source, checksum and remote download link. Follow [android/releases/README.md](../android/releases/README.md). This is the user's standing delivery preference; local-only APKs and expiring CI artifacts are insufficient. Keep private signing material outside Git.
+
 ## Product direction and scope
 
 Build a proper native, local-first Android workout tracker with Kotlin, Jetpack Compose and Material 3 Expressive. Keep the recognizable navy/coral identity, workout-first hierarchy and quick logging workflow. Preserve routines, schedule, RPE preference, progression suggestions, History, independent PRs, Stats, custom exercises, offline catalog/guides, profile and backup behavior. The PWA remains usable during the transition.

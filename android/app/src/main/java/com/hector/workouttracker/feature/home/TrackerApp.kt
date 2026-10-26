@@ -6,6 +6,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ import com.hector.workouttracker.feature.session.*
 import com.hector.workouttracker.feature.settings.PreferencesScreen
 import com.hector.workouttracker.feature.settings.SettingsScreen
 import com.hector.workouttracker.feature.stats.StatsScreen
+import com.hector.workouttracker.feature.stats.StatsViewModel
 import kotlinx.serialization.json.*
 
 @Composable
@@ -58,6 +60,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
         viewModel(key = if (state.dataEpoch == "initial") null else "history:${state.dataEpoch}")
     val helpVm: HelpViewModel =
         viewModel(key = if (state.dataEpoch == "initial") null else "help:${state.dataEpoch}")
+    val statsVm: StatsViewModel = viewModel(key = "progress:${state.dataEpoch}")
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "home"
@@ -80,41 +83,62 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     "feedback",
                                 )
                     ) {
-                        NavigationBar {
-                            listOf(
-                                    "home" to "Today",
-                                    "history" to "History",
-                                    "stats" to "Stats",
-                                    "settings" to "You",
-                                )
-                                .forEach { (key, label) ->
-                                    NavigationBarItem(
-                                        selected = route == key,
-                                        onClick = {
-                                            nav.navigate(key) {
-                                                popUpTo(nav.graph.findStartDestination().id) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        },
-                                        icon = {
-                                            Icon(
-                                                painterResource(
-                                                    when (key) {
-                                                        "home" -> R.drawable.ic_home
-                                                        "history" -> R.drawable.ic_history
-                                                        "stats" -> R.drawable.ic_stats
-                                                        else -> R.drawable.ic_person
-                                                    }
-                                                ),
-                                                contentDescription = null,
-                                            )
-                                        },
-                                        label = { Text(label) },
+                        Surface(
+                            Modifier.navigationBarsPadding()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            tonalElevation = 2.dp,
+                        ) {
+                            NavigationBar(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                tonalElevation = 0.dp,
+                                windowInsets = WindowInsets(0, 0, 0, 0),
+                            ) {
+                                listOf(
+                                        "home" to "Today",
+                                        "history" to "History",
+                                        "stats" to "Stats",
+                                        "settings" to "You",
                                     )
-                                }
+                                    .forEach { (key, label) ->
+                                        NavigationBarItem(
+                                            colors =
+                                                NavigationBarItemDefaults.colors(
+                                                    indicatorColor =
+                                                        MaterialTheme.colorScheme.primary,
+                                                    selectedIconColor =
+                                                        MaterialTheme.colorScheme.onPrimary,
+                                                    selectedTextColor =
+                                                        MaterialTheme.colorScheme.onSurface,
+                                                ),
+                                            selected = route == key,
+                                            onClick = {
+                                                nav.navigate(key) {
+                                                    popUpTo(nav.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            },
+                                            icon = {
+                                                Icon(
+                                                    painterResource(
+                                                        when (key) {
+                                                            "home" -> R.drawable.ic_home
+                                                            "history" -> R.drawable.ic_history
+                                                            "stats" -> R.drawable.ic_stats
+                                                            else -> R.drawable.ic_person
+                                                        }
+                                                    ),
+                                                    contentDescription = null,
+                                                )
+                                            },
+                                            label = { Text(label) },
+                                        )
+                                    }
+                            }
                         }
                     }
                 }
@@ -167,6 +191,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     HomeScreen(
                                         state,
                                         vm,
+                                        statsVm,
                                         { nav.navigate("routines") { launchSingleTop = true } },
                                         { nav.navigate("schedule") { launchSingleTop = true } },
                                     ) {
@@ -179,7 +204,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                         nav.navigate("workout") { launchSingleTop = true }
                                     }
                                 }
-                                composable("stats") { StatsScreen() }
+                                composable("stats") { StatsScreen(statsVm) }
                                 composable("workout") {
                                     HistoryWorkoutScreen(state, historyVm) { nav.popBackStack() }
                                 }
@@ -187,6 +212,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     SettingsScreen(
                                         state,
                                         vm,
+                                        statsVm,
                                         { nav.navigate("schedule") { launchSingleTop = true } },
                                         { nav.navigate("preferences") { launchSingleTop = true } },
                                         { nav.navigate("help") { launchSingleTop = true } },
