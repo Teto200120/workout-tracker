@@ -7,3 +7,5 @@ Profile owns identity, goal/session summaries and weekly progress. A small Setti
 Settings is a normal scrolling form: name, training goal/RPE, weekly schedule, app feel and data/support links. Short row descriptions replace explanatory paragraphs; progression defaults stay collapsed until requested. Show Save changes when there are edits. Keep explicit saves, validation, dirty-back confirmation, restoration and revision/epoch conflict checks. Refresh unchanged preferences when returning from a secondary page; never reload over edited values.
 
 Backup/data has its own page, retaining existing document pickers, import review, active-draft guards and reviewed reset/clear operations. No workout, routine, date, backup, metrics or preference storage formats change.
+
+The v25 profile polish introduces an asymmetric monogram header, a distinct round Settings button, tonal contours and a native goal ring with readable counts. Logged sessions is compact and profile shortcuts use the existing native action rows. Settings and data-page workflows remain as established here. See [primary-screen polish](ANDROID_PRIMARY_LOOK_UI.md).

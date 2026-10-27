@@ -199,8 +199,9 @@ internal fun HomeScreen(
             item {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = card.copy(alpha = if (dark) .7f else .9f),
-                    border = BorderStroke(1.dp, edge.copy(alpha = .65f)),
+                    color = card.copy(alpha = if (dark) .85f else 1f),
+                    border = BorderStroke(1.dp, edge.copy(alpha = .4f)),
+                    shadowElevation = 2.dp,
                 ) {
                     Column(
                         Modifier.fillMaxWidth().padding(16.dp),
@@ -233,12 +234,7 @@ internal fun HomeScreen(
                 }
             }
             item {
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = card,
-                    border = BorderStroke(1.dp, edge),
-                    modifier = Modifier.fillMaxWidth().testTag("home-workout-card"),
-                ) {
+                TrainingHero(Modifier.testTag("home-workout-card")) {
                     Column(
                         Modifier.padding(22.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -247,13 +243,9 @@ internal fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Box(
-                                Modifier.size(7.dp)
-                                    .background(
-                                        if (draft != null || plan?.kind == "gym") accent else muted,
-                                        CircleShape,
-                                    )
-                            )
+                            TrainingEmblem(size = 32.dp) {
+                                Icon(TrackerIcons.Workout, null, Modifier.size(20.dp))
+                            }
                             Text(
                                 if (draft != null) "Workout in progress"
                                 else
@@ -415,7 +407,7 @@ internal fun HomeScreen(
                     TextButton(
                         onClick = openRoutines,
                         enabled = !state.busy,
-                        colors = ButtonDefaults.textButtonColors(contentColor = muted),
+                        colors = ButtonDefaults.textButtonColors(contentColor = accent),
                     ) {
                         Icon(TrackerIcons.Workout, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -424,7 +416,7 @@ internal fun HomeScreen(
                     TextButton(
                         onClick = openSchedule,
                         enabled = !state.busy,
-                        colors = ButtonDefaults.textButtonColors(contentColor = muted),
+                        colors = ButtonDefaults.textButtonColors(contentColor = accent),
                     ) {
                         Icon(TrackerIcons.Calendar, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -438,7 +430,18 @@ internal fun HomeScreen(
             Button(
                 onClick = ::start,
                 enabled = !state.busy && !opening,
-                shape = RoundedCornerShape(20.dp),
+                shape =
+                    RoundedCornerShape(
+                        topStart = 28.dp,
+                        topEnd = 28.dp,
+                        bottomEnd = 28.dp,
+                        bottomStart = 12.dp,
+                    ),
+                elevation =
+                    ButtonDefaults.buttonElevation(
+                        defaultElevation = 3.dp,
+                        pressedElevation = 0.dp,
+                    ),
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor = TrackerPalette.Coral,

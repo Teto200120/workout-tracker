@@ -4,11 +4,11 @@ Continue the PWA UI/UX import one screen at a time. Each delivered checkpoint ge
 
 | Screen | Checkpoint | Status |
 | --- | --- | --- |
-| Home | [v14](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.14.0-preview) | Delivered; compact PWA composition and preview-before-start |
+| Home | [v25](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.25.0-preview) | Expressive workout surface and primary action; selection/preview/start preserved |
 | Active workout | [v15](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.15.0-preview) | Current-set logging, set review, elapsed header, contextual completion |
 | History | [v16](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.16.0-preview) | PWA filters, date-first cards, full workout/editor and native date selection |
-| Stats | [v17](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.17.0-preview) | Tonal overview, weekly activity, source-backed exercise chart and records |
-| You / preferences / backup | [v24](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.24.0-preview) | PWA profile hierarchy, header Settings icon, streamlined settings and separate backup/data |
+| Stats | [v25](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.25.0-preview) | Emphasized totals, tonal panels and source chart area fill |
+| You / preferences / backup | [v25](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.25.0-preview) | Expressive profile identity, goal ring and shortcuts; separate settings preserved |
 | Routines / routine editor | [v19](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.19.0-preview) | Compact library, ordered exercise previews, focused editor and persistent Save |
 | Weekly schedule | [v20](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.20.0-preview) | Day groups, tonal choices, selected radio dialogs and persistent Save |
 | Exercise picker / guide | [v21](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.21.0-preview) | Filled search, compact result actions, retained list position and numbered offline guides |

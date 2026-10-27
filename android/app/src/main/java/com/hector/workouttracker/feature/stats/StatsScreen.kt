@@ -17,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -100,31 +101,36 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
         }
         if (snapshot != null && selected == null) {
             item {
-                StatsPanel {
-                    Text("All time", style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        "${snapshot.totals.workouts} workouts · ${snapshot.totals.sets} working sets",
-                        modifier = Modifier.testTag("stats-totals"),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    StatsMetrics(
-                        listOf(
-                            "${snapshot.totals.workouts}" to "Workouts",
-                            "${snapshot.totals.sets}" to "Working sets",
-                            decimal(snapshot.totals.volume) to "Volume · lb × reps",
-                            "${snapshot.streak}" to "Streak · days",
+                TrainingHero {
+                    Column(
+                        Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text("All time", style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            "${snapshot.totals.workouts} workouts · ${snapshot.totals.sets} working sets",
+                            modifier = Modifier.testTag("stats-totals"),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    )
-                    Text(
-                        "Average duration: ${snapshot.totals.avgDuration} min",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        "Average uses sessions with a nonzero duration.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                        StatsMetrics(
+                            listOf(
+                                "${snapshot.totals.workouts}" to "Workouts",
+                                "${snapshot.totals.sets}" to "Working sets",
+                                decimal(snapshot.totals.volume) to "Volume · lb × reps",
+                                "${snapshot.streak}" to "Streak · days",
+                            )
+                        )
+                        Text(
+                            "Average duration: ${snapshot.totals.avgDuration} min",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Text(
+                            "Average uses sessions with a nonzero duration.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
             item {
@@ -409,7 +415,8 @@ private fun StatsPanel(modifier: Modifier = Modifier, content: @Composable Colum
         modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             Modifier.padding(16.dp),
@@ -423,23 +430,46 @@ private fun StatsPanel(modifier: Modifier = Modifier, content: @Composable Colum
 private fun StatsMetrics(values: List<Pair<String, String>>) {
     val large = LocalDensity.current.fontScale > 1.3f
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        values.chunked(if (large) 1 else 2).forEach { row ->
+        values.withIndex().toList().chunked(if (large) 1 else 2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { (value, label) ->
+                row.forEach { (index, entry) ->
+                    val (value, label) = entry
+                    val emphasized = index == 0
                     Surface(
                         Modifier.weight(1f).semantics(mergeDescendants = true) {},
-                        shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        shape =
+                            if (emphasized)
+                                RoundedCornerShape(
+                                    topStart = 24.dp,
+                                    topEnd = 24.dp,
+                                    bottomEnd = 24.dp,
+                                    bottomStart = 8.dp,
+                                )
+                            else RoundedCornerShape(22.dp),
+                        color =
+                            if (emphasized) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceContainerLow,
+                        contentColor =
+                            if (emphasized) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurface,
+                        shadowElevation = if (emphasized) 3.dp else 0.dp,
                     ) {
                         Column(
-                            Modifier.padding(16.dp).heightIn(min = 70.dp),
+                            Modifier.padding(16.dp).heightIn(min = 82.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Text(value, style = MaterialTheme.typography.headlineSmall)
+                            Text(
+                                value,
+                                style =
+                                    if (emphasized) MaterialTheme.typography.displaySmall
+                                    else MaterialTheme.typography.headlineLarge,
+                            )
                             Text(
                                 label,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color =
+                                    if (emphasized) MaterialTheme.colorScheme.onPrimary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -468,9 +498,11 @@ private fun StatsWeek(days: List<ActivityDay>, today: String) {
                     shape = RoundedCornerShape(16.dp),
                     color =
                         if (day.complete) MaterialTheme.colorScheme.primaryContainer
+                        else if (day.key == today)
+                            MaterialTheme.colorScheme.primary.copy(alpha = .1f)
                         else MaterialTheme.colorScheme.surfaceContainerLow,
                     border =
-                        if (day.key == today) BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                        if (day.key == today) BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                         else null,
                 ) {
                     Column(
@@ -520,6 +552,19 @@ private fun ProgressChart(points: List<ExercisePoint>, metric: String) {
                         moveTo(offsets.first().x, offsets.first().y)
                         offsets.drop(1).forEach { lineTo(it.x, it.y) }
                     }
+                val area =
+                    Path().apply {
+                        moveTo(offsets.first().x, inset + height)
+                        offsets.forEach { lineTo(it.x, it.y) }
+                        lineTo(offsets.last().x, inset + height)
+                        close()
+                    }
+                drawPath(
+                    area,
+                    Brush.verticalGradient(
+                        listOf(primary.copy(alpha = .22f), primary.copy(alpha = .01f))
+                    ),
+                )
                 drawPath(line, primary, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
             }
             offsets.forEach { drawCircle(primary, 4.dp.toPx(), it) }

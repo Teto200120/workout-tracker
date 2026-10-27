@@ -24,6 +24,8 @@ Keep a clear typography hierarchy, tonal grouping, rounded shape hierarchy, a si
 
 References: [Material 3 in Compose](https://developer.android.com/develop/ui/compose/designsystems/material3), [Material typography](https://m3.material.io/styles/typography/applying-type).
 
+The v25 polish adds a tonal workout surface with a quiet contour motif, asymmetric shape, workout emblem and elevated primary action. Preserve this composition and the same selection/preview/start behavior. See [primary-screen polish](ANDROID_PRIMARY_LOOK_UI.md).
+
 ## Review cadence
 
 Continue the visual port one screen at a time. Inspect that screen's rendered PWA states and source, specify the native hierarchy and interactions, implement only that scope, and compare real emulator screenshots before delivery. Preserve data assertions when adapting tests to intentional UI changes. Deliver a versioned signed APK, GitHub Release and screenshots so the user can review the result before choosing the next screen.
