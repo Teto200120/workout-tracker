@@ -1,21 +1,31 @@
 package com.hector.workouttracker.feature.catalog
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.hector.workouttracker.core.catalog.*
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.core.model.visibleName
-import com.hector.workouttracker.feature.help.HelpTip
+import com.hector.workouttracker.feature.help.CompactHelpTip
 import com.hector.workouttracker.feature.session.TrackerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,7 +36,16 @@ private fun CatalogWindow(onDismiss: () -> Unit, content: @Composable () -> Unit
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) { content() }
+        Surface(
+            Modifier.fillMaxSize()
+                .background(trackerScreenBackground())
+                .safeDrawingPadding()
+                .imePadding(),
+            color = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+        ) {
+            content()
+        }
     }
 }
 
@@ -40,6 +59,7 @@ internal fun ExercisePicker(
     selectionVerb: String = "Add",
 ) {
     val focus = LocalFocusManager.current
+    val list = rememberLazyListState()
     var query by rememberSaveable { mutableStateOf("") }
     var muscle by rememberSaveable { mutableStateOf("") }
     var equipment by rememberSaveable { mutableStateOf("") }
@@ -81,22 +101,28 @@ internal fun ExercisePicker(
         } else {
             LazyColumn(
                 Modifier.fillMaxSize().testTag("exercise-picker"),
+                state = list,
                 contentPadding = PaddingValues(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
                     TextButton(onClick = onDismiss) { Text(returnLabel) }
-                    Heading(
-                        "Exercise library",
-                        "Exercises",
-                        "Your saved names come first. All guides work offline.",
+                    Text("Choose exercise", style = MaterialTheme.typography.headlineMedium)
+                    Text(
+                        "Your saved names first. Guides available offline.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 item {
-                    OutlinedTextField(
+                    TextField(
                         query,
                         { query = it },
                         label = { Text("Search exercises") },
+                        shape = RoundedCornerShape(16.dp),
+                        leadingIcon = { Icon(TrackerIcons.Search, null, Modifier.size(20.dp)) },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().testTag("exercise-search"),
                     )
@@ -110,15 +136,33 @@ internal fun ExercisePicker(
                     }
                     if (filtersOpen) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = { filterChoice = "Muscle" }) {
-                                Text(muscle.ifEmpty { "Muscle" })
-                            }
-                            OutlinedButton(onClick = { filterChoice = "Equipment" }) {
-                                Text(equipment.ifEmpty { "Equipment" })
-                            }
-                            OutlinedButton(onClick = { filterChoice = "Category" }) {
-                                Text(category.ifEmpty { "Category" })
-                            }
+                            FilterChip(
+                                selected = muscle.isNotEmpty(),
+                                onClick = { filterChoice = "Muscle" },
+                                label = {
+                                    Text(if (muscle.isEmpty()) "Muscle" else "Muscle: $muscle")
+                                },
+                            )
+                            FilterChip(
+                                selected = equipment.isNotEmpty(),
+                                onClick = { filterChoice = "Equipment" },
+                                label = {
+                                    Text(
+                                        if (equipment.isEmpty()) "Equipment"
+                                        else "Equipment: $equipment"
+                                    )
+                                },
+                            )
+                            FilterChip(
+                                selected = category.isNotEmpty(),
+                                onClick = { filterChoice = "Category" },
+                                label = {
+                                    Text(
+                                        if (category.isEmpty()) "Category"
+                                        else "Category: $category"
+                                    )
+                                },
+                            )
                             if (
                                 muscle.isNotEmpty() ||
                                     equipment.isNotEmpty() ||
@@ -140,12 +184,13 @@ internal fun ExercisePicker(
                         )
                     }
                     if (visibleName(query.trim(), 120))
-                        Button(
+                        OutlinedButton(
                             onClick = { add(query) },
+                            shape = RoundedCornerShape(16.dp),
                             enabled = !state.busy && !accepted,
                             modifier = Modifier.fillMaxWidth().testTag("add-search-name"),
                         ) {
-                            Text("$selectionVerb ${catalog.canonicalName(query, local)}")
+                            Text("Use name: ${catalog.canonicalName(query, local)}")
                         }
                 }
                 item { Text("Your exercises", style = MaterialTheme.typography.titleLarge) }
@@ -227,6 +272,8 @@ internal fun ExercisePicker(
             }
         AlertDialog(
             onDismissRequest = { filterChoice = null },
+            modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth(),
+            properties = DialogProperties(usePlatformDefaultWidth = false),
             title = { Text(choice) },
             text = {
                 LazyColumn {
@@ -261,15 +308,33 @@ private fun ExerciseOption(
     onGuide: () -> Unit,
     selectionVerb: String,
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(name, style = MaterialTheme.typography.titleMedium)
-            Text(detail, style = MaterialTheme.typography.bodySmall)
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = onAdd, enabled = enabled) {
-                    Text("$selectionVerb $name")
+                FilledTonalButton(
+                    onClick = onAdd,
+                    enabled = enabled,
+                    modifier = Modifier.semantics { contentDescription = "$selectionVerb $name" },
+                ) {
+                    Text(selectionVerb)
                 }
-                TextButton(onClick = onGuide) { Text("Guide for $name") }
+                TextButton(
+                    onClick = onGuide,
+                    modifier = Modifier.semantics { contentDescription = "Guide for $name" },
+                ) {
+                    Text("Guide")
+                }
             }
         }
     }
@@ -289,66 +354,110 @@ private fun GuideContent(
     addLabel: String = "Add to workout",
 ) {
     val exercise = remember(name, catalog) { catalog?.guide(name) }
-    LazyColumn(
-        Modifier.fillMaxSize().testTag("exercise-guide"),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        item {
-            TextButton(onClick = onBack) { Text("Back") }
-            Heading("Exercise guide", name)
-            if (exercise != null && exercise.name != name)
+    Column(Modifier.fillMaxSize()) {
+        LazyColumn(
+            Modifier.weight(1f).testTag("exercise-guide"),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item {
+                TextButton(onClick = onBack) { Text("Back") }
                 Text(
-                    "Reference movement: ${exercise.name}",
+                    "Exercise guide",
                     style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
                 )
-        }
-        item { HelpTip("exerciseGuideBasics") }
-        if (onAdd != null)
-            item {
-                Button(
-                    onClick = onAdd,
-                    modifier = Modifier.fillMaxWidth().testTag("add-from-guide"),
-                ) {
-                    Text(addLabel)
+                Text(name, style = MaterialTheme.typography.headlineMedium)
+                if (exercise != null && exercise.name != name)
+                    Text(
+                        "Reference movement: ${exercise.name}",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+            }
+            item { CompactHelpTip("exerciseGuideBasics", "About exercise guides") }
+            if (exercise == null || exercise.instructions.isEmpty())
+                item {
+                    Text(
+                        "No verified guide match for this saved name. Use guidance for your exact movement and equipment."
+                    )
                 }
-            }
-        if (exercise == null || exercise.instructions.isEmpty())
-            item {
-                Text(
-                    "No verified guide match for this saved name. Use guidance for your exact movement and equipment."
-                )
-            }
-        else {
-            item {
-                Card {
-                    Column(
-                        Modifier.fillMaxWidth().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+            else {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
                     ) {
-                        Text(
-                            "Equipment: ${exercise.equipment.joinToString().ifEmpty { "Not specified" }}"
-                        )
-                        Text("Primary muscles: ${exercise.primaryMuscles.joinToString()}")
-                        if (exercise.secondaryMuscles.isNotEmpty())
-                            Text("Secondary muscles: ${exercise.secondaryMuscles.joinToString()}")
-                        Text("${exercise.difficulty} · ${exercise.category}")
+                        Column(
+                            Modifier.fillMaxWidth().padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                "Equipment: ${exercise.equipment.joinToString().ifEmpty { "Not specified" }}"
+                            )
+                            Text("Primary muscles: ${exercise.primaryMuscles.joinToString()}")
+                            if (exercise.secondaryMuscles.isNotEmpty())
+                                Text(
+                                    "Secondary muscles: ${exercise.secondaryMuscles.joinToString()}"
+                                )
+                            Text("${exercise.difficulty} · ${exercise.category}")
+                        }
                     }
                 }
+                item { Text("How to perform it", style = MaterialTheme.typography.titleLarge) }
+                items(exercise.instructions.withIndex().toList(), key = { it.index }) {
+                    (index, instruction) ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                        ) {
+                            Text(
+                                "${index + 1}",
+                                Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
+                        Text(
+                            instruction.replace(Regex("\\s+"), " "),
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+                item {
+                    Text(
+                        "Source: Free Exercise DB by yuhonas and contributors\nhttps://github.com/yuhonas/free-exercise-db\nLicense: Unlicense",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
-            items(exercise.instructions.withIndex().toList(), key = { it.index }) {
-                (index, instruction) ->
-                Text("${index + 1}. ${instruction.replace(Regex("\\s+"), " ")}")
-            }
-            item {
-                Text(
-                    "Source: Free Exercise DB by yuhonas and contributors\nhttps://github.com/yuhonas/free-exercise-db\nLicense: Unlicense",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
+            item { GuideReminder() }
         }
-        item {
-            HorizontalDivider()
+        if (onAdd != null)
+            Button(
+                onClick = onAdd,
+                shape = RoundedCornerShape(20.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(20.dp)
+                        .heightIn(min = 56.dp)
+                        .testTag("add-from-guide"),
+            ) {
+                Text(addLabel)
+            }
+    }
+}
+
+@Composable
+private fun GuideReminder() {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Text("Training reminders", style = MaterialTheme.typography.titleMedium)
             Text(
                 "Use a load you can control through a comfortable range of motion.\n\nKeep each repetition smooth and stop the set if form breaks down.\n\nStop if the movement causes sharp pain."

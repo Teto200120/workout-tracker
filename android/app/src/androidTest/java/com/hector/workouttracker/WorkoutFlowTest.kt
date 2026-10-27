@@ -357,12 +357,17 @@ class WorkoutFlowTest {
             runCatching {
                     compose
                         .onNodeWithTag("exercise-picker")
-                        .performScrollToNode(hasText("Guide for Alternate Hammer Curl"))
+                        .performScrollToNode(
+                            hasContentDescription("Guide for Alternate Hammer Curl")
+                        )
                 }
                 .isSuccess
         }
         screenshot("exercise-picker")
-        compose.onNodeWithText("Guide for Alternate Hammer Curl").performScrollTo().performClick()
+        compose
+            .onNode(hasContentDescription("Guide for Alternate Hammer Curl"))
+            .performScrollTo()
+            .performClick()
         compose.onNodeWithTag("add-from-guide").performClick()
         compose
             .onNodeWithTag("session-list")
