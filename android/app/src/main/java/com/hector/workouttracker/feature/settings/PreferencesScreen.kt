@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -24,9 +26,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hector.workouttracker.BuildConfig
 import com.hector.workouttracker.core.designsystem.TrackerIcons
-import com.hector.workouttracker.core.designsystem.TrainingHeading
 import com.hector.workouttracker.core.designsystem.trackerPanelColor
 import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.visibleName
@@ -49,23 +49,77 @@ internal fun PreferencesScreen(
     }
     val draft = state.draft
     val values = draft?.values
+    val focus = LocalFocusManager.current
+    var page by rememberSaveable { mutableStateOf("home") }
     var discard by rememberSaveable { mutableStateOf(false) }
     var reload by rememberSaveable { mutableStateOf(false) }
     var warning by rememberSaveable { mutableStateOf(false) }
-    var advanced by rememberSaveable { mutableStateOf(false) }
-    val list = rememberLazyListState()
+    val hubList = rememberLazyListState()
+    val profileList = rememberLazyListState()
+    val trainingList = rememberLazyListState()
+    val feelList = rememberLazyListState()
+    val progressionList = rememberLazyListState()
+    val list =
+        when (page) {
+            "profile" -> profileList
+            "training" -> trainingList
+            "feel" -> feelList
+            "progression" -> progressionList
+            else -> hubList
+        }
     val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
     val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     fun leave() {
         if (!state.busy) {
-            if (draft?.changed == true) discard = true else back()
+            focus.clearFocus()
+            if (draft?.changed == true) discard = true
+            else if (page == "home") back() else page = "home"
         }
     }
     BackHandler { leave() }
     LaunchedEffect(state.message) { if (state.message != null) list.scrollToItem(0) }
-    Column(Modifier.fillMaxSize().background(trackerScreenBackground())) {
+    Column(
+        Modifier.fillMaxSize()
+            .background(trackerScreenBackground())
+            .testTag(if (page == "home") "settings-hub" else "settings-editor-$page")
+    ) {
+        Row(
+            Modifier.fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FilledTonalIconButton(
+                onClick = ::leave,
+                enabled = !state.busy,
+                modifier = Modifier.size(48.dp).testTag("settings-back"),
+                shape = CircleShape,
+                colors =
+                    IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = trackerPanelColor(),
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+            ) {
+                Icon(
+                    TrackerIcons.Back,
+                    if (page == "home") "Back to Profile" else "Back to settings",
+                    Modifier.size(24.dp),
+                )
+            }
+            Text(
+                when (page) {
+                    "profile" -> "Edit profile"
+                    "training" -> "Workout preferences"
+                    "feel" -> "App behavior"
+                    "progression" -> "Progression defaults"
+                    else -> "Settings"
+                },
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineLarge,
+            )
+        }
         state.error?.let { message ->
-            Card(Modifier.fillMaxWidth().padding(12.dp)) {
+            Card(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
                 Column(Modifier.padding(16.dp)) {
                     Text(message, color = MaterialTheme.colorScheme.error)
                     if (state.conflict)
@@ -78,143 +132,136 @@ internal fun PreferencesScreen(
         LazyColumn(
             Modifier.weight(1f).testTag("preferences-editor"),
             state = list,
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            item {
-                TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back to Profile") }
-                TrainingHeading("Settings", icon = TrackerIcons.Settings)
-                state.message?.let {
-                    Text(if (it == "Preferences saved.") "Settings saved." else it)
-                }
-                if (!state.restorable) Text("Save before leaving the app to keep these edits.")
-                if (values == null) {
+            if (state.message != null || !state.restorable || state.busy || values == null)
+                item {
+                    state.message?.let {
+                        Text(
+                            if (it == "Preferences saved.") "Settings saved." else it,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    if (!state.restorable) Text("Save before leaving the app to keep these edits.")
                     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                    else TextButton(onClick = vm::reload) { Text("Retry loading preferences") }
+                    if (values == null && !state.busy)
+                        TextButton(onClick = vm::reload) { Text("Retry loading preferences") }
                 }
-            }
             if (values != null) {
-                item {
-                    TextField(
-                        values.displayName,
-                        { value -> vm.edit { it.copy(displayName = value) } },
-                        label = { Text("Your name") },
-                        shape = RoundedCornerShape(16.dp),
-                        isError = !visibleName(values.displayName.trim(), 80),
-                        supportingText =
-                            if (!visibleName(values.displayName.trim(), 80)) {
-                                { Text("Enter a name up to 80 characters.") }
-                            } else null,
-                        singleLine = true,
-                        enabled = !state.busy,
-                        modifier = Modifier.fillMaxWidth().testTag("preference-name"),
-                    )
-                }
-                item {
-                    SettingsLabel("Training")
-                    SettingsPanel {
-                        PreferenceNumber(
-                            values.weeklyGoal,
-                            "Weekly workout goal",
-                            "weeklyGoal",
+                when (page) {
+                    "home" -> {
+                        settingsHub(
+                            values,
                             !state.busy,
-                        ) { value ->
-                            vm.edit { it.copy(weeklyGoal = value) }
-                        }
-                        Text(
-                            "Counts workouts in the last 7 days.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        PreferenceToggle(
-                            "Track RPE",
-                            "Past entries are kept when turned off.",
-                            "rpe",
-                            values.trackRpe,
-                            !state.busy,
-                        ) { value ->
-                            vm.edit { it.copy(trackRpe = value) }
-                        }
-                    }
-                }
-                item {
-                    SettingsToolGroup {
-                        SettingsTool(
-                            "Weekly schedule",
-                            "Gym, soccer and rest days",
-                            TrackerIcons.Calendar,
-                            Modifier.testTag("settings-schedule"),
-                            !state.busy,
+                            { page = it },
                             openSchedule,
+                            openBackup,
+                            openHelp,
+                            openFeedback,
                         )
                     }
-                }
-                item {
-                    SettingsLabel("App feel")
-                    SettingsPanel {
-                        PreferenceToggle(
-                            "Haptics",
-                            "Set completion feedback",
-                            "haptics",
-                            values.haptics,
-                            !state.busy,
-                        ) { value ->
-                            vm.edit { it.copy(haptics = value) }
-                        }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        PreferenceToggle(
-                            "Animations",
-                            "Transitions and component motion",
-                            "animations",
-                            values.animations,
-                            !state.busy,
-                        ) { value ->
-                            vm.edit { it.copy(animations = value) }
+                    "profile" -> {
+                        item {
+                            SettingsLabel("Your profile")
+                            TextField(
+                                values.displayName,
+                                { value -> vm.edit { it.copy(displayName = value) } },
+                                label = { Text("Your name") },
+                                shape = RoundedCornerShape(16.dp),
+                                isError = !visibleName(values.displayName.trim(), 80),
+                                supportingText =
+                                    if (!visibleName(values.displayName.trim(), 80)) {
+                                        { Text("Enter a name up to 80 characters.") }
+                                    } else null,
+                                singleLine = true,
+                                enabled = !state.busy,
+                                modifier = Modifier.fillMaxWidth().testTag("preference-name"),
+                            )
                         }
                     }
-                }
-                item {
-                    TextButton(
-                        onClick = { advanced = !advanced },
-                        modifier = Modifier.fillMaxWidth().testTag("progression-preferences"),
-                    ) {
-                        Text(
-                            if (advanced) "Hide progression defaults" else "Progression defaults",
-                            Modifier.weight(1f),
-                        )
-                        Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
-                    }
-                }
-                if (advanced) {
-                    item {
-                        PreferenceNumber(
-                            values.numbers.getValue("defaultWeightJump"),
-                            "Default load jump (lb)",
-                            "defaultWeightJump",
-                            !state.busy,
-                        ) { value ->
-                            vm.edit {
-                                it.copy(numbers = it.numbers + ("defaultWeightJump" to value))
+                    "training" -> {
+                        item {
+                            SettingsLabel("Weekly goal")
+                            SettingsPanel {
+                                PreferenceNumber(
+                                    values.weeklyGoal,
+                                    "Weekly workout goal",
+                                    "weeklyGoal",
+                                    !state.busy,
+                                ) { value ->
+                                    vm.edit { it.copy(weeklyGoal = value) }
+                                }
+                                Text(
+                                    "Counts workouts in the last 7 days.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        item {
+                            SettingsLabel("Effort tracking")
+                            SettingsPanel {
+                                PreferenceToggle(
+                                    "Track RPE",
+                                    "Past entries are kept when turned off.",
+                                    "rpe",
+                                    values.trackRpe,
+                                    !state.busy,
+                                ) { value ->
+                                    vm.edit { it.copy(trackRpe = value) }
+                                }
                             }
                         }
                     }
-                    for ((prefix, label) in
-                        listOf(
-                            "compound" to "Compound",
-                            "pull" to "Pull",
-                            "isolation" to "Isolation",
-                            "general" to "General",
-                        )) {
+                    "feel" -> {
                         item {
-                            Card(
-                                shape = RoundedCornerShape(24.dp),
-                                colors =
-                                    CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                            ) {
-                                Column(
-                                    Modifier.fillMaxWidth().padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                                ) {
+                            SettingsPanel {
+                                PreferenceToggle(
+                                    "Haptics",
+                                    "Set completion feedback",
+                                    "haptics",
+                                    values.haptics,
+                                    !state.busy,
+                                ) { value ->
+                                    vm.edit { it.copy(haptics = value) }
+                                }
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                PreferenceToggle(
+                                    "Animations",
+                                    "Transitions and component motion",
+                                    "animations",
+                                    values.animations,
+                                    !state.busy,
+                                ) { value ->
+                                    vm.edit { it.copy(animations = value) }
+                                }
+                            }
+                        }
+                    }
+                    "progression" -> {
+                        item {
+                            SettingsLabel("Load progression")
+                            PreferenceNumber(
+                                values.numbers.getValue("defaultWeightJump"),
+                                "Default load jump (lb)",
+                                "defaultWeightJump",
+                                !state.busy,
+                            ) { value ->
+                                vm.edit {
+                                    it.copy(numbers = it.numbers + ("defaultWeightJump" to value))
+                                }
+                            }
+                        }
+                        for ((prefix, label) in
+                            listOf(
+                                "compound" to "Compound",
+                                "pull" to "Pull",
+                                "isolation" to "Isolation",
+                                "general" to "General",
+                            )) {
+                            item {
+                                SettingsPanel {
                                     Text(
                                         "$label rep range",
                                         style = MaterialTheme.typography.titleMedium,
@@ -251,54 +298,13 @@ internal fun PreferencesScreen(
                         Text(it, color = MaterialTheme.colorScheme.error)
                     }
                 }
-                item {
-                    SettingsLabel("Data & support")
-                    SettingsToolGroup {
-                        SettingsTool(
-                            "Backup & data",
-                            "Import, export and manage local data",
-                            TrackerIcons.Backup,
-                            Modifier.testTag("settings-backup"),
-                            !state.busy,
-                            openBackup,
-                        )
-                        HorizontalDivider(
-                            Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
-                        SettingsTool(
-                            "Help & guidance",
-                            "Tips and explanations",
-                            TrackerIcons.Help,
-                            Modifier.testTag("open-help"),
-                            onClick = openHelp,
-                        )
-                        HorizontalDivider(
-                            Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
-                        SettingsTool(
-                            "Beta feedback",
-                            "Open browser feedback",
-                            TrackerIcons.Feedback,
-                            Modifier.testTag("open-feedback"),
-                            onClick = openFeedback,
-                        )
-                    }
-                }
-                item {
-                    Text(
-                        "Workout Tracker ${BuildConfig.VERSION_NAME}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
             }
         }
-        if (draft?.changed == true || state.busy)
+        if (page != "home" && (draft?.changed == true || state.busy))
             Button(
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 onClick = {
+                    focus.clearFocus()
                     if (values != null && preferencesWarning(values) != null) warning = true
                     else vm.save()
                 },
@@ -332,7 +338,11 @@ internal fun PreferencesScreen(
                 TextButton(
                     onClick = {
                         discard = false
-                        back()
+                        if (page == "home") back()
+                        else {
+                            vm.reload()
+                            page = "home"
+                        }
                     }
                 ) {
                     Text("Discard edits")

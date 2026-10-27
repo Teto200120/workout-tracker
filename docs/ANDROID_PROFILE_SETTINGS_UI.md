@@ -4,7 +4,7 @@ Replace the four-destination floating bar with the PWA's Stats / Home / Profile 
 
 Profile owns identity, goal/session summaries and weekly progress. A small Settings icon in its header opens a separate Settings page. Routines and backup/data remain profile shortcuts; no preference editor, reset controls or long backup instructions appear inline on Profile.
 
-Settings is a normal scrolling form: name, training goal/RPE, weekly schedule, app feel and data/support links. Short row descriptions replace explanatory paragraphs; progression defaults stay collapsed until requested. Show Save changes when there are edits. Keep explicit saves, validation, dirty-back confirmation, restoration and revision/epoch conflict checks. Refresh unchanged preferences when returning from a secondary page; never reload over edited values.
+Settings opens as a grouped native hub inspired by the user's reference: rounded bordered cards, coral category headers, tinted icon circles, saved-value summaries and chevrons. Profile, workout preferences, app preferences, help/support and a separate danger group use the existing navy/coral language. Profile, workout, app behavior and progression open focused editors. Show Save changes only for edits in an editor. Keep explicit saves, validation, dirty-back confirmation, restoration and revision/epoch conflict checks. Refresh unchanged preferences when returning from a secondary page; never reload over edited values. See [settings hub](ANDROID_SETTINGS_HUB_UI.md).
 
 Backup/data has its own page, retaining existing document pickers, import review, active-draft guards and reviewed reset/clear operations. No workout, routine, date, backup, metrics or preference storage formats change.
 

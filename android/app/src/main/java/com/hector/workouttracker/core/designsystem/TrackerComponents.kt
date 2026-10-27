@@ -45,6 +45,65 @@ private fun symbol(name: String, draw: PathBuilder.() -> Unit) =
         .build()
 
 internal object TrackerIcons {
+    val Goal =
+        symbol("Weekly goal") {
+            moveTo(21f, 12f)
+            curveTo(21f, 7f, 17f, 3f, 12f, 3f)
+            curveTo(7f, 3f, 3f, 7f, 3f, 12f)
+            curveTo(3f, 17f, 7f, 21f, 12f, 21f)
+            curveTo(17f, 21f, 21f, 17f, 21f, 12f)
+            close()
+            moveTo(17f, 12f)
+            curveTo(17f, 9.2f, 14.8f, 7f, 12f, 7f)
+            curveTo(9.2f, 7f, 7f, 9.2f, 7f, 12f)
+            curveTo(7f, 14.8f, 9.2f, 17f, 12f, 17f)
+            curveTo(14.8f, 17f, 17f, 14.8f, 17f, 12f)
+            close()
+            moveTo(12f, 11f)
+            lineTo(12f, 13f)
+        }
+    val DataManagement =
+        symbol("Manage data") {
+            moveTo(4f, 6f)
+            lineTo(20f, 6f)
+            moveTo(9f, 3f)
+            lineTo(15f, 3f)
+            moveTo(6f, 6f)
+            lineTo(7f, 21f)
+            lineTo(17f, 21f)
+            lineTo(18f, 6f)
+            moveTo(10f, 10f)
+            lineTo(10f, 17f)
+            moveTo(14f, 10f)
+            lineTo(14f, 17f)
+        }
+    val Haptics =
+        symbol("Haptics") {
+            moveTo(8f, 4f)
+            lineTo(16f, 4f)
+            lineTo(16f, 20f)
+            lineTo(8f, 20f)
+            close()
+            moveTo(4f, 8f)
+            lineTo(3f, 12f)
+            lineTo(4f, 16f)
+            moveTo(20f, 8f)
+            lineTo(21f, 12f)
+            lineTo(20f, 16f)
+        }
+    val Motion =
+        symbol("Animations") {
+            moveTo(9f, 5f)
+            lineTo(20f, 12f)
+            lineTo(9f, 19f)
+            close()
+            moveTo(3f, 8f)
+            lineTo(5f, 8f)
+            moveTo(2f, 12f)
+            lineTo(5f, 12f)
+            moveTo(3f, 16f)
+            lineTo(5f, 16f)
+        }
     val History =
         symbol("History") {
             moveTo(21f, 12f)

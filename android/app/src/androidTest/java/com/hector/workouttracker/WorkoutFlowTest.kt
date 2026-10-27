@@ -450,17 +450,18 @@ class WorkoutFlowTest {
             compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("data-back"))
             compose.onNodeWithTag("data-back").performScrollTo().performClick()
         }
-        if (compose.onAllNodesWithTag("preferences-editor").fetchSemanticsNodes().isNotEmpty()) {
-            compose
-                .onNodeWithTag("preferences-editor")
-                .performScrollToNode(hasText("Back to Profile"))
-            compose.waitUntil(10000) {
-                compose
-                    .onAllNodes(hasText("Back to Profile") and isEnabled())
-                    .fetchSemanticsNodes()
-                    .isNotEmpty()
+        repeat(2) {
+            if (
+                compose.onAllNodesWithTag("preferences-editor").fetchSemanticsNodes().isNotEmpty()
+            ) {
+                compose.waitUntil(10000) {
+                    compose
+                        .onAllNodes(hasTestTag("settings-back") and isEnabled())
+                        .fetchSemanticsNodes()
+                        .isNotEmpty()
+                }
+                compose.onNodeWithTag("settings-back").performClick()
             }
-            compose.onNodeWithText("Back to Profile").performScrollTo().performClick()
         }
     }
 
@@ -472,6 +473,9 @@ class WorkoutFlowTest {
     private fun openData() {
         if (compose.onAllNodesWithTag("settings-list").fetchSemanticsNodes().isNotEmpty()) return
         if (compose.onAllNodesWithTag("preferences-editor").fetchSemanticsNodes().isNotEmpty()) {
+            if (compose.onAllNodesWithTag("settings-hub").fetchSemanticsNodes().isEmpty()) {
+                compose.onNodeWithTag("settings-back").performClick()
+            }
             compose
                 .onNodeWithTag("preferences-editor")
                 .performScrollToNode(hasTestTag("settings-backup"))
@@ -493,7 +497,7 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("open-settings").performScrollTo().performClick()
         compose.waitUntil(10000) {
             compose
-                .onAllNodes(hasTestTag("preference-name") and isEnabled())
+                .onAllNodes(hasTestTag("settings-edit-profile") and isEnabled())
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
@@ -1337,14 +1341,28 @@ class WorkoutFlowTest {
             compose.onNodeWithTag("preference-$key").performScrollTo().performTextReplacement(value)
             closeSoftKeyboard()
         }
+        fun section(tag: String) {
+            if (compose.onAllNodesWithTag("settings-hub").fetchSemanticsNodes().isEmpty()) {
+                compose.onNodeWithTag("settings-back").performClick()
+            }
+            compose.onNodeWithTag("preferences-editor").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().performClick()
+        }
         fun open() {
             openAppSettings()
+            section("settings-edit-profile")
+        }
+        fun save() {
+            compose.onNodeWithTag("save-preferences").assertIsDisplayed().performClick()
+            compose.waitUntil(10000) {
+                compose.onAllNodesWithText("Settings saved.").fetchSemanticsNodes().isNotEmpty()
+            }
         }
         fun back() {
-            compose
-                .onNodeWithTag("preferences-editor")
-                .performScrollToNode(hasText("Back to Profile"))
-            compose.onNodeWithText("Back to Profile").performScrollTo().performClick()
+            compose.onNodeWithTag("settings-back").performClick()
+            if (compose.onAllNodesWithTag("settings-hub").fetchSemanticsNodes().isNotEmpty()) {
+                compose.onNodeWithTag("settings-back").performClick()
+            }
         }
         open()
         field("name", "Unsaved preferences")
@@ -1375,19 +1393,22 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Discard edits").performClick()
         open()
         field("name", "Native preferences")
+        save()
+        section("settings-edit-training")
         field("weeklyGoal", "0")
         compose.onNodeWithTag("save-preferences").assertIsNotEnabled()
         field("weeklyGoal", "6")
-        for (key in listOf("rpe", "haptics", "animations")) {
+        compose.onNodeWithTag("preference-rpe").performScrollTo().performClick()
+        save()
+        section("settings-edit-feel")
+        for (key in listOf("haptics", "animations")) {
             compose
                 .onNodeWithTag("preferences-editor")
                 .performScrollToNode(hasTestTag("preference-$key"))
             compose.onNodeWithTag("preference-$key").performScrollTo().performClick()
         }
-        compose
-            .onNodeWithTag("preferences-editor")
-            .performScrollToNode(hasTestTag("progression-preferences"))
-        compose.onNodeWithTag("progression-preferences").performScrollTo().performClick()
+        save()
+        section("progression-preferences")
         field("defaultWeightJump", "2.5")
         field("compoundMin", "7")
         compose.onNodeWithTag("save-preferences").performClick()
@@ -1406,6 +1427,7 @@ class WorkoutFlowTest {
         assertEquals(active, vm.state.value.draft)
         assertEquals(history, vm.state.value.workouts)
         screenshot("preferences-saved")
+        section("settings-edit-profile")
         field("name", "Retained preference edit")
         kotlinx.coroutines.runBlocking {
             val plan = app.scheduleRepository.read()
@@ -1454,6 +1476,7 @@ class WorkoutFlowTest {
                 }
                 .isSuccess
         }
+        section("settings-edit-training")
         field("weeklyGoal", "15")
         compose.onNodeWithTag("save-preferences").performClick()
         compose
