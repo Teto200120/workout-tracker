@@ -4,9 +4,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -28,31 +30,49 @@ internal fun BackupControls(state: TrackerState, vm: TrackerViewModel, firstRun:
         ) { uri ->
             uri?.let(vm::exportBackup)
         }
+    var instructions by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             if (firstRun) "Bring your workouts with you" else "Your backup",
             style = MaterialTheme.typography.titleLarge,
         )
         if (!firstRun) BackupStatusCard(state.backup)
-        Text(
+        val migrationInstructions =
             "In the PWA, finish and save any active workout, then export a JSON backup. Choose that file here to review it before importing. This is a one-time copy, not ongoing sync."
-        )
+        if (firstRun) Text(migrationInstructions)
+        else {
+            Text(
+                "Keep a JSON copy of your saved training, or review a backup before restoring it.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            FilledTonalButton(
+                onClick = { create.launch("WorkoutTracker-${LocalDate.now()}.json") },
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Text("Export backup")
+            }
+        }
         OutlinedButton(
             onClick = {
                 open.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
             },
             enabled = !state.busy && state.draft == null,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            shape = RoundedCornerShape(16.dp),
         ) {
             Text("Import PWA backup")
         }
         if (state.draft != null) Text("Finish or discard your active workout before importing.")
-        if (!firstRun)
-            OutlinedButton(
-                onClick = { create.launch("WorkoutTracker-${LocalDate.now()}.json") },
-                enabled = !state.busy,
-            ) {
-                Text("Export backup")
+        if (!firstRun) {
+            TextButton(onClick = { instructions = !instructions }) {
+                Text(if (instructions) "Hide import instructions" else "Import instructions")
             }
+            if (instructions)
+                Text(migrationInstructions, style = MaterialTheme.typography.bodyMedium)
+        }
         state.backupMessage?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (!firstRun)

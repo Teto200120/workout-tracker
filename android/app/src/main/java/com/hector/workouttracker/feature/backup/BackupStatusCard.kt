@@ -1,6 +1,7 @@
 package com.hector.workouttracker.feature.backup
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,7 +27,12 @@ internal fun BackupStatusCard(snapshot: BackupSnapshot?) {
         onPauseOrDispose { job.cancel() }
     }
     val status = snapshot?.let { backupStatus(it, now) }
-    OutlinedCard(Modifier.fillMaxWidth().testTag("backup-status")) {
+    Card(
+        Modifier.fillMaxWidth().testTag("backup-status"),
+        shape = RoundedCornerShape(18.dp),
+        colors =
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 status?.label ?: "Backup status unavailable",

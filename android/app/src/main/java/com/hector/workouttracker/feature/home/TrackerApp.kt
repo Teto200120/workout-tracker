@@ -71,9 +71,16 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
         InteractionTheme(state.interactions) {
             state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
             val brandedVisible =
-                route in listOf("home", "session", "history", "workout", "stats") &&
-                    !state.loading &&
-                    state.profile.displayName.isNotEmpty()
+                route in
+                    listOf(
+                        "home",
+                        "session",
+                        "history",
+                        "workout",
+                        "stats",
+                        "settings",
+                        "preferences",
+                    ) && !state.loading && state.profile.displayName.isNotEmpty()
             Scaffold(
                 modifier =
                     if (brandedVisible)
@@ -82,7 +89,9 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 "session" -> sessionBackgroundBrush()
                                 "history",
                                 "workout",
-                                "stats" -> trackerScreenBackground()
+                                "stats",
+                                "settings",
+                                "preferences" -> trackerScreenBackground()
                                 else -> homeBackgroundBrush()
                             }
                         )
@@ -239,6 +248,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                         { nav.navigate("preferences") { launchSingleTop = true } },
                                         { nav.navigate("help") { launchSingleTop = true } },
                                         { nav.navigate("feedback") { launchSingleTop = true } },
+                                        { nav.navigate("routines") { launchSingleTop = true } },
                                     )
                                 }
                                 composable("help") { HelpScreen { nav.popBackStack() } }

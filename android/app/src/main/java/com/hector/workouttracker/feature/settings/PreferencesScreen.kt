@@ -1,10 +1,12 @@
 package com.hector.workouttracker.feature.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -12,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -20,7 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.trackerPanelColor
+import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.visibleName
 import com.hector.workouttracker.data.*
 import java.math.BigDecimal
@@ -44,7 +48,7 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
     }
     BackHandler { leave() }
     LaunchedEffect(state.message) { if (state.message != null) list.scrollToItem(0) }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(trackerScreenBackground())) {
         state.error?.let { message ->
             Card(Modifier.fillMaxWidth().padding(12.dp)) {
                 Column(Modifier.padding(16.dp)) {
@@ -64,7 +68,12 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
         ) {
             item {
                 TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back to You") }
-                Heading("Your training", "Preferences", "Save changes when you're ready.")
+                Text("Preferences", style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    "Your goal, training effort and app feel.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 state.message?.let { Text(it) }
                 if (!state.restorable) Text("Save before leaving the app to keep these edits.")
                 if (values == null) {
@@ -74,10 +83,11 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
             }
             if (values != null) {
                 item {
-                    OutlinedTextField(
+                    TextField(
                         values.displayName,
                         { value -> vm.edit { it.copy(displayName = value) } },
                         label = { Text("Your name") },
+                        shape = RoundedCornerShape(16.dp),
                         isError = !visibleName(values.displayName.trim(), 80),
                         supportingText = {
                             if (!visibleName(values.displayName.trim(), 80))
@@ -89,7 +99,10 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                     )
                 }
                 item {
-                    Card {
+                    Card(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                    ) {
                         Column(
                             Modifier.fillMaxWidth().padding(20.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -110,7 +123,10 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                     }
                 }
                 item {
-                    Card {
+                    Card(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                    ) {
                         Column(Modifier.fillMaxWidth().padding(20.dp)) {
                             Text("Workout & feel", style = MaterialTheme.typography.titleLarge)
                             PreferenceToggle(
@@ -176,7 +192,11 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                             "general" to "General",
                         )) {
                         item {
-                            Card {
+                            Card(
+                                shape = RoundedCornerShape(24.dp),
+                                colors =
+                                    CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                            ) {
                                 Column(
                                     Modifier.fillMaxWidth().padding(16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -185,7 +205,12 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                                         "$label rep range",
                                         style = MaterialTheme.typography.titleMedium,
                                     )
-                                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                                        maxItemsInEachRow =
+                                            if (LocalDensity.current.fontScale > 1.3f) 1 else 2,
+                                    ) {
                                         for ((suffix, title) in
                                             listOf("Min" to "Minimum", "Max" to "Maximum")) {
                                             val key = "$prefix$suffix"
@@ -215,6 +240,7 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
             }
         }
         Button(
+            shape = RoundedCornerShape(20.dp),
             onClick = {
                 if (values != null && preferencesWarning(values) != null) warning = true
                 else vm.save()
@@ -327,10 +353,11 @@ private fun PreferenceNumber(
             number < minimum ||
             number > maximum ||
             number.stripTrailingZeros().scale() > places
-    OutlinedTextField(
+    TextField(
         value,
         change,
         label = { Text(label) },
+        shape = RoundedCornerShape(16.dp),
         isError = invalid,
         supportingText = {
             if (invalid)
