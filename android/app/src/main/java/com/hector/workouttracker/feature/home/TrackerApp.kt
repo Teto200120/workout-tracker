@@ -71,7 +71,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
         InteractionTheme(state.interactions) {
             state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
             val brandedVisible =
-                route in listOf("home", "session", "history", "workout") &&
+                route in listOf("home", "session", "history", "workout", "stats") &&
                     !state.loading &&
                     state.profile.displayName.isNotEmpty()
             Scaffold(
@@ -81,7 +81,8 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                             when (route) {
                                 "session" -> sessionBackgroundBrush()
                                 "history",
-                                "workout" -> trackerScreenBackground()
+                                "workout",
+                                "stats" -> trackerScreenBackground()
                                 else -> homeBackgroundBrush()
                             }
                         )
