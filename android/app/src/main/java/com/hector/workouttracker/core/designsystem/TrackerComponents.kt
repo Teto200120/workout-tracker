@@ -45,6 +45,32 @@ private fun symbol(name: String, draw: PathBuilder.() -> Unit) =
         .build()
 
 internal object TrackerIcons {
+    val Backup =
+        symbol("Backup") {
+            moveTo(12f, 3f)
+            lineTo(12f, 15f)
+            moveTo(7f, 10f)
+            lineTo(12f, 15f)
+            lineTo(17f, 10f)
+            moveTo(5f, 21f)
+            lineTo(19f, 21f)
+        }
+    val Settings =
+        symbol("Settings") {
+            for (index in 0 until 32) {
+                val radius = if (index % 4 == 1 || index % 4 == 2) 10f else 8f
+                val angle = index * kotlin.math.PI / 16
+                val x = 12f + radius * kotlin.math.cos(angle).toFloat()
+                val y = 12f + radius * kotlin.math.sin(angle).toFloat()
+                if (index == 0) moveTo(x, y) else lineTo(x, y)
+            }
+            close()
+            moveTo(15.5f, 12f)
+            curveTo(15.5f, 10.07f, 13.93f, 8.5f, 12f, 8.5f)
+            curveTo(10.07f, 8.5f, 8.5f, 10.07f, 8.5f, 12f)
+            curveTo(8.5f, 13.93f, 10.07f, 15.5f, 12f, 15.5f)
+            curveTo(13.93f, 15.5f, 15.5f, 13.93f, 15.5f, 12f)
+        }
     val Search =
         symbol("Search") {
             moveTo(10.5f, 3f)

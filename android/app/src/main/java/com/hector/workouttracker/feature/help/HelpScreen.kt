@@ -88,7 +88,7 @@ internal fun HelpScreen(back: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            TextButton(onClick = back) { Text("Back to You") }
+            TextButton(onClick = back) { Text("Back to settings") }
             Text("Help & guidance", style = MaterialTheme.typography.headlineMedium)
             Text(
                 "Works offline. Open a topic when you need it.",

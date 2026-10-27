@@ -31,6 +31,7 @@ import com.hector.workouttracker.feature.routines.RoutinesScreen
 import com.hector.workouttracker.feature.schedule.ScheduleScreen
 import com.hector.workouttracker.feature.session.*
 import com.hector.workouttracker.feature.settings.PreferencesScreen
+import com.hector.workouttracker.feature.settings.ProfileScreen
 import com.hector.workouttracker.feature.settings.SettingsScreen
 import com.hector.workouttracker.feature.stats.StatsScreen
 import com.hector.workouttracker.feature.stats.StatsViewModel
@@ -83,6 +84,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 "schedule",
                                 "help",
                                 "feedback",
+                                "backup",
                             ))
             Scaffold(
                 modifier =
@@ -100,7 +102,8 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     "routines",
                                     "schedule",
                                     "help",
-                                    "feedback" -> trackerScreenBackground()
+                                    "feedback",
+                                    "backup" -> trackerScreenBackground()
                                     else -> homeBackgroundBrush()
                                 }
                         )
@@ -121,9 +124,12 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     "preferences",
                                     "help",
                                     "feedback",
+                                    "backup",
                                 )
                     ) {
                         TrackerNavigationBar(route) { key ->
+                            if (route == "history")
+                                nav.popBackStack("history", inclusive = true, saveState = true)
                             nav.navigate(key) {
                                 popUpTo(nav.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
@@ -189,31 +195,64 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     }
                                 }
                                 composable("history") {
-                                    HistoryScreen(state) { record ->
+                                    HistoryScreen(
+                                        state,
+                                        back = {
+                                            nav.popBackStack(
+                                                "history",
+                                                inclusive = true,
+                                                saveState = true,
+                                            )
+                                        },
+                                    ) { record ->
                                         historyVm.open(record)
                                         nav.navigate("workout") { launchSingleTop = true }
                                     }
                                 }
-                                composable("stats") { StatsScreen(statsVm) }
+                                composable("stats") {
+                                    StatsScreen(
+                                        statsVm,
+                                        onHistory = {
+                                            nav.navigate("history") {
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        },
+                                    )
+                                }
                                 composable("workout") {
                                     HistoryWorkoutScreen(state, historyVm) { nav.popBackStack() }
                                 }
                                 composable("settings") {
-                                    SettingsScreen(
+                                    ProfileScreen(
                                         state,
-                                        vm,
                                         statsVm,
-                                        { nav.navigate("schedule") { launchSingleTop = true } },
                                         { nav.navigate("preferences") { launchSingleTop = true } },
-                                        { nav.navigate("help") { launchSingleTop = true } },
-                                        { nav.navigate("feedback") { launchSingleTop = true } },
                                         { nav.navigate("routines") { launchSingleTop = true } },
+                                        { nav.navigate("backup") { launchSingleTop = true } },
                                     )
+                                }
+                                composable("backup") {
+                                    SettingsScreen(state, vm) { nav.popBackStack() }
                                 }
                                 composable("help") { HelpScreen { nav.popBackStack() } }
                                 composable("feedback") { FeedbackScreen({ nav.popBackStack() }) }
                                 composable("preferences") {
-                                    PreferencesScreen({ nav.popBackStack() })
+                                    PreferencesScreen(
+                                        { nav.popBackStack() },
+                                        openSchedule = {
+                                            nav.navigate("schedule") { launchSingleTop = true }
+                                        },
+                                        openBackup = {
+                                            nav.navigate("backup") { launchSingleTop = true }
+                                        },
+                                        openHelp = {
+                                            nav.navigate("help") { launchSingleTop = true }
+                                        },
+                                        openFeedback = {
+                                            nav.navigate("feedback") { launchSingleTop = true }
+                                        },
+                                    )
                                 }
                                 composable("routines") {
                                     RoutinesScreen(
@@ -224,7 +263,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                                 nav.previousBackStackEntry?.destination?.route ==
                                                     "settings"
                                             )
-                                                "Back to You"
+                                                "Back to Profile"
                                             else "Back to Today",
                                     )
                                 }

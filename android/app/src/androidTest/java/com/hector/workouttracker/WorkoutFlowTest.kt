@@ -217,13 +217,13 @@ class WorkoutFlowTest {
         screenshot("completion-summary")
         compose.onNodeWithText("Save workout").performClick()
         compose.waitUntil(10000) {
-            compose.onAllNodesWithText("History").fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithTag("nav-stats").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("workout-completion"))
         compose.onNodeWithTag("workout-completion").assertExists()
         screenshot("completion-result")
         compose.onNodeWithText("Dismiss summary").performScrollTo().performClick()
-        compose.onNodeWithText("History").performClick()
+        openHistory()
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Bench Press · 1 set").fetchSemanticsNodes().isNotEmpty()
         }
@@ -233,7 +233,7 @@ class WorkoutFlowTest {
             .onFirst()
             .assertExists()
         screenshot("history")
-        compose.onNodeWithText("You").performClick()
+        openData()
         compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Import PWA backup"))
         nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/fixture.json")
         compose.onNodeWithText("Import PWA backup").performScrollTo().performClick()
@@ -307,7 +307,7 @@ class WorkoutFlowTest {
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        compose.onNodeWithText("Today").performClick()
+        goHome()
         compose.onNodeWithTag("home-list").performScrollToNode(hasTestTag("home-routine-chooser"))
         compose
             .onNodeWithTag("home-routine-chooser")
@@ -397,9 +397,12 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Finish workout").performClick()
         compose.onNodeWithText("Save workout").performClick()
         compose.waitUntil(10000) {
-            compose.onAllNodesWithText("You", substring = false).fetchSemanticsNodes().isNotEmpty()
+            compose
+                .onAllNodesWithText("Profile", substring = false)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
         }
-        compose.onNodeWithText("You", substring = false).performClick()
+        openData()
         nextUri = Uri.parse("content://com.hector.workouttracker.test.documents/export.json")
         compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Export backup"))
         compose.onNodeWithText("Export backup").performClick()
@@ -440,6 +443,70 @@ class WorkoutFlowTest {
             trainingExport.routines.single().getValue("extension").jsonObject.getValue("keep"),
         )
         routineEditorFlow(vm, owner)
+    }
+
+    private fun primaryNavigation() {
+        if (compose.onAllNodesWithTag("settings-list").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("data-back"))
+            compose.onNodeWithTag("data-back").performScrollTo().performClick()
+        }
+        if (compose.onAllNodesWithTag("preferences-editor").fetchSemanticsNodes().isNotEmpty()) {
+            compose
+                .onNodeWithTag("preferences-editor")
+                .performScrollToNode(hasText("Back to Profile"))
+            compose.waitUntil(10000) {
+                compose
+                    .onAllNodes(hasText("Back to Profile") and isEnabled())
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+            }
+            compose.onNodeWithText("Back to Profile").performScrollTo().performClick()
+        }
+    }
+
+    private fun goHome() {
+        primaryNavigation()
+        compose.onNodeWithTag("nav-home").performClick()
+    }
+
+    private fun openData() {
+        if (compose.onAllNodesWithTag("settings-list").fetchSemanticsNodes().isNotEmpty()) return
+        if (compose.onAllNodesWithTag("preferences-editor").fetchSemanticsNodes().isNotEmpty()) {
+            compose
+                .onNodeWithTag("preferences-editor")
+                .performScrollToNode(hasTestTag("settings-backup"))
+            compose.onNodeWithTag("settings-backup").performScrollTo().performClick()
+        } else {
+            compose.onNodeWithTag("nav-settings").performClick()
+            compose.onNodeWithTag("profile-list").performScrollToNode(hasTestTag("profile-backup"))
+            compose.onNodeWithTag("profile-backup").performScrollTo().performClick()
+        }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("settings-list").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    private fun openAppSettings() {
+        primaryNavigation()
+        compose.onNodeWithTag("nav-settings").performClick()
+        compose.onNodeWithTag("profile-list").performScrollToNode(hasTestTag("open-settings"))
+        compose.onNodeWithTag("open-settings").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose
+                .onAllNodes(hasTestTag("preference-name") and isEnabled())
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    private fun openHistory() {
+        primaryNavigation()
+        compose.onNodeWithTag("nav-stats").performClick()
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("open-history"))
+        compose.onNodeWithTag("open-history").performScrollTo().performClick()
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("history-list").fetchSemanticsNodes().isNotEmpty()
+        }
     }
 
     private fun routineEditorFlow(
@@ -486,7 +553,7 @@ class WorkoutFlowTest {
                 compose.onAllNodesWithTag("routine-name").fetchSemanticsNodes().isNotEmpty()
             }
         }
-        compose.onNodeWithText("Today", substring = false).performClick()
+        goHome()
         compose.onNodeWithTag("home-list").performScrollToNode(hasText("Manage routines"))
         compose
             .onNodeWithText("Manage routines")
@@ -972,7 +1039,7 @@ class WorkoutFlowTest {
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performScrollTo()
             .performClick()
-        compose.onNodeWithText("History").performClick()
+        openHistory()
         historyFiltersFlow(vm, owner)
         val original =
             kotlinx.coroutines.runBlocking { app.historyRepository.read(JsonPrimitive(0)) }!!
@@ -1089,7 +1156,7 @@ class WorkoutFlowTest {
         )
         assertEquals(active, vm.state.value.draft)
         back()
-        compose.onNodeWithText("Today").performClick()
+        goHome()
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         statsFlow(vm, owner)
     }
@@ -1227,7 +1294,7 @@ class WorkoutFlowTest {
                 .isSuccess
         }
         assertEquals(active, vm.state.value.draft)
-        compose.onNodeWithText("Today", substring = false).performClick()
+        goHome()
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         preferencesFlow(vm, owner)
     }
@@ -1248,18 +1315,13 @@ class WorkoutFlowTest {
             closeSoftKeyboard()
         }
         fun open() {
-            compose.onNode(hasText("You", substring = false) and hasClickAction()).performClick()
-            compose
-                .onNodeWithTag("settings-list")
-                .performScrollToNode(hasText("Edit preferences & goal"))
-            compose.onNodeWithText("Edit preferences & goal").performScrollTo().performClick()
-            compose.waitUntil(10000) {
-                compose.onAllNodesWithTag("preference-name").fetchSemanticsNodes().isNotEmpty()
-            }
+            openAppSettings()
         }
         fun back() {
-            compose.onNodeWithTag("preferences-editor").performScrollToNode(hasText("Back to You"))
-            compose.onNodeWithText("Back to You").performScrollTo().performClick()
+            compose
+                .onNodeWithTag("preferences-editor")
+                .performScrollToNode(hasText("Back to Profile"))
+            compose.onNodeWithText("Back to Profile").performScrollTo().performClick()
         }
         open()
         field("name", "Unsaved preferences")
@@ -1307,7 +1369,7 @@ class WorkoutFlowTest {
         field("compoundMin", "7")
         compose.onNodeWithTag("save-preferences").performClick()
         compose.waitUntil(10000) {
-            compose.onAllNodesWithText("Preferences saved.").fetchSemanticsNodes().isNotEmpty() &&
+            compose.onAllNodesWithText("Settings saved.").fetchSemanticsNodes().isNotEmpty() &&
                 vm.state.value.profile.displayName == "Native preferences"
         }
         assertEquals(!original.values.trackRpe, vm.state.value.profile.trackRpe)
@@ -1459,7 +1521,7 @@ class WorkoutFlowTest {
                 )
             )
         }
-        compose.onNodeWithText("Today", substring = false).performClick()
+        goHome()
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         compose.onNodeWithText("Resume workout").performClick()
         compose
@@ -1589,8 +1651,8 @@ class WorkoutFlowTest {
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
-        compose.onNodeWithText("You", substring = false).performClick()
-        compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("open-help"))
+        openAppSettings()
+        compose.onNodeWithTag("preferences-editor").performScrollToNode(hasTestTag("open-help"))
         compose.onNodeWithTag("open-help").performClick()
         compose
             .onNodeWithTag("help-list")
@@ -1655,8 +1717,9 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("help-list").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithTag("help-list").performScrollToNode(hasText("Back to You"))
-        compose.onNodeWithText("Back to You").performClick()
+        compose.onNodeWithTag("help-list").performScrollToNode(hasText("Back to settings"))
+        compose.onNodeWithText("Back to settings").performClick()
+        openData()
         fun export() {
             compose.onNodeWithTag("settings-list").performScrollToNode(hasText("Export backup"))
             compose.onNodeWithText("Export backup").performClick()
@@ -1898,7 +1961,8 @@ class WorkoutFlowTest {
         val app = compose.activity.application as TrackerApplication
         val active = vm.state.value.draft
         val before = kotlinx.coroutines.runBlocking { app.backups.export("2026-10-24T12:00:00Z") }
-        compose.onNodeWithTag("settings-list").performScrollToNode(hasTestTag("open-feedback"))
+        openAppSettings()
+        compose.onNodeWithTag("preferences-editor").performScrollToNode(hasTestTag("open-feedback"))
         compose.onNodeWithTag("open-feedback").performClick()
         compose.onNodeWithText("Beta feedback").assertIsDisplayed()
         compose.activityRule.scenario.recreate()
@@ -1941,8 +2005,8 @@ class WorkoutFlowTest {
             instrumentation.removeMonitor(monitor)
         }
         compose.onNodeWithTag("feedback-list").performScrollToIndex(0)
-        compose.onNodeWithText("Back to You").performClick()
-        compose.onNodeWithTag("settings-list").assertExists()
+        compose.onNodeWithText("Back to settings").performClick()
+        compose.onNodeWithTag("preferences-editor").assertExists()
         assertEquals(active, vm.state.value.draft)
         assertEquals(active, kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first)
         assertEquals(
@@ -2178,8 +2242,8 @@ class WorkoutFlowTest {
         compose
             .onNodeWithTag("history-routine-filter")
             .assertTextEquals("Routine: Compatibility fixture")
-        compose.onNodeWithText("Today").performClick()
-        compose.onNodeWithText("History").performClick()
+        goHome()
+        openHistory()
         count(2)
         scroll("open-history-number:0")
         compose.onNodeWithTag("open-history-number:0").performClick()

@@ -21,8 +21,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hector.workouttracker.BuildConfig
+import com.hector.workouttracker.core.designsystem.TrackerIcons
 import com.hector.workouttracker.core.designsystem.trackerPanelColor
 import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.visibleName
@@ -30,8 +33,19 @@ import com.hector.workouttracker.data.*
 import java.math.BigDecimal
 
 @Composable
-internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = viewModel()) {
+internal fun PreferencesScreen(
+    back: () -> Unit,
+    vm: PreferencesViewModel = viewModel(),
+    openSchedule: () -> Unit = {},
+    openBackup: () -> Unit = {},
+    openHelp: () -> Unit = {},
+    openFeedback: () -> Unit = {},
+) {
     val state by vm.state.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(vm) {
+        if (vm.state.value.draft?.changed != true) vm.reload()
+        onPauseOrDispose {}
+    }
     val draft = state.draft
     val values = draft?.values
     var discard by rememberSaveable { mutableStateOf(false) }
@@ -67,14 +81,11 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back to You") }
-                Text("Preferences", style = MaterialTheme.typography.headlineMedium)
-                Text(
-                    "Your goal, training effort and app feel.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                state.message?.let { Text(it) }
+                TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back to Profile") }
+                Text("Settings", style = MaterialTheme.typography.headlineMedium)
+                state.message?.let {
+                    Text(if (it == "Preferences saved.") "Settings saved." else it)
+                }
                 if (!state.restorable) Text("Save before leaving the app to keep these edits.")
                 if (values == null) {
                     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -89,87 +100,89 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                         label = { Text("Your name") },
                         shape = RoundedCornerShape(16.dp),
                         isError = !visibleName(values.displayName.trim(), 80),
-                        supportingText = {
-                            if (!visibleName(values.displayName.trim(), 80))
-                                Text("Enter a name up to 80 characters.")
-                        },
+                        supportingText =
+                            if (!visibleName(values.displayName.trim(), 80)) {
+                                { Text("Enter a name up to 80 characters.") }
+                            } else null,
                         singleLine = true,
                         enabled = !state.busy,
                         modifier = Modifier.fillMaxWidth().testTag("preference-name"),
                     )
                 }
                 item {
-                    Card(
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                    ) {
-                        Column(
-                            Modifier.fillMaxWidth().padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            Text("Weekly goal", style = MaterialTheme.typography.titleLarge)
-                            Text(
-                                "Workouts in the last seven days. Multiple workouts on one day count separately."
-                            )
-                            PreferenceNumber(
-                                values.weeklyGoal,
-                                "Workouts per week",
-                                "weeklyGoal",
-                                !state.busy,
-                            ) { value ->
-                                vm.edit { it.copy(weeklyGoal = value) }
-                            }
+                    SettingsLabel("Training")
+                    SettingsPanel {
+                        PreferenceNumber(
+                            values.weeklyGoal,
+                            "Weekly workout goal",
+                            "weeklyGoal",
+                            !state.busy,
+                        ) { value ->
+                            vm.edit { it.copy(weeklyGoal = value) }
+                        }
+                        Text(
+                            "Counts workouts in the last 7 days.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        PreferenceToggle(
+                            "Track RPE",
+                            "Past entries are kept when turned off.",
+                            "rpe",
+                            values.trackRpe,
+                            !state.busy,
+                        ) { value ->
+                            vm.edit { it.copy(trackRpe = value) }
                         }
                     }
                 }
                 item {
-                    Card(
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                    ) {
-                        Column(Modifier.fillMaxWidth().padding(20.dp)) {
-                            Text("Workout & feel", style = MaterialTheme.typography.titleLarge)
-                            PreferenceToggle(
-                                "Track RPE",
-                                "Hide entry fields without deleting past or active RPE values.",
-                                "rpe",
-                                values.trackRpe,
-                                !state.busy,
-                            ) { value ->
-                                vm.edit { it.copy(trackRpe = value) }
-                            }
-                            PreferenceToggle(
-                                "Haptics",
-                                "Touch feedback for set completion; Android's system setting also applies.",
-                                "haptics",
-                                values.haptics,
-                                !state.busy,
-                            ) { value ->
-                                vm.edit { it.copy(haptics = value) }
-                            }
-                            PreferenceToggle(
-                                "Animations",
-                                "App transitions and component motion. Android's reduced-motion setting also applies.",
-                                "animations",
-                                values.animations,
-                                !state.busy,
-                            ) { value ->
-                                vm.edit { it.copy(animations = value) }
-                            }
+                    SettingsToolGroup {
+                        SettingsTool(
+                            "Weekly schedule",
+                            "Gym, soccer and rest days",
+                            TrackerIcons.Calendar,
+                            Modifier.testTag("settings-schedule"),
+                            !state.busy,
+                            openSchedule,
+                        )
+                    }
+                }
+                item {
+                    SettingsLabel("App feel")
+                    SettingsPanel {
+                        PreferenceToggle(
+                            "Haptics",
+                            "Set completion feedback",
+                            "haptics",
+                            values.haptics,
+                            !state.busy,
+                        ) { value ->
+                            vm.edit { it.copy(haptics = value) }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        PreferenceToggle(
+                            "Animations",
+                            "Transitions and component motion",
+                            "animations",
+                            values.animations,
+                            !state.busy,
+                        ) { value ->
+                            vm.edit { it.copy(animations = value) }
                         }
                     }
                 }
                 item {
-                    OutlinedButton(
+                    TextButton(
                         onClick = { advanced = !advanced },
                         modifier = Modifier.fillMaxWidth().testTag("progression-preferences"),
                     ) {
-                        Text(if (advanced) "Hide progression defaults" else "Progression defaults")
-                    }
-                    if (advanced)
                         Text(
-                            "These defaults control suggested loads and rep ranges. Suggestions use your saved working sets and RPE preference."
+                            if (advanced) "Hide progression defaults" else "Progression defaults",
+                            Modifier.weight(1f),
                         )
+                        Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
+                    }
                 }
                 if (advanced) {
                     item {
@@ -237,27 +250,70 @@ internal fun PreferencesScreen(back: () -> Unit, vm: PreferencesViewModel = view
                         Text(it, color = MaterialTheme.colorScheme.error)
                     }
                 }
+                item {
+                    SettingsLabel("Data & support")
+                    SettingsToolGroup {
+                        SettingsTool(
+                            "Backup & data",
+                            "Import, export and manage local data",
+                            TrackerIcons.Backup,
+                            Modifier.testTag("settings-backup"),
+                            !state.busy,
+                            openBackup,
+                        )
+                        HorizontalDivider(
+                            Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                        SettingsTool(
+                            "Help & guidance",
+                            "Tips and explanations",
+                            TrackerIcons.Help,
+                            Modifier.testTag("open-help"),
+                            onClick = openHelp,
+                        )
+                        HorizontalDivider(
+                            Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                        SettingsTool(
+                            "Beta feedback",
+                            "Open browser feedback",
+                            TrackerIcons.Feedback,
+                            Modifier.testTag("open-feedback"),
+                            onClick = openFeedback,
+                        )
+                    }
+                }
+                item {
+                    Text(
+                        "Workout Tracker ${BuildConfig.VERSION_NAME}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
-        Button(
-            shape = RoundedCornerShape(20.dp),
-            onClick = {
-                if (values != null && preferencesWarning(values) != null) warning = true
-                else vm.save()
-            },
-            enabled =
-                !state.busy &&
-                    !state.conflict &&
-                    draft?.changed == true &&
-                    preferencesError(draft.values) == null,
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(20.dp)
-                    .heightIn(min = 56.dp)
-                    .testTag("save-preferences"),
-        ) {
-            Text(if (state.busy) "Saving…" else "Save preferences")
-        }
+        if (draft?.changed == true || state.busy)
+            Button(
+                shape = RoundedCornerShape(20.dp),
+                onClick = {
+                    if (values != null && preferencesWarning(values) != null) warning = true
+                    else vm.save()
+                },
+                enabled =
+                    !state.busy &&
+                        !state.conflict &&
+                        draft?.changed == true &&
+                        preferencesError(draft.values) == null,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(20.dp)
+                        .heightIn(min = 56.dp)
+                        .testTag("save-preferences"),
+            ) {
+                Text(if (state.busy) "Saving…" else "Save changes")
+            }
     }
     if (discard)
         AlertDialog(
@@ -359,13 +415,15 @@ private fun PreferenceNumber(
         label = { Text(label) },
         shape = RoundedCornerShape(16.dp),
         isError = invalid,
-        supportingText = {
-            if (invalid)
-                Text(
-                    if (places == 0) "Enter a whole number from $minimum to $maximum."
-                    else "Enter $minimum–$maximum, up to 2 decimals."
-                )
-        },
+        supportingText =
+            if (invalid) {
+                {
+                    Text(
+                        if (places == 0) "Enter a whole number from $minimum to $maximum."
+                        else "Enter $minimum–$maximum, up to 2 decimals."
+                    )
+                }
+            } else null,
         singleLine = true,
         enabled = enabled,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -391,7 +449,7 @@ private fun PreferenceToggle(
             Text(label, style = MaterialTheme.typography.titleMedium)
             Text(
                 detail,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -402,4 +460,14 @@ private fun PreferenceToggle(
             modifier = Modifier.testTag("preference-$key").semantics { contentDescription = label },
         )
     }
+}
+
+@Composable
+private fun SettingsLabel(label: String) {
+    Text(
+        label,
+        Modifier.padding(start = 4.dp, bottom = 8.dp),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+    )
 }

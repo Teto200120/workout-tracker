@@ -1,7 +1,9 @@
-# Navigation and accessibility UI pass
+# Navigation — PWA structure
 
-Keep the reviewed Material navigation bar at normal text sizes, with Today, History, Stats and You. At large text sizes, use wider labelled tab surfaces: two columns on a phone and four when the window has enough room. Let text and height expand; never reduce the user's font scale or hide destination names. Retain selected tab semantics, icon/text contrast and at least 48dp touch targets.
+The primary bar follows the PWA: Stats, Home, Profile. Use a full-width navy surface, outlined icons and compact labels; a coral capsule contains the active icon and label. Preserve user font scaling, minimum 48dp targets, selectable-group semantics and selected-tab state. Limit the row width on wide windows without turning the bar into a floating card.
 
-Use the same navigation callbacks, single-top behavior, saved destination state and Back handling. Editors and the active session keep their existing dedicated navigation. This pass changes presentation only.
+History opens from Stats and keeps Stats selected. The History back action returns to Stats; tapping a primary tab closes that secondary view. Reopening History restores its search, routine filter and list position. Editors and active workouts retain their existing Back/save/discard flows. Navigation keeps the existing single-top and destination state behavior for primary pages.
 
-Verify all four destinations, light/dark themes, 200% text, landscape, keyboard visibility and stored-data stability on the owned emulator. The maintained workflow covers editor conflicts, Activity recreation, imports/exports and reviewed data actions. Physical-phone and TalkBack acceptance remain separate; this checkpoint does not certify those.
+Profile's header icon opens the separate Settings page. Backup/data, settings, schedule and support are secondary pages with explicit Back navigation. See [Profile/settings specification](ANDROID_PROFILE_SETTINGS_UI.md).
+
+Emulator checks cover light/dark, 200% text, landscape, selected tabs and stored-data stability. Physical-phone and TalkBack acceptance remain separate.

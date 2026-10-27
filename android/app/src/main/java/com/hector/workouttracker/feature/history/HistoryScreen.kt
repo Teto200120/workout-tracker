@@ -39,7 +39,11 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
 @Composable
-internal fun HistoryScreen(state: TrackerState, open: (RecordEntity) -> Unit) {
+internal fun HistoryScreen(
+    state: TrackerState,
+    back: () -> Unit = {},
+    open: (RecordEntity) -> Unit,
+) {
     var query by rememberSaveable { mutableStateOf("") }
     var routine by rememberSaveable { mutableStateOf<String?>(null) }
     var choosingRoutine by rememberSaveable { mutableStateOf(false) }
@@ -74,6 +78,9 @@ internal fun HistoryScreen(state: TrackerState, open: (RecordEntity) -> Unit) {
     ) {
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                TextButton(onClick = back, modifier = Modifier.testTag("history-back")) {
+                    Text("Back to Stats")
+                }
                 Text("Session history", style = MaterialTheme.typography.headlineMedium)
                 Text(
                     "Your saved workouts, all in one place.",

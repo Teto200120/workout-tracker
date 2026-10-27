@@ -28,7 +28,7 @@ internal fun FeedbackScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            TextButton(onClick = back) { Text("Back to You") }
+            TextButton(onClick = back) { Text("Back to settings") }
             Text("Beta feedback", style = MaterialTheme.typography.headlineMedium)
             Text(
                 "Help improve Workout Tracker.",

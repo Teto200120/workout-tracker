@@ -22,12 +22,14 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hector.workouttracker.R
 import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.domain.*
 import com.hector.workouttracker.feature.help.CompactHelpTip
@@ -47,7 +49,7 @@ private fun label(metric: String) =
 private fun unit(metric: String) = if (metric == "bestVolume") "lb × reps" else "lb"
 
 @Composable
-internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
+internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit = {}) {
     val state by vm.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     LifecycleResumeEffect(Unit) {
@@ -123,6 +125,18 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel()) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            }
+            item {
+                OutlinedButton(
+                    onClick = onHistory,
+                    modifier = Modifier.fillMaxWidth().testTag("open-history"),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Icon(painterResource(R.drawable.ic_history), null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text("Session history", Modifier.weight(1f))
+                    Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
                 }
             }
             item {
