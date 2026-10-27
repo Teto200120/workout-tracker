@@ -1172,7 +1172,14 @@ class WorkoutFlowTest {
             compose.onAllNodesWithTag("stats-totals").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithTag("stats-totals").assertTextContains("3 workouts", substring = true)
+        compose.onNodeWithTag("stats-week-summary").assertIsDisplayed()
+        compose.onNodeWithTag("stats-lifetime-summary").assertIsDisplayed()
+        compose.onNodeWithTag("stats-open-insights").assertIsDisplayed()
+        compose.onNodeWithTag("stats-open-exercises").assertIsDisplayed()
+        compose.onNodeWithTag("stats-latest-session").assertIsDisplayed()
+        compose.onNodeWithTag("open-history").assertIsDisplayed()
         screenshot("stats-overview")
+        compose.onNodeWithTag("stats-open-insights").performClick()
         compose
             .onNodeWithTag("stats-list")
             .performScrollToNode(hasTestTag("stats-strength-heading"))
@@ -1205,6 +1212,9 @@ class WorkoutFlowTest {
                 )
                 .assertExists()
         }
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-back"))
+        compose.onNodeWithTag("stats-back").performClick()
+        compose.onNodeWithTag("stats-open-exercises").performClick()
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-search"))
         compose.onNodeWithTag("stats-search").performScrollTo().performTextInput("Bench Press")
         closeSoftKeyboard()
@@ -1215,12 +1225,15 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Best load: 100.0 lb").fetchSemanticsNodes().isNotEmpty()
         }
+        compose.onNodeWithTag("stats-chart").assertIsDisplayed()
         screenshot("stats-records")
         compose
             .onNodeWithTag("stats-list")
             .performScrollToNode(hasTestTag("stats-metric-bestVolume"))
         compose.onNodeWithTag("stats-metric-bestVolume").performScrollTo().performClick()
+        compose.onNodeWithTag("stats-record-bestVolume").assertExists()
         compose.onNodeWithTag("stats-metric-estimated1rm").performScrollTo().performClick()
+        compose.onNodeWithTag("stats-record-estimated1rm").assertExists()
         compose.activityRule.scenario.recreate()
         compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
         compose.waitUntil(10000) {
@@ -1254,6 +1267,10 @@ class WorkoutFlowTest {
         }
         compose
             .onNodeWithTag("stats-list")
+            .performScrollToNode(hasTestTag("stats-metric-bestWeight"))
+        compose.onNodeWithTag("stats-metric-bestWeight").performScrollTo().performClick()
+        compose
+            .onNodeWithTag("stats-list")
             .performScrollToNode(hasTestTag("stats-record-bestWeight"))
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Best load: 150.0 lb").fetchSemanticsNodes().isNotEmpty()
@@ -1261,8 +1278,12 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Best load: 150.0 lb").assertExists()
         screenshot("stats-live-update")
         assertEquals(active, vm.state.value.draft)
-        compose.onNodeWithTag("stats-list").performScrollToNode(hasText("Back to Stats"))
-        compose.onNodeWithText("Back to Stats").performScrollTo().performClick()
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-back"))
+        compose.onNodeWithTag("stats-back").performClick()
+        compose.onNodeWithTag("stats-search").assertTextContains("Bench Press")
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-back"))
+        compose.onNodeWithTag("stats-back").performClick()
+        compose.onNodeWithTag("stats-open-insights").performClick()
         compose
             .onNodeWithTag("stats-list")
             .performScrollToNode(hasTestTag("stats-insight-pr-New PR: Bench Press"))
@@ -1284,6 +1305,8 @@ class WorkoutFlowTest {
         kotlinx.coroutines.runBlocking {
             app.historyRepository.delete(app.historyRepository.read(JsonPrimitive("0"))!!)
         }
+        compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-back"))
+        compose.onNodeWithTag("stats-back").performClick()
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-totals"))
         compose.waitUntil(10000) {
             runCatching {
@@ -1464,12 +1487,11 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-goal"))
         compose.waitUntil(10000) {
             runCatching {
-                    compose
-                        .onNodeWithTag("stats-goal")
-                        .assertTextContains("/ 6 workouts", substring = true)
+                    compose.onNodeWithTag("stats-goal").assertTextContains("/ 6", substring = true)
                 }
                 .isSuccess
         }
+        compose.onNodeWithText("workouts · last 7 days").assertExists()
         screenshot("preferences-goal")
         File(compose.activity.getExternalFilesDir(null), "qa/preferences-export.json")
             .writeText(

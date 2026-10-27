@@ -4,13 +4,13 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -21,13 +21,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.R
@@ -52,6 +51,7 @@ private fun unit(metric: String) = if (metric == "bestVolume") "lb × reps" else
 @Composable
 internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit = {}) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val focus = LocalFocusManager.current
     val scope = rememberCoroutineScope()
     LifecycleResumeEffect(Unit) {
         val job =
@@ -63,203 +63,157 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
             }
         onPauseOrDispose { job.cancel() }
     }
+    var section by rememberSaveable { mutableStateOf("overview") }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var metric by rememberSaveable { mutableStateOf("bestWeight") }
     var query by rememberSaveable { mutableStateOf("") }
-    var allInsights by rememberSaveable { mutableStateOf(false) }
     var weekDetails by rememberSaveable { mutableStateOf(false) }
-    BackHandler(selected != null) { selected = null }
-    val list = rememberLazyListState()
-    LaunchedEffect(selected) { list.scrollToItem(0) }
+    var numberDetails by rememberSaveable { mutableStateOf(false) }
+    var entriesExpanded by rememberSaveable { mutableStateOf(false) }
+    val overviewList = rememberLazyListState()
+    val exerciseList = rememberLazyListState()
+    val insightsList = rememberLazyListState()
+    val progressList = rememberLazyListState()
+    val list =
+        if (selected != null) progressList
+        else
+            when (section) {
+                "exercises" -> exerciseList
+                "insights" -> insightsList
+                else -> overviewList
+            }
+    fun back() {
+        focus.clearFocus()
+        if (selected != null) selected = null else section = "overview"
+    }
+    BackHandler(selected != null || section != "overview") { back() }
+    LaunchedEffect(selected) { if (selected != null) progressList.scrollToItem(0) }
     val snapshot = state.snapshot
     val exercise = snapshot?.exercises?.firstOrNull { it.name == selected }
     LazyColumn(
         Modifier.fillMaxSize().background(trackerScreenBackground()).testTag("stats-list"),
         state = list,
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            if (selected != null)
-                TextButton(onClick = { selected = null }) { Text("Back to Stats") }
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(selected ?: "Your stats", style = MaterialTheme.typography.headlineMedium)
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (selected != null || section != "overview")
+                    IconButton(onClick = ::back, modifier = Modifier.testTag("stats-back")) {
+                        Icon(
+                            TrackerIcons.Back,
+                            if (selected != null) "Back to exercises" else "Back to Stats",
+                        )
+                    }
                 Text(
-                    if (selected == null) "A clear view of your training."
-                    else "Exercise progress · saved workouts",
-                    style = MaterialTheme.typography.bodyMedium,
+                    selected
+                        ?: when (section) {
+                            "exercises" -> "Exercise records"
+                            "insights" -> "Training insights"
+                            else -> "Your stats"
+                        },
+                    Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+                IconButton(onClick = onHistory, modifier = Modifier.testTag("open-history")) {
+                    Icon(
+                        painterResource(R.drawable.ic_history),
+                        "Session history",
+                        Modifier.size(22.dp),
+                    )
+                }
+            }
+            if (selected != null)
+                Text(
+                    "Exercise progress · saved workouts",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
         }
-        if (state.loading) item { CircularProgressIndicator() }
+        if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         state.error?.let { message ->
             item {
                 Text(message)
                 TextButton(onClick = vm::retry) { Text("Retry") }
             }
         }
-        if (snapshot != null && selected == null) {
+        if (snapshot != null && selected == null && section == "overview") {
+            item { StatsWeekSummary(snapshot) { weekDetails = true } }
+            item { StatsLifetimeSummary(snapshot) { numberDetails = true } }
+            item { StatsStrengthPreview(snapshot) { section = "insights" } }
             item {
-                TrainingHero {
-                    Column(
-                        Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        Text("All time", style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            "${snapshot.totals.workouts} workouts · ${snapshot.totals.sets} working sets",
-                            modifier = Modifier.testTag("stats-totals"),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        StatsMetrics(
-                            listOf(
-                                "${snapshot.totals.workouts}" to "Workouts",
-                                "${snapshot.totals.sets}" to "Working sets",
-                                decimal(snapshot.totals.volume) to "Volume · lb × reps",
-                                "${snapshot.streak}" to "Streak · days",
-                            )
-                        )
-                        Text(
-                            "Average duration: ${snapshot.totals.avgDuration} min",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Text(
-                            "Average uses sessions with a nonzero duration.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                ActionRow(
+                    "Exercise records",
+                    "${snapshot.exercises.count { it.bestEstimated1rm > 0 }} ${if (snapshot.exercises.count { it.bestEstimated1rm > 0 } == 1) "exercise" else "exercises"} · load, volume, 1RM",
+                    TrackerIcons.Search,
+                    modifier = Modifier.testTag("stats-open-exercises"),
+                    onClick = { section = "exercises" },
+                )
             }
-            item {
-                OutlinedButton(
-                    onClick = onHistory,
-                    modifier = Modifier.fillMaxWidth().testTag("open-history"),
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    Icon(painterResource(R.drawable.ic_history), null, Modifier.size(20.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Text("Session history", Modifier.weight(1f))
-                    Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
-                }
-            }
-            item {
-                StatsPanel {
-                    Text("Weekly activity", style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        "This week · Monday–Sunday",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        "${snapshot.weekly.completedGymDays} / ${snapshot.weekly.gymDays} planned gym days logged",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                    StatsWeek(snapshot.weekly.days, snapshot.today)
-                    TextButton(onClick = { weekDetails = !weekDetails }) {
-                        Text(if (weekDetails) "Hide weekly details" else "Weekly details")
-                    }
-                    if (weekDetails) {
-                        snapshot.weekly.days.forEach { day ->
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(
-                                    "${day.key}${if(day.key == snapshot.today) " · Today" else ""}",
-                                    style = MaterialTheme.typography.labelLarge,
-                                )
-                                Text(
-                                    "${day.status} · ${day.title}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            item {
-                StatsPanel {
-                    Text("Weekly goal", style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        "${snapshot.recent} / ${snapshot.goal} workouts in the last 7 days",
-                        modifier = Modifier.testTag("stats-goal"),
-                    )
-                    LinearProgressIndicator(
-                        progress = {
-                            (snapshot.recent.toFloat() / snapshot.goal.coerceAtLeast(1)).coerceIn(
-                                0f,
-                                1f,
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text(
-                        "Includes today. Multiple workouts on one date count separately.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            if (snapshot.recentSessions.isNotEmpty())
+                item { StatsLatestSession(snapshot, onHistory) }
+        } else if (snapshot != null && selected == null && section == "insights") {
             item {
                 Text(
                     "Strength snapshot",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.testTag("stats-strength-heading"),
+                    Modifier.testTag("stats-strength-heading"),
+                    style = MaterialTheme.typography.titleMedium,
                 )
-                Text(
-                    "Recent PRs, rising trends and changes against the previous workout of the same type."
-                )
-                if (snapshot.insights.isEmpty()) {
-                    Text("Keep logging sessions", style = MaterialTheme.typography.titleMedium)
-                    Text("Strength trends will appear here once you have a few sessions logged.")
-                }
             }
-            items(
-                if (allInsights) snapshot.insights else snapshot.insights.take(3),
-                key = { "insight:${it.type}:${it.title}" },
-            ) { insight ->
+            if (snapshot.insights.isEmpty())
+                item {
+                    Text(
+                        "Keep logging sessions. Strength trends will appear here once you have a few sessions logged."
+                    )
+                }
+            items(snapshot.insights, key = { "insight:${it.type}:${it.title}" }) { insight ->
                 StatsPanel(Modifier.testTag("stats-insight-${insight.type}-${insight.title}")) {
                     Text(insight.title, style = MaterialTheme.typography.titleMedium)
-                    Text(insight.meta, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            if (snapshot.insights.size > 3)
-                item {
-                    TextButton(
-                        onClick = { allInsights = !allInsights },
-                        modifier = Modifier.testTag("stats-insights-toggle"),
-                    ) {
-                        Text(if (allInsights) "Show fewer insights" else "View all insights")
-                    }
-                }
-            item {
-                Text(
-                    "Recent sessions",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.testTag("stats-recent-heading"),
-                )
-                Text("The three newest saved workouts. Full details are in History.")
-                if (snapshot.recentSessions.isEmpty())
-                    Text("No sessions yet. Logged workouts will appear here.")
-            }
-            items(snapshot.recentSessions, key = { "recent:${it.id}" }) { session ->
-                StatsPanel(Modifier.testTag("stats-recent-${session.id}")) {
-                    Text(session.type, style = MaterialTheme.typography.titleMedium)
-                    Text("${session.date} · ${session.exercises} exercises")
                     Text(
-                        if (session.duration == 0.0) "Duration: —"
-                        else "${progressNumber(session.duration)} min"
+                        insight.meta,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
             item {
-                Text("Personal records", style = MaterialTheme.typography.titleLarge)
                 Text(
-                    "Warm-ups are excluded. Loaded sets with positive weight and reps qualify even when not marked completed. Estimated 1RM uses the Epley formula and is an estimate.",
-                    style = MaterialTheme.typography.bodySmall,
+                    "Recent sessions",
+                    Modifier.testTag("stats-recent-heading"),
+                    style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            if (snapshot.recentSessions.isEmpty())
+                item { Text("No sessions yet. Logged workouts will appear here.") }
+            items(snapshot.recentSessions, key = { "recent:${it.id}" }) { session ->
+                StatsPanel(Modifier.testTag("stats-recent-${session.id}")) {
+                    Text(session.type, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "${session.date} · ${session.exercises} exercises",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        if (session.duration == 0.0) "Duration: —"
+                        else "${progressNumber(session.duration)} min",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            item {
+                OutlinedButton(onClick = onHistory, modifier = Modifier.fillMaxWidth()) {
+                    Text("Open session history")
+                }
+            }
+            item {
+                TextButton(onClick = { numberDetails = true }) { Text("How these numbers work") }
+                CompactHelpTip("statsBasics", "About your stats")
+            }
+        } else if (snapshot != null && selected == null && section == "exercises") {
+            item {
                 TextField(
                     query,
                     { query = it },
@@ -267,11 +221,6 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     leadingIcon = { Icon(TrackerIcons.Search, null, Modifier.size(20.dp)) },
-                    colors =
-                        TextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        ),
                     modifier = Modifier.fillMaxWidth().testTag("stats-search"),
                 )
             }
@@ -281,6 +230,13 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
                         it.bestEstimated1rm > 0 && it.name.contains(query.trim(), ignoreCase = true)
                     }
                     .sortedByDescending { it.bestEstimated1rm }
+            item {
+                Text(
+                    "${records.size} ${if (records.size == 1) "exercise" else "exercises"} with loaded sets",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             if (records.isEmpty())
                 item {
                     Text(
@@ -290,65 +246,50 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
                     )
                 }
             items(records, key = { "record:${it.name}" }) { record ->
-                StatsPanel {
-                    Text(record.name, style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        "${record.sessions} sessions · ${record.sets} working sets",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        "Best estimated 1RM: ${decimal(record.bestEstimated1rm)} lb · ${record.bestDate}"
-                    )
-                    OutlinedButton(
-                        onClick = { selected = record.name },
-                        modifier = Modifier.fillMaxWidth().testTag("stats-exercise-${record.name}"),
-                        shape = RoundedCornerShape(16.dp),
+                Surface(
+                    onClick = {
+                        focus.clearFocus()
+                        selected = record.name
+                        entriesExpanded = false
+                    },
+                    modifier = Modifier.fillMaxWidth().testTag("stats-exercise-${record.name}"),
+                    shape = RoundedCornerShape(20.dp),
+                    color = trackerPanelColor(),
+                ) {
+                    Row(
+                        Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("View progress", Modifier.weight(1f))
-                        Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
+                        Column(
+                            Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(record.name, style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Best estimated 1RM: ${decimal(record.bestEstimated1rm)} lb · ${record.bestDate}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(TrackerIcons.Chevron, "View progress", Modifier.size(20.dp))
                     }
                 }
             }
-            item { CompactHelpTip("statsBasics", "About your stats") }
+            item {
+                TextButton(onClick = { numberDetails = true }) { Text("How these numbers work") }
+            }
         } else if (snapshot != null && selected != null) {
             if (exercise == null || exercise.history.isEmpty())
                 item { Text("This exercise no longer has loaded sets in saved History.") }
             else {
                 item {
-                    Text("${exercise.sessions} sessions · ${exercise.sets} working sets")
                     Text(
-                        "Saved spellings are kept separate. Repeated exercise rows remain separate progress entries.",
+                        "${exercise.sessions} sessions · ${exercise.sets} working sets",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
-                for (key in listOf("bestWeight", "bestVolume", "estimated1rm")) {
-                    val record = requireNotNull(exercise.records.value(key))
-                    item(key = "best:$key") {
-                        StatsPanel(Modifier.testTag("stats-record-$key")) {
-                            val value =
-                                when (key) {
-                                    "bestWeight" -> record.weight
-                                    "bestVolume" -> record.volume
-                                    else -> record.estimated1rm
-                                }
-                            Text(
-                                "${label(key)}: ${decimal(value)} ${unit(key)}",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                "${progressNumber(record.weight)} lb × ${progressNumber(record.reps)} reps · ${record.date}"
-                            )
-                            Text(
-                                "RPE: ${record.rpe.jsonPrimitive.content.ifEmpty { "—" }}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
                 item {
-                    Text("Recent progress", style = MaterialTheme.typography.titleLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         for (key in listOf("bestWeight", "bestVolume", "estimated1rm")) FilterChip(
                             metric == key,
@@ -360,14 +301,36 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
                 }
                 val recent = exercise.history.sortedBy { it.date }.takeLast(7)
                 val max = recent.maxOf { it.value(metric) }.coerceAtLeast(1.0)
+                val record = requireNotNull(exercise.records.value(metric))
                 item {
-                    val delta = recent.last().value(metric) - recent.first().value(metric)
-                    Text(
-                        if (recent.size < 2) "Log another entry to see a trend."
-                        else
-                            "${if(delta >= 0) "+" else ""}${decimal(delta)} ${unit(metric)} over ${recent.size} entries"
-                    )
-                    StatsPanel {
+                    StatsPanel(Modifier.testTag("stats-record-$metric")) {
+                        val value =
+                            when (metric) {
+                                "bestWeight" -> record.weight
+                                "bestVolume" -> record.volume
+                                else -> record.estimated1rm
+                            }
+                        Text(
+                            "${label(metric)}: ${decimal(value)} ${unit(metric)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            "${progressNumber(record.weight)} lb × ${progressNumber(record.reps)} reps · ${record.date}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Text(
+                            "RPE: ${record.rpe.jsonPrimitive.content.ifEmpty { "—" }}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        val delta = recent.last().value(metric) - recent.first().value(metric)
+                        Text(
+                            if (recent.size < 2) "Log another entry to see a trend."
+                            else
+                                "${if (delta >= 0) "+" else ""}${decimal(delta)} ${unit(metric)} over ${recent.size} entries",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                         ProgressChart(recent, metric)
                         Text(
                             "Last ${recent.size} entries · ${unit(metric)} · zero baseline",
@@ -387,137 +350,92 @@ internal fun StatsScreen(vm: StatsViewModel = viewModel(), onHistory: () -> Unit
                         }
                     }
                 }
-                items(recent.withIndex().toList(), key = { "point:${it.index}" }) { (_, point) ->
-                    val record = requireNotNull(point.records.value(metric))
-                    StatsPanel {
+                item {
+                    TextButton(
+                        onClick = { entriesExpanded = !entriesExpanded },
+                        modifier = Modifier.fillMaxWidth().testTag("stats-entries-toggle"),
+                    ) {
                         Text(
-                            "${point.date} · ${point.type}",
-                            style = MaterialTheme.typography.titleMedium,
+                            if (entriesExpanded) "Hide entry details"
+                            else "Show ${recent.size} entry details"
                         )
-                        Text("${label(metric)}: ${decimal(point.value(metric))} ${unit(metric)}")
-                        Text(
-                            "${progressNumber(record.weight)} lb × ${progressNumber(record.reps)} reps"
-                        )
-                        LinearProgressIndicator(
-                            progress = { (point.value(metric) / max).toFloat().coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxWidth().clearAndSetSemantics {},
-                        )
+                    }
+                }
+                if (entriesExpanded)
+                    items(recent.withIndex().toList(), key = { "point:${it.index}" }) {
+                        (index, point) ->
+                        val source = requireNotNull(point.records.value(metric))
+                        StatsPanel(Modifier.testTag("stats-point-$index")) {
+                            Text(
+                                "${point.date} · ${point.type}",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                "${label(metric)}: ${decimal(point.value(metric))} ${unit(metric)}"
+                            )
+                            Text(
+                                "${progressNumber(source.weight)} lb × ${progressNumber(source.reps)} reps"
+                            )
+                            LinearProgressIndicator(
+                                progress = {
+                                    (point.value(metric) / max).toFloat().coerceIn(0f, 1f)
+                                },
+                                modifier = Modifier.fillMaxWidth().clearAndSetSemantics {},
+                            )
+                        }
+                    }
+                item {
+                    TextButton(onClick = { numberDetails = true }) {
+                        Text("How these numbers work")
                     }
                 }
             }
         }
     }
+    if (weekDetails && snapshot != null) StatsWeekDialog(snapshot) { weekDetails = false }
+    if (numberDetails)
+        AlertDialog(
+            onDismissRequest = { numberDetails = false },
+            modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth(),
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            title = { Text("About your stats") },
+            text = {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text("Average duration uses sessions with a nonzero duration.")
+                    Text(
+                        "The weekly goal counts workouts in the last seven days, including today. Multiple workouts on one date count separately. Planned gym days use the Monday–Sunday calendar week."
+                    )
+                    Text(
+                        "Warm-ups are excluded. Loaded sets with positive weight and reps qualify even when not marked completed. Estimated 1RM uses the Epley formula and is an estimate."
+                    )
+                    Text(
+                        "Saved spellings are kept separate. Repeated exercise rows remain separate progress entries. Each metric keeps its own source set, date and RPE."
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { numberDetails = false }) { Text("Done") } },
+        )
 }
 
 @Composable
-private fun StatsPanel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+internal fun StatsPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Card(
         modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content,
         )
-    }
-}
-
-@Composable
-private fun StatsMetrics(values: List<Pair<String, String>>) {
-    val large = LocalDensity.current.fontScale > 1.3f
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        values.withIndex().toList().chunked(if (large) 1 else 2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { (index, entry) ->
-                    val (value, label) = entry
-                    val emphasized = index == 0
-                    Surface(
-                        Modifier.weight(1f).semantics(mergeDescendants = true) {},
-                        shape =
-                            if (emphasized)
-                                RoundedCornerShape(
-                                    topStart = 24.dp,
-                                    topEnd = 24.dp,
-                                    bottomEnd = 24.dp,
-                                    bottomStart = 8.dp,
-                                )
-                            else RoundedCornerShape(22.dp),
-                        color =
-                            if (emphasized) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceContainerLow,
-                        contentColor =
-                            if (emphasized) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurface,
-                        shadowElevation = if (emphasized) 3.dp else 0.dp,
-                    ) {
-                        Column(
-                            Modifier.padding(16.dp).heightIn(min = 82.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Text(
-                                value,
-                                style =
-                                    if (emphasized) MaterialTheme.typography.displaySmall
-                                    else MaterialTheme.typography.headlineLarge,
-                            )
-                            Text(
-                                label,
-                                style = MaterialTheme.typography.bodySmall,
-                                color =
-                                    if (emphasized) MaterialTheme.colorScheme.onPrimary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatsWeek(days: List<ActivityDay>, today: String) {
-    val fontScale = LocalDensity.current.fontScale
-    val large = fontScale > 1.3f
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val width = if (large) 52.dp * fontScale else ((maxWidth - 24.dp) / 7).coerceAtLeast(40.dp)
-        Row(
-            Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            days.forEach { day ->
-                Surface(
-                    Modifier.width(width).clearAndSetSemantics {
-                        contentDescription =
-                            "${day.key}, ${day.title}, ${day.status}${if(day.key == today) ", Today" else ""}"
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    color =
-                        if (day.complete) MaterialTheme.colorScheme.primaryContainer
-                        else if (day.key == today)
-                            MaterialTheme.colorScheme.primary.copy(alpha = .1f)
-                        else MaterialTheme.colorScheme.surfaceContainerLow,
-                    border =
-                        if (day.key == today) BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-                        else null,
-                ) {
-                    Column(
-                        Modifier.padding(horizontal = 2.dp, vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(day.label, style = MaterialTheme.typography.labelMedium)
-                        if (day.complete) Icon(TrackerIcons.Check, null, Modifier.size(18.dp))
-                        else Text(day.key.takeLast(2), style = MaterialTheme.typography.labelMedium)
-                        Text(day.status, style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -526,9 +444,9 @@ private fun ProgressChart(points: List<ExercisePoint>, metric: String) {
     val primary = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
     val max = points.maxOf { it.value(metric) }.coerceAtLeast(1.0)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.testTag("stats-chart"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("${decimal(max)} ${unit(metric)}", style = MaterialTheme.typography.labelSmall)
-        Canvas(Modifier.fillMaxWidth().height(140.dp).clearAndSetSemantics {}) {
+        Canvas(Modifier.fillMaxWidth().height(120.dp).clearAndSetSemantics {}) {
             val inset = 6.dp.toPx()
             val width = size.width - 2 * inset
             val height = size.height - 2 * inset

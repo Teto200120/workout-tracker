@@ -7,7 +7,7 @@ Continue the PWA UI/UX import one screen at a time. Each delivered checkpoint ge
 | Home | [v25](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.25.0-preview) | Expressive workout surface and primary action; selection/preview/start preserved |
 | Active workout | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Expressive session header and current-exercise emphasis; set logging/review retained |
 | History | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Expressive date-first history and saved-workout/editor surfaces; filters retained |
-| Stats | [v25](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.25.0-preview) | Emphasized totals, tonal panels and source chart area fill |
+| Stats | [v27](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.27.0-preview) | Compact overview, one-tap exercise search, independent page positions and chart-first metric detail |
 | You / preferences / backup | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | v25 profile with matching v26 settings/backup forms and icon groups |
 | Routines / routine editor | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Expressive library, editor and starter-preview headings; drafts/reorder/save retained |
 | Weekly schedule | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Calendar header and distinct gym-day badges; guarded saves retained |
