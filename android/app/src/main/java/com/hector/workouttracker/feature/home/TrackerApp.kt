@@ -7,21 +7,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.hector.workouttracker.MainActivity
-import com.hector.workouttracker.R
 import com.hector.workouttracker.core.designsystem.InteractionTheme
 import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.*
@@ -126,61 +123,11 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     "feedback",
                                 )
                     ) {
-                        Surface(
-                            Modifier.navigationBarsPadding()
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            shape = RoundedCornerShape(28.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainer,
-                            tonalElevation = 2.dp,
-                        ) {
-                            NavigationBar(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                tonalElevation = 0.dp,
-                                windowInsets = WindowInsets(0, 0, 0, 0),
-                            ) {
-                                listOf(
-                                        "home" to "Today",
-                                        "history" to "History",
-                                        "stats" to "Stats",
-                                        "settings" to "You",
-                                    )
-                                    .forEach { (key, label) ->
-                                        NavigationBarItem(
-                                            colors =
-                                                NavigationBarItemDefaults.colors(
-                                                    indicatorColor =
-                                                        MaterialTheme.colorScheme.primary,
-                                                    selectedIconColor =
-                                                        MaterialTheme.colorScheme.onPrimary,
-                                                    selectedTextColor =
-                                                        MaterialTheme.colorScheme.onSurface,
-                                                ),
-                                            selected = route == key,
-                                            onClick = {
-                                                nav.navigate(key) {
-                                                    popUpTo(nav.graph.findStartDestination().id) {
-                                                        saveState = true
-                                                    }
-                                                    launchSingleTop = true
-                                                    restoreState = true
-                                                }
-                                            },
-                                            icon = {
-                                                Icon(
-                                                    painterResource(
-                                                        when (key) {
-                                                            "home" -> R.drawable.ic_home
-                                                            "history" -> R.drawable.ic_history
-                                                            "stats" -> R.drawable.ic_stats
-                                                            else -> R.drawable.ic_person
-                                                        }
-                                                    ),
-                                                    contentDescription = null,
-                                                )
-                                            },
-                                            label = { Text(label) },
-                                        )
-                                    }
+                        TrackerNavigationBar(route) { key ->
+                            nav.navigate(key) {
+                                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
                     }
