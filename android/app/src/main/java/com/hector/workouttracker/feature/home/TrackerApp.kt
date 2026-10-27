@@ -80,6 +80,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                         "stats",
                         "settings",
                         "preferences",
+                        "routines",
                     ) && !state.loading && state.profile.displayName.isNotEmpty()
             Scaffold(
                 modifier =
@@ -91,7 +92,8 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 "workout",
                                 "stats",
                                 "settings",
-                                "preferences" -> trackerScreenBackground()
+                                "preferences",
+                                "routines" -> trackerScreenBackground()
                                 else -> homeBackgroundBrush()
                             }
                         )
@@ -257,7 +259,17 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                     PreferencesScreen({ nav.popBackStack() })
                                 }
                                 composable("routines") {
-                                    RoutinesScreen(state, { nav.popBackStack() })
+                                    RoutinesScreen(
+                                        state,
+                                        { nav.popBackStack() },
+                                        backLabel =
+                                            if (
+                                                nav.previousBackStackEntry?.destination?.route ==
+                                                    "settings"
+                                            )
+                                                "Back to You"
+                                            else "Back to Today",
+                                    )
                                 }
                                 composable("schedule") {
                                     ScheduleScreen(state, { nav.popBackStack() })

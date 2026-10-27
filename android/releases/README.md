@@ -1,16 +1,16 @@
 # Android APK downloads
 
-Latest: [v18 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.18.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.18.0-preview/WorkoutTracker-0.18.0-preview.apk).
+Latest: [v19 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.19.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.19.0-preview/WorkoutTracker-0.19.0-preview.apk).
 
-This is the signed, non-debuggable You and preferences UI preview (version code 18). It uses the permanent signing identity and can update permanently signed v17. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
+This is the signed, non-debuggable Routines UI preview (version code 19). It uses the permanent signing identity and can update permanently signed v18. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
 
 Matching source is in the commit that adds this APK. Built locally with the pinned toolchain; this is not a downloaded CI artifact. SHA-256 is recorded in [SHA256SUMS](SHA256SUMS).
 
 Certificate SHA-256: `e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88`.
 
-Validation: 103 JVM tests pass; Android lint has zero errors and 10 warnings; the maintained end-to-end workflow passes. Focused emulator checks cover this screen's interactions, light/dark rendering, large text and landscape. The delivered APK passes a v17-to-v18 upgrade retaining profile and active draft, installed-byte verification, cold restart and keyboard checks. Physical-phone and TalkBack acceptance remain outstanding.
+Validation: 103 JVM tests pass; Android lint has zero errors and 10 warnings; the maintained end-to-end workflow passes. Focused emulator checks cover this screen's interactions, light/dark rendering, large text and landscape. The delivered APK passes a v18-to-v19 upgrade retaining profile and active draft, installed-byte verification, cold restart and keyboard checks. Physical-phone and TalkBack acceptance remain outstanding.
 
-UI specifications: [Home](../../docs/ANDROID_HOME_UI.md) · [Active workout](../../docs/ANDROID_SESSION_UI.md) · [History](../../docs/ANDROID_HISTORY_UI.md) · [Stats](../../docs/ANDROID_STATS_UI.md) · [You and preferences](../../docs/ANDROID_YOU_UI.md).
+UI specifications: [Home](../../docs/ANDROID_HOME_UI.md) · [Active workout](../../docs/ANDROID_SESSION_UI.md) · [History](../../docs/ANDROID_HISTORY_UI.md) · [Stats](../../docs/ANDROID_STATS_UI.md) · [You and preferences](../../docs/ANDROID_YOU_UI.md) · [Routines](../../docs/ANDROID_ROUTINES_UI.md).
 
 ## Future Android deliveries
 

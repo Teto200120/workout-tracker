@@ -442,6 +442,10 @@ class WorkoutFlowTest {
         owner: ActivityResultRegistryOwner,
     ) {
         fun editorText(text: String) {
+            if (text == "Save routine") {
+                compose.onNodeWithTag("save-routine").assertIsDisplayed().performClick()
+                return
+            }
             compose
                 .onNodeWithTag("routine-editor")
                 .performScrollToNode(hasText(text, substring = false))
