@@ -347,12 +347,13 @@ internal fun ExerciseGuide(name: String, catalog: ExerciseCatalog?, onDismiss: (
 }
 
 @Composable
-private fun GuideContent(
+internal fun GuideContent(
     name: String,
     catalog: ExerciseCatalog?,
     onBack: () -> Unit,
     onAdd: (() -> Unit)? = null,
     addLabel: String = "Add to workout",
+    embedded: Boolean = false,
 ) {
     val exercise = remember(name, catalog) { catalog?.guide(name) }
     Column(Modifier.fillMaxSize()) {
@@ -362,8 +363,10 @@ private fun GuideContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                TextButton(onClick = onBack) { Text("Back") }
-                TrainingHeading(name, "Exercise guide", TrackerIcons.Workout, hero = true)
+                if (!embedded) {
+                    TextButton(onClick = onBack) { Text("Back") }
+                    TrainingHeading(name, "Exercise guide", TrackerIcons.Workout, hero = true)
+                }
                 if (exercise != null && exercise.name != name)
                     Text(
                         "Reference movement: ${exercise.name}",

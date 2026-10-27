@@ -77,6 +77,7 @@ fun sessionError(draft: SessionDraft): String? {
     if (draft.exercises.size > 100) return "A workout can contain up to 100 exercises."
     draft.exercises.forEach { exercise ->
         if (!visibleName(exercise.name, 120)) return "Check the exercise name."
+        if (exercise.notes.length > 4000) return "Exercise notes are too long."
         if (exercise.sets.isEmpty() || exercise.sets.size > 200) return "Check the number of sets."
         exercise.sets.forEach { set ->
             setEntryError(set)?.let {

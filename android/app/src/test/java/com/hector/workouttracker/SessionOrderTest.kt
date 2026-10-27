@@ -68,4 +68,55 @@ class SessionOrderTest {
         val empty = draft.copy(exercises = emptyList())
         assertSame(empty, empty.moveExercise("a", 1))
     }
+
+    @Test
+    fun dragPermutationRetainsEveryRowAndRoundTripsTheDraft() {
+        val original = session()
+        val reordered = original.reorderExercises(listOf("c", "b", "a"))
+        assertEquals(original.copy(exercises = original.exercises.reversed()), reordered)
+        original.exercises.forEach { row ->
+            assertSame(row, reordered.exercises.single { it.key == row.key })
+        }
+        assertEquals(
+            reordered,
+            trackerJson.decodeFromString<SessionDraft>(
+                trackerJson.encodeToString(SessionDraft.serializer(), reordered)
+            ),
+        )
+        assertEquals(original, reordered.reorderExercises(listOf("a", "b", "c")))
+    }
+
+    @Test
+    fun staleOrMalformedDragOrdersCannotDropOrDuplicateExercises() {
+        val original = session()
+        for (keys in
+            listOf(
+                listOf("a", "b"),
+                listOf("a", "a", "c"),
+                listOf("a", "b", "foreign"),
+                emptyList(),
+            )) {
+            assertSame(original, original.reorderExercises(keys))
+        }
+        assertSame(original, original.reorderExercises(listOf("a", "b", "c")))
+        val changed =
+            original.copy(
+                exercises = original.exercises + Exercise(key = "new", name = "New exercise")
+            )
+        assertSame(changed, changed.reorderExercises(listOf("c", "b", "a")))
+    }
+
+    @Test
+    fun focusedNotesRespectTheBackupTextLimit() {
+        val original = session()
+        fun withNotes(notes: String) =
+            original.copy(
+                exercises =
+                    original.exercises.mapIndexed { index, row ->
+                        if (index == 0) row.copy(notes = notes) else row
+                    }
+            )
+        assertNull(sessionError(withNotes("x".repeat(4000))))
+        assertEquals("Exercise notes are too long.", sessionError(withNotes("x".repeat(4001))))
+    }
 }

@@ -104,6 +104,28 @@ internal object TrackerIcons {
             moveTo(3f, 16f)
             lineTo(5f, 16f)
         }
+    val Grip =
+        symbol("Reorder") {
+            for (x in listOf(9f, 15f)) for (y in listOf(6f, 12f, 18f)) {
+                moveTo(x, y)
+                lineTo(x, y + .1f)
+            }
+        }
+    val Focus =
+        symbol("Exercise details") {
+            moveTo(9f, 4f)
+            lineTo(4f, 4f)
+            lineTo(4f, 9f)
+            moveTo(15f, 4f)
+            lineTo(20f, 4f)
+            lineTo(20f, 9f)
+            moveTo(4f, 15f)
+            lineTo(4f, 20f)
+            lineTo(9f, 20f)
+            moveTo(20f, 15f)
+            lineTo(20f, 20f)
+            lineTo(15f, 20f)
+        }
     val History =
         symbol("History") {
             moveTo(21f, 12f)

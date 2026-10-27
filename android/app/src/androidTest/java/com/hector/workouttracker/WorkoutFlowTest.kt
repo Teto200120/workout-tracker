@@ -10,6 +10,8 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
@@ -202,7 +204,7 @@ class WorkoutFlowTest {
         closeSoftKeyboard()
         screenshot("session")
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(
                 (hasText("Back to Today") or hasContentDescription("Back to Today"))
             )
@@ -211,7 +213,9 @@ class WorkoutFlowTest {
             .performClick()
         compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithText("Weight (lb)").performScrollTo().assertTextContains("100")
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Finish workout"))
         compose.onNodeWithText("Finish workout").performClick()
         compose.onNodeWithTag("workout-tag-Good session").performScrollTo().performClick()
         screenshot("completion-summary")
@@ -347,7 +351,9 @@ class WorkoutFlowTest {
             .assertExists()
         screenshot("exercise-guide")
         compose.onNodeWithText("Back", substring = false).performClick()
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Browse exercises"))
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Browse exercises"))
         compose.onNodeWithText("Browse exercises").performClick()
         compose.onNodeWithTag("exercise-search").performTextInput("curl")
         compose.onNodeWithText("Show filters").performClick()
@@ -370,10 +376,12 @@ class WorkoutFlowTest {
             .performClick()
         compose.onNodeWithTag("add-from-guide").performClick()
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Alternate Hammer Curl", substring = false))
         compose.onNodeWithText("Alternate Hammer Curl", substring = false).assertExists()
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Workout name"))
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Workout name"))
         compose
             .onAllNodesWithText("Reps", substring = false)
             .onFirst()
@@ -382,7 +390,7 @@ class WorkoutFlowTest {
         sessionKeyboardViewport()
         closeSoftKeyboard()
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(
                 (hasText("Back to Today") or hasContentDescription("Back to Today"))
             )
@@ -392,8 +400,11 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Resume workout").performClick()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         activeOrderFlow(vm, owner)
+        focusedExerciseFlow(vm, owner)
         activeExerciseFlow(vm, owner)
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Finish workout"))
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Finish workout"))
         compose.onNodeWithText("Finish workout").performClick()
         compose.onNodeWithText("Save workout").performClick()
         compose.waitUntil(10000) {
@@ -973,7 +984,9 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("start-planned-workout").assertDoesNotExist()
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         compose.onNodeWithText("Resume workout").performClick()
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Discard workout"))
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Discard workout"))
         compose.onNodeWithText("Discard workout").performScrollTo().performClick()
         compose.onNodeWithText("Discard", substring = false).performClick()
         compose.waitUntil(10000) {
@@ -1035,7 +1048,7 @@ class WorkoutFlowTest {
             compose.onNodeWithTag("edit-history-workout").performScrollTo().performClick()
         }
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(
                 (hasText("Back to Today") or hasContentDescription("Back to Today"))
             )
@@ -1570,7 +1583,7 @@ class WorkoutFlowTest {
         compose.onNodeWithText("Resume workout").assertIsDisplayed()
         compose.onNodeWithText("Resume workout").performClick()
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Exercise name", substring = false))
         compose
             .onNodeWithText("Exercise name", substring = false)
@@ -1584,7 +1597,9 @@ class WorkoutFlowTest {
         }
         val key = vm.state.value.draft!!.exercises.last().key
         fun click(tag: String) {
-            compose.onNodeWithTag("session-list").performScrollToNode(hasTestTag(tag))
+            compose
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag(tag))
             compose.onNodeWithTag(tag).performScrollTo().performClick()
         }
         fun entry() = vm.state.value.draft!!.exercises.last()
@@ -1645,7 +1660,7 @@ class WorkoutFlowTest {
         awaitEntry("102.5", "7")
         assertEquals(active.exercises, vm.state.value.draft!!.exercises.dropLast(1))
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Finish workout", substring = false))
         compose.onNodeWithText("Finish workout", substring = false).performScrollTo().performClick()
         compose.onNodeWithText("Save workout", substring = false).performClick()
@@ -1677,7 +1692,7 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) { !vm.state.value.pending }
         val active = vm.state.value.draft
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasTestTag("read-tip-activeWorkoutBasics"))
         compose.onNodeWithTag("read-tip-activeWorkoutBasics").performClick()
         screenshot("guidance-inline")
@@ -1689,7 +1704,7 @@ class WorkoutFlowTest {
                 .isEmpty()
         }
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(
                 (hasText("Back to Today") or hasContentDescription("Back to Today"))
             )
@@ -1835,7 +1850,10 @@ class WorkoutFlowTest {
                 val ime =
                     ViewCompat.getRootWindowInsets(decor)!!.getInsets(WindowInsetsCompat.Type.ime())
                 val viewport =
-                    compose.onNodeWithTag("session-list").fetchSemanticsNode().boundsInWindow
+                    compose
+                        .onNodeWithTag("session-list", useUnmergedTree = true)
+                        .fetchSemanticsNode()
+                        .boundsInWindow
                 kotlin.math.abs(viewport.bottom - (decor.height - ime.bottom)) <= 2f
             }
             val ime =
@@ -2072,7 +2090,9 @@ class WorkoutFlowTest {
         val set = first.sets.first()
         assertFalse(set.warmup)
         fun scroll(tag: String) {
-            compose.onNodeWithTag("session-list").performScrollToNode(hasTestTag(tag))
+            compose
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag(tag))
         }
         fun click(tag: String) {
             scroll(tag)
@@ -2160,7 +2180,9 @@ class WorkoutFlowTest {
             ),
         )
         screenshot("session-review-cancelled")
-        compose.onNodeWithTag("session-list").performScrollToNode(hasText("Discard workout"))
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Discard workout"))
         compose.onNodeWithText("Discard workout").performScrollTo().performClick()
         compose
             .onNodeWithText("This removes the active draft. Saved History stays intact.")
@@ -2190,6 +2212,150 @@ class WorkoutFlowTest {
         )
     }
 
+    private fun focusedExerciseFlow(
+        vm: com.hector.workouttracker.feature.session.TrackerViewModel,
+        owner: ActivityResultRegistryOwner,
+    ) {
+        val app = compose.activity.application as TrackerApplication
+        val original = requireNotNull(vm.state.value.draft)
+        val first = original.exercises.first()
+        val firstSet = first.sets.first()
+        val history = vm.state.value.workouts
+        fun saved() {
+            compose.waitUntil(10000) { !vm.state.value.pending }
+        }
+        fun sessionTag(tag: String) {
+            compose
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag(tag))
+        }
+        fun logTag(tag: String) {
+            compose.onNodeWithTag("focused-log-list").performScrollToNode(hasTestTag(tag))
+        }
+        sessionTag("toggle-session-${first.key}")
+        // Tap the name area, well away from the arrow.
+        compose.onNodeWithTag("toggle-session-${first.key}").performTouchInput {
+            click(Offset(width * .4f, height * .35f))
+        }
+        saved()
+        assertTrue(vm.state.value.draft!!.exercises.first().collapsed)
+        sessionTag("session-summary-${first.key}")
+        compose
+            .onNodeWithTag("session-summary-${first.key}", useUnmergedTree = true)
+            .performTouchInput { click(center) }
+        saved()
+        assertEquals(original.openExercise(first.key), vm.state.value.draft)
+        sessionTag("focus-session-${first.key}")
+        compose.onNodeWithTag("focus-session-${first.key}").performClick()
+        compose.onNodeWithTag("focused-exercise").assertExists()
+        logTag("focused-notes")
+        compose
+            .onNodeWithTag("focused-notes")
+            .performTextReplacement("Grip cue from focused logging")
+        closeSoftKeyboard()
+        logTag("session-set-${firstSet.key}")
+        compose
+            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${firstSet.key}")))
+            .performScrollTo()
+            .performTextReplacement("11")
+        closeSoftKeyboard()
+        saved()
+        compose.onNodeWithTag("focused-primary-action").performClick()
+        saved()
+        val edited = requireNotNull(vm.state.value.draft)
+        assertEquals("Grip cue from focused logging", edited.exercises.first().notes)
+        assertEquals("11", edited.exercises.first().sets.first().reps)
+        assertTrue(edited.exercises.first().sets.first().done)
+        assertEquals(edited, kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first)
+        screenshot("focused-log-edited")
+        compose.onNodeWithTag("focused-guide-tab").performClick()
+        compose.onNodeWithTag("exercise-guide").assertExists()
+        assertEquals(edited, vm.state.value.draft)
+        compose.activityRule.scenario.recreate()
+        compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
+        compose.waitUntil(10000) {
+            compose.onAllNodesWithTag("focused-exercise").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("exercise-guide").assertExists()
+        compose.onNodeWithTag("focused-log-tab").performClick()
+        logTag("focused-notes")
+        compose.onNodeWithTag("focused-notes").assertTextContains("Grip cue from focused logging")
+        logTag("focused-add-set")
+        compose.onNodeWithTag("focused-add-set").performClick()
+        saved()
+        assertEquals(first.sets.size + 1, vm.state.value.draft!!.exercises.first().sets.size)
+        logTag("focused-remove-set")
+        compose.onNodeWithTag("focused-remove-set").performClick()
+        saved()
+        assertEquals(edited, vm.state.value.draft)
+        logTag("focused-next")
+        compose.onNodeWithTag("focused-next").performClick()
+        saved()
+        compose
+            .onNodeWithTag("focused-position")
+            .assertTextContains("Exercise 2 of", substring = true)
+        logTag("focused-previous")
+        compose.onNodeWithTag("focused-previous").performClick()
+        logTag("focused-notes")
+        compose.onNodeWithTag("focused-notes").assertTextContains("Grip cue from focused logging")
+        compose.onNodeWithTag("focused-back").performClick()
+        sessionTag("reorder-exercises")
+        compose.onNodeWithTag("reorder-exercises").performClick()
+        val target = original.exercises.last()
+        repeat(original.exercises.size - 1) {
+            compose
+                .onNodeWithTag("exercise-order-list")
+                .performScrollToNode(hasTestTag("order-card-${target.key}"))
+            val actions =
+                compose
+                    .onNodeWithTag("order-card-${target.key}")
+                    .fetchSemanticsNode()
+                    .config[SemanticsActions.CustomActions]
+            compose.runOnIdle { assertTrue(actions.first { it.label == "Move up" }.action()) }
+            saved()
+        }
+        val reordered = vm.state.value.draft!!
+        assertEquals(
+            listOf(target.key) + original.exercises.dropLast(1).map { it.key },
+            reordered.exercises.map { it.key },
+        )
+        assertEquals(
+            edited.exercises.first(),
+            reordered.exercises
+                .single { it.key == first.key }
+                .copy(collapsed = edited.exercises.first().collapsed),
+        )
+        assertEquals(
+            reordered,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+        screenshot("focused-accessible-reorder")
+        compose.onNodeWithTag("order-done").performClick()
+        assertEquals(history, vm.state.value.workouts)
+        val payload =
+            com.hector.workouttracker.core.model.workoutPayload(
+                reordered,
+                110000,
+                0,
+                java.time.ZoneId.of("UTC"),
+            )
+        val exported =
+            payload
+                .getValue("exercises")
+                .jsonArray[reordered.exercises.indexOfFirst { it.key == first.key }]
+                .jsonObject
+        assertEquals(
+            "Grip cue from focused logging",
+            exported.getValue("notes").jsonPrimitive.content,
+        )
+        compose.runOnIdle { vm.edit { original } }
+        saved()
+        assertEquals(
+            original,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+    }
+
     private fun activeOrderFlow(
         vm: com.hector.workouttracker.feature.session.TrackerViewModel,
         owner: ActivityResultRegistryOwner,
@@ -2199,7 +2365,9 @@ class WorkoutFlowTest {
         val target = original.exercises[2]
         fun move(direction: String) {
             val tag = "move-session-$direction-${target.key}"
-            compose.onNodeWithTag("session-list").performScrollToNode(hasTestTag(tag))
+            compose
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag(tag))
             compose.onNodeWithTag(tag).performScrollTo().performClick()
             compose.waitUntil(10000) { !vm.state.value.pending }
         }
@@ -2221,10 +2389,10 @@ class WorkoutFlowTest {
             compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
         }
         compose
-            .onNodeWithTag("session-list")
+            .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasTestTag("session-position-${target.key}"))
         compose
-            .onNodeWithTag("session-position-${target.key}")
+            .onNodeWithTag("session-position-${target.key}", useUnmergedTree = true)
             .assertTextEquals("Exercise 1 of ${original.exercises.size}")
         assertEquals(expected, vm.state.value.draft)
         screenshot("session-reordered")
