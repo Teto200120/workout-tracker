@@ -802,7 +802,10 @@ class WorkoutFlowTest {
             compose.onAllNodesWithTag("schedule-editor").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-0"))
-        compose.onNodeWithTag("schedule-kind-0").assertTextContains("Sunday · Soccer")
+        compose
+            .onNodeWithTag("schedule-kind-0")
+            .assertTextContains("Soccer")
+            .assertContentDescriptionEquals("Sunday activity")
         assertEquals(original, kotlinx.coroutines.runBlocking { app.scheduleRepository.read() })
         backFromSchedule()
         compose.onNodeWithText("Discard edits").performClick()
@@ -854,7 +857,10 @@ class WorkoutFlowTest {
         val latestSchedule = kotlinx.coroutines.runBlocking { app.scheduleRepository.read() }
         compose.onNodeWithText("Keep editing").performClick()
         compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-1"))
-        compose.onNodeWithTag("schedule-kind-1").assertTextContains("Monday · Soccer")
+        compose
+            .onNodeWithTag("schedule-kind-1")
+            .assertTextContains("Soccer")
+            .assertContentDescriptionEquals("Monday activity")
         assertEquals(
             latestSchedule,
             kotlinx.coroutines.runBlocking { app.scheduleRepository.read() },
@@ -864,11 +870,17 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("schedule-editor").performScrollToNode(hasTestTag("schedule-kind-1"))
         compose.waitUntil(10000) {
             runCatching {
-                    compose.onNodeWithTag("schedule-kind-1").assertTextContains("Monday · Rest")
+                    compose
+                        .onNodeWithTag("schedule-kind-1")
+                        .assertTextContains("Rest")
+                        .assertContentDescriptionEquals("Monday activity")
                 }
                 .isSuccess
         }
-        compose.onNodeWithTag("schedule-kind-1").assertTextContains("Monday · Rest")
+        compose
+            .onNodeWithTag("schedule-kind-1")
+            .assertTextContains("Rest")
+            .assertContentDescriptionEquals("Monday activity")
         kind(1, "gym")
         compose.onNodeWithTag("save-schedule").performClick()
         compose.waitUntil(10000) {

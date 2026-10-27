@@ -81,6 +81,7 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                         "settings",
                         "preferences",
                         "routines",
+                        "schedule",
                     ) && !state.loading && state.profile.displayName.isNotEmpty()
             Scaffold(
                 modifier =
@@ -93,7 +94,8 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 "stats",
                                 "settings",
                                 "preferences",
-                                "routines" -> trackerScreenBackground()
+                                "routines",
+                                "schedule" -> trackerScreenBackground()
                                 else -> homeBackgroundBrush()
                             }
                         )

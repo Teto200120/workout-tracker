@@ -1,22 +1,31 @@
 package com.hector.workouttracker.feature.schedule
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.core.schedule.*
 import com.hector.workouttracker.feature.session.TrackerState
 
@@ -40,7 +49,7 @@ internal fun ScheduleScreen(
         }
     }
     BackHandler { leave() }
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(trackerScreenBackground())) {
         state.error?.let { message ->
             Card(Modifier.fillMaxWidth().padding(12.dp)) {
                 Column(Modifier.padding(16.dp)) {
@@ -59,10 +68,16 @@ internal fun ScheduleScreen(
         ) {
             item {
                 TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back") }
-                Heading(
-                    "Your training",
-                    "Weekly schedule",
-                    "Choose gym, soccer or rest days. Changes apply to future workouts after you save.",
+                Text("Weekly schedule", style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    "Make room for training and recovery.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "Changes apply to future workouts after you save.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 state.message?.let { Text(it) }
                 if (!state.restorable)
@@ -76,36 +91,94 @@ internal fun ScheduleScreen(
             if (draft != null)
                 items(listOf(1, 2, 3, 4, 5, 6, 0), key = { it }) { index ->
                     val day = draft.days[index]
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    ) {
                         Column(
                             Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Text(
-                                scheduleDayNames[index],
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                            OutlinedButton(
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                ) {
+                                    Text(
+                                        scheduleDayNames[index].take(2),
+                                        Modifier.padding(10.dp),
+                                        style = MaterialTheme.typography.labelLarge,
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        scheduleDayNames[index],
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                    Text(
+                                        "Workout suggestion",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            FilledTonalButton(
                                 onClick = { kindDay = index },
+                                shape = RoundedCornerShape(16.dp),
+                                colors =
+                                    ButtonDefaults.filledTonalButtonColors(
+                                        containerColor =
+                                            MaterialTheme.colorScheme.surfaceContainerLow,
+                                        contentColor = MaterialTheme.colorScheme.onSurface,
+                                    ),
                                 enabled = !state.busy,
-                                modifier = Modifier.fillMaxWidth().testTag("schedule-kind-$index"),
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .heightIn(min = 52.dp)
+                                        .testTag("schedule-kind-$index")
+                                        .semantics {
+                                            contentDescription =
+                                                "${scheduleDayNames[index]} activity"
+                                        },
                             ) {
                                 Text(
-                                    "${scheduleDayNames[index]} · ${day.kind.replaceFirstChar { it.uppercase() }}"
+                                    day.kind.replaceFirstChar { it.uppercase() },
+                                    Modifier.weight(1f),
                                 )
+                                Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
                             }
                             if (day.kind == "gym") {
-                                OutlinedButton(
+                                FilledTonalButton(
                                     onClick = { routineDay = index },
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors =
+                                        ButtonDefaults.filledTonalButtonColors(
+                                            containerColor =
+                                                MaterialTheme.colorScheme.surfaceContainerLow,
+                                            contentColor = MaterialTheme.colorScheme.onSurface,
+                                        ),
                                     enabled = !state.busy,
                                     modifier =
-                                        Modifier.fillMaxWidth().testTag("schedule-routine-$index"),
+                                        Modifier.fillMaxWidth()
+                                            .testTag("schedule-routine-$index")
+                                            .semantics {
+                                                contentDescription =
+                                                    "${scheduleDayNames[index]} routine"
+                                            },
                                 ) {
                                     Text(
                                         "Routine: ${day.routine.take(120).ifEmpty { "Default (${scheduleDays()[index].routine})" }}",
-                                        maxLines = 2,
+                                        modifier = Modifier.weight(1f),
+                                        maxLines =
+                                            if (LocalDensity.current.fontScale > 1.3f) 4 else 2,
                                         overflow = TextOverflow.Ellipsis,
                                     )
+                                    Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
                                 }
                                 val matches = library.routines.count { it.name == day.routine }
                                 if (matches == 0 && day.routine.isNotEmpty())
@@ -127,6 +200,7 @@ internal fun ScheduleScreen(
                 }
         }
         Button(
+            shape = RoundedCornerShape(20.dp),
             onClick = vm::save,
             enabled = !state.busy && draft?.changed == true,
             modifier =
@@ -147,13 +221,25 @@ internal fun ScheduleScreen(
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     scheduleKinds.forEach { kind ->
-                        TextButton(
-                            onClick = {
-                                vm.edit(kindDay) { it.copy(kind = kind) }
-                                kindDay = -1
-                            },
-                            modifier = Modifier.fillMaxWidth().testTag("choose-kind-$kind"),
+                        val selected = draft?.days?.get(kindDay)?.kind == kind
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .testTag("choose-kind-$kind")
+                                .selectable(
+                                    selected,
+                                    enabled = !state.busy,
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        vm.edit(kindDay) { it.copy(kind = kind) }
+                                        kindDay = -1
+                                    },
+                                )
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
+                            RadioButton(selected, null)
                             Text(kind.replaceFirstChar { it.uppercase() })
                         }
                     }
@@ -176,15 +262,25 @@ internal fun ScheduleScreen(
                     }
                     items(library.routines.distinctBy { it.name }, key = { it.record.idKey }) {
                         routine ->
-                        TextButton(
-                            onClick = {
-                                vm.edit(routineDay) { it.copy(routine = routine.name) }
-                                routineDay = -1
-                            },
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .testTag("choose-schedule-${routine.record.idKey}"),
+                        val selected = draft?.days?.get(routineDay)?.routine == routine.name
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .testTag("choose-schedule-${routine.record.idKey}")
+                                .selectable(
+                                    selected,
+                                    enabled = !state.busy,
+                                    role = Role.RadioButton,
+                                    onClick = {
+                                        vm.edit(routineDay) { it.copy(routine = routine.name) }
+                                        routineDay = -1
+                                    },
+                                )
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
+                            RadioButton(selected, null)
                             Text(routine.name)
                         }
                     }

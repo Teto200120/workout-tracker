@@ -10,7 +10,7 @@ Continue the PWA UI/UX import one screen at a time. Each delivered checkpoint ge
 | Stats | [v17](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.17.0-preview) | Tonal overview, weekly activity, source-backed exercise chart and records |
 | You / preferences / backup | [v18](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.18.0-preview) | Profile summary, grouped tools, adaptive preferences and backup controls |
 | Routines / routine editor | [v19](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.19.0-preview) | Compact library, ordered exercise previews, focused editor and persistent Save |
-| Weekly schedule | Pending | Day choices, routine selection and save flow |
+| Weekly schedule | [v20](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.20.0-preview) | Day groups, tonal choices, selected radio dialogs and persistent Save |
 | Exercise picker / guide | Pending | Search, filters, custom names and detail |
 | Onboarding / feedback / help | Pending | Secondary flows and empty/error states |
 | Navigation / accessibility pass | Pending | Cross-screen consistency, large text and responsive behavior |
