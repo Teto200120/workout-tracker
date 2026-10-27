@@ -1,20 +1,25 @@
 package com.hector.workouttracker.feature.help
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hector.workouttracker.core.designsystem.Heading
+import com.hector.workouttracker.core.designsystem.*
 import com.hector.workouttracker.core.designsystem.TrackerIcons
 import com.hector.workouttracker.domain.*
 
@@ -78,29 +83,52 @@ internal fun HelpScreen(back: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     var reset by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
-        Modifier.fillMaxSize().testTag("help-list"),
+        Modifier.fillMaxSize().background(trackerScreenBackground()).testTag("help-list"),
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
             TextButton(onClick = back) { Text("Back to You") }
-            Heading(
-                "Learn at your pace",
-                "Help & guidance",
-                "Works offline. Tips open only when you choose them.",
+            Text("Help & guidance", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                "Works offline. Open a topic when you need it.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             (state.error ?: state.message)?.let { Text(it, Modifier.testTag("help-message")) }
         }
         items(guidanceTopics, key = { it.id }) { topic ->
             var expanded by rememberSaveable(topic.id) { mutableStateOf(false) }
-            OutlinedCard(Modifier.fillMaxWidth()) {
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(topic.title, style = MaterialTheme.typography.titleMedium)
                     TextButton(
                         onClick = { expanded = !expanded },
-                        modifier = Modifier.testTag("help-read-${topic.id}"),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .testTag("help-read-${topic.id}")
+                                .semantics {
+                                    stateDescription = if (expanded) "Expanded" else "Collapsed"
+                                },
+                        colors =
+                            ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            ),
                     ) {
-                        Text(if (expanded) "Close explanation" else "Read explanation")
+                        Text(
+                            topic.title,
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Icon(
+                            TrackerIcons.Chevron,
+                            null,
+                            Modifier.rotate(if (expanded) 90f else 0f).size(20.dp),
+                        )
                     }
                     if (expanded) {
                         Text(topic.text)

@@ -71,33 +71,41 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
         InteractionTheme(state.interactions) {
             state.importPreview?.let { ImportDialog(it, vm::confirmImport, vm::cancelImport) }
             val brandedVisible =
-                route in
-                    listOf(
-                        "home",
-                        "session",
-                        "history",
-                        "workout",
-                        "stats",
-                        "settings",
-                        "preferences",
-                        "routines",
-                        "schedule",
-                    ) && !state.loading && state.profile.displayName.isNotEmpty()
-            Scaffold(
-                modifier =
-                    if (brandedVisible)
-                        Modifier.background(
-                            when (route) {
-                                "session" -> sessionBackgroundBrush()
+                !state.loading &&
+                    (state.profile.displayName.isEmpty() ||
+                        route in
+                            listOf(
+                                "home",
+                                "session",
                                 "history",
                                 "workout",
                                 "stats",
                                 "settings",
                                 "preferences",
                                 "routines",
-                                "schedule" -> trackerScreenBackground()
-                                else -> homeBackgroundBrush()
-                            }
+                                "schedule",
+                                "help",
+                                "feedback",
+                            ))
+            Scaffold(
+                modifier =
+                    if (brandedVisible)
+                        Modifier.background(
+                            if (state.profile.displayName.isEmpty()) trackerScreenBackground()
+                            else
+                                when (route) {
+                                    "session" -> sessionBackgroundBrush()
+                                    "history",
+                                    "workout",
+                                    "stats",
+                                    "settings",
+                                    "preferences",
+                                    "routines",
+                                    "schedule",
+                                    "help",
+                                    "feedback" -> trackerScreenBackground()
+                                    else -> homeBackgroundBrush()
+                                }
                         )
                     else Modifier,
                 containerColor =

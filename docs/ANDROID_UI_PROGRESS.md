@@ -12,7 +12,7 @@ Continue the PWA UI/UX import one screen at a time. Each delivered checkpoint ge
 | Routines / routine editor | [v19](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.19.0-preview) | Compact library, ordered exercise previews, focused editor and persistent Save |
 | Weekly schedule | [v20](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.20.0-preview) | Day groups, tonal choices, selected radio dialogs and persistent Save |
 | Exercise picker / guide | [v21](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.21.0-preview) | Filled search, compact result actions, retained list position and numbered offline guides |
-| Onboarding / feedback / help | Pending | Secondary flows and empty/error states |
+| Onboarding / feedback / help | [v22](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.22.0-preview) | Name-first setup, expandable help and clear hosted-browser feedback handoff |
 | Navigation / accessibility pass | Pending | Cross-screen consistency, large text and responsive behavior |
 
 Use the rendered PWA and source as the reference, preserve data contracts, and keep verification scoped to each change. Physical-phone and TalkBack acceptance remain separate from emulator evidence.

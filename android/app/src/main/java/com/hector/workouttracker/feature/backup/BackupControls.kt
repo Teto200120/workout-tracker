@@ -39,7 +39,12 @@ internal fun BackupControls(state: TrackerState, vm: TrackerViewModel, firstRun:
         if (!firstRun) BackupStatusCard(state.backup)
         val migrationInstructions =
             "In the PWA, finish and save any active workout, then export a JSON backup. Choose that file here to review it before importing. This is a one-time copy, not ongoing sync."
-        if (firstRun) Text(migrationInstructions)
+        if (firstRun)
+            Text(
+                "Finish and save any PWA workout, then import its JSON backup. This copies saved data without syncing the apps.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         else {
             Text(
                 "Keep a JSON copy of your saved training, or review a backup before restoring it.",
@@ -66,13 +71,10 @@ internal fun BackupControls(state: TrackerState, vm: TrackerViewModel, firstRun:
             Text("Import PWA backup")
         }
         if (state.draft != null) Text("Finish or discard your active workout before importing.")
-        if (!firstRun) {
-            TextButton(onClick = { instructions = !instructions }) {
-                Text(if (instructions) "Hide import instructions" else "Import instructions")
-            }
-            if (instructions)
-                Text(migrationInstructions, style = MaterialTheme.typography.bodyMedium)
+        TextButton(onClick = { instructions = !instructions }) {
+            Text(if (instructions) "Hide import instructions" else "Import instructions")
         }
+        if (instructions) Text(migrationInstructions, style = MaterialTheme.typography.bodyMedium)
         state.backupMessage?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         if (!firstRun)
