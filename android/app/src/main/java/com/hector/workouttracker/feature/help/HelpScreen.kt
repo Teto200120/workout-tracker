@@ -25,6 +25,9 @@ import com.hector.workouttracker.domain.*
 
 internal val LocalHelp = staticCompositionLocalOf<HelpViewModel?> { null }
 
+private fun nativeHelpText(text: String) =
+    text.replace("You → Edit preferences & goal", "Profile → Settings")
+
 /** Inline, user-opened help never takes focus or opens over a field/picker. */
 @Composable
 internal fun HelpTip(id: String) {
@@ -55,7 +58,8 @@ internal fun HelpTip(id: String) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            if (expanded) Text(topic.text, style = MaterialTheme.typography.bodySmall)
+            if (expanded)
+                Text(nativeHelpText(topic.text), style = MaterialTheme.typography.bodySmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(
                     onClick = { expanded = !expanded },
@@ -89,11 +93,10 @@ internal fun HelpScreen(back: () -> Unit) {
     ) {
         item {
             TextButton(onClick = back) { Text("Back to settings") }
-            Text("Help & guidance", style = MaterialTheme.typography.headlineMedium)
-            Text(
+            TrainingHeading(
+                "Help & guidance",
                 "Works offline. Open a topic when you need it.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                TrackerIcons.Help,
             )
             (state.error ?: state.message)?.let { Text(it, Modifier.testTag("help-message")) }
         }
@@ -103,6 +106,7 @@ internal fun HelpScreen(back: () -> Unit) {
                 Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(
@@ -131,7 +135,7 @@ internal fun HelpScreen(back: () -> Unit) {
                         )
                     }
                     if (expanded) {
-                        Text(topic.text)
+                        Text(nativeHelpText(topic.text))
                         TextButton(
                             onClick = { vm.replay(topic.id) },
                             enabled =
@@ -147,10 +151,10 @@ internal fun HelpScreen(back: () -> Unit) {
         item {
             Text("Backups & moving from the PWA", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Your PWA and Android data are separate. Finish and save a PWA workout before exporting it. In You, choose Import PWA backup, review changes and confirm. This copies saved records; it does not synchronize the apps. Keep the PWA and its backup until you have checked your imported data."
+                "Your PWA and Android data are separate. Finish and save a PWA workout before exporting it. In Profile, open Backup & data, choose Import PWA backup, review changes and confirm. This copies saved records; it does not synchronize the apps. Keep the PWA and its backup until you have checked your imported data."
             )
             Text(
-                "Export a JSON backup from You and keep it somewhere you can find again. Normal backups exclude active workouts and guidance preferences. A successful export means the destination accepted the file; a cloud provider may still need to sync it. Reimporting a backup reviews matching IDs before replacing them."
+                "Export a JSON backup from Backup & data and keep it somewhere you can find again. Normal backups exclude active workouts and guidance preferences. A successful export means the destination accepted the file; a cloud provider may still need to sync it. Reimporting a backup reviews matching IDs before replacing them."
             )
             Text(
                 "The reminder uses the last recorded export time, including imported metadata. It does not verify that an older file still exists or covers edits made since then. Reminders stay inside the app; no notifications are scheduled."
@@ -214,7 +218,7 @@ internal fun CompactHelpTip(id: String, label: String) {
         }
         if (expanded) {
             Text(
-                guidanceTopics.first { it.id == id }.text,
+                nativeHelpText(guidanceTopics.first { it.id == id }.text),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

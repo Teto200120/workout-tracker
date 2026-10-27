@@ -9,3 +9,5 @@ Settings is a normal scrolling form: name, training goal/RPE, weekly schedule, a
 Backup/data has its own page, retaining existing document pickers, import review, active-draft guards and reviewed reset/clear operations. No workout, routine, date, backup, metrics or preference storage formats change.
 
 The v25 profile polish introduces an asymmetric monogram header, a distinct round Settings button, tonal contours and a native goal ring with readable counts. Logged sessions is compact and profile shortcuts use the existing native action rows. Settings and data-page workflows remain as established here. See [primary-screen polish](ANDROID_PRIMARY_LOOK_UI.md).
+
+The v26 expressive treatment follows the shared navy/coral shapes, tonal depth and compact/summary heading hierarchy. Existing flows and data contracts remain intact. See [remaining-screen polish](ANDROID_REMAINING_LOOK_UI.md).

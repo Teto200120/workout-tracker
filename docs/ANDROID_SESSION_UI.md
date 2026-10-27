@@ -11,3 +11,5 @@ Changing the selected set or opening All sets changes presentation only. Set edi
 Elapsed time uses the existing monotonic/reboot-aware calculation. Rendering the timer never writes draft data. Observe it only while resumed. At large text sizes, numeric entry expands to full width with its step controls underneath. Native dialogs and the exercise list remain scrollable.
 
 Material adaptation: navy tonal surfaces, coral emphasis, a restrained shape hierarchy, large numeric values, native text input and 48dp control targets. Inline guidance, exercise tools and reordering remain below entry. Existing interaction preferences apply.
+
+The v26 expressive treatment follows the shared navy/coral shapes, tonal depth and compact/summary heading hierarchy. Existing flows and data contracts remain intact. See [remaining-screen polish](ANDROID_REMAINING_LOOK_UI.md).

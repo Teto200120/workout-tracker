@@ -5,3 +5,5 @@ Reference the PWA picker: prominent search, optional muscle/equipment/category f
 Guides use the selected saved name, the existing reviewed alias/reference notice, grouped metadata, numbered instructions and source attribution. Keep the add action below the scrolling guide. Optional guidance expands on request. Unmatched custom names retain the exact-match explanation; no fuzzy substitutions or source photos are introduced into the existing offline catalog.
 
 Keep custom entry, canonical-name boundaries, local-name deduplication, search ranking, pagination, warm/offline availability, duplicate-routine confirmation and existing callbacks unchanged. Large text wraps names, actions and filter choices. No catalog data, workout IDs or persistence changes.
+
+The v26 expressive treatment follows the shared navy/coral shapes, tonal depth and compact/summary heading hierarchy. Existing flows and data contracts remain intact. See [remaining-screen polish](ANDROID_REMAINING_LOOK_UI.md).

@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -144,63 +143,71 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedIconButton(
-                        onClick = back,
-                        modifier = Modifier.size(48.dp),
-                        border = BorderStroke(1.dp, colors.onSurfaceVariant.copy(alpha = .24f)),
+                TrainingHero {
+                    Row(
+                        Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(TrackerIcons.Back, "Back to Today")
-                    }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        TextField(
-                            draft.type,
-                            { value -> vm.edit { it.copy(type = value) } },
-                            label = {
-                                Text("Workout name", style = MaterialTheme.typography.labelSmall)
-                            },
-                            textStyle = MaterialTheme.typography.titleLarge,
-                            singleLine = true,
-                            enabled = !state.busy,
-                            colors =
-                                TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                ),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                        OutlinedIconButton(
+                            onClick = back,
+                            modifier = Modifier.size(48.dp),
+                            border = BorderStroke(1.dp, colors.onSurfaceVariant.copy(alpha = .24f)),
                         ) {
-                            Text(
-                                "Active workout",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = colors.onSurfaceVariant,
-                            )
-                            Text(
-                                clock,
-                                Modifier.testTag("session-clock"),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = colors.onSurfaceVariant,
-                            )
+                            Icon(TrackerIcons.Back, "Back to Today")
                         }
-                    }
-                    FilledTonalIconButton(
-                        onClick = {
-                            focus.clearFocus()
-                            finish = true
-                        },
-                        enabled = !state.busy,
-                        modifier = Modifier.size(48.dp).testTag("review-session"),
-                    ) {
-                        Icon(TrackerIcons.Check, "Finish workout")
+                        Column(
+                            Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            TextField(
+                                draft.type,
+                                { value -> vm.edit { it.copy(type = value) } },
+                                label = {
+                                    Text(
+                                        "Workout name",
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                },
+                                textStyle = MaterialTheme.typography.titleLarge,
+                                singleLine = true,
+                                enabled = !state.busy,
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                    ),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Text(
+                                    "Active workout",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colors.onSurfaceVariant,
+                                )
+                                Text(
+                                    clock,
+                                    Modifier.testTag("session-clock"),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colors.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        FilledTonalIconButton(
+                            onClick = {
+                                focus.clearFocus()
+                                finish = true
+                            },
+                            enabled = !state.busy,
+                            modifier = Modifier.size(48.dp).testTag("review-session"),
+                        ) {
+                            Icon(TrackerIcons.Check, "Finish workout")
+                        }
                     }
                 }
             }
@@ -251,10 +258,23 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                 var chooseSet by rememberSaveable(exercise.key) { mutableStateOf(false) }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = panel),
-                    shape = RoundedCornerShape(24.dp),
+                    shape =
+                        if (activeExercise?.key == exercise.key)
+                            RoundedCornerShape(
+                                topStart = 24.dp,
+                                topEnd = 24.dp,
+                                bottomEnd = 24.dp,
+                                bottomStart = 10.dp,
+                            )
+                        else RoundedCornerShape(24.dp),
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation =
+                                if (activeExercise?.key == exercise.key) 4.dp else 1.dp
+                        ),
                     border =
                         BorderStroke(
-                            1.dp,
+                            if (activeExercise?.key == exercise.key) 2.dp else 1.dp,
                             if (activeExercise?.key == exercise.key)
                                 colors.primary.copy(alpha = .65f)
                             else colors.outlineVariant,
@@ -269,13 +289,23 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             Surface(
-                                shape = CircleShape,
-                                color = colors.primary.copy(alpha = .14f),
+                                shape =
+                                    RoundedCornerShape(
+                                        topStart = 16.dp,
+                                        topEnd = 16.dp,
+                                        bottomEnd = 16.dp,
+                                        bottomStart = 6.dp,
+                                    ),
+                                color =
+                                    if (activeExercise?.key == exercise.key) colors.primary
+                                    else colors.primaryContainer,
                             ) {
                                 Text(
                                     "${position + 1}",
                                     Modifier.padding(12.dp),
-                                    color = colors.primary,
+                                    color =
+                                        if (activeExercise?.key == exercise.key) colors.onPrimary
+                                        else colors.onPrimaryContainer,
                                     style = MaterialTheme.typography.titleSmall,
                                 )
                             }

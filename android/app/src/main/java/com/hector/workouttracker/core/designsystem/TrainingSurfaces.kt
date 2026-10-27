@@ -15,7 +15,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -45,8 +48,8 @@ internal fun TrainingHero(modifier: Modifier = Modifier, content: @Composable Bo
                 )
             )
         ) {
-            Canvas(Modifier.align(Alignment.TopEnd).size(160.dp).clearAndSetSemantics {}) {
-                val center = Offset(size.width * 1.08f, size.height * .18f)
+            Canvas(Modifier.matchParentSize().clearAndSetSemantics {}) {
+                val center = Offset(size.width + 13.dp.toPx(), 29.dp.toPx())
                 drawCircle(accent.copy(alpha = .06f), 72.dp.toPx(), center)
                 listOf(48.dp, 82.dp, 116.dp).forEach { radius ->
                     drawCircle(
@@ -107,5 +110,42 @@ internal fun TrainingGoalRing(completed: Int, goal: Int) {
             Modifier.size(28.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
+    }
+}
+
+/** A compact form heading or a more prominent summary/library heading. */
+@Composable
+internal fun TrainingHeading(
+    title: String,
+    detail: String? = null,
+    icon: ImageVector,
+    hero: Boolean = false,
+) {
+    val content: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TrainingEmblem(size = 40.dp) { Icon(icon, null, Modifier.size(22.dp)) }
+                Text(
+                    title,
+                    Modifier.weight(1f).semantics { heading() },
+                    style = MaterialTheme.typography.headlineMedium,
+                )
+            }
+            detail?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+    if (hero) {
+        TrainingHero { Box(Modifier.fillMaxWidth().padding(20.dp)) { content() } }
+    } else {
+        Box(Modifier.fillMaxWidth().padding(vertical = 8.dp)) { content() }
     }
 }

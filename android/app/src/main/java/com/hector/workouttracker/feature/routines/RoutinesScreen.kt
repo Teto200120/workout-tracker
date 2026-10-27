@@ -88,7 +88,11 @@ internal fun RoutinesScreen(
             ) {
                 item {
                     TextButton(onClick = back, enabled = !state.busy) { Text(backLabel) }
-                    RoutineHeading("Routines", "Plan exercises here, then start from Today.")
+                    RoutineHeading(
+                        "Routines",
+                        "Plan exercises here, then start from Today.",
+                        hero = true,
+                    )
                     state.message?.let { Text(it, Modifier.padding(top = 12.dp)) }
                     if (library.draft != null)
                         Text(
@@ -130,7 +134,12 @@ internal fun RoutinesScreen(
                         Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        border =
+                            BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f),
+                            ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     ) {
                         Column(
                             Modifier.padding(20.dp),
@@ -140,6 +149,7 @@ internal fun RoutinesScreen(
                             Text(
                                 "${routine.exercises.size} exercises",
                                 style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                             routine.exercises.take(3).forEachIndexed { index, name ->
                                 Text(
@@ -292,7 +302,12 @@ private fun StarterPreview(
                     Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    border =
+                        BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f),
+                        ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 ) {
                     Column(
                         Modifier.padding(20.dp),
@@ -379,7 +394,12 @@ private fun RoutineEditor(
                     Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    border =
+                        BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f),
+                        ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 ) {
                     Column(
                         Modifier.padding(16.dp),
@@ -525,13 +545,6 @@ private fun RoutineEditor(
 }
 
 @Composable
-private fun RoutineHeading(title: String, detail: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineMedium)
-        Text(
-            detail,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+private fun RoutineHeading(title: String, detail: String, hero: Boolean = false) {
+    TrainingHeading(title, detail, TrackerIcons.Workout, hero)
 }

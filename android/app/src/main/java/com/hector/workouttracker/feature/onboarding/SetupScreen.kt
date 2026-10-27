@@ -32,32 +32,34 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Icon(
-                        TrackerIcons.Workout,
-                        null,
-                        Modifier.size(28.dp),
-                        tint = MaterialTheme.colorScheme.primary,
+            TrainingHero {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            TrackerIcons.Workout,
+                            null,
+                            Modifier.size(28.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            "WORKOUT TRACKER",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    Text(
+                        "Welcome to your workout tracker",
+                        style = MaterialTheme.typography.headlineMedium,
                     )
                     Text(
-                        "WORKOUT TRACKER",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        "Log workouts, resume unfinished sessions and see your progress. Your training stays on this device.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(
-                    "Welcome to your workout tracker",
-                    style = MaterialTheme.typography.headlineMedium,
-                )
-                Text(
-                    "Log workouts, resume unfinished sessions and see your progress. Your training stays on this device.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
         item {
@@ -80,6 +82,7 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Row(
@@ -121,7 +124,14 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
             Button(
                 onClick = { vm.saveProfile(name, rpe) },
                 enabled = visibleName(name, 80) && !state.busy,
-                shape = RoundedCornerShape(20.dp),
+                shape =
+                    RoundedCornerShape(
+                        topStart = 24.dp,
+                        topEnd = 24.dp,
+                        bottomEnd = 24.dp,
+                        bottomStart = 8.dp,
+                    ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp),
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             ) {
                 Text("Let's begin")
@@ -131,6 +141,7 @@ internal fun SetupScreen(state: TrackerState, vm: TrackerViewModel) {
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     BackupControls(state, vm, firstRun = true)

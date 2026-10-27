@@ -29,28 +29,14 @@ internal fun FeedbackScreen(
     ) {
         item {
             TextButton(onClick = back) { Text("Back to settings") }
-            Text("Beta feedback", style = MaterialTheme.typography.headlineMedium)
-            Text(
-                "Help improve Workout Tracker.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            TrainingHeading("Beta feedback", "Help improve Workout Tracker.", TrackerIcons.Feedback)
         }
         item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-            ) {
+            TrainingHero {
                 Column(
                     Modifier.fillMaxWidth().padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    Icon(
-                        TrackerIcons.Feedback,
-                        null,
-                        Modifier.size(28.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
                     Text(
                         "Send feedback in your browser",
                         style = MaterialTheme.typography.titleLarge,
@@ -67,7 +53,13 @@ internal fun FeedbackScreen(
                         )
                     Button(
                         onClick = { failed = !openBrowser(context) },
-                        shape = RoundedCornerShape(16.dp),
+                        shape =
+                            RoundedCornerShape(
+                                topStart = 24.dp,
+                                topEnd = 24.dp,
+                                bottomEnd = 24.dp,
+                                bottomStart = 8.dp,
+                            ),
                         modifier =
                             Modifier.fillMaxWidth()
                                 .heightIn(min = 56.dp)
@@ -84,6 +76,7 @@ internal fun FeedbackScreen(
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(
                     Modifier.fillMaxWidth().padding(16.dp),

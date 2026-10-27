@@ -81,11 +81,11 @@ internal fun HistoryScreen(
                 TextButton(onClick = back, modifier = Modifier.testTag("history-back")) {
                     Text("Back to Stats")
                 }
-                Text("Session history", style = MaterialTheme.typography.headlineMedium)
-                Text(
+                TrainingHeading(
+                    "Session history",
                     "Your saved workouts, all in one place.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    TrackerIcons.History,
+                    hero = true,
                 )
             }
         }
@@ -93,7 +93,9 @@ internal fun HistoryScreen(
             Card(
                 colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
                 shape = RoundedCornerShape(24.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                border =
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Recent sessions", style = MaterialTheme.typography.titleLarge)
@@ -182,9 +184,17 @@ internal fun HistoryScreen(
             val metrics = entry.metrics
             Card(
                 Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
+                shape =
+                    RoundedCornerShape(
+                        topStart = 24.dp,
+                        topEnd = 24.dp,
+                        bottomEnd = 24.dp,
+                        bottomStart = 10.dp,
+                    ),
                 colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                border =
+                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Column(
                     Modifier.fillMaxWidth().padding(18.dp),

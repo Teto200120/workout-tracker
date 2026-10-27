@@ -32,7 +32,7 @@ internal fun SettingsScreen(state: TrackerState, vm: TrackerViewModel, back: () 
     ) {
         item {
             TextButton(onClick = back, modifier = Modifier.testTag("data-back")) { Text("Back") }
-            Text("Backup & data", style = MaterialTheme.typography.headlineMedium)
+            TrainingHeading("Backup & data", icon = TrackerIcons.Backup, hero = true)
         }
         item { SettingsPanel { BackupControls(state, vm) } }
         item {
@@ -89,7 +89,8 @@ internal fun SettingsPanel(content: @Composable ColumnScope.() -> Unit) {
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             Modifier.padding(16.dp),
@@ -105,7 +106,8 @@ internal fun SettingsToolGroup(content: @Composable ColumnScope.() -> Unit) {
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(content = content)
     }
@@ -124,7 +126,17 @@ internal fun SettingsTool(
         headlineContent = { Text(label) },
         supportingContent = { Text(detail) },
         leadingContent = {
-            Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Icon(
+                    icon,
+                    null,
+                    Modifier.padding(8.dp).size(20.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
         },
         trailingContent = { Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp)) },
         colors = ListItemDefaults.colors(containerColor = trackerPanelColor()),

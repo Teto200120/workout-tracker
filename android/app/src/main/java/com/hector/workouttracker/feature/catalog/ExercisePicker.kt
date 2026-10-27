@@ -107,7 +107,7 @@ internal fun ExercisePicker(
             ) {
                 item {
                     TextButton(onClick = onDismiss) { Text(returnLabel) }
-                    Text("Choose exercise", style = MaterialTheme.typography.headlineMedium)
+                    TrainingHeading("Choose exercise", icon = TrackerIcons.Search)
                     Text(
                         "Your saved names first. Guides available offline.",
                         style = MaterialTheme.typography.bodyMedium,
@@ -312,7 +312,8 @@ private fun ExerciseOption(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(name, style = MaterialTheme.typography.titleMedium)
@@ -362,12 +363,7 @@ private fun GuideContent(
         ) {
             item {
                 TextButton(onClick = onBack) { Text("Back") }
-                Text(
-                    "Exercise guide",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Text(name, style = MaterialTheme.typography.headlineMedium)
+                TrainingHeading(name, "Exercise guide", TrackerIcons.Workout, hero = true)
                 if (exercise != null && exercise.name != name)
                     Text(
                         "Reference movement: ${exercise.name}",
@@ -408,8 +404,15 @@ private fun GuideContent(
                     (index, instruction) ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape =
+                                RoundedCornerShape(
+                                    topStart = 16.dp,
+                                    topEnd = 16.dp,
+                                    bottomEnd = 16.dp,
+                                    bottomStart = 6.dp,
+                                ),
+                            color = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                         ) {
                             Text(
                                 "${index + 1}",

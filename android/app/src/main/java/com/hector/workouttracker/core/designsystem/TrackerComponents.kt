@@ -45,6 +45,18 @@ private fun symbol(name: String, draw: PathBuilder.() -> Unit) =
         .build()
 
 internal object TrackerIcons {
+    val History =
+        symbol("History") {
+            moveTo(21f, 12f)
+            curveTo(21f, 7.03f, 16.97f, 3f, 12f, 3f)
+            curveTo(7.03f, 3f, 3f, 7.03f, 3f, 12f)
+            curveTo(3f, 16.97f, 7.03f, 21f, 12f, 21f)
+            curveTo(16.97f, 21f, 21f, 16.97f, 21f, 12f)
+            close()
+            moveTo(12f, 7f)
+            lineTo(12f, 12f)
+            lineTo(16f, 14f)
+        }
     val Backup =
         symbol("Backup") {
             moveTo(12f, 3f)

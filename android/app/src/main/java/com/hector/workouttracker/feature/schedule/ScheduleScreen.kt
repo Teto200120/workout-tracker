@@ -68,11 +68,11 @@ internal fun ScheduleScreen(
         ) {
             item {
                 TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back") }
-                Text("Weekly schedule", style = MaterialTheme.typography.headlineMedium)
-                Text(
+                TrainingHeading(
+                    "Weekly schedule",
                     "Make room for training and recovery.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    TrackerIcons.Calendar,
+                    hero = true,
                 )
                 Text(
                     "Changes apply to future workouts after you save.",
@@ -95,7 +95,12 @@ internal fun ScheduleScreen(
                         Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        border =
+                            BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f),
+                            ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     ) {
                         Column(
                             Modifier.padding(16.dp),
@@ -106,8 +111,19 @@ internal fun ScheduleScreen(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    shape =
+                                        RoundedCornerShape(
+                                            topStart = 16.dp,
+                                            topEnd = 16.dp,
+                                            bottomEnd = 16.dp,
+                                            bottomStart = 6.dp,
+                                        ),
+                                    color =
+                                        if (day.kind == "gym") MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor =
+                                        if (day.kind == "gym") MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.onPrimaryContainer,
                                 ) {
                                     Text(
                                         scheduleDayNames[index].take(2),

@@ -7,3 +7,5 @@ Use a compact Session history header, tonal filter group and filled search field
 The full workout and editor use the same navy tonal canvas, grouped metadata and set surfaces. Preserve every existing entry, validation, revision/epoch fence, save/discard and reviewed delete behavior. The native date picker is an optional companion to the manual ISO field. Convert picker dates through UTC midnight to preserve the selected calendar day; opening/cancelling it must not change stored data. Imported year-zero dates remain supported by the manual field, with an initially unselected picker.
 
 Guidance expands on request after the records. Loading, empty filters, retry, stale-editor review and missing-record states retain their current behavior. This is a presentation change with no database or backup format changes.
+
+The v26 expressive treatment follows the shared navy/coral shapes, tonal depth and compact/summary heading hierarchy. Existing flows and data contracts remain intact. See [remaining-screen polish](ANDROID_REMAINING_LOOK_UI.md).

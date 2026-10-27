@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hector.workouttracker.BuildConfig
 import com.hector.workouttracker.core.designsystem.TrackerIcons
+import com.hector.workouttracker.core.designsystem.TrainingHeading
 import com.hector.workouttracker.core.designsystem.trackerPanelColor
 import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.visibleName
@@ -82,7 +83,7 @@ internal fun PreferencesScreen(
         ) {
             item {
                 TextButton(onClick = ::leave, enabled = !state.busy) { Text("Back to Profile") }
-                Text("Settings", style = MaterialTheme.typography.headlineMedium)
+                TrainingHeading("Settings", icon = TrackerIcons.Settings)
                 state.message?.let {
                     Text(if (it == "Preferences saved.") "Settings saved." else it)
                 }

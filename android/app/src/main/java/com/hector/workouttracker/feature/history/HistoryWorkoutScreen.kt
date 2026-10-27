@@ -158,12 +158,12 @@ internal fun HistoryWorkoutScreen(state: TrackerState, vm: HistoryViewModel, bac
         ) {
             item {
                 TextButton(onClick = { leave() }, enabled = enabled) { Text("Back to History") }
-                Text(
+                TrainingHeading(
+                    values?.type ?: "History",
                     if (editor.editing) "Edit saved workout" else "Saved workout",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    TrackerIcons.History,
+                    hero = !editor.editing,
                 )
-                Text(values?.type ?: "History", style = MaterialTheme.typography.headlineMedium)
                 editor.message?.let { Text(it) }
                 if (!editor.restorable)
                     Text(
@@ -682,7 +682,8 @@ private fun HistorySection(content: @Composable ColumnScope.() -> Unit) {
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = trackerPanelColor()),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             Modifier.padding(16.dp),

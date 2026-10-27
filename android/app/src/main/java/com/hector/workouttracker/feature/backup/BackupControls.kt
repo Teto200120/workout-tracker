@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.hector.workouttracker.core.designsystem.TrackerIcons
 import com.hector.workouttracker.data.ImportCounts
 import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.feature.session.*
@@ -57,6 +58,8 @@ internal fun BackupControls(state: TrackerState, vm: TrackerViewModel, firstRun:
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 shape = RoundedCornerShape(16.dp),
             ) {
+                Icon(TrackerIcons.Backup, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
                 Text("Export backup")
             }
         }
