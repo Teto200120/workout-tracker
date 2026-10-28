@@ -1,0 +1,86 @@
+{
+  "passed": true,
+  "version_code": 35,
+  "version_name": "0.35.0-preview",
+  "apk_sha256": "cca75070b5edd2607208e4b4fdbe109961687217b7909fc19892198c0c826546",
+  "certificate_sha256": "e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88",
+  "pwa_reference": {
+    "rendered": true,
+    "viewport": [
+      412,
+      915
+    ],
+    "source_base_commit": "384784d2c406adbaab9507272bcafb6800799aeb",
+    "files_unchanged": true,
+    "source_sha256": {
+      "src/js/components/icons.js": "850275c33ab7977d6b9fb02277c35b1b16169e00cc18da0dd870ff7525948130",
+      "src/styles/motion.css": "7770878c7f51220395b2a5ed4532c1ceb843e73eacc368c2c71901a58792fa61",
+      "src/styles/session-components.css": "506cf54d47c981b3590d75bd77f9f73720e5b62437fc08cf1de9ef58ac3b53de",
+      "src/styles/today-components.css": "ca6132b3684030b01aa399e2cbf222224a9cd99a969b0646a2d6b26d94df71a4",
+      "src/js/screens/active-workout.js": "e359c82c7cbc83ac33236cf26997608b8e59a7658cbebfc3a8ead03b530415ce"
+    },
+    "icons": "PWA rounded 2.25-unit paths; its session close and back controls",
+    "disclosure_ms": 280,
+    "disclosure_easing": [
+      0.2,
+      0.86,
+      0.2,
+      1.0
+    ],
+    "chevron_ms": 180,
+    "details_fade_ms": 220,
+    "press_ms": 150,
+    "pressed_scale": 0.975
+  },
+  "checks": {
+    "unit_tests_passed": 114,
+    "device_tests_passed": 7,
+    "device_test_seconds": 132.474,
+    "device_tests": [
+      "WorkoutFlowTest",
+      "SessionDragTest (4 cases)",
+      "WorkoutControlsTest",
+      "FeedbackScreenTest"
+    ],
+    "device_platform": "Android 16, isolated read-only MigrationQA emulator",
+    "formatting": "passed",
+    "debug_release_builds": "passed",
+    "lint_errors": 0,
+    "lint_warnings": 16,
+    "signed_v34_to_v35_upgrade": {
+      "passed": true,
+      "from": 34,
+      "to": 35,
+      "device": "MigrationQA35, Android 15",
+      "same_permanent_certificate": true,
+      "installed_bytes_match_delivered_apk": true,
+      "non_debuggable": true,
+      "all_record_document_draft_payloads_and_revisions_unchanged": true,
+      "unchanged_after_cold_restart": true,
+      "profile_retained": "Alex",
+      "draft_exercises": [
+        "Squat",
+        "Bench Press"
+      ],
+      "retained_reps": "7",
+      "real_keyboard_verified": true,
+      "apk_sha256": "cca75070b5edd2607208e4b4fdbe109961687217b7909fc19892198c0c826546"
+    },
+    "visual_checks": [
+      "PWA and Android live rendering",
+      "fixed workout header",
+      "expanded/collapsed controls",
+      "real motion recording",
+      "light/dark",
+      "200% text",
+      "320dp width",
+      "real keyboard"
+    ],
+    "numeric_field_target": "Independent editable value bounds; typing and stepper values verified",
+    "existing_flow_assertions": "Retained; locators follow named value fields and the fixed toolbar"
+  },
+  "remaining_acceptance": [
+    "Physical-phone animation feel",
+    "TalkBack"
+  ]
+}

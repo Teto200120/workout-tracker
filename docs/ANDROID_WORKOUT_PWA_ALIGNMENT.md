@@ -1,0 +1,15 @@
+# Active workout PWA alignment — v35
+
+The reference is the rendered, unchanged PWA at 412 × 915, together with its icon paths and computed CSS. The PWA source files remain unchanged. This correction stays in the native active-workout presentation and transitions into or out of it.
+
+Workout controls use the PWA's rounded 2.25-unit icon strokes: a rotating up/down disclosure, information action for Exercise details, six-dot grip, plus/minus, completion checks, close control and detail back arrow. Numbered round badges become green checks when the existing working-set completion metric is complete. The fullscreen-style details glyph is removed from the workout card.
+
+The information action sits above set entry. Weight, reps and RPE use labeled minus/value/plus rows with circular inline controls and rounded detail controls. Numeric values have independent touch and accessibility bounds, so tapping a value cannot trigger its neighboring stepper. Large text stacks the label above the controls. Direct entry, blank values, bounded stepping, RPE preference, warm-ups and completion remain available.
+
+The workout toolbar stays in place while the exercise list scrolls, following the PWA's fixed context. Its editable name, timer, back-to-Today action and explicit finish review remain available. The decorative hero treatment is removed from this toolbar. Progress changes animate without the Material stop marker.
+
+Card disclosure uses the PWA's computed 280 ms curve, a small upward body offset and fading. The chevron rotates over 180 ms. Opening details uses a 220 ms fade instead of horizontal travel. Press feedback scales controls to 0.975 over 150 ms. Opening a card uses the PWA's small 8dp/0.99 settling effect; returning from details or scrolling a card back into view does not replay it. Reduced motion and the existing animation preference remain supported. The v34 continuous drag handler, viewport preservation, drop-only persistence and cancellation behavior are retained.
+
+Validation is recorded in [v35 checks](verification/android-v35-pwa-alignment.json): 114 unit tests, seven device tests, formatting, debug/release builds and zero lint errors. The existing full workout test retains its data, keyboard and lifecycle assertions; selectors follow the named numeric fields and fixed toolbar. A new interaction test verifies that typing and stepping use separate targets. The exact signed v34-to-v35 APK update retains the complete synthetic database and unfinished workout across a cold restart, and the Android 15 keyboard works.
+
+Visual checks include the rendered PWA, native disclosure/details recording, dark/light modes, 200% text and 320dp width. Emulator checks do not establish physical-phone animation feel; physical-phone and TalkBack acceptance remain outstanding. No dependency, database schema, backup format or network-permission changes are included.

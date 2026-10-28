@@ -4,10 +4,16 @@ import android.os.SystemClock
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -27,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -40,6 +47,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -62,6 +70,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     val savedDraft = state.draft ?: return
     val draft = remember(savedDraft) { savedDraft.singleExpandedExercise() }
     val completionFeedback = LocalCompletionFeedback.current
+    val primaryInteraction = remember { MutableInteractionSource() }
     var copyRequest by remember { mutableStateOf<SetCopyRequest?>(null) }
     var focusedKey by rememberSaveable(draft.id) { mutableStateOf<String?>(null) }
     fun closeExercise() {
@@ -81,6 +90,12 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     var chosenSets by
         rememberSaveable(draft.id) { mutableStateOf<Map<String, String>>(hashMapOf()) }
     var scrollTarget by remember { mutableStateOf<String?>(null) }
+    val bodyHeights = remember(draft.id) { mutableStateMapOf<String, Int>() }
+    val headerHeights = remember(draft.id) { mutableStateMapOf<String, Int>() }
+    val collapseStates = remember(draft.id) { mutableMapOf<String, Boolean>() }
+    val contentGap = with(LocalDensity.current) { 44.dp.toPx() }
+    val focusInset = with(LocalDensity.current) { 8.dp.toPx() }
+    val disclosureShift = with(LocalDensity.current) { 6.dp.roundToPx() }
     val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
     val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
     // New workouts keep their name and overview visible. Resume at the current exercise
@@ -95,7 +110,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     val list =
         rememberLazyListState(
             initialFirstVisibleItemIndex =
-                if (!hasEntries || initialExercise < 0) 0 else initialExercise + 2
+                if (!hasEntries || initialExercise < 0) 0 else initialExercise + 1
         )
     val currentDraft by rememberUpdatedState(draft)
     val drag = rememberSessionDrag(draft.id, draft.exercises.map { it.key }, list, !state.busy)
@@ -111,8 +126,31 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
         val target = scrollTarget ?: return@LaunchedEffect
         val index = draft.exercises.indexOfFirst { it.key == target && !it.collapsed }
         if (index >= 0 && drag.key == null && focusedKey == null) {
-            if (state.interactions.animations) list.animateScrollToItem(index + 2, -8)
-            else list.scrollToItem(index + 2, -8)
+            if (list.layoutInfo.visibleItemsInfo.none { it.key == target }) {
+                if (state.interactions.animations) list.animateScrollToItem(index + 1)
+                else list.scrollToItem(index + 1)
+            }
+            withFrameNanos {}
+            withFrameNanos {}
+            list.layoutInfo.visibleItemsInfo
+                .firstOrNull { it.key == target }
+                ?.let { item ->
+                    val targetHeight =
+                        (bodyHeights[target] ?: 0) + (headerHeights[target] ?: 0) + contentGap
+                    val available =
+                        list.layoutInfo.viewportEndOffset - list.layoutInfo.viewportStartOffset
+                    val desiredTop =
+                        list.layoutInfo.viewportStartOffset +
+                            focusInset +
+                            ((available - targetHeight - focusInset * 2).coerceAtLeast(0f) * .44f)
+                    val delta = item.offset - desiredTop
+                    if (state.interactions.animations)
+                        list.animateScrollBy(
+                            delta,
+                            tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing),
+                        )
+                    else list.scrollBy(delta)
+                }
         }
         scrollTarget = null
     }
@@ -149,9 +187,18 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val completed = draft.exercises.sumOf { e -> e.sets.count { it.done } }
     val total = draft.exercises.sumOf { it.sets.size }
+    val progressAnimation =
+        animateFloatAsState(
+            if (total == 0) 0f else completed.toFloat() / total,
+            animationSpec =
+                if (state.interactions.animations)
+                    tween(WorkoutMotion.Detail, easing = WorkoutMotion.Easing)
+                else snap(),
+            label = "workout-progress",
+        )
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.luminance() < .5f
-    val panel = if (dark) Color(0xFF1D3048) else colors.surfaceContainerLow
+    val panel = if (dark) Color(0xFF223650) else colors.surfaceContainerLow
     val focusedExercise = draft.exercises.firstOrNull { it.key == focusedKey }
     LaunchedEffect(draft.exercises.map { it.key }) {
         if (focusedKey != null && focusedExercise == null) focusedKey = null
@@ -179,6 +226,17 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             var more by rememberSaveable(exercise.key) { mutableStateOf(false) }
             val guidance = guidanceViews[exercise.key] == true
             var chooseSet by rememberSaveable(exercise.key) { mutableStateOf(false) }
+            val settle = remember(exercise.key) { Animatable(1f) }
+            val lifted = drag.key == exercise.key
+            val settleDistance = with(LocalDensity.current) { 8.dp.toPx() }
+            LaunchedEffect(exercise.collapsed, lifted, state.interactions.animations) {
+                val opening = collapseStates[exercise.key] != false && !exercise.collapsed
+                collapseStates[exercise.key] = exercise.collapsed
+                if (opening && !lifted && state.interactions.animations) {
+                    settle.snapTo(0f)
+                    settle.animateTo(1f, tween(WorkoutMotion.Detail, easing = WorkoutMotion.Easing))
+                } else settle.snapTo(1f)
+            }
             fun toggleExercise() {
                 focus.clearFocus()
                 vm.edit {
@@ -193,6 +251,12 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                 modifier =
                     cardModifier
                         .fillMaxWidth()
+                        .graphicsLayer {
+                            translationY = (1f - settle.value) * settleDistance
+                            scaleX = .99f + .01f * settle.value
+                            scaleY = scaleX
+                            alpha = .86f + .14f * settle.value
+                        }
                         .testTag("session-card-${exercise.key}")
                         .semantics { customActions = moveActions(exercise) }
                         .then(
@@ -225,24 +289,20 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     role = Role.Button,
                                     onClick = ::toggleExercise,
                                 )
+                                .onSizeChanged { headerHeights[exercise.key] = it.height }
                                 .testTag("toggle-session-${exercise.key}")
                                 .semantics {
-                                    contentDescription =
-                                        if (exercise.collapsed) "Expand exercise"
-                                        else "Collapse exercise"
                                     stateDescription =
                                         "${exercise.name}, ${if (exercise.collapsed) "Collapsed" else "Expanded"}"
                                 },
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(
-                            "${position + 1}".padStart(2, '0'),
-                            Modifier.widthIn(min = 24.dp),
-                            color =
-                                if (activeExercise?.key == exercise.key) colors.primary
-                                else colors.onSurfaceVariant.copy(alpha = .7f),
-                            style = MaterialTheme.typography.labelLarge,
+                        WorkoutStatus(
+                            position,
+                            progress.complete,
+                            !exercise.collapsed,
+                            state.interactions.animations,
                         )
                         Column(
                             Modifier.weight(1f),
@@ -265,6 +325,30 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     },
                             )
                         }
+                        val disclosureInteraction =
+                            remember(exercise.key) { MutableInteractionSource() }
+                        IconButton(
+                            onClick = ::toggleExercise,
+                            enabled = !state.busy,
+                            interactionSource = disclosureInteraction,
+                            colors =
+                                IconButtonDefaults.iconButtonColors(
+                                    contentColor = colors.onSurfaceVariant
+                                ),
+                            modifier =
+                                Modifier.size(48.dp)
+                                    .workoutPressFeedback(
+                                        disclosureInteraction,
+                                        state.interactions.animations,
+                                    )
+                                    .semantics {
+                                        contentDescription =
+                                            if (exercise.collapsed) "Expand exercise"
+                                            else "Collapse exercise"
+                                    },
+                        ) {
+                            WorkoutChevron(!exercise.collapsed, state.interactions.animations)
+                        }
                         if (draft.exercises.size > 1)
                             Box(
                                 Modifier.size(48.dp)
@@ -273,37 +357,97 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    TrackerIcons.Grip,
+                                    WorkoutIcons.Grip,
                                     null,
-                                    Modifier.size(24.dp),
-                                    tint = colors.onSurfaceVariant.copy(alpha = .65f),
+                                    Modifier.size(22.dp),
+                                    tint = colors.onSurfaceVariant.copy(alpha = .78f),
                                 )
                             }
-                        Icon(
-                            if (exercise.collapsed) TrackerIcons.Chevron else TrackerIcons.Remove,
-                            null,
-                            Modifier.size(24.dp),
-                        )
                     }
                     AnimatedVisibility(
                         visible = !exercise.collapsed,
                         enter =
                             if (state.interactions.animations)
                                 expandVertically(
-                                    tween(TrackerMotion.Duration, easing = TrackerMotion.Easing)
-                                ) + fadeIn(tween(TrackerMotion.Quick))
+                                    tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing)
+                                ) +
+                                    fadeIn(
+                                        tween(
+                                            WorkoutMotion.Disclosure,
+                                            easing = WorkoutMotion.Easing,
+                                        )
+                                    ) +
+                                    slideInVertically(
+                                        tween(
+                                            WorkoutMotion.Disclosure,
+                                            easing = WorkoutMotion.Easing,
+                                        )
+                                    ) {
+                                        -disclosureShift
+                                    }
                             else EnterTransition.None,
                         exit =
                             if (state.interactions.animations)
                                 shrinkVertically(
-                                    tween(TrackerMotion.Duration, easing = TrackerMotion.Easing)
-                                ) + fadeOut(tween(100))
+                                    tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing)
+                                ) +
+                                    fadeOut(
+                                        tween(
+                                            WorkoutMotion.Disclosure,
+                                            easing = WorkoutMotion.Easing,
+                                        )
+                                    ) +
+                                    slideOutVertically(
+                                        tween(
+                                            WorkoutMotion.Disclosure,
+                                            easing = WorkoutMotion.Easing,
+                                        )
+                                    ) {
+                                        -disclosureShift
+                                    }
                             else ExitTransition.None,
                     ) {
                         Column(
-                            Modifier.testTag("session-expanded-${exercise.key}"),
+                            Modifier.onSizeChanged { bodyHeights[exercise.key] = it.height }
+                                .testTag("session-expanded-${exercise.key}"),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            val detailsInteraction =
+                                remember(exercise.key) { MutableInteractionSource() }
+                            OutlinedButton(
+                                onClick = {
+                                    focus.clearFocus()
+                                    activeKey = exercise.key
+                                    focusedKey = exercise.key
+                                },
+                                enabled = !state.busy,
+                                shape = RoundedCornerShape(28.dp),
+                                border =
+                                    BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .4f)),
+                                colors =
+                                    ButtonDefaults.outlinedButtonColors(
+                                        containerColor = colors.secondary.copy(alpha = .06f),
+                                        contentColor = colors.onSurface,
+                                    ),
+                                interactionSource = detailsInteraction,
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .heightIn(min = 56.dp)
+                                        .testTag("focus-session-${exercise.key}")
+                                        .workoutPressFeedback(
+                                            detailsInteraction,
+                                            state.interactions.animations,
+                                        ),
+                            ) {
+                                Icon(
+                                    WorkoutIcons.Info,
+                                    null,
+                                    Modifier.size(22.dp),
+                                    tint = workoutAccent(),
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text("Exercise details", Modifier.weight(1f))
+                            }
                             FlowRow(
                                 Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -328,7 +472,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                                 "Set ${exercise.sets.indexOf(currentSet) + 1} of ${exercise.sets.size}",
                                                 style = MaterialTheme.typography.titleMedium,
                                             )
-                                            Icon(TrackerIcons.Chevron, null, Modifier.size(18.dp))
+                                            WorkoutChevron(chooseSet, state.interactions.animations)
                                         }
                                         DropdownMenu(
                                             expanded = chooseSet,
@@ -378,6 +522,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                                 ?: 5.0,
                                             set.key == currentSet?.key,
                                             showHeading = allSets,
+                                            animations = state.interactions.animations,
                                             onFocused = { select(exercise, set) },
                                             onChange = { value ->
                                                 changeExercise(exercise.key) { e ->
@@ -417,21 +562,6 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                IconButton(
-                                    onClick = {
-                                        focus.clearFocus()
-                                        activeKey = exercise.key
-                                        focusedKey = exercise.key
-                                    },
-                                    enabled = !state.busy,
-                                    modifier = Modifier.testTag("focus-session-${exercise.key}"),
-                                ) {
-                                    Icon(
-                                        TrackerIcons.Focus,
-                                        "Exercise details",
-                                        Modifier.size(20.dp),
-                                    )
-                                }
                                 TextButton(
                                     onClick = {
                                         changeExercise(exercise.key) {
@@ -440,7 +570,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     },
                                     enabled = !state.busy && exercise.sets.size < 200,
                                 ) {
-                                    Icon(TrackerIcons.Add, null, Modifier.size(18.dp))
+                                    Icon(WorkoutIcons.Plus, null, Modifier.size(18.dp))
                                     Text("Add set")
                                 }
                                 IconButton(
@@ -450,8 +580,8 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                 ) {
                                     Icon(
                                         if (position == draft.exercises.lastIndex)
-                                            TrackerIcons.Check
-                                        else TrackerIcons.Chevron,
+                                            WorkoutIcons.Check
+                                        else WorkoutIcons.Next,
                                         if (position == draft.exercises.lastIndex) "Review workout"
                                         else "Next exercise",
                                     )
@@ -525,8 +655,8 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
         modifier = Modifier.fillMaxSize(),
         transitionSpec = {
             if (state.interactions.animations)
-                (TrackerMotion.enter(targetState != null) togetherWith
-                        TrackerMotion.exit(targetState != null))
+                (fadeIn(tween(WorkoutMotion.Detail, easing = WorkoutMotion.Easing)) togetherWith
+                        fadeOut(tween(WorkoutMotion.Press, easing = WorkoutMotion.Easing)))
                     .using(null)
             else (EnterTransition.None togetherWith ExitTransition.None).using(null)
         },
@@ -575,6 +705,72 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             )
         } else
             Column(Modifier.fillMaxSize().background(sessionBackgroundBrush())) {
+                Surface(
+                    color = if (dark) Color(0xFF1A304D) else colors.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        WorkoutIconButton(
+                            onClick = back,
+                            animations = state.interactions.animations,
+                            modifier = Modifier.size(48.dp),
+                        ) {
+                            Icon(WorkoutIcons.Close, "Back to Today", Modifier.size(22.dp))
+                        }
+                        Column(
+                            Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            TextField(
+                                draft.type,
+                                { value -> vm.edit { it.copy(type = value) } },
+                                label = {
+                                    Text(
+                                        "Workout name",
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                },
+                                textStyle =
+                                    MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                    ),
+                                singleLine = true,
+                                enabled = !state.busy,
+                                colors =
+                                    TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                    ),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                SessionClock(draft, bootCount)
+                            }
+                        }
+                        WorkoutIconButton(
+                            animations = state.interactions.animations,
+                            accent = true,
+                            onClick = {
+                                focus.clearFocus()
+                                finish = true
+                            },
+                            enabled = !state.busy,
+                            modifier = Modifier.size(48.dp).testTag("review-session"),
+                        ) {
+                            Icon(WorkoutIcons.Check, "Finish workout")
+                        }
+                    }
+                }
                 Box(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
                     LazyColumn(
                         Modifier.fillMaxSize()
@@ -596,69 +792,6 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         item {
-                            TrainingHero {
-                                Row(
-                                    Modifier.fillMaxWidth().padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    OutlinedIconButton(
-                                        onClick = back,
-                                        modifier = Modifier.size(48.dp),
-                                        border =
-                                            BorderStroke(
-                                                1.dp,
-                                                colors.onSurfaceVariant.copy(alpha = .24f),
-                                            ),
-                                    ) {
-                                        Icon(TrackerIcons.Back, "Back to Today")
-                                    }
-                                    Column(
-                                        Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    ) {
-                                        TextField(
-                                            draft.type,
-                                            { value -> vm.edit { it.copy(type = value) } },
-                                            label = {
-                                                Text(
-                                                    "Workout name",
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                )
-                                            },
-                                            textStyle = MaterialTheme.typography.titleLarge,
-                                            singleLine = true,
-                                            enabled = !state.busy,
-                                            colors =
-                                                TextFieldDefaults.colors(
-                                                    focusedContainerColor = Color.Transparent,
-                                                    unfocusedContainerColor = Color.Transparent,
-                                                    disabledContainerColor = Color.Transparent,
-                                                    unfocusedIndicatorColor = Color.Transparent,
-                                                ),
-                                            modifier = Modifier.fillMaxWidth(),
-                                        )
-                                        Row(
-                                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                        ) {
-                                            SessionClock(draft, bootCount)
-                                        }
-                                    }
-                                    FilledTonalIconButton(
-                                        onClick = {
-                                            focus.clearFocus()
-                                            finish = true
-                                        },
-                                        enabled = !state.busy,
-                                        modifier = Modifier.size(48.dp).testTag("review-session"),
-                                    ) {
-                                        Icon(TrackerIcons.Check, "Finish workout")
-                                    }
-                                }
-                            }
-                        }
-                        item {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 FlowRow(
                                     Modifier.fillMaxWidth(),
@@ -676,17 +809,19 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                         onClick = { picker = true },
                                         enabled = !state.busy && draft.exercises.size < 100,
                                     ) {
-                                        Icon(TrackerIcons.Add, null, Modifier.size(18.dp))
+                                        Icon(WorkoutIcons.Plus, null, Modifier.size(18.dp))
                                         Spacer(Modifier.width(6.dp))
                                         Text("Browse exercises")
                                     }
                                 }
                                 LinearProgressIndicator(
-                                    progress = {
-                                        if (total == 0) 0f else completed.toFloat() / total
-                                    },
+                                    progress = { progressAnimation.value },
+                                    color = workoutAccent(),
+                                    trackColor = colors.secondary.copy(alpha = .2f),
+                                    gapSize = 0.dp,
+                                    drawStopIndicator = {},
                                     modifier =
-                                        Modifier.fillMaxWidth().semantics {
+                                        Modifier.fillMaxWidth().height(11.dp).semantics {
                                             stateDescription =
                                                 if (state.pending) "Saving entries"
                                                 else "Saved on this device"
@@ -708,8 +843,8 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                                 if (drag.key == exercise.key) null
                                                 else
                                                     tween(
-                                                        TrackerMotion.Duration,
-                                                        easing = TrackerMotion.Easing,
+                                                        WorkoutMotion.Press,
+                                                        easing = WorkoutMotion.Easing,
                                                     ),
                                             fadeOutSpec = null,
                                         )
@@ -830,6 +965,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                 }
                             },
                             enabled = !state.busy,
+                            interactionSource = primaryInteraction,
                             shape = RoundedCornerShape(20.dp),
                             colors =
                                 ButtonDefaults.buttonColors(
@@ -839,6 +975,10 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                             modifier =
                                 Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                                     .fillMaxWidth()
+                                    .workoutPressFeedback(
+                                        primaryInteraction,
+                                        state.interactions.animations,
+                                    )
                                     .heightIn(min = 64.dp)
                                     .testTag(
                                         if (activeSet != null && !activeSet.done)
@@ -846,7 +986,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                         else "session-primary-action"
                                     ),
                         ) {
-                            Icon(TrackerIcons.Check, null, Modifier.size(20.dp))
+                            Icon(WorkoutIcons.Check, null, Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
@@ -1001,6 +1141,8 @@ internal fun SessionSetEntry(
     onFocused: () -> Unit,
     onChange: (WorkingSet) -> Unit,
     onComplete: (Boolean) -> Unit,
+    animations: Boolean = true,
+    detail: Boolean = false,
 ) {
     Column(
         Modifier.fillMaxWidth().testTag("session-set-${set.key}"),
@@ -1022,57 +1164,43 @@ internal fun SessionSetEntry(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
             }
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val columns = if (trackRpe) 3 else 2
-            val compact = maxWidth >= (columns * 104).dp && LocalDensity.current.fontScale < 1.5f
-            @Composable
-            fun Fields(modifier: Modifier) {
-                SetEntryField(
-                    set.weight,
-                    { onChange(set.copy(weight = it)) },
-                    "Weight (lb)",
-                    increment,
-                    KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = modifier,
-                    enabled = enabled,
-                    compact = compact,
-                    onFocused = onFocused,
-                )
-                SetEntryField(
-                    set.reps,
-                    { onChange(set.copy(reps = it)) },
-                    "Reps",
-                    1.0,
-                    KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = modifier,
-                    enabled = enabled,
-                    compact = compact,
-                    onFocused = onFocused,
-                )
-                if (trackRpe)
-                    SetEntryField(
-                        set.rpe,
-                        { onChange(set.copy(rpe = it, historicalRpeZero = false)) },
-                        "RPE",
-                        .5,
-                        KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = modifier,
-                        enabled = enabled,
-                        compact = compact,
-                        maximum = 10.0,
-                        minimum = 1.0,
-                        onFocused = onFocused,
-                    )
-            }
-            if (compact)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Fields(Modifier.weight(1f))
-                }
-            else
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Fields(Modifier.fillMaxWidth())
-                }
-        }
+        SetEntryField(
+            set.weight,
+            { onChange(set.copy(weight = it)) },
+            "Weight (lb)",
+            increment,
+            KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            enabled = enabled,
+            detail = detail,
+            onFocused = onFocused,
+            animations = animations,
+        )
+        SetEntryField(
+            set.reps,
+            { onChange(set.copy(reps = it)) },
+            "Reps",
+            1.0,
+            KeyboardOptions(keyboardType = KeyboardType.Number),
+            enabled = enabled,
+            detail = detail,
+            onFocused = onFocused,
+            animations = animations,
+        )
+        if (trackRpe)
+            SetEntryField(
+                set.rpe,
+                { onChange(set.copy(rpe = it, historicalRpeZero = false)) },
+                "RPE",
+                .5,
+                KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                enabled = enabled,
+                detail = detail,
+                maximum = 10.0,
+                minimum = 1.0,
+                secondary = true,
+                onFocused = onFocused,
+                animations = animations,
+            )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
                 Modifier.heightIn(min = 48.dp)

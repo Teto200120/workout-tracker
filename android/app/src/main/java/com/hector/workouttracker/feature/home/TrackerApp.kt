@@ -188,6 +188,11 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 enterTransition = {
                                     if (!state.interactions.animations) EnterTransition.None
                                     else if (
+                                        initialState.destination.route == "session" ||
+                                            targetState.destination.route == "session"
+                                    )
+                                        WorkoutMotion.enter()
+                                    else if (
                                         initialState.destination.route in primaryRoutes &&
                                             targetState.destination.route in primaryRoutes
                                     )
@@ -196,6 +201,8 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 },
                                 popEnterTransition = {
                                     if (!state.interactions.animations) EnterTransition.None
+                                    else if (initialState.destination.route == "session")
+                                        WorkoutMotion.enter()
                                     else if (
                                         initialState.destination.route in primaryRoutes &&
                                             targetState.destination.route in primaryRoutes
@@ -214,6 +221,8 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 },
                                 exitTransition = {
                                     if (!state.interactions.animations) ExitTransition.None
+                                    else if (targetState.destination.route == "session")
+                                        WorkoutMotion.exit()
                                     else if (
                                         initialState.destination.route in primaryRoutes &&
                                             targetState.destination.route in primaryRoutes
@@ -309,7 +318,25 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 composable("schedule") {
                                     ScheduleScreen(state, { nav.popBackStack() })
                                 }
-                                composable("session") {
+                                composable(
+                                    "session",
+                                    enterTransition = {
+                                        if (state.interactions.animations) WorkoutMotion.enter()
+                                        else EnterTransition.None
+                                    },
+                                    exitTransition = {
+                                        if (state.interactions.animations) WorkoutMotion.exit()
+                                        else ExitTransition.None
+                                    },
+                                    popEnterTransition = {
+                                        if (state.interactions.animations) WorkoutMotion.enter()
+                                        else EnterTransition.None
+                                    },
+                                    popExitTransition = {
+                                        if (state.interactions.animations) WorkoutMotion.exit()
+                                        else ExitTransition.None
+                                    },
+                                ) {
                                     LaunchedEffect(state.draft, state.busy) {
                                         if (state.draft == null && !state.busy) nav.popBackStack()
                                     }

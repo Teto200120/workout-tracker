@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.hector.workouttracker.core.designsystem.TrackerMotion
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -222,8 +221,8 @@ internal fun Modifier.sessionDrag(
                                             state.settleOffset.animateTo(
                                                 target,
                                                 tween(
-                                                    TrackerMotion.Quick,
-                                                    easing = TrackerMotion.Easing,
+                                                    WorkoutMotion.Press,
+                                                    easing = WorkoutMotion.Easing,
                                                 ),
                                             )
                                     } finally {

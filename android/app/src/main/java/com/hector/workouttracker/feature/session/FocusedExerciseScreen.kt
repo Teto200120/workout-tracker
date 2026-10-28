@@ -4,13 +4,13 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -48,6 +48,7 @@ internal fun FocusedExerciseScreen(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
 ) {
+    val primaryInteraction = remember { MutableInteractionSource() }
     var guide by rememberSaveable(exercise.key) { mutableStateOf(false) }
     var allSets by rememberSaveable(exercise.key) { mutableStateOf(false) }
     var chooseSet by rememberSaveable(exercise.key) { mutableStateOf(false) }
@@ -77,12 +78,12 @@ internal fun FocusedExerciseScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    FilledTonalIconButton(
+                    WorkoutIconButton(
                         onClick = onBack,
-                        shape = CircleShape,
+                        animations = state.interactions.animations,
                         modifier = Modifier.size(48.dp).testTag("focused-back"),
                     ) {
-                        Icon(TrackerIcons.Back, "Back to workout")
+                        Icon(WorkoutIcons.Back, "Back to workout", Modifier.size(24.dp))
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
@@ -136,7 +137,9 @@ internal fun FocusedExerciseScreen(
                 targetState = guide,
                 modifier = Modifier.weight(1f),
                 animationSpec =
-                    if (state.interactions.animations) tween(TrackerMotion.Quick) else snap(),
+                    if (state.interactions.animations)
+                        tween(WorkoutMotion.Press, easing = WorkoutMotion.Easing)
+                    else snap(),
                 label = "exercise-log-guide",
             ) { showGuide ->
                 if (showGuide)
@@ -234,6 +237,8 @@ internal fun FocusedExerciseScreen(
                                                         ?.increment ?: 5.0,
                                                     set.key == selectedSet?.key,
                                                     showHeading = allSets,
+                                                    animations = state.interactions.animations,
+                                                    detail = true,
                                                     onFocused = { onSelect(set) },
                                                     onChange = { value ->
                                                         onChange(
@@ -399,6 +404,7 @@ internal fun FocusedExerciseScreen(
                         }
                     },
                     enabled = !state.busy,
+                    interactionSource = primaryInteraction,
                     shape = RoundedCornerShape(24.dp),
                     colors =
                         ButtonDefaults.buttonColors(
@@ -408,10 +414,11 @@ internal fun FocusedExerciseScreen(
                     modifier =
                         Modifier.fillMaxWidth()
                             .padding(16.dp)
+                            .workoutPressFeedback(primaryInteraction, state.interactions.animations)
                             .heightIn(min = 64.dp)
                             .testTag("focused-primary-action"),
                 ) {
-                    Icon(TrackerIcons.Check, null, Modifier.size(20.dp))
+                    Icon(WorkoutIcons.Check, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
                         when {

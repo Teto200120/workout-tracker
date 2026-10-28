@@ -202,20 +202,22 @@ class WorkoutFlowTest {
         }
         compose.onNodeWithText("Exercise name").performScrollTo().performTextInput("Bench Press")
         compose.onNodeWithText("Add exercise").performScrollTo().performClick()
-        compose.onNodeWithText("Weight (lb)").performScrollTo().performTextInput("100")
-        compose.onNodeWithText("Reps").performScrollTo().performTextInput("5")
+        compose
+            .onNodeWithContentDescription("Weight (lb)")
+            .performScrollTo()
+            .performTextInput("100")
+        compose.onNodeWithContentDescription("Reps").performScrollTo().performTextInput("5")
         closeSoftKeyboard()
         screenshot("session")
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(
-                (hasText("Back to Today") or hasContentDescription("Back to Today"))
-            )
+        compose.onNodeWithContentDescription("Back to Today").assertIsDisplayed()
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
         compose.onNodeWithText("Resume workout").performClick()
-        compose.onNodeWithText("Weight (lb)").performScrollTo().assertTextContains("100")
+        compose
+            .onNodeWithContentDescription("Weight (lb)")
+            .performScrollTo()
+            .assertTextContains("100")
         compose
             .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Finish workout"))
@@ -351,9 +353,7 @@ class WorkoutFlowTest {
             listOf(false) + List(started.exercises.size - 1) { true },
             started.exercises.map { it.collapsed },
         )
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(hasText("Workout name"))
+        compose.onNodeWithText("Workout name").assertIsDisplayed()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         val moreTag = "session-more-${started.exercises.first().key}"
         compose
@@ -407,23 +407,19 @@ class WorkoutFlowTest {
             .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(keyboardEntry)
         compose
-            .onNode(hasText("Reps", substring = false) and hasAnyAncestor(keyboardEntry))
+            .onNode(
+                hasContentDescription("Reps", substring = false) and hasAnyAncestor(keyboardEntry)
+            )
             .performScrollTo()
             .performTextInput("8")
         sessionKeyboardViewport()
         closeSoftKeyboard()
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(
-                (hasText("Back to Today") or hasContentDescription("Back to Today"))
-            )
+        compose.onNodeWithContentDescription("Back to Today").assertIsDisplayed()
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
         compose.onNodeWithText("Resume workout").performClick()
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(hasText("Workout name"))
+        compose.onNodeWithText("Workout name").assertIsDisplayed()
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
         val firstKey = vm.state.value.draft!!.exercises.first().key
         compose
@@ -786,11 +782,7 @@ class WorkoutFlowTest {
         val active = vm.state.value.draft!!
         assertEquals(JsonPrimitive(0), active.originRoutineId)
         assertEquals(expected, active.exercises.map { it.name })
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(
-                (hasText("Back to Today") or hasContentDescription("Back to Today"))
-            )
+        compose.onNodeWithContentDescription("Back to Today").assertIsDisplayed()
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
@@ -1085,14 +1077,9 @@ class WorkoutFlowTest {
             }
             compose.onNodeWithTag("edit-history-workout").performScrollTo().performClick()
         }
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(
-                (hasText("Back to Today") or hasContentDescription("Back to Today"))
-            )
+        compose.onNodeWithContentDescription("Back to Today").assertIsDisplayed()
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
-            .performScrollTo()
             .performClick()
         openHistory()
         historyFiltersFlow(vm, owner)
@@ -1753,11 +1740,7 @@ class WorkoutFlowTest {
                 .fetchSemanticsNodes()
                 .isEmpty()
         }
-        compose
-            .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(
-                (hasText("Back to Today") or hasContentDescription("Back to Today"))
-            )
+        compose.onNodeWithContentDescription("Back to Today").assertIsDisplayed()
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
@@ -1889,7 +1872,8 @@ class WorkoutFlowTest {
         try {
             // Exercise a real IME even on emulators configured with a hardware keyboard.
             setting("1")
-            val field = compose.onAllNodesWithText("Reps", substring = false).onFirst()
+            val field =
+                compose.onAllNodesWithContentDescription("Reps", substring = false).onFirst()
             field.performScrollTo().performClick()
             val decor = compose.activity.window.decorView
             compose.waitUntil(10000) {
@@ -2180,7 +2164,10 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) { !vm.state.value.pending }
         compose.onNodeWithTag("complete-current-set").assertTextContains(second.name)
         compose
-            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${secondSet.key}")))
+            .onNode(
+                hasContentDescription("Reps") and
+                    hasAnyAncestor(hasTestTag("session-set-${secondSet.key}"))
+            )
             .performTextReplacement(secondSet.reps)
         closeSoftKeyboard()
         compose.waitUntil(10000) { !vm.state.value.pending }
@@ -2189,7 +2176,10 @@ class WorkoutFlowTest {
         assertEquals(original.openExercise(first.key), vm.state.value.draft)
         scroll("session-set-${set.key}")
         compose
-            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
+            .onNode(
+                hasContentDescription("Reps") and
+                    hasAnyAncestor(hasTestTag("session-set-${set.key}"))
+            )
             .performTextReplacement("9")
         closeSoftKeyboard()
         compose
@@ -2226,7 +2216,10 @@ class WorkoutFlowTest {
         click("review-all-sets-${first.key}")
         scroll("session-set-${set.key}")
         compose
-            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
+            .onNode(
+                hasContentDescription("Reps") and
+                    hasAnyAncestor(hasTestTag("session-set-${set.key}"))
+            )
             .assertTextContains("9")
         compose
             .onNode(hasText("Completed") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
@@ -2308,7 +2301,7 @@ class WorkoutFlowTest {
             // Align the source card so the collapsed destination is visible on a short phone.
             compose
                 .onNodeWithTag("session-list", useUnmergedTree = true)
-                .performScrollToIndex(index + 2)
+                .performScrollToIndex(index + 1)
             val fromBounds =
                 compose
                     .onNodeWithTag("drag-session-$from", useUnmergedTree = true)
@@ -2391,7 +2384,10 @@ class WorkoutFlowTest {
         closeSoftKeyboard()
         logTag("session-set-${firstSet.key}")
         compose
-            .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${firstSet.key}")))
+            .onNode(
+                hasContentDescription("Reps") and
+                    hasAnyAncestor(hasTestTag("session-set-${firstSet.key}"))
+            )
             .performScrollTo()
             .performTextReplacement("11")
         closeSoftKeyboard()

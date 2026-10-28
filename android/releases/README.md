@@ -1,18 +1,18 @@
 # Android APK downloads
 
-Latest: [v34 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.34.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.34.0-preview/WorkoutTracker-0.34.0-preview.apk).
+Latest: [v35 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.35.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.35.0-preview/WorkoutTracker-0.35.0-preview.apk).
 
-This signed, non-debuggable workout motion and card clarity preview uses version code 34 and the permanent signing identity. It updates permanently signed v33. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
+This signed, non-debuggable active-workout PWA alignment preview uses version code 35 and the permanent signing identity. It updates permanently signed v34. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
 
-Dragging retains the lifted card through release, preserves the list position and settles cards into place. Card disclosure, details, Log/Guide and screen changes use consistent short transitions. Clearer card headers and grouped set values keep logging ahead of supporting information. Narrow layouts and large text retain stacked controls.
+The active workout returns to the PWA's icon shapes, rotating chevrons, information action, round steppers, status badges and motion. The toolbar remains visible as cards move, numeric values have their own input targets, and details fade without horizontal travel. Existing data, set entry, drag continuity and cancellation remain intact.
 
-Matching source is in the commit that adds this APK. Built locally with the pinned toolchain. SHA-256 is recorded in [SHA256SUMS](SHA256SUMS); release assets include signing and source details.
+Matching source is in the commit that adds this APK. Built locally with the pinned toolchain. SHA-256 is recorded in [SHA256SUMS](SHA256SUMS); GitHub release assets include source, signing and verification details.
 
 Certificate SHA-256: `e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88`.
 
-Validation: 114 unit tests, six device tests, formatting and debug/release builds pass. Android lint reports zero errors and 16 warnings in unchanged code or dependency declarations. The exact signed v33-to-v34 upgrade preserves the complete synthetic database and active draft through a cold restart, and the real keyboard works on Android 15.
+Validation: 114 unit tests, seven device tests, formatting and debug/release builds pass. Lint reports zero errors and 16 warnings. The exact signed v34-to-v35 update preserves the synthetic database, profile and unfinished workout through a cold restart. Android 15 keyboard checks pass. Physical-phone and TalkBack acceptance remain outstanding.
 
-Verification and limits: [workout motion](../../docs/ANDROID_WORKOUT_MOTION.md) and [v34 checks](../../docs/verification/android-v34-workout-motion.json). Physical-phone and TalkBack acceptance remain outstanding. Earlier [Android 15 keyboard recovery](../../docs/ANDROID_KEYBOARD_RECOVERY.md), [read-only draft recovery](../../docs/ANDROID_DRAFT_RECOVERY.md), and [native performance improvements](../../docs/ANDROID_NATIVE_PERFORMANCE.md) remain included.
+Details: [PWA alignment](../../docs/ANDROID_WORKOUT_PWA_ALIGNMENT.md) · [v35 verification](../../docs/verification/android-v35-pwa-alignment.json) · [retained drag continuity](../../docs/ANDROID_WORKOUT_MOTION.md) · [Android 15 keyboard recovery](../../docs/ANDROID_KEYBOARD_RECOVERY.md).
 
 ## Future Android deliveries
 
