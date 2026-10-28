@@ -397,12 +397,15 @@ class WorkoutFlowTest {
                     hasAnyAncestor(hasTestTag("session-list"))
             )
             .assertExists()
+        val keyboardExercise =
+            requireNotNull(vm.state.value.draft).exercises.single { !it.collapsed }
+        val keyboardSet = keyboardExercise.sets.first { !it.done }
+        val keyboardEntry = hasTestTag("session-set-${keyboardSet.key}")
         compose
             .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(hasText("Workout name"))
+            .performScrollToNode(keyboardEntry)
         compose
-            .onAllNodesWithText("Reps", substring = false)
-            .onFirst()
+            .onNode(hasText("Reps", substring = false) and hasAnyAncestor(keyboardEntry))
             .performScrollTo()
             .performTextInput("8")
         sessionKeyboardViewport()
@@ -781,6 +784,11 @@ class WorkoutFlowTest {
         val active = vm.state.value.draft!!
         assertEquals(JsonPrimitive(0), active.originRoutineId)
         assertEquals(expected, active.exercises.map { it.name })
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(
+                (hasText("Back to Today") or hasContentDescription("Back to Today"))
+            )
         compose
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
@@ -1212,6 +1220,10 @@ class WorkoutFlowTest {
     ) {
         val app = compose.activity.application as TrackerApplication
         val active = vm.state.value.draft
+        fun statsTag(tag: String) {
+            compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
+        }
         compose.onNodeWithText("Stats", substring = false).performClick()
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("stats-totals").fetchSemanticsNodes().isNotEmpty()
@@ -1220,10 +1232,11 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("stats-week-summary").assertIsDisplayed()
         compose.onNodeWithTag("stats-lifetime-summary").assertIsDisplayed()
         compose.onNodeWithTag("stats-open-insights").assertIsDisplayed()
-        compose.onNodeWithTag("stats-open-exercises").assertIsDisplayed()
-        compose.onNodeWithTag("stats-latest-session").assertIsDisplayed()
-        compose.onNodeWithTag("open-history").assertIsDisplayed()
+        statsTag("stats-open-exercises")
+        statsTag("stats-latest-session")
+        statsTag("open-history")
         screenshot("stats-overview")
+        statsTag("stats-open-insights")
         compose.onNodeWithTag("stats-open-insights").performClick()
         compose
             .onNodeWithTag("stats-list")
@@ -1259,6 +1272,7 @@ class WorkoutFlowTest {
         }
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-back"))
         compose.onNodeWithTag("stats-back").performClick()
+        statsTag("stats-open-exercises")
         compose.onNodeWithTag("stats-open-exercises").performClick()
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-search"))
         compose.onNodeWithTag("stats-search").performScrollTo().performTextInput("Bench Press")
@@ -1270,7 +1284,7 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithText("Best load: 100.0 lb").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithTag("stats-chart").assertIsDisplayed()
+        statsTag("stats-chart")
         screenshot("stats-records")
         compose
             .onNodeWithTag("stats-list")
@@ -1328,6 +1342,7 @@ class WorkoutFlowTest {
         compose.onNodeWithTag("stats-search").assertTextContains("Bench Press")
         compose.onNodeWithTag("stats-list").performScrollToNode(hasTestTag("stats-back"))
         compose.onNodeWithTag("stats-back").performClick()
+        statsTag("stats-open-insights")
         compose.onNodeWithTag("stats-open-insights").performClick()
         compose
             .onNodeWithTag("stats-list")
@@ -2268,7 +2283,13 @@ class WorkoutFlowTest {
         val closed = requireNotNull(vm.state.value.draft)
         assertTrue(closed.exercises.all { it.collapsed })
         fun drag(from: String, to: String, cancel: Boolean) {
-            scroll("drag-session-$from")
+            val index =
+                requireNotNull(vm.state.value.draft).exercises.indexOfFirst { it.key == from }
+            assertTrue(index >= 0)
+            // Align the source card so the collapsed destination is visible on a short phone.
+            compose
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToIndex(index + 2)
             val fromBounds =
                 compose
                     .onNodeWithTag("drag-session-$from", useUnmergedTree = true)
@@ -2281,10 +2302,9 @@ class WorkoutFlowTest {
                     .boundsInRoot
             compose.onNodeWithTag("drag-session-$from", useUnmergedTree = true).performTouchInput {
                 down(center)
-                moveBy(
-                    Offset(0f, toBounds.center.y - fromBounds.center.y + toBounds.height / 2),
-                    delayMillis = 700,
-                )
+                val distance = toBounds.center.y - fromBounds.center.y + toBounds.height / 2
+                // Stream a real drag instead of holding the grip inside the auto-scroll edge.
+                repeat(30) { moveBy(Offset(0f, distance / 30), delayMillis = 20) }
                 if (cancel) cancel() else up()
             }
             saved()

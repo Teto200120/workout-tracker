@@ -33,7 +33,7 @@ class FeedbackScreenTest {
         compose.onNodeWithTag("feedback-open-error").assertDoesNotExist()
         assertEquals(2, calls)
         compose.onNodeWithTag("feedback-list").performScrollToIndex(0)
-        compose.onNodeWithText("Back to You").performClick()
+        compose.onNodeWithText("Back to settings").performClick()
         assertTrue(back)
         assertEquals(
             before,
