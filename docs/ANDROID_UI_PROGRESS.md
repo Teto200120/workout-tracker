@@ -5,7 +5,7 @@ Continue the PWA UI/UX import one screen at a time. Each delivered checkpoint ge
 | Screen | Checkpoint | Status |
 | --- | --- | --- |
 | Home | [v25](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.25.0-preview) | Expressive workout surface and primary action; selection/preview/start preserved |
-| Active workout | [v29](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.29.0-preview) | Touch-expandable cards, real drag reordering with auto-scroll and accessible actions, focused Log/Guide with notes and durable set entry |
+| Active workout | [v30](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.30.0-preview) | Immediate in-place card dragging, one centered current exercise, compact summaries and focused Log/Guide |
 | History | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Expressive date-first history and saved-workout/editor surfaces; filters retained |
 | Stats | [v27](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.27.0-preview) | Compact overview, one-tap exercise search, independent page positions and chart-first metric detail |
 | You / preferences / backup | [v28](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.28.0-preview) | Reference-inspired grouped Settings hub, saved-value rows, focused editors and separate guarded danger section; v25 Profile retained |

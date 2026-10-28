@@ -38,3 +38,9 @@ fun exerciseProgress(exercise: Exercise): ExerciseProgress {
         (done.size - 3).coerceAtLeast(0),
     )
 }
+
+/** Repair older drafts with several open rows; an intentional all-collapsed draft stays closed. */
+fun SessionDraft.singleExpandedExercise(): SessionDraft {
+    if (exercises.count { !it.collapsed } <= 1) return this
+    return openExercise(exercises.first { !it.collapsed }.key)
+}

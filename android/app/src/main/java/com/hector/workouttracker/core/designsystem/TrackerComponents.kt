@@ -104,6 +104,13 @@ internal object TrackerIcons {
             moveTo(3f, 16f)
             lineTo(5f, 16f)
         }
+    val More =
+        symbol("More actions") {
+            for (y in listOf(5f, 12f, 19f)) {
+                moveTo(12f, y)
+                lineTo(12f, y + .1f)
+            }
+        }
     val Grip =
         symbol("Reorder") {
             for (x in listOf(9f, 15f)) for (y in listOf(6f, 12f, 18f)) {

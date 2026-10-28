@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
@@ -343,9 +344,21 @@ class WorkoutFlowTest {
         compose.waitUntil(10000) {
             compose.onAllNodesWithTag("session-list").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithText("Active workout").assertIsDisplayed()
+        val started = requireNotNull(vm.state.value.draft)
+        assertEquals(
+            listOf(false) + List(started.exercises.size - 1) { true },
+            started.exercises.map { it.collapsed },
+        )
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Workout name"))
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
-        compose.onAllNodesWithText("Exercise guide").onFirst().performScrollTo().performClick()
+        val moreTag = "session-more-${started.exercises.first().key}"
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag(moreTag))
+        compose.onNodeWithTag(moreTag).performClick()
+        compose.onNodeWithText("Exercise guide").performClick()
         compose
             .onNodeWithText("Reference movement: Barbell Bench Press - Medium Grip")
             .assertExists()
@@ -378,7 +391,12 @@ class WorkoutFlowTest {
         compose
             .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Alternate Hammer Curl", substring = false))
-        compose.onNodeWithText("Alternate Hammer Curl", substring = false).assertExists()
+        compose
+            .onNode(
+                hasText("Alternate Hammer Curl", substring = false) and
+                    hasAnyAncestor(hasTestTag("session-list"))
+            )
+            .assertExists()
         compose
             .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Workout name"))
@@ -398,8 +416,18 @@ class WorkoutFlowTest {
             .onNode(hasText("Back to Today") or hasContentDescription("Back to Today"))
             .performClick()
         compose.onNodeWithText("Resume workout").performClick()
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasText("Workout name"))
         compose.onNodeWithText("Workout name").assertTextContains("Training fixture")
+        val firstKey = vm.state.value.draft!!.exercises.first().key
+        compose
+            .onNodeWithTag("session-list", useUnmergedTree = true)
+            .performScrollToNode(hasTestTag("toggle-session-$firstKey"))
+        compose.onNodeWithTag("toggle-session-$firstKey").performClick()
+        compose.waitUntil(10000) { !vm.state.value.pending }
         activeOrderFlow(vm, owner)
+        inlineDragFlow(vm)
         focusedExerciseFlow(vm, owner)
         activeExerciseFlow(vm, owner)
         compose
@@ -1611,6 +1639,8 @@ class WorkoutFlowTest {
                         true
             }
         }
+        click("session-more-$key")
+        compose.onNodeWithText("Training guidance", substring = false).performClick()
         click("review-last-$key")
         compose.onNodeWithText("1. 100 lb × 10 · RPE 8 · Working").assertExists()
         compose.onNodeWithText("Done", substring = false).performClick()
@@ -1658,7 +1688,10 @@ class WorkoutFlowTest {
         click("use-target-$key")
         compose.onNodeWithText("Replace sets", substring = false).performClick()
         awaitEntry("102.5", "7")
-        assertEquals(active.exercises, vm.state.value.draft!!.exercises.dropLast(1))
+        assertEquals(
+            active.exercises.map { it.copy(collapsed = true) },
+            vm.state.value.draft!!.exercises.dropLast(1),
+        )
         compose
             .onNodeWithTag("session-list", useUnmergedTree = true)
             .performScrollToNode(hasText("Finish workout", substring = false))
@@ -2099,7 +2132,8 @@ class WorkoutFlowTest {
             compose.onNodeWithTag(tag).performScrollTo().performClick()
             compose.waitUntil(10000) { !vm.state.value.pending }
         }
-        // A stepper on another expanded exercise must move the primary action to that set.
+        // Selecting another card opens only that exercise and directs the primary action to it.
+        click("toggle-session-${second.key}")
         val secondSet = second.sets.first()
         scroll("session-set-${secondSet.key}")
         compose
@@ -2116,7 +2150,9 @@ class WorkoutFlowTest {
             .performTextReplacement(secondSet.reps)
         closeSoftKeyboard()
         compose.waitUntil(10000) { !vm.state.value.pending }
-        assertEquals(original, vm.state.value.draft)
+        assertEquals(original.openExercise(second.key), vm.state.value.draft)
+        click("toggle-session-${first.key}")
+        assertEquals(original.openExercise(first.key), vm.state.value.draft)
         scroll("session-set-${set.key}")
         compose
             .onNode(hasText("Reps") and hasAnyAncestor(hasTestTag("session-set-${set.key}")))
@@ -2139,7 +2175,9 @@ class WorkoutFlowTest {
         )
         compose.onAllNodes(isFocused()).assertCountEquals(0)
         scroll("session-summary-${first.key}")
-        compose.onNodeWithText("Set 1: 9 reps").assertExists()
+        compose
+            .onNodeWithTag("session-summary-${first.key}", useUnmergedTree = true)
+            .assertTextContains("1/${first.sets.count { !it.warmup }} sets", substring = true)
         screenshot("session-collapsed-summary")
 
         compose.activityRule.scenario.recreate()
@@ -2206,6 +2244,65 @@ class WorkoutFlowTest {
         // Restore the synthetic fixture for the existing full training/export flow.
         compose.runOnIdle { vm.edit { original } }
         compose.waitUntil(10000) { !vm.state.value.pending }
+        assertEquals(
+            original,
+            kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
+        )
+    }
+
+    private fun inlineDragFlow(vm: com.hector.workouttracker.feature.session.TrackerViewModel) {
+        val app = compose.activity.application as TrackerApplication
+        val original = requireNotNull(vm.state.value.draft)
+        val first = original.exercises.first()
+        fun scroll(tag: String) {
+            compose
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag(tag))
+        }
+        fun saved() {
+            compose.waitUntil(10000) { !vm.state.value.pending }
+        }
+        scroll("toggle-session-${first.key}")
+        compose.onNodeWithTag("toggle-session-${first.key}").performClick()
+        saved()
+        val closed = requireNotNull(vm.state.value.draft)
+        assertTrue(closed.exercises.all { it.collapsed })
+        fun drag(from: String, to: String, cancel: Boolean) {
+            scroll("drag-session-$from")
+            val fromBounds =
+                compose
+                    .onNodeWithTag("drag-session-$from", useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+            val toBounds =
+                compose
+                    .onNodeWithTag("drag-session-$to", useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+            compose.onNodeWithTag("drag-session-$from", useUnmergedTree = true).performTouchInput {
+                down(center)
+                moveBy(
+                    Offset(0f, toBounds.center.y - fromBounds.center.y + toBounds.height / 2),
+                    delayMillis = 700,
+                )
+                if (cancel) cancel() else up()
+            }
+            saved()
+        }
+        val before = kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!
+        drag(first.key, original.exercises.last().key, false)
+        val expected = closed.copy(exercises = closed.exercises.drop(1) + closed.exercises.first())
+        assertEquals(expected, vm.state.value.draft)
+        val dropped = kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!
+        assertEquals(expected, dropped.first)
+        assertEquals(before.second + 1, dropped.second)
+        // A synthesized pointer cancellation (also used during Activity rotation) is never a drop.
+        drag(expected.exercises.first().key, expected.exercises.last().key, true)
+        assertEquals(expected, vm.state.value.draft)
+        assertEquals(dropped, kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!)
+        screenshot("session-inline-drag-cancelled")
+        compose.runOnIdle { vm.edit { original } }
+        saved()
         assertEquals(
             original,
             kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
@@ -2299,16 +2396,14 @@ class WorkoutFlowTest {
         logTag("focused-notes")
         compose.onNodeWithTag("focused-notes").assertTextContains("Grip cue from focused logging")
         compose.onNodeWithTag("focused-back").performClick()
-        sessionTag("reorder-exercises")
-        compose.onNodeWithTag("reorder-exercises").performClick()
         val target = original.exercises.last()
         repeat(original.exercises.size - 1) {
             compose
-                .onNodeWithTag("exercise-order-list")
-                .performScrollToNode(hasTestTag("order-card-${target.key}"))
+                .onNodeWithTag("session-list", useUnmergedTree = true)
+                .performScrollToNode(hasTestTag("session-card-${target.key}"))
             val actions =
                 compose
-                    .onNodeWithTag("order-card-${target.key}")
+                    .onNodeWithTag("session-card-${target.key}", useUnmergedTree = true)
                     .fetchSemanticsNode()
                     .config[SemanticsActions.CustomActions]
             compose.runOnIdle { assertTrue(actions.first { it.label == "Move up" }.action()) }
@@ -2330,7 +2425,6 @@ class WorkoutFlowTest {
             kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
         )
         screenshot("focused-accessible-reorder")
-        compose.onNodeWithTag("order-done").performClick()
         assertEquals(history, vm.state.value.workouts)
         val payload =
             com.hector.workouttracker.core.model.workoutPayload(
@@ -2364,11 +2458,17 @@ class WorkoutFlowTest {
         val original = requireNotNull(vm.state.value.draft)
         val target = original.exercises[2]
         fun move(direction: String) {
-            val tag = "move-session-$direction-${target.key}"
             compose
                 .onNodeWithTag("session-list", useUnmergedTree = true)
-                .performScrollToNode(hasTestTag(tag))
-            compose.onNodeWithTag(tag).performScrollTo().performClick()
+                .performScrollToNode(hasTestTag("session-card-${target.key}"))
+            val actions =
+                compose
+                    .onNodeWithTag("session-card-${target.key}", useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .config[SemanticsActions.CustomActions]
+            compose.runOnIdle {
+                assertTrue(actions.first { it.label == "Move $direction" }.action())
+            }
             compose.waitUntil(10000) { !vm.state.value.pending }
         }
         move("up")
@@ -2382,7 +2482,12 @@ class WorkoutFlowTest {
             expected,
             kotlinx.coroutines.runBlocking { app.repository.readDraft() }!!.first,
         )
-        compose.onNodeWithTag("move-session-up-${target.key}").assertIsNotEnabled()
+        val boundaryActions =
+            compose
+                .onNodeWithTag("session-card-${target.key}", useUnmergedTree = true)
+                .fetchSemanticsNode()
+                .config[SemanticsActions.CustomActions]
+        assertFalse(boundaryActions.any { it.label == "Move up" })
         compose.activityRule.scenario.recreate()
         compose.activityRule.scenario.onActivity { installTestContent(it, owner) }
         compose.waitUntil(10000) {
@@ -2390,10 +2495,15 @@ class WorkoutFlowTest {
         }
         compose
             .onNodeWithTag("session-list", useUnmergedTree = true)
-            .performScrollToNode(hasTestTag("session-position-${target.key}"))
+            .performScrollToNode(hasTestTag("session-summary-${target.key}"))
         compose
-            .onNodeWithTag("session-position-${target.key}", useUnmergedTree = true)
-            .assertTextEquals("Exercise 1 of ${original.exercises.size}")
+            .onNodeWithTag("session-summary-${target.key}", useUnmergedTree = true)
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "Exercise 1 of ${original.exercises.size}",
+                )
+            )
         assertEquals(expected, vm.state.value.draft)
         screenshot("session-reordered")
         move("down")

@@ -176,13 +176,17 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             profileRevision = profile.second
             val draft = repository.readDraft()
             val epoch = maintenance.currentEpoch()
+            val focusedDraft = draft?.first?.singleExpandedExercise()
             draftRevision = draft?.second ?: 0L
+            if (focusedDraft != null && focusedDraft != draft.first) {
+                draftRevision = repository.saveDraft(focusedDraft, draftRevision)
+            }
             mutable.update {
                 it.copy(
                     loading = false,
                     profile = profile.first,
                     setupRpe = profile.first.trackRpe,
-                    draft = draft?.first,
+                    draft = focusedDraft,
                     dataEpoch = epoch,
                 )
             }
@@ -578,7 +582,8 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                 ?: local.firstOrNull { it.trim().equals(value.trim(), ignoreCase = true) }
                 ?: value.trim()
         if (!visibleName(name, 120)) return false
-        edit { it.copy(exercises = it.exercises + Exercise(name = name)) }
+        val exercise = Exercise(name = name)
+        edit { it.copy(exercises = it.exercises + exercise).openExercise(exercise.key) }
         return true
     }
 

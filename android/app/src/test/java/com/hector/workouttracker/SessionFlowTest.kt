@@ -65,6 +65,24 @@ class SessionFlowTest {
     }
 
     @Test
+    fun legacyMultiOpenDraftKeepsOneCurrentRowWithoutChangingAnyWorkoutData() {
+        val original = session()
+        val repaired = original.singleExpandedExercise()
+        assertEquals(listOf(false, true, true), repaired.exercises.map { it.collapsed })
+        assertEquals(
+            workoutPayload(original, 110000, 0, ZoneId.of("UTC")),
+            workoutPayload(repaired, 110000, 0, ZoneId.of("UTC")),
+        )
+        assertSame(repaired, repaired.singleExpandedExercise())
+        val second = original.openExercise("b")
+        assertSame(second, second.singleExpandedExercise())
+        val closed = second.collapseExercise("b")
+        assertSame(closed, closed.singleExpandedExercise())
+        val empty = original.copy(exercises = emptyList())
+        assertSame(empty, empty.singleExpandedExercise())
+    }
+
+    @Test
     fun compactProgressUsesCompletedWorkingRowsAndBoundsItsSummary() {
         val exercise =
             Exercise(

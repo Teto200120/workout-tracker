@@ -97,10 +97,11 @@ class TrackerRepository(private val db: TrackerDatabase) {
                     type = routine.name,
                     originRoutineId = routine.id,
                     exercises =
-                        routine.exercises.map { name ->
+                        routine.exercises.mapIndexed { index, name ->
                             val last = history.guidance(name).last?.sets.orEmpty()
                             Exercise(
                                 name = name,
+                                collapsed = index != 0,
                                 sets =
                                     if (last.isEmpty()) listOf(WorkingSet())
                                     else copiedTrainingSets(last),
