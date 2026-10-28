@@ -51,9 +51,11 @@ class WorkoutFlowTest {
     // Reuse this composition path after Activity recreation so the test registry and
     // saveable navigation keys match the original test content.
     private fun installTestContent(activity: MainActivity, owner: ActivityResultRegistryOwner) {
-        activity.setContent {
-            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                TrackerTheme { TrackerApp() }
+        compose.runOnUiThread {
+            activity.setContent {
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                    TrackerTheme { TrackerApp() }
+                }
             }
         }
     }
@@ -1894,15 +1896,32 @@ class WorkoutFlowTest {
                 ViewCompat.getRootWindowInsets(decor)?.isVisible(WindowInsetsCompat.Type.ime()) ==
                     true
             }
-            compose.waitUntil(10000) {
+            try {
+                compose.waitUntil(10000) {
+                    val ime =
+                        ViewCompat.getRootWindowInsets(decor)!!.getInsets(
+                            WindowInsetsCompat.Type.ime()
+                        )
+                    val viewport =
+                        compose
+                            .onNodeWithTag("session-list", useUnmergedTree = true)
+                            .fetchSemanticsNode()
+                            .boundsInWindow
+                    kotlin.math.abs(viewport.bottom - (decor.height - ime.bottom)) <= 2f
+                }
+            } catch (failure: Throwable) {
+                screenshot("session-keyboard-viewport-failure")
                 val ime =
-                    ViewCompat.getRootWindowInsets(decor)!!.getInsets(WindowInsetsCompat.Type.ime())
+                    ViewCompat.getRootWindowInsets(decor)?.getInsets(WindowInsetsCompat.Type.ime())
                 val viewport =
                     compose
                         .onNodeWithTag("session-list", useUnmergedTree = true)
                         .fetchSemanticsNode()
                         .boundsInWindow
-                kotlin.math.abs(viewport.bottom - (decor.height - ime.bottom)) <= 2f
+                throw AssertionError(
+                    "Workout viewport=$viewport; decor height=${decor.height}; keyboard=$ime",
+                    failure,
+                )
             }
             val ime =
                 ViewCompat.getRootWindowInsets(decor)!!.getInsets(WindowInsetsCompat.Type.ime())

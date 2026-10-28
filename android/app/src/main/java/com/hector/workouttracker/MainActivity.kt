@@ -13,4 +13,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent { TrackerTheme { TrackerApp() } }
     }
+
+    @Suppress("DEPRECATION")
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        if (android.os.Build.VERSION.SDK_INT == 35 && savedInstanceState != null) {
+            // Android 15 can retain fitted content bounds when recreating at the same size.
+            // Restore the full window so Compose receives keyboard and system-bar insets.
+            enableEdgeToEdge()
+            window.decorView.systemUiVisibility =
+                window.decorView.systemUiVisibility or
+                    android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        }
+    }
 }

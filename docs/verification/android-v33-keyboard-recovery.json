@@ -1,0 +1,65 @@
+{
+  "passed": true,
+  "version_code": 33,
+  "version_name": "0.33.0-preview",
+  "apk_sha256": "6618306669fef35f0bbbe27135749598a4d791b7c76afd7659c21cc0e6c3f0f5",
+  "apk_bytes": 2265476,
+  "activity_source_sha256": "8703b9b129efdc9c08614403e0c054ccbf414022c66043b37846fbbf732608f8",
+  "reproduced_before": {
+    "platform": "Android 15/API 35",
+    "screen_dp": [
+      320,
+      640
+    ],
+    "density_dpi": 160,
+    "keyboard_top_pixels": 395,
+    "workout_list_bottom_pixels": 307,
+    "lost_entry_space_dp": 88,
+    "native_activity_only_reproduction": true
+  },
+  "fix_scope": "Restored activities on Android 15; first launches and other API levels keep their existing setup",
+  "checks": {
+    "unit_tests_passed": 114,
+    "lint_errors": 0,
+    "lint_existing_warnings": 10,
+    "phone_workflow": "Passed at 320dp width, airplane mode on, Wi-Fi and mobile data off, animations off",
+    "instrumented_ui_tests_passed": [
+      "WorkoutFlowTest",
+      "FeedbackScreenTest"
+    ],
+    "opt_in_drivers_skipped_in_default_suite": [
+      "LifecycleAcceptanceTest",
+      "DataMaintenanceAcceptanceTest",
+      "PerformanceProbeTest"
+    ],
+    "pwa_export_checks_passed": [
+      "routines",
+      "starters",
+      "schedule",
+      "history",
+      "preferences",
+      "progression",
+      "guidance",
+      "data-actions"
+    ],
+    "strict_installed_v2_to_v33_upgrade": true,
+    "strict_cold_process_recovery": true,
+    "exactly_once_finish": true,
+    "signed_v32_to_v33_upgrade": true,
+    "installed_release_bytes_match_delivery": true,
+    "signed_release_checks": [
+      "Permanent-key v32 to v33 install -r retains profile and both exercises",
+      "Installed bytes equal delivered APK; version 33 is non-debuggable",
+      "The selected current exercise remains open after the v32 to v33 update",
+      "Focused Log/Guide and real keyboard work in release",
+      "Immediate in-card swipe reorders exercises without a menu",
+      "Cold restart retains dropped order and the expanded exercise identity",
+      "Returning to the moved exercise retains its own notes",
+      "Light/dark, profile/settings and Stats smoke checks pass",
+      "Signed Android 15 release retains full keyboard entry space after same-size font configuration recreation; typed reps stay above the keyboard and the completion action returns after dismissal"
+    ]
+  },
+  "physical_phone_tested": false,
+  "talkback_tested": false,
+  "performance_measurements": "v31 workload measurements remain recorded separately in docs/ANDROID_NATIVE_PERFORMANCE.md"
+}
