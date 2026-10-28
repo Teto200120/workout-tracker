@@ -10,7 +10,7 @@ Matching source is in the commit that adds this APK. Built locally with the pinn
 
 Certificate SHA-256: `e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88`.
 
-Validation: 114 unit tests, seven device tests, formatting and debug/release builds pass. Lint reports zero errors and 16 warnings. The exact signed v34-to-v35 update preserves the synthetic database, profile and unfinished workout through a cold restart. Android 15 keyboard checks pass. Physical-phone and TalkBack acceptance remain outstanding.
+Validation: 114 unit tests, eight device tests, formatting and debug/release builds pass. Lint reports zero errors and 17 warnings. The signed upgrade and final APK replacement preserve the original v34 synthetic database, profile and unfinished workout through a cold restart. Android 15 keyboard checks pass. Physical-phone and TalkBack acceptance remain outstanding.
 
 Details: [PWA alignment](../../docs/ANDROID_WORKOUT_PWA_ALIGNMENT.md) · [v35 verification](../../docs/verification/android-v35-pwa-alignment.json) · [retained drag continuity](../../docs/ANDROID_WORKOUT_MOTION.md) · [Android 15 keyboard recovery](../../docs/ANDROID_KEYBOARD_RECOVERY.md).
 

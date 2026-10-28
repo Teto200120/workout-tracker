@@ -836,19 +836,11 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                             renderExercise(
                                 position,
                                 exercise,
-                                (if (state.interactions.animations)
-                                        Modifier.animateItem(
-                                            fadeInSpec = null,
-                                            placementSpec =
-                                                if (drag.key == exercise.key) null
-                                                else
-                                                    tween(
-                                                        WorkoutMotion.Press,
-                                                        easing = WorkoutMotion.Easing,
-                                                    ),
-                                            fadeOutSpec = null,
-                                        )
-                                    else Modifier)
+                                workoutPlacement(
+                                        state.interactions.animations,
+                                        drag.key,
+                                        exercise.key,
+                                    )
                                     .graphicsLayer {
                                         alpha = if (drag.key == exercise.key) 0f else 1f
                                     }

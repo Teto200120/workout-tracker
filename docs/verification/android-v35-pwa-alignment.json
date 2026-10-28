@@ -2,7 +2,7 @@
   "passed": true,
   "version_code": 35,
   "version_name": "0.35.0-preview",
-  "apk_sha256": "cca75070b5edd2607208e4b4fdbe109961687217b7909fc19892198c0c826546",
+  "apk_sha256": "9bcab610b92e54045ca53a30f791becc399a294cce15874afcec345967052aab",
   "certificate_sha256": "e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88",
   "pwa_reference": {
     "rendered": true,
@@ -34,19 +34,20 @@
   },
   "checks": {
     "unit_tests_passed": 114,
-    "device_tests_passed": 7,
-    "device_test_seconds": 132.474,
+    "device_tests_passed": 8,
+    "device_test_seconds": 167.708,
     "device_tests": [
       "WorkoutFlowTest",
       "SessionDragTest (4 cases)",
       "WorkoutControlsTest",
+      "WorkoutLayoutTest",
       "FeedbackScreenTest"
     ],
     "device_platform": "Android 16, isolated read-only MigrationQA emulator",
     "formatting": "passed",
     "debug_release_builds": "passed",
     "lint_errors": 0,
-    "lint_warnings": 16,
+    "lint_warnings": 17,
     "signed_v34_to_v35_upgrade": {
       "passed": true,
       "from": 34,
@@ -64,7 +65,10 @@
       ],
       "retained_reps": "7",
       "real_keyboard_verified": true,
-      "apk_sha256": "cca75070b5edd2607208e4b4fdbe109961687217b7909fc19892198c0c826546"
+      "apk_sha256": "9bcab610b92e54045ca53a30f791becc399a294cce15874afcec345967052aab",
+      "original_upgrade_from_version_code": 34,
+      "final_apk_replacement_from_version_code": 35,
+      "baseline": "Original v34 complete database; final signed v35 replacement checked against unchanged baseline"
     },
     "visual_checks": [
       "PWA and Android live rendering",

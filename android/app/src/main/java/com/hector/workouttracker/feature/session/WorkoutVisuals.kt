@@ -6,6 +6,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -224,3 +225,21 @@ internal fun WorkoutStatus(position: Int, complete: Boolean, active: Boolean, an
         }
     }
 }
+
+/**
+ * Disclosure already animates row height. Animating its neighbors again would lag behind normal
+ * layout and overlap the unanimated form rows beneath the cards.
+ */
+internal fun LazyItemScope.workoutPlacement(
+    animations: Boolean,
+    draggedKey: String?,
+    itemKey: String,
+): Modifier =
+    Modifier.animateItem(
+        fadeInSpec = null,
+        placementSpec =
+            if (animations && draggedKey != null && draggedKey != itemKey)
+                tween(WorkoutMotion.Press, easing = WorkoutMotion.Easing)
+            else null,
+        fadeOutSpec = null,
+    )
