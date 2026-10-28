@@ -54,6 +54,48 @@ class RepositoryTest {
             )
 
     @Test
+    fun sharedLibraryIndexRechecksEditedAndDeletedHistoryBeforeCopyingSets() = runBlocking {
+        val dao = db.trackerDao()
+        val payload = workoutPayload(draft(), 110000, 0, ZoneId.of("UTC"))
+        val id = typedIdKey(payload.getValue("id"))
+        dao.insertRecord(RecordEntity("workout", id, payload.toString()))
+        val routine =
+            RecordEntity(
+                "routine",
+                typedIdKey(JsonPrimitive(0)),
+                """{"id":0,"name":"Bench","exercises":["Bench Press"]}""",
+            )
+        dao.insertRecord(routine)
+        val routines = listOf(routineSnapshot(routine))
+        val records = dao.recordsOfKind("workout")
+        assertEquals(
+            localExerciseNames(records, routines),
+            repository.localNames(records, routines),
+        )
+        suspend fun copiedWeight(): String {
+            val started = repository.startRoutine(routine, draft().copy(exercises = emptyList()))
+            val weight = started.exercises.single().sets.single().weight
+            repository.discard(started.id, 1)
+            return weight
+        }
+        assertEquals("100", copiedWeight())
+        val exercise = payload.getValue("exercises").jsonArray.single().jsonObject
+        val set = exercise.getValue("sets").jsonArray.single().jsonObject
+        val revisedExercise =
+            JsonObject(
+                exercise +
+                    ("sets" to
+                        JsonArray(listOf(JsonObject(set + ("weight" to JsonPrimitive("120"))))))
+            )
+        val revised = JsonObject(payload + ("exercises" to JsonArray(listOf(revisedExercise))))
+        assertEquals(1, dao.updateRecord("workout", id, 1, revised.toString()))
+        assertEquals("120", copiedWeight())
+        assertEquals(1, dao.deleteRecord("workout", id, 2))
+        assertEquals("", copiedWeight())
+        assertEquals(emptyList<String>(), repository.localNames(emptyList(), emptyList()))
+    }
+
+    @Test
     fun committedDraftAndProfileSurviveDatabaseReopen() = runBlocking {
         val d = draft()
         repository.start(d)

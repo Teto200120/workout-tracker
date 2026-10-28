@@ -34,14 +34,19 @@ internal fun catalogKey(value: String) = value.trim().lowercase(Locale.US)
 private val textOrder = compareBy<String>({ catalogKey(it) }, { it })
 
 /** Mirrors the PWA's reviewed resolver; deliberately no fuzzy movement matching. */
+private val guideApostrophes = Regex("['’]+")
+private val guideHyphens = Regex("[-\\u2010-\\u2015]+")
+private val guidePunctuation = Regex("[.,:;/\\\\()\\[\\]{}]+")
+private val guideSpaces = Regex("[\\s\\p{Z}]+")
+
 fun guideKey(value: String): String =
     Normalizer.normalize(value, Normalizer.Form.NFKC)
         .trim()
         .lowercase(Locale.US)
-        .replace(Regex("['’]+"), "")
-        .replace(Regex("[-\\u2010-\\u2015]+"), " ")
-        .replace(Regex("[.,:;/\\\\()\\[\\]{}]+"), " ")
-        .replace(Regex("[\\s\\p{Z}]+"), " ")
+        .replace(guideApostrophes, "")
+        .replace(guideHyphens, " ")
+        .replace(guidePunctuation, " ")
+        .replace(guideSpaces, " ")
 
 val reviewedAliases =
     mapOf(

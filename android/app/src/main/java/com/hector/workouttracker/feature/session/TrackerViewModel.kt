@@ -19,7 +19,6 @@ import com.hector.workouttracker.data.ImportPreview
 import com.hector.workouttracker.data.InteractionPreferences
 import com.hector.workouttracker.data.SavedRoutine
 import com.hector.workouttracker.data.SetCopyRequest
-import com.hector.workouttracker.data.localExerciseNames
 import com.hector.workouttracker.data.routineSnapshot
 import com.hector.workouttracker.domain.BackupSnapshot
 import com.hector.workouttracker.domain.CompletionSummary
@@ -37,6 +36,7 @@ import kotlinx.coroutines.withContext
 /** All writes have one owner. UI values update immediately; snapshots queue in order. */
 data class TrackerState(
     val loading: Boolean = true,
+    val libraryLoading: Boolean = true,
     val interactions: InteractionPreferences = InteractionPreferences(),
     val guidance: Map<String, TrainingGuidance> = emptyMap(),
     val guidanceBasis: String? = null,
@@ -198,7 +198,7 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                             records.map(::routineSnapshot).sortedBy {
                                 it.name.lowercase(java.util.Locale.US)
                             }
-                        Triple(workouts, routines, localExerciseNames(workouts, routines))
+                        Triple(workouts, routines, repository.localNames(workouts, routines))
                     }
                 }
                 .catch {
@@ -210,7 +210,12 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
                 }
                 .collect { (workouts, routines, localNames) ->
                     mutable.update {
-                        it.copy(workouts = workouts, routines = routines, localNames = localNames)
+                        it.copy(
+                            workouts = workouts,
+                            routines = routines,
+                            localNames = localNames,
+                            libraryLoading = false,
+                        )
                     }
                 }
         }

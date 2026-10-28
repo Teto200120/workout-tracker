@@ -11,6 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
@@ -21,6 +24,21 @@ class WriteConflict :
 
 class TrackerRepository(private val db: TrackerDatabase) {
     private val dao = db.trackerDao()
+    private val historyIndexLock = Mutex()
+    private var historyIndex: RoutineHistoryIndex? = null
+
+    private suspend fun indexedHistory(records: List<RecordEntity>): RoutineHistoryIndex =
+        historyIndexLock.withLock {
+            historyIndex?.takeIf { it.records == records }
+                ?: RoutineHistoryIndex(records).also { historyIndex = it }
+        }
+
+    suspend fun localNames(
+        workouts: List<RecordEntity>,
+        routines: List<SavedRoutine>,
+    ): List<String> =
+        normalizedLocalNames(routines.flatMap { it.exercises } + indexedHistory(workouts).names)
+
     val profileChanges =
         dao.observeDocument("native_profile")
             .map { document ->
@@ -29,8 +47,8 @@ class TrackerRepository(private val db: TrackerDatabase) {
             }
             .distinctUntilChanged()
             .flowOn(Dispatchers.Default)
-    val workouts = dao.observeRecords("workout")
-    val routines = dao.observeRecords("routine")
+    val workouts = dao.observeRecords("workout").distinctUntilChanged()
+    val routines = dao.observeRecords("routine").distinctUntilChanged()
 
     suspend fun readDraft(): Pair<SessionDraft, Long>? =
         dao.draft()?.let { trackerJson.decodeFromString<SessionDraft>(it.payload) to it.revision }
@@ -91,14 +109,14 @@ class TrackerRepository(private val db: TrackerDatabase) {
             val current = dao.record("routine", selected.idKey) ?: throw WriteConflict()
             if (selected.kind != "routine" || current != selected) throw WriteConflict()
             val routine = routineSnapshot(current)
-            val history = trainingSnapshot(dao)
+            val history = indexedHistory(dao.recordsOfKind("workout")).lastSets(routine.exercises)
             val draft =
                 empty.copy(
                     type = routine.name,
                     originRoutineId = routine.id,
                     exercises =
                         routine.exercises.mapIndexed { index, name ->
-                            val last = history.guidance(name).last?.sets.orEmpty()
+                            val last = history[trainingName(name)].orEmpty()
                             Exercise(
                                 name = name,
                                 collapsed = index != 0,
@@ -206,16 +224,76 @@ fun routineSnapshot(record: RecordEntity): SavedRoutine {
     return SavedRoutine(record, id, name, exercises)
 }
 
+// Decode names without building thousands of unused set/extension objects at startup.
+private val nameFieldsJson = Json { ignoreUnknownKeys = true }
+
+@Serializable private data class ExerciseNameField(val name: JsonPrimitive)
+
+@Serializable private data class WorkoutNameFields(val exercises: List<ExerciseNameField>)
+
 fun localExerciseNames(workouts: List<RecordEntity>, routines: List<SavedRoutine>): List<String> =
-    (routines.flatMap { it.exercises } +
+    normalizedLocalNames(
+        routines.flatMap { it.exercises } +
             workouts.flatMap { record ->
-                trackerJson
-                    .parseToJsonElement(record.payload)
-                    .jsonObject
-                    .getValue("exercises")
-                    .jsonArray
-                    .map { it.jsonObject.getValue("name").jsonPrimitive.content }
-            })
+                nameFieldsJson.decodeFromString<WorkoutNameFields>(record.payload).exercises.map {
+                    it.name.content
+                }
+            }
+    )
+
+private fun normalizedLocalNames(names: List<String>): List<String> =
+    names
         .map { it.trim() }
         .filter { visibleName(it, 120) }
         .distinctBy { it.lowercase(java.util.Locale.US) }
+
+@Serializable
+private data class TrainingHistoryFields(
+    val id: JsonPrimitive,
+    val date: String = "",
+    val createdAt: String = "",
+    val exercises: List<ExerciseNameField>,
+)
+
+/** One bounded metadata snapshot shared by library loading and routine starts, never saved. */
+internal class RoutineHistoryIndex(val records: List<RecordEntity>) {
+    private val indexed =
+        records.map { record ->
+            record to nameFieldsJson.decodeFromString<TrainingHistoryFields>(record.payload)
+        }
+    val names = indexed.flatMap { (_, fields) -> fields.exercises.map { it.name.content } }
+    private val byId by lazy { indexed.associateBy { typedIdKey(it.second.id) } }
+    private val ordered by lazy {
+        sortedWorkouts(
+            interchangeOrder(
+                indexed.map { (_, fields) ->
+                    buildJsonObject {
+                        put("id", fields.id)
+                        put("date", fields.date)
+                        put("createdAt", fields.createdAt)
+                    }
+                }
+            )
+        )
+    }
+
+    fun lastSets(names: List<String>): Map<String, List<JsonObject>> {
+        if (names.isEmpty()) return emptyMap()
+        val requested = names.map(::trainingName).toSet()
+        val result = mutableMapOf<String, List<JsonObject>>()
+        for (entry in ordered) {
+            val (record, fields) = byId.getValue(typedIdKey(entry.getValue("id")))
+            val remaining = requested - result.keys
+            if (fields.exercises.none { trainingName(it.name.content) in remaining }) continue
+            val workout = trackerJson.parseToJsonElement(record.payload).jsonObject
+            for (row in workout.getValue("exercises").jsonArray) {
+                val exercise = row.jsonObject
+                val key = trainingName(exercise.getValue("name").jsonPrimitive.content)
+                if (key in requested && key !in result)
+                    result[key] = (exercise["sets"] as? JsonArray).orEmpty().map { it.jsonObject }
+            }
+            if (result.keys.containsAll(requested)) break
+        }
+        return result
+    }
+}

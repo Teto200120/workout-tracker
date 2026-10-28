@@ -52,7 +52,14 @@ fun TrackerApp(vm: TrackerViewModel = viewModel()) {
         }
     }
     // The durable epoch also rejects old navigation restoration after process death mid-clear.
-    key(state.dataEpoch) { TrackerAppContent(state, vm) }
+    if (state.loading) {
+        Box(
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+    } else key(state.dataEpoch) { TrackerAppContent(state, vm) }
 }
 
 @Composable

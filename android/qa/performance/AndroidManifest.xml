@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.hector.workoutbenchmark">
+<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+<queries><package android:name="com.hector.workouttracker"/></queries>
+<application android:label="Workout performance test" android:debuggable="true"/>
+<instrumentation android:name="com.hector.workoutbenchmark.Driver" android:targetPackage="com.hector.workoutbenchmark"/>
+</manifest>

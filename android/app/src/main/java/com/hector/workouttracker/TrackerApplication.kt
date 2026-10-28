@@ -13,12 +13,14 @@ import com.hector.workouttracker.data.RoutineRepository
 import com.hector.workouttracker.data.ScheduleRepository
 import com.hector.workouttracker.data.StatsRepository
 import com.hector.workouttracker.data.TrackerRepository
+import com.hector.workouttracker.data.WorkoutHistoryCache
 
 class TrackerApplication : Application() {
     private val database by lazy {
         Room.databaseBuilder(this, TrackerDatabase::class.java, "workout-tracker.db").build()
     }
-    val progressionRepository by lazy { ProgressionRepository(database) }
+    private val workoutHistory = WorkoutHistoryCache()
+    val progressionRepository by lazy { ProgressionRepository(database, workoutHistory) }
     val guidanceRepository by lazy { GuidanceRepository(database) }
     val preferencesRepository by lazy { PreferencesRepository(database) }
     val repository by lazy { TrackerRepository(database) }
@@ -27,5 +29,5 @@ class TrackerApplication : Application() {
     val routineRepository by lazy { RoutineRepository(database) }
     val scheduleRepository by lazy { ScheduleRepository(database) }
     val historyRepository by lazy { HistoryRepository(database) }
-    val statsRepository by lazy { StatsRepository(database) }
+    val statsRepository by lazy { StatsRepository(database, workoutHistory) }
 }

@@ -1,5 +1,6 @@
 package com.hector.workouttracker.feature.home
 
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -78,6 +79,10 @@ internal fun HomeScreen(
     var choice by rememberSaveable(today.toString()) { mutableStateOf<String?>(null) }
     val progressState by progressVm.state.collectAsStateWithLifecycle()
     val progress = progressState.snapshot
+    // Report the first complete Home frame, including local library and reference data.
+    ReportDrawnWhen {
+        !state.libraryLoading && !state.scheduleLoading && !state.catalogLoading && progress != null
+    }
     val scope = rememberCoroutineScope()
     LifecycleResumeEffect(Unit) {
         val job =

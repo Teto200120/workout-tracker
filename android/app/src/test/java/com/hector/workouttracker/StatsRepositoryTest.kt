@@ -160,6 +160,36 @@ class StatsRepositoryTest {
     }
 
     @Test
+    fun unchangedReadsReuseSummariesButDateGoalsAndWorkoutsRemainFresh() = runBlocking {
+        imported()
+        val repository = StatsRepository(db)
+        val before = repository.read(date)
+        assertSame(before, repository.read(date))
+        val dao = db.trackerDao()
+        val goal = requireNotNull(dao.document("goals"))
+        val fields = trackerJson.parseToJsonElement(goal.payload).jsonObject
+        dao.updateDocument(
+            "goals",
+            goal.revision,
+            JsonObject(fields + ("weeklyGoal" to JsonPrimitive(7))).toString(),
+        )
+        val changedGoal = repository.read(date)
+        assertEquals(7, changedGoal.goal)
+        assertSame(before.exercises, changedGoal.exercises)
+        assertSame(before.totals, changedGoal.totals)
+        val nextDay = repository.read(LocalDate.parse("2050-01-01"))
+        assertEquals(0, nextDay.recent)
+        assertTrue(nextDay.insights.none { it.type == "pr" })
+        assertSame(before.exercises, nextDay.exercises)
+        val history = HistoryRepository(db)
+        history.delete(requireNotNull(history.read(JsonPrimitive(0))))
+        val changedWorkout = repository.read(date)
+        assertEquals(1, changedWorkout.totals.workouts)
+        assertNotSame(before.exercises, changedWorkout.exercises)
+        assertEquals(StatsRepository(db).read(date), changedWorkout)
+    }
+
+    @Test
     fun finishSummaryOnlyReturnsAfterAtomicCommitAndCanRetryAfterFailure() = runBlocking {
         imported()
         val dao = db.trackerDao()

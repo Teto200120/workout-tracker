@@ -75,6 +75,46 @@ class ProgressionRepositoryTest {
         SetCopyRequest(draft, draft.exercises.first(), repo.read().basis, target)
 
     @Test
+    fun statsAndGuidanceShareTheSameCoherentHistoryWithoutChangingGuidance() = runBlocking {
+        imported()
+        val shared = WorkoutHistoryCache()
+        StatsRepository(db, shared).read(LocalDate.parse("2026-10-23"))
+        val actual = ProgressionRepository(db, shared).read()
+        val expected = repo.read()
+        assertEquals(expected, actual)
+        assertSame(shared.read(db.trackerDao().recordsOfKind("workout")), actual.workouts)
+        assertEquals(
+            expected.guidance(listOf("Bench Press", "Squat")),
+            actual.guidance(listOf("Bench Press", "Squat")),
+        )
+    }
+
+    @Test
+    fun batchGuidanceAndRoutineCopiesMatchIndependentRulesWithTypedIdsAndBlankRows() {
+        val fixture = fixture()
+        val names = listOf("Bench Press", " bench press ", "Squat", "Missing lift", "Bench Press")
+        val settings = requireNotNull(fixture.settings)
+        val snapshot = TrainingSnapshot("test", fixture.workouts, settings)
+        assertEquals(
+            names.distinct().associateWith { trainingGuidance(it, fixture.workouts, settings) },
+            snapshot.guidance(names),
+        )
+        val records =
+            fixture.workouts.map {
+                RecordEntity("workout", typedIdKey(it.getValue("id")), it.toString())
+            }
+        val before = records.toList()
+        val index = RoutineHistoryIndex(records)
+        val copies = index.lastSets(names)
+        for (name in names) assertEquals(
+            trainingGuidance(name, fixture.workouts, settings).last?.sets.orEmpty(),
+            copies[trainingName(name)].orEmpty(),
+        )
+        assertEquals(before, records)
+        assertTrue(index.lastSets(emptyList()).isEmpty())
+    }
+
+    @Test
     fun goldenTargetsMatchAllActualPwaCasesWithoutMutatingInputs() {
         val cases =
             trackerJson

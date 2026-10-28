@@ -177,15 +177,15 @@ jobs:
           ./gradlew --no-daemon :app:assembleRelease
           destination=app/build/outputs/signed-preview
           mkdir -p "$destination"
-          apk="$destination/WorkoutTracker-0.30.0-preview.apk"
+          apk="$destination/WorkoutTracker-0.31.0-preview.apk"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign --ks "$signing_dir/release.p12" --ks-key-alias "$RELEASE_KEY_ALIAS" --ks-pass env:RELEASE_STORE_PASSWORD --key-pass env:RELEASE_KEY_PASSWORD --out "$apk" app/build/outputs/apk/release/app-release-unsigned.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk" > "$destination/SIGNATURE.txt"
           grep -F "Signer #1 certificate SHA-256 digest: $(cat qa/release-certificate.sha256)" "$destination/SIGNATURE.txt"
           "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$apk" > "$destination/MANIFEST.txt"
-          grep -F "versionCode='30' versionName='0.30.0-preview'" "$destination/MANIFEST.txt"
+          grep -F "versionCode='31' versionName='0.31.0-preview'" "$destination/MANIFEST.txt"
           ! grep -q '^application-debuggable' "$destination/MANIFEST.txt"
-          (cd "$destination" && sha256sum WorkoutTracker-0.30.0-preview.apk > SHA256SUMS)
-          printf 'commit=%s\nrun=https://github.com/%s/actions/runs/%s\nversionCode=30\nversionName=0.30.0-preview\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > "$destination/PROVENANCE.txt"
+          (cd "$destination" && sha256sum WorkoutTracker-0.31.0-preview.apk > SHA256SUMS)
+          printf 'commit=%s\nrun=https://github.com/%s/actions/runs/%s\nversionCode=31\nversionName=0.31.0-preview\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > "$destination/PROVENANCE.txt"
       - name: Upload signed release preview
         if: success() && github.event_name == 'push'
         uses: actions/upload-artifact@v4
@@ -206,5 +206,6 @@ jobs:
             android/app/build/outputs/androidTest-results/
             android/app/build/outputs/screenshots/
             android/app/build/outputs/lifecycle/
+            android/app/build/outputs/mapping/release/
           if-no-files-found: warn
           retention-days: 14

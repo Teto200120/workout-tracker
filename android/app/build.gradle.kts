@@ -1,3 +1,6 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -15,7 +18,25 @@ abstract class BundleExerciseCatalog : DefaultTask() {
     fun bundle() {
         val directory = outputDirectory.get().asFile
         directory.mkdirs()
-        catalog.get().asFile.copyTo(directory.resolve("exercise-catalog.json"), overwrite = true)
+        // The canonical PWA catalog stays intact; native code uses these eight fields.
+        @Suppress("UNCHECKED_CAST")
+        val envelope = JsonSlurper().parse(catalog.get().asFile) as Map<String, Any?>
+        val nativeFields =
+            setOf(
+                "catalogId",
+                "name",
+                "category",
+                "difficulty",
+                "equipment",
+                "primaryMuscles",
+                "secondaryMuscles",
+                "instructions",
+            )
+        @Suppress("UNCHECKED_CAST")
+        val rows = envelope.getValue("exercises") as List<Map<String, Any?>>
+        val native =
+            envelope + ("exercises" to rows.map { row -> row.filterKeys { it in nativeFields } })
+        directory.resolve("exercise-catalog.json").writeText(JsonOutput.toJson(native))
     }
 }
 
@@ -26,8 +47,8 @@ android {
         applicationId = "com.hector.workouttracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 30
-        versionName = "0.30.0-preview"
+        versionCode = 31
+        versionName = "0.31.0-preview"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
@@ -45,7 +66,13 @@ android {
     sourceSets["test"].resources.srcDir("src/main/assets")
     sourceSets["androidTest"].assets.srcDir("../../tests/fixtures/android")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
-    buildTypes { release { isMinifyEnabled = false } }
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
 }
 
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
@@ -57,7 +84,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
-    implementation(libs.compose.preview)
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.compose)
     implementation(libs.lifecycle.viewmodel)

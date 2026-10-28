@@ -18,6 +18,61 @@ data class TrainingSnapshot(
     val settings: JsonObject,
 ) {
     fun guidance(name: String) = trainingGuidance(name, workouts, settings)
+
+    private val ordered by lazy { interchangeOrder(workouts) }
+    private val lastByName by lazy {
+        buildMap<String, LastTraining> {
+            for (workout in sortedWorkouts(ordered)) {
+                for (row in (workout["exercises"] as? JsonArray).orEmpty()) {
+                    val exercise = row.jsonObject
+                    val key = trainingName(exercise.getValue("name").jsonPrimitive.content)
+                    if (key !in this)
+                        put(
+                            key,
+                            LastTraining(
+                                workout.getValue("id"),
+                                workout.getValue("date").jsonPrimitive.content,
+                                workout.getValue("type").jsonPrimitive.content,
+                                (exercise["sets"] as? JsonArray).orEmpty().map { it.jsonObject },
+                            ),
+                        )
+                }
+            }
+        }
+    }
+
+    fun lastSets(name: String): List<JsonObject> = lastByName[trainingName(name)]?.sets.orEmpty()
+
+    /**
+     * One history scan for all visible exercises, preserving the original typed-ID PR tie order.
+     */
+    fun guidance(names: List<String>): Map<String, TrainingGuidance> {
+        val selected = names.distinct()
+        if (selected.size <= 1) return selected.associateWith(::guidance)
+        val keys = selected.map(::trainingName).toSet()
+        val records = mutableMapOf<String, RecordSet>()
+        for (workout in ordered) {
+            for (row in (workout["exercises"] as? JsonArray).orEmpty()) {
+                val exercise = row.jsonObject
+                val key = trainingName(exercise.getValue("name").jsonPrimitive.content)
+                if (key !in keys) continue
+                val best = exerciseRecords(exercise).estimated1rm ?: continue
+                if (records[key]?.let { best.estimated1rm > it.estimated1rm } != false)
+                    records[key] = best.copy(date = workout.getValue("date").jsonPrimitive.content)
+            }
+        }
+        return selected.associateWith { name ->
+            val key = trainingName(name)
+            val last = lastByName[key]
+            TrainingGuidance(
+                name,
+                trainingProfile(name, settings),
+                last,
+                records[key],
+                trainingTarget(name, last?.sets.orEmpty(), settings),
+            )
+        }
+    }
 }
 
 data class SetCopyRequest(
@@ -42,7 +97,10 @@ class ProgressionConflict :
         "History, preferences or this exercise changed. Your sets were kept. Review the latest guidance and choose again."
     )
 
-internal suspend fun trainingSnapshot(dao: TrackerDao): TrainingSnapshot {
+internal suspend fun trainingSnapshot(
+    dao: TrackerDao,
+    workoutHistory: WorkoutHistoryCache,
+): TrainingSnapshot {
     val records = dao.recordsOfKind("workout")
     val settings = dao.document("settings")
     val profile = if (settings == null) dao.document("native_profile") else null
@@ -74,7 +132,7 @@ internal suspend fun trainingSnapshot(dao: TrackerDao): TrainingSnapshot {
             )
     return TrainingSnapshot(
         digest.digest().joinToString("") { "%02x".format(it) },
-        records.map { trackerJson.parseToJsonElement(it.payload).jsonObject },
+        workoutHistory.read(records),
         canonical,
     )
 }
@@ -126,11 +184,16 @@ fun copiedTrainingSets(sets: List<JsonObject>): List<WorkingSet> {
 }
 
 /** Suggestions are derived off-thread; one transaction fences source and destination on apply. */
-class ProgressionRepository(private val db: TrackerDatabase) {
+class ProgressionRepository(
+    private val db: TrackerDatabase,
+    private val workoutHistory: WorkoutHistoryCache = WorkoutHistoryCache(),
+) {
     private val dao = db.trackerDao()
 
     suspend fun read(): TrainingSnapshot =
-        withContext(Dispatchers.Default) { db.withTransaction { trainingSnapshot(dao) } }
+        withContext(Dispatchers.Default) {
+            db.withTransaction { trainingSnapshot(dao, workoutHistory) }
+        }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observe(
@@ -144,16 +207,16 @@ class ProgressionRepository(private val db: TrackerDatabase) {
                 )
             else
                 combine(
-                        dao.observeRecords("workout"),
-                        dao.observeDocument("settings"),
-                        dao.observeDocument("native_profile"),
+                        dao.observeRecords("workout").distinctUntilChanged(),
+                        dao.observeDocument("settings").distinctUntilChanged(),
+                        dao.observeDocument("native_profile").distinctUntilChanged(),
                     ) { _, _, _ ->
                         Unit
                     }
                     .mapLatest {
                         withContext(Dispatchers.Default) {
                             val source = read()
-                            source to selected.distinct().associateWith(source::guidance)
+                            source to source.guidance(selected)
                         }
                     }
         }
@@ -170,7 +233,7 @@ class ProgressionRepository(private val db: TrackerDatabase) {
                         draft.exercises.find { it.key == request.exercise.key } != request.exercise
                 )
                     throw ProgressionConflict()
-                val source = trainingSnapshot(dao)
+                val source = trainingSnapshot(dao, workoutHistory)
                 if (source.basis != request.basis) throw ProgressionConflict()
                 val guide = source.guidance(request.exercise.name)
                 val rows =

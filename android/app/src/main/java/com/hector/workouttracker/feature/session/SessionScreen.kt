@@ -82,7 +82,12 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     var scrollTarget by remember { mutableStateOf<String?>(null) }
     val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
     val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
-    val list = rememberLazyListState()
+    // Start at the current card instead of laying out the heading and then jumping past it.
+    val initialExercise = draft.exercises.indexOfFirst { !it.collapsed }
+    val list =
+        rememberLazyListState(
+            initialFirstVisibleItemIndex = if (initialExercise < 0) 0 else initialExercise + 2
+        )
     val currentDraft by rememberUpdatedState(draft)
     val drag = rememberSessionDrag(draft.id, draft.exercises.map { it.key }, list, !state.busy)
     BackHandler(enabled = drag.key != null) { drag.cancel(draft.exercises.map { it.key }) }
@@ -92,26 +97,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
         remember(context) {
             Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
         }
-    var wallNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var elapsedNow by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
     val scope = rememberCoroutineScope()
-    LifecycleResumeEffect(draft.id) {
-        val job =
-            scope.launch {
-                while (isActive) {
-                    wallNow = System.currentTimeMillis()
-                    elapsedNow = SystemClock.elapsedRealtime()
-                    delay(1000)
-                }
-            }
-        onPauseOrDispose { job.cancel() }
-    }
-    val seconds = elapsedMillis(draft, wallNow, elapsedNow, bootCount) / 1000
-    val clock =
-        if (seconds >= 3600)
-            "%d:%02d:%02d"
-                .format(java.util.Locale.US, seconds / 3600, seconds / 60 % 60, seconds % 60)
-        else "%02d:%02d".format(java.util.Locale.US, seconds / 60, seconds % 60)
     LaunchedEffect(draft.id) { scrollTarget = draft.exercises.firstOrNull { !it.collapsed }?.key }
     LaunchedEffect(scrollTarget, draft.exercises.map { it.collapsed }) {
         val key = scrollTarget ?: return@LaunchedEffect
@@ -653,12 +639,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                         Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
-                                        Text(
-                                            clock,
-                                            Modifier.testTag("session-clock"),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = colors.onSurfaceVariant,
-                                        )
+                                        SessionClock(draft, bootCount)
                                     }
                                 }
                                 FilledTonalIconButton(
@@ -1091,3 +1072,36 @@ internal fun sessionBackgroundBrush(): Brush =
             listOf(Color(0xFF19304D), Color(0xFF102540), Color(0xFF071B31))
         else listOf(Color(0xFFF1F5FA), MaterialTheme.colorScheme.background)
     )
+
+/**
+ * Timer state is read here so ticking never recomposes exercise entry fields or the focused view.
+ */
+@Composable
+private fun SessionClock(draft: SessionDraft, bootCount: Int) {
+    val scope = rememberCoroutineScope()
+    var wallNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var elapsedNow by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LifecycleResumeEffect(draft.id) {
+        val job =
+            scope.launch {
+                while (isActive) {
+                    wallNow = System.currentTimeMillis()
+                    elapsedNow = SystemClock.elapsedRealtime()
+                    delay(1000)
+                }
+            }
+        onPauseOrDispose { job.cancel() }
+    }
+    val seconds = elapsedMillis(draft, wallNow, elapsedNow, bootCount) / 1000
+    val clock =
+        if (seconds >= 3600)
+            "%d:%02d:%02d"
+                .format(java.util.Locale.US, seconds / 3600, seconds / 60 % 60, seconds % 60)
+        else "%02d:%02d".format(java.util.Locale.US, seconds / 60, seconds % 60)
+    Text(
+        clock,
+        Modifier.testTag("session-clock"),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}

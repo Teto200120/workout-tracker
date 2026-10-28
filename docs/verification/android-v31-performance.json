@@ -1,0 +1,1080 @@
+{
+  "baseline_source_commit": "d13ea94b57fe294b52fb1440e911eb1f9ecef19b",
+  "candidate_version": "0.31.0-preview",
+  "candidate_apk_sha256": "f2d853d691a688c85bb929f7e3f0f423199b9cc58b4544412eb046c6ccb03fd8",
+  "measured_release_qa_sha256": "0e667a962b6ecff22dcbcb54ad8ad5aade50fdc1af14b0c5509cdb5cfae91de9",
+  "delivered_and_measured_contents_identical": true,
+  "apk_bytes": {
+    "before": 10275662,
+    "after": 2265476
+  },
+  "native_catalog_uncompressed_bytes": 798464,
+  "environment": {
+    "device": "MigrationQA Android 16 emulator",
+    "graphics": "Host NVIDIA RTX 5070 through Android Emulator OpenGL ES Translator",
+    "resolution": "1080x2400",
+    "density_dpi": 420,
+    "font_scale": 1.0,
+    "compiler_mode": "speed",
+    "trials_per_flow": 9,
+    "excluded_warmups_per_flow": 2,
+    "setup": "Fresh boot for each version and history size; identical synthetic seed and helper code per comparison",
+    "release_debuggable": false
+  },
+  "release_ui_cohorts": {
+    "1003": {
+      "ui-workout": {
+        "metrics": {
+          "home_ms": {
+            "before_ms": 1104.254,
+            "after_ms": 928.6178,
+            "reduction_percent": 15.905416688551721,
+            "before_range_ms": [
+              1062.1116,
+              1207.0675
+            ],
+            "after_range_ms": [
+              832.9017,
+              1011.3555
+            ]
+          },
+          "start_workout_ms": {
+            "before_ms": 519.4727,
+            "after_ms": 321.6262,
+            "reduction_percent": 38.08602453988439,
+            "before_range_ms": [
+              452.9475,
+              575.3229
+            ],
+            "after_range_ms": [
+              275.0268,
+              348.1291
+            ]
+          },
+          "launch_to_workout_ms": {
+            "before_ms": 1656.4294,
+            "after_ms": 1246.1464,
+            "reduction_percent": 24.769120857188355,
+            "before_range_ms": [
+              1518.6434,
+              1726.5402
+            ],
+            "after_range_ms": [
+              1174.2028,
+              1329.9699
+            ]
+          }
+        },
+        "before_samples": [
+          {
+            "run": 1,
+            "home_ms": 1085.9926,
+            "start_workout_ms": 575.3229,
+            "launch_to_workout_ms": 1661.3155
+          },
+          {
+            "run": 2,
+            "home_ms": 1148.2036,
+            "start_workout_ms": 526.2429,
+            "launch_to_workout_ms": 1674.4465
+          },
+          {
+            "run": 3,
+            "home_ms": 1154.4507,
+            "start_workout_ms": 512.9873,
+            "launch_to_workout_ms": 1667.438
+          },
+          {
+            "run": 4,
+            "home_ms": 1207.0675,
+            "start_workout_ms": 519.4727,
+            "launch_to_workout_ms": 1726.5402
+          },
+          {
+            "run": 5,
+            "home_ms": 1104.254,
+            "start_workout_ms": 505.4688,
+            "launch_to_workout_ms": 1609.7228
+          },
+          {
+            "run": 6,
+            "home_ms": 1062.1116,
+            "start_workout_ms": 523.2838,
+            "launch_to_workout_ms": 1585.3954
+          },
+          {
+            "run": 7,
+            "home_ms": 1065.6959,
+            "start_workout_ms": 452.9475,
+            "launch_to_workout_ms": 1518.6434
+          },
+          {
+            "run": 8,
+            "home_ms": 1085.2653,
+            "start_workout_ms": 507.6819,
+            "launch_to_workout_ms": 1592.9472
+          },
+          {
+            "run": 9,
+            "home_ms": 1115.4082,
+            "start_workout_ms": 541.0212,
+            "launch_to_workout_ms": 1656.4294
+          }
+        ],
+        "after_samples": [
+          {
+            "run": 1,
+            "home_ms": 948.0654,
+            "start_workout_ms": 298.081,
+            "launch_to_workout_ms": 1246.1464
+          },
+          {
+            "run": 2,
+            "home_ms": 949.5591,
+            "start_workout_ms": 348.1291,
+            "launch_to_workout_ms": 1297.6882
+          },
+          {
+            "run": 3,
+            "home_ms": 892.0259,
+            "start_workout_ms": 310.0988,
+            "launch_to_workout_ms": 1202.1247
+          },
+          {
+            "run": 4,
+            "home_ms": 832.9017,
+            "start_workout_ms": 341.3011,
+            "launch_to_workout_ms": 1174.2028
+          },
+          {
+            "run": 5,
+            "home_ms": 924.6895,
+            "start_workout_ms": 321.6262,
+            "launch_to_workout_ms": 1246.3157
+          },
+          {
+            "run": 6,
+            "home_ms": 1011.3555,
+            "start_workout_ms": 318.6144,
+            "launch_to_workout_ms": 1329.9699
+          },
+          {
+            "run": 7,
+            "home_ms": 903.0036,
+            "start_workout_ms": 323.0472,
+            "launch_to_workout_ms": 1226.0508
+          },
+          {
+            "run": 8,
+            "home_ms": 928.6178,
+            "start_workout_ms": 323.045,
+            "launch_to_workout_ms": 1251.6628
+          },
+          {
+            "run": 9,
+            "home_ms": 929.0004,
+            "start_workout_ms": 275.0268,
+            "launch_to_workout_ms": 1204.0272
+          }
+        ],
+        "driver_code_identical": true
+      },
+      "ui-stats": {
+        "metrics": {
+          "home_ms": {
+            "before_ms": 1098.9865,
+            "after_ms": 918.6415,
+            "reduction_percent": 16.410119687548487,
+            "before_range_ms": [
+              1044.6951,
+              1199.2034
+            ],
+            "after_range_ms": [
+              875.5652,
+              1030.9692
+            ]
+          },
+          "first_stats_ms": {
+            "before_ms": 181.2077,
+            "after_ms": 164.7928,
+            "reduction_percent": 9.058610644028919,
+            "before_range_ms": [
+              131.2707,
+              212.9787
+            ],
+            "after_range_ms": [
+              129.9555,
+              176.727
+            ]
+          },
+          "launch_to_stats_ms": {
+            "before_ms": 1274.7126,
+            "after_ms": 1078.4468,
+            "reduction_percent": 15.396866713328173,
+            "before_range_ms": [
+              1192.3275,
+              1380.4111
+            ],
+            "after_range_ms": [
+              1043.9693,
+              1160.9247
+            ]
+          }
+        },
+        "before_samples": [
+          {
+            "run": 1,
+            "home_ms": 1098.9865,
+            "first_stats_ms": 175.7261,
+            "launch_to_stats_ms": 1274.7126
+          },
+          {
+            "run": 2,
+            "home_ms": 1099.7911,
+            "first_stats_ms": 211.8757,
+            "launch_to_stats_ms": 1311.6668
+          },
+          {
+            "run": 3,
+            "home_ms": 1085.5138,
+            "first_stats_ms": 187.5272,
+            "launch_to_stats_ms": 1273.041
+          },
+          {
+            "run": 4,
+            "home_ms": 1199.2034,
+            "first_stats_ms": 181.2077,
+            "launch_to_stats_ms": 1380.4111
+          },
+          {
+            "run": 5,
+            "home_ms": 1124.9504,
+            "first_stats_ms": 212.9787,
+            "launch_to_stats_ms": 1337.9291
+          },
+          {
+            "run": 6,
+            "home_ms": 1113.136,
+            "first_stats_ms": 195.7048,
+            "launch_to_stats_ms": 1308.8408
+          },
+          {
+            "run": 7,
+            "home_ms": 1076.7592,
+            "first_stats_ms": 135.9484,
+            "launch_to_stats_ms": 1212.7076
+          },
+          {
+            "run": 8,
+            "home_ms": 1061.0568,
+            "first_stats_ms": 131.2707,
+            "launch_to_stats_ms": 1192.3275
+          },
+          {
+            "run": 9,
+            "home_ms": 1044.6951,
+            "first_stats_ms": 163.0044,
+            "launch_to_stats_ms": 1207.6995
+          }
+        ],
+        "after_samples": [
+          {
+            "run": 1,
+            "home_ms": 918.6415,
+            "first_stats_ms": 146.991,
+            "launch_to_stats_ms": 1065.6325
+          },
+          {
+            "run": 2,
+            "home_ms": 913.654,
+            "first_stats_ms": 164.7928,
+            "launch_to_stats_ms": 1078.4468
+          },
+          {
+            "run": 3,
+            "home_ms": 936.6191,
+            "first_stats_ms": 157.3952,
+            "launch_to_stats_ms": 1094.0143
+          },
+          {
+            "run": 4,
+            "home_ms": 875.5652,
+            "first_stats_ms": 168.4041,
+            "launch_to_stats_ms": 1043.9693
+          },
+          {
+            "run": 5,
+            "home_ms": 943.067,
+            "first_stats_ms": 170.6545,
+            "launch_to_stats_ms": 1113.7215
+          },
+          {
+            "run": 6,
+            "home_ms": 899.0521,
+            "first_stats_ms": 157.1005,
+            "launch_to_stats_ms": 1056.1526
+          },
+          {
+            "run": 7,
+            "home_ms": 894.9393,
+            "first_stats_ms": 165.005,
+            "launch_to_stats_ms": 1059.9443
+          },
+          {
+            "run": 8,
+            "home_ms": 918.9875,
+            "first_stats_ms": 176.727,
+            "launch_to_stats_ms": 1095.7145
+          },
+          {
+            "run": 9,
+            "home_ms": 1030.9692,
+            "first_stats_ms": 129.9555,
+            "launch_to_stats_ms": 1160.9247
+          }
+        ],
+        "driver_code_identical": true
+      }
+    },
+    "2003": {
+      "ui-workout": {
+        "metrics": {
+          "home_ms": {
+            "before_ms": 1352.2106,
+            "after_ms": 1074.1754,
+            "reduction_percent": 20.561530873962973,
+            "before_range_ms": [
+              1276.0535,
+              1645.5938
+            ],
+            "after_range_ms": [
+              1035.4919,
+              1403.5924
+            ]
+          },
+          "start_workout_ms": {
+            "before_ms": 769.5235,
+            "after_ms": 376.4817,
+            "reduction_percent": 51.07599702933049,
+            "before_range_ms": [
+              695.0504,
+              813.9451
+            ],
+            "after_range_ms": [
+              334.0052,
+              400.7057
+            ]
+          },
+          "launch_to_workout_ms": {
+            "before_ms": 2134.2372,
+            "after_ms": 1453.245,
+            "reduction_percent": 31.90799035833506,
+            "before_range_ms": [
+              1971.1039,
+              2370.1243
+            ],
+            "after_range_ms": [
+              1411.9736,
+              1753.6612
+            ]
+          }
+        },
+        "before_samples": [
+          {
+            "run": 1,
+            "home_ms": 1334.8779,
+            "start_workout_ms": 747.7366,
+            "launch_to_workout_ms": 2082.6145
+          },
+          {
+            "run": 2,
+            "home_ms": 1364.7137,
+            "start_workout_ms": 769.5235,
+            "launch_to_workout_ms": 2134.2372
+          },
+          {
+            "run": 3,
+            "home_ms": 1276.0535,
+            "start_workout_ms": 695.0504,
+            "launch_to_workout_ms": 1971.1039
+          },
+          {
+            "run": 4,
+            "home_ms": 1352.2106,
+            "start_workout_ms": 795.26,
+            "launch_to_workout_ms": 2147.4706
+          },
+          {
+            "run": 5,
+            "home_ms": 1295.5892,
+            "start_workout_ms": 746.9271,
+            "launch_to_workout_ms": 2042.5163
+          },
+          {
+            "run": 6,
+            "home_ms": 1645.5938,
+            "start_workout_ms": 724.5305,
+            "launch_to_workout_ms": 2370.1243
+          },
+          {
+            "run": 7,
+            "home_ms": 1356.6553,
+            "start_workout_ms": 794.5118,
+            "launch_to_workout_ms": 2151.1671
+          },
+          {
+            "run": 8,
+            "home_ms": 1361.5803,
+            "start_workout_ms": 813.9451,
+            "launch_to_workout_ms": 2175.5254
+          },
+          {
+            "run": 9,
+            "home_ms": 1279.2254,
+            "start_workout_ms": 783.9657,
+            "launch_to_workout_ms": 2063.1911
+          }
+        ],
+        "after_samples": [
+          {
+            "run": 1,
+            "home_ms": 1067.2071,
+            "start_workout_ms": 386.0379,
+            "launch_to_workout_ms": 1453.245
+          },
+          {
+            "run": 2,
+            "home_ms": 1089.4758,
+            "start_workout_ms": 334.0052,
+            "launch_to_workout_ms": 1423.481
+          },
+          {
+            "run": 3,
+            "home_ms": 1229.5789,
+            "start_workout_ms": 400.7057,
+            "launch_to_workout_ms": 1630.2846
+          },
+          {
+            "run": 4,
+            "home_ms": 1067.2798,
+            "start_workout_ms": 354.7465,
+            "launch_to_workout_ms": 1422.0263
+          },
+          {
+            "run": 5,
+            "home_ms": 1074.1754,
+            "start_workout_ms": 349.831,
+            "launch_to_workout_ms": 1424.0064
+          },
+          {
+            "run": 6,
+            "home_ms": 1403.5924,
+            "start_workout_ms": 350.0688,
+            "launch_to_workout_ms": 1753.6612
+          },
+          {
+            "run": 7,
+            "home_ms": 1094.5994,
+            "start_workout_ms": 378.7608,
+            "launch_to_workout_ms": 1473.3602
+          },
+          {
+            "run": 8,
+            "home_ms": 1035.4919,
+            "start_workout_ms": 376.4817,
+            "launch_to_workout_ms": 1411.9736
+          },
+          {
+            "run": 9,
+            "home_ms": 1074.042,
+            "start_workout_ms": 391.8706,
+            "launch_to_workout_ms": 1465.9126
+          }
+        ],
+        "driver_code_identical": true
+      },
+      "ui-stats": {
+        "metrics": {
+          "home_ms": {
+            "before_ms": 1338.4685,
+            "after_ms": 1068.4336,
+            "reduction_percent": 20.174916331613325,
+            "before_range_ms": [
+              1286.5336,
+              1442.2802
+            ],
+            "after_range_ms": [
+              1028.3583,
+              1247.0049
+            ]
+          },
+          "first_stats_ms": {
+            "before_ms": 194.5308,
+            "after_ms": 162.2981,
+            "reduction_percent": 16.569458409670858,
+            "before_range_ms": [
+              136.7396,
+              208.2272
+            ],
+            "after_range_ms": [
+              132.4262,
+              187.6565
+            ]
+          },
+          "launch_to_stats_ms": {
+            "before_ms": 1505.2818,
+            "after_ms": 1222.3827,
+            "reduction_percent": 18.793763400314802,
+            "before_range_ms": [
+              1459.3474,
+              1650.5074
+            ],
+            "after_range_ms": [
+              1162.0829,
+              1409.3939
+            ]
+          }
+        },
+        "before_samples": [
+          {
+            "run": 1,
+            "home_ms": 1326.8707,
+            "first_stats_ms": 142.0102,
+            "launch_to_stats_ms": 1468.8809
+          },
+          {
+            "run": 2,
+            "home_ms": 1338.4685,
+            "first_stats_ms": 201.3706,
+            "launch_to_stats_ms": 1539.8391
+          },
+          {
+            "run": 3,
+            "home_ms": 1371.7282,
+            "first_stats_ms": 204.0428,
+            "launch_to_stats_ms": 1575.771
+          },
+          {
+            "run": 4,
+            "home_ms": 1286.5336,
+            "first_stats_ms": 190.5069,
+            "launch_to_stats_ms": 1477.0405
+          },
+          {
+            "run": 5,
+            "home_ms": 1409.7905,
+            "first_stats_ms": 194.5308,
+            "launch_to_stats_ms": 1604.3213
+          },
+          {
+            "run": 6,
+            "home_ms": 1368.5422,
+            "first_stats_ms": 136.7396,
+            "launch_to_stats_ms": 1505.2818
+          },
+          {
+            "run": 7,
+            "home_ms": 1301.8579,
+            "first_stats_ms": 157.4895,
+            "launch_to_stats_ms": 1459.3474
+          },
+          {
+            "run": 8,
+            "home_ms": 1299.2646,
+            "first_stats_ms": 201.2929,
+            "launch_to_stats_ms": 1500.5575
+          },
+          {
+            "run": 9,
+            "home_ms": 1442.2802,
+            "first_stats_ms": 208.2272,
+            "launch_to_stats_ms": 1650.5074
+          }
+        ],
+        "after_samples": [
+          {
+            "run": 1,
+            "home_ms": 1127.8387,
+            "first_stats_ms": 134.902,
+            "launch_to_stats_ms": 1262.7407
+          },
+          {
+            "run": 2,
+            "home_ms": 1029.6567,
+            "first_stats_ms": 132.4262,
+            "launch_to_stats_ms": 1162.0829
+          },
+          {
+            "run": 3,
+            "home_ms": 1028.3583,
+            "first_stats_ms": 163.5502,
+            "launch_to_stats_ms": 1191.9085
+          },
+          {
+            "run": 4,
+            "home_ms": 1082.7889,
+            "first_stats_ms": 139.5938,
+            "launch_to_stats_ms": 1222.3827
+          },
+          {
+            "run": 5,
+            "home_ms": 1070.993,
+            "first_stats_ms": 178.2557,
+            "launch_to_stats_ms": 1249.2487
+          },
+          {
+            "run": 6,
+            "home_ms": 1059.067,
+            "first_stats_ms": 187.6565,
+            "launch_to_stats_ms": 1246.7235
+          },
+          {
+            "run": 7,
+            "home_ms": 1058.8546,
+            "first_stats_ms": 162.2981,
+            "launch_to_stats_ms": 1221.1527
+          },
+          {
+            "run": 8,
+            "home_ms": 1247.0049,
+            "first_stats_ms": 162.389,
+            "launch_to_stats_ms": 1409.3939
+          },
+          {
+            "run": 9,
+            "home_ms": 1068.4336,
+            "first_stats_ms": 147.3692,
+            "launch_to_stats_ms": 1215.8028
+          }
+        ],
+        "driver_code_identical": true
+      }
+    }
+  },
+  "supporting_debug_probes": {
+    "baseline": {
+      "phase": "baseline-hardware",
+      "device": "MigrationQA",
+      "android": "16",
+      "release_qa_sha256": "6357c1270819dc6f1857f509836699929592b49f1a21da03dcce4e197c657a0c",
+      "release_apk_bytes": 10275662,
+      "workloads": {
+        "small": {
+          "workouts": 3,
+          "probe": {
+            "workouts": 3,
+            "routine_start_ms": [
+              82.0788,
+              9.0825,
+              6.4588,
+              6.5211,
+              6.0688,
+              6.4107,
+              6.373
+            ],
+            "started_workout_sha256": "039d92073106dad04c2f746b8ead8ae30f591539e7eab411164fe2e729b10fd1",
+            "records_sha256": "6d425eb724253eb8e52951b9afd9ed2fb845e68739b755b8bf5df6827c364136",
+            "stats_sha256": "cf916fb935690a55e181cdf54574b44103de27efc011532b35ef9d19cf8c6b79",
+            "catalog_sha256": "3e9e240e3de1c2638ae8b49dfeebf614f5dffda2fccd5c01257b6d557c571ff1",
+            "stats_ms": [
+              108.2979,
+              9.3439,
+              8.2715,
+              8.0124,
+              10.6876,
+              8.606,
+              10.8853,
+              7.9437,
+              6.9607
+            ],
+            "catalog_ms": [
+              304.1773,
+              185.1904,
+              214.5435,
+              177.8165,
+              168.5343,
+              159.5164,
+              164.654
+            ],
+            "history_ms": [
+              2.9022,
+              0.5539,
+              0.5529,
+              1.3034,
+              0.8419,
+              0.8339,
+              0.429
+            ],
+            "total_pss_kib": 125047
+          },
+          "starts": [
+            {
+              "run": 1,
+              "warmup": true,
+              "first_frame_ms": 660,
+              "full_display_ms": 1053
+            },
+            {
+              "run": 2,
+              "warmup": true,
+              "first_frame_ms": 523,
+              "full_display_ms": 798
+            },
+            {
+              "run": 3,
+              "warmup": false,
+              "first_frame_ms": 519,
+              "full_display_ms": 814
+            },
+            {
+              "run": 4,
+              "warmup": false,
+              "first_frame_ms": 558,
+              "full_display_ms": 844
+            },
+            {
+              "run": 5,
+              "warmup": false,
+              "first_frame_ms": 513,
+              "full_display_ms": 812
+            },
+            {
+              "run": 6,
+              "warmup": false,
+              "first_frame_ms": 498,
+              "full_display_ms": 744
+            },
+            {
+              "run": 7,
+              "warmup": false,
+              "first_frame_ms": 538,
+              "full_display_ms": 819
+            },
+            {
+              "run": 8,
+              "warmup": false,
+              "first_frame_ms": 534,
+              "full_display_ms": 785
+            },
+            {
+              "run": 9,
+              "warmup": false,
+              "first_frame_ms": 656,
+              "full_display_ms": 860
+            },
+            {
+              "run": 10,
+              "warmup": false,
+              "first_frame_ms": 521,
+              "full_display_ms": 810
+            },
+            {
+              "run": 11,
+              "warmup": false,
+              "first_frame_ms": 550,
+              "full_display_ms": 844
+            }
+          ],
+          "median_first_frame_ms": 534,
+          "median_full_display_ms": 814
+        },
+        "large": {
+          "workouts": 1003,
+          "probe": {
+            "workouts": 1003,
+            "routine_start_ms": [
+              486.8282,
+              386.4006,
+              339.4213,
+              370.9977,
+              358.5745,
+              334.9642,
+              349.4489
+            ],
+            "started_workout_sha256": "039d92073106dad04c2f746b8ead8ae30f591539e7eab411164fe2e729b10fd1",
+            "records_sha256": "ba05aa8f0a99eba8bce0c4a9a0bcdf37a078fafff0e1955cc2db81b87d317125",
+            "stats_sha256": "20a1c0bb82a8e3c8ee5da896e292b881227476758df9390d02214a6952d9f494",
+            "catalog_sha256": "3e9e240e3de1c2638ae8b49dfeebf614f5dffda2fccd5c01257b6d557c571ff1",
+            "stats_ms": [
+              739.5576,
+              585.7172,
+              439.751,
+              420.8589,
+              434.6585,
+              403.7537,
+              399.8463,
+              383.2311,
+              396.1556
+            ],
+            "catalog_ms": [
+              193.0063,
+              185.838,
+              152.232,
+              154.8437,
+              153.0823,
+              167.0406,
+              154.7261
+            ],
+            "history_ms": [
+              283.8749,
+              293.6696,
+              306.179,
+              293.355,
+              297.5232,
+              307.5908,
+              298.5509
+            ],
+            "total_pss_kib": 134378
+          },
+          "starts": [
+            {
+              "run": 1,
+              "warmup": true,
+              "first_frame_ms": 597,
+              "full_display_ms": 1048
+            },
+            {
+              "run": 2,
+              "warmup": true,
+              "first_frame_ms": 553,
+              "full_display_ms": 1008
+            },
+            {
+              "run": 3,
+              "warmup": false,
+              "first_frame_ms": 522,
+              "full_display_ms": 979
+            },
+            {
+              "run": 4,
+              "warmup": false,
+              "first_frame_ms": 529,
+              "full_display_ms": 963
+            },
+            {
+              "run": 5,
+              "warmup": false,
+              "first_frame_ms": 524,
+              "full_display_ms": 973
+            },
+            {
+              "run": 6,
+              "warmup": false,
+              "first_frame_ms": 506,
+              "full_display_ms": 1006
+            },
+            {
+              "run": 7,
+              "warmup": false,
+              "first_frame_ms": 528,
+              "full_display_ms": 947
+            },
+            {
+              "run": 8,
+              "warmup": false,
+              "first_frame_ms": 525,
+              "full_display_ms": 982
+            },
+            {
+              "run": 9,
+              "warmup": false,
+              "first_frame_ms": 515,
+              "full_display_ms": 968
+            },
+            {
+              "run": 10,
+              "warmup": false,
+              "first_frame_ms": 547,
+              "full_display_ms": 975
+            },
+            {
+              "run": 11,
+              "warmup": false,
+              "first_frame_ms": 510,
+              "full_display_ms": 944
+            }
+          ],
+          "median_first_frame_ms": 524,
+          "median_full_display_ms": 973
+        }
+      },
+      "compiler_mode": "speed",
+      "caveats": [
+        "Hardware-rendered emulator (host NVIDIA RTX 5070), not a physical phone",
+        "Process-cold starts with warm OS caches",
+        "Two warmup launches precede nine collected launches",
+        "Full display includes library, catalog, schedule and Home summary readiness",
+        "Release measurements use a local QA certificate; final delivered APK is signed separately"
+      ]
+    },
+    "candidate_before_scroll_position_only_change": {
+      "phase": "optimized-shared-hardware",
+      "device": "MigrationQA",
+      "android": "16",
+      "release_qa_sha256": "b6cc1e0e364da4fc86904c34448a956716ffd22c3e5c5d0b8136149739e8827a",
+      "release_apk_bytes": 2265476,
+      "workloads": {
+        "small": {
+          "workouts": 3,
+          "probe": {
+            "workouts": 3,
+            "routine_start_ms": [
+              76.4166,
+              4.9679,
+              4.9274,
+              6.1503,
+              8.238,
+              4.7655,
+              4.6942
+            ],
+            "started_workout_sha256": "039d92073106dad04c2f746b8ead8ae30f591539e7eab411164fe2e729b10fd1",
+            "records_sha256": "6d425eb724253eb8e52951b9afd9ed2fb845e68739b755b8bf5df6827c364136",
+            "stats_sha256": "cf916fb935690a55e181cdf54574b44103de27efc011532b35ef9d19cf8c6b79",
+            "catalog_sha256": "3e9e240e3de1c2638ae8b49dfeebf614f5dffda2fccd5c01257b6d557c571ff1",
+            "stats_ms": [
+              109.8028,
+              4.475,
+              3.8738,
+              3.2764,
+              2.8664,
+              3.199,
+              4.163,
+              2.6288,
+              2.693
+            ],
+            "catalog_ms": [
+              291.3275,
+              105.9092,
+              86.0374,
+              103.6981,
+              91.317,
+              88.3391,
+              89.8472
+            ],
+            "history_ms": [
+              3.5882,
+              1.1301,
+              0.5172,
+              0.4501,
+              1.0348,
+              0.8215,
+              0.808
+            ],
+            "total_pss_kib": 113714
+          }
+        },
+        "large": {
+          "workouts": 1003,
+          "probe": {
+            "workouts": 1003,
+            "routine_start_ms": [
+              462.4419,
+              66.4392,
+              63.9345,
+              77.2985,
+              56.9354,
+              70.84,
+              60.0165
+            ],
+            "started_workout_sha256": "039d92073106dad04c2f746b8ead8ae30f591539e7eab411164fe2e729b10fd1",
+            "records_sha256": "ba05aa8f0a99eba8bce0c4a9a0bcdf37a078fafff0e1955cc2db81b87d317125",
+            "stats_sha256": "20a1c0bb82a8e3c8ee5da896e292b881227476758df9390d02214a6952d9f494",
+            "catalog_sha256": "3e9e240e3de1c2638ae8b49dfeebf614f5dffda2fccd5c01257b6d557c571ff1",
+            "stats_ms": [
+              763.1476,
+              74.8959,
+              58.0606,
+              48.8653,
+              63.4725,
+              51.4624,
+              66.9119,
+              52.4713,
+              45.2087
+            ],
+            "catalog_ms": [
+              124.0169,
+              100.6842,
+              86.5217,
+              78.7825,
+              82.4972,
+              64.7717,
+              73.5942
+            ],
+            "history_ms": [
+              308.8033,
+              298.7389,
+              301.5302,
+              304.1774,
+              400.8987,
+              310.1256,
+              294.6039
+            ],
+            "total_pss_kib": 142203
+          }
+        }
+      },
+      "compiler_mode": "speed",
+      "caveats": [
+        "Hardware-rendered emulator (host NVIDIA RTX 5070), not a physical phone",
+        "Process-cold starts with warm OS caches",
+        "Two warmup launches precede nine collected launches",
+        "Full display includes library, catalog, schedule and Home summary readiness",
+        "Release measurements use a local QA certificate; final delivered APK is signed separately"
+      ]
+    },
+    "exact_output_parity": {
+      "small": {
+        "records_sha256": true,
+        "stats_sha256": true,
+        "catalog_sha256": true,
+        "started_workout_sha256": true
+      },
+      "large": {
+        "records_sha256": true,
+        "stats_sha256": true,
+        "catalog_sha256": true,
+        "started_workout_sha256": true
+      }
+    },
+    "baseline_metadata_note": "The original generic harness renderer label was corrected from software to verified host graphics; timing samples are unchanged."
+  },
+  "verification": {
+    "jvm_tests": 114,
+    "lint": "0 errors, 10 existing warnings",
+    "full_workflow": "Passed with airplane mode on and Wi-Fi/mobile data off",
+    "jvm_exports_accepted_by_pwa": 11,
+    "device_exports_accepted_by_pwa": 8,
+    "signed_upgrade": {
+      "passed": true,
+      "apk_sha256": "f2d853d691a688c85bb929f7e3f0f423199b9cc58b4544412eb046c6ccb03fd8",
+      "checks": [
+        "Permanent-key v30 to v31 install -r retains profile and both exercises",
+        "Installed bytes equal delivered APK; version 31 is non-debuggable",
+        "The selected current exercise remains open after the v30 to v31 update",
+        "Focused Log/Guide and real keyboard work in release",
+        "Immediate in-card swipe reorders exercises without a menu",
+        "Cold restart retains dropped order and the expanded exercise identity",
+        "Returning to the moved exercise retains its own notes",
+        "Light/dark, profile/settings and Stats smoke checks pass"
+      ]
+    },
+    "release_phone": {
+      "passed": true,
+      "clock_advanced_seconds": 5,
+      "checks": [
+        "Delivered release clock advances while visible",
+        "360dp phone width and 200 percent text retain workout action access",
+        "Focused Log retains its notes at 200 percent text",
+        "Home and Stats retain navigation and displayed values"
+      ]
+    }
+  },
+  "limitations": [
+    "Emulator results do not establish physical-phone speed.",
+    "Workout entry reaches 50 percent less time on 2003 workouts; other operations have separate results.",
+    "Accessibility readiness plus a 32 ms frame allowance is measured, rather than exact display presentation timestamps.",
+    "Debug method probes exclude the first sample and explain calculations rather than whole-app speed.",
+    "Earlier software-GPU and long-running-emulator runs remain in local artifacts but are excluded after original-app timings drifted.",
+    "A diagnostic startup/workout Perfetto trace before final cache/timer changes parsed with zero error/data-loss counters."
+  ]
+}

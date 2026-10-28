@@ -14,5 +14,6 @@ Continue the PWA UI/UX import one screen at a time. Each delivered checkpoint ge
 | Exercise picker / guide | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Matching search and guide landmarks, tonal results and coral instruction markers |
 | Onboarding / feedback / help | [v26](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.26.0-preview) | Branded setup, compact support headings and browser handoff; expandable guidance retained |
 | Navigation / accessibility pass | [v24](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.24.0-preview) | PWA Stats/Home/Profile bar, History under Stats, native tab semantics |
+| Native performance | [v31](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.31.0-preview) | Smaller APK, shared history reads, faster workout entry and isolated timer updates; measured results in ANDROID_NATIVE_PERFORMANCE.md |
 
 Use the rendered PWA and source as the reference, preserve data contracts, and keep verification scoped to each change. Physical-phone, TalkBack and hosted feedback delivery acceptance remain separate from emulator evidence. Exercise guides retain the native offline text and reviewed reference matching; the PWA online demonstration photos remain outside the native catalog.
