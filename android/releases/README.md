@@ -1,20 +1,22 @@
 # Android APK downloads
 
-Latest: [v33 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.33.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.33.0-preview/WorkoutTracker-0.33.0-preview.apk).
+Latest: [v34 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.34.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.34.0-preview/WorkoutTracker-0.34.0-preview.apk).
 
-This is the signed, non-debuggable Android 15 keyboard recovery preview (version code 33). It uses the permanent signing identity and can update permanently signed v32. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
+This signed, non-debuggable workout motion and card clarity preview uses version code 34 and the permanent signing identity. It updates permanently signed v33. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
 
-Matching source is in the commit that adds this APK. Built locally with the pinned toolchain; this is not a downloaded CI artifact. SHA-256 is recorded in [SHA256SUMS](SHA256SUMS).
+Dragging retains the lifted card through release, preserves the list position and settles cards into place. Card disclosure, details, Log/Guide and screen changes use consistent short transitions. Clearer card headers and grouped set values keep logging ahead of supporting information. Narrow layouts and large text retain stacked controls.
+
+Matching source is in the commit that adds this APK. Built locally with the pinned toolchain. SHA-256 is recorded in [SHA256SUMS](SHA256SUMS); release assets include signing and source details.
 
 Certificate SHA-256: `e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88`.
 
-Validation: 114 JVM tests pass; Android lint has zero errors and 10 warnings; the maintained end-to-end workflow passes. Emulator checks cover unchanged draft recovery, inline dragging, focused Log/Guide, real keyboard input, notes and light/dark rendering. The delivered APK passes a v32-to-v33 upgrade retaining profile and active draft, installed-byte verification, cold restart and keyboard checks. Physical-phone and TalkBack acceptance remain outstanding.
+Validation: 114 unit tests, six device tests, formatting and debug/release builds pass. Android lint reports zero errors and 16 warnings in unchanged code or dependency declarations. The exact signed v33-to-v34 upgrade preserves the complete synthetic database and active draft through a cold restart, and the real keyboard works on Android 15.
 
-Recovery details: [Android 15 keyboard recovery](../../docs/ANDROID_KEYBOARD_RECOVERY.md) and [read-only draft recovery](../../docs/ANDROID_DRAFT_RECOVERY.md). The shrinking, caches and timer improvements from v32 remain included; [earlier performance measurements](../../docs/ANDROID_NATIVE_PERFORMANCE.md) are recorded separately.
-
-UI specifications: [Home](../../docs/ANDROID_HOME_UI.md) · [Active workout](../../docs/ANDROID_SESSION_UI.md) · [History](../../docs/ANDROID_HISTORY_UI.md) · [Stats](../../docs/ANDROID_STATS_UI.md) · [Profile and settings](../../docs/ANDROID_PROFILE_SETTINGS_UI.md) · [Routines](../../docs/ANDROID_ROUTINES_UI.md) · [Weekly schedule](../../docs/ANDROID_SCHEDULE_UI.md) · [Exercise picker and guide](../../docs/ANDROID_CATALOG_UI.md) · [Setup and support](../../docs/ANDROID_SUPPORT_UI.md) · [Navigation and accessibility](../../docs/ANDROID_NAVIGATION_UI.md).
+Verification and limits: [workout motion](../../docs/ANDROID_WORKOUT_MOTION.md) and [v34 checks](../../docs/verification/android-v34-workout-motion.json). Physical-phone and TalkBack acceptance remain outstanding. Earlier [Android 15 keyboard recovery](../../docs/ANDROID_KEYBOARD_RECOVERY.md), [read-only draft recovery](../../docs/ANDROID_DRAFT_RECOVERY.md), and [native performance improvements](../../docs/ANDROID_NATIVE_PERFORMANCE.md) remain included.
 
 ## Future Android deliveries
+
+Advance `versionCode` and `versionName` for every delivered update and create a new GitHub Release. Keep the published APK for each version unchanged.
 
 At the user's request, every future delivered Android preview must include its signed APK in this repository so it is remotely downloadable. Add the versioned APK here, update this latest-download link and SHA256SUMS, and commit/push it with its matching source. Verify its version, non-debuggable flag, permanent signing certificate and checksum before publishing. Also publish a GitHub Release (prerelease for previews) targeting the matching source commit, with the signed APK and SHA256SUMS attached as release assets. Include both the GitHub Release page and direct APK asset download URL in the handoff. Do not rely solely on local files or expiring CI artifacts. Never commit signing keys or credentials.
 

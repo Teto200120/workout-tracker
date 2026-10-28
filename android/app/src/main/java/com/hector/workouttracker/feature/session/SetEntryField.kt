@@ -1,6 +1,5 @@
 package com.hector.workouttracker.feature.session
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,6 +26,7 @@ internal fun SetEntryField(
     keyboardOptions: KeyboardOptions,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    compact: Boolean = false,
     maximum: Double = 10000.0,
     minimum: Double = 0.0,
     onFocused: () -> Unit = {},
@@ -79,7 +79,7 @@ internal fun SetEntryField(
     }
     @Composable
     fun Step(direction: Int) {
-        OutlinedIconButton(
+        IconButton(
             onClick = {
                 onFocused()
                 adjust(direction)
@@ -88,12 +88,6 @@ internal fun SetEntryField(
                 enabled &&
                     valid &&
                     if (direction < 0) (number ?: 0.0) > minimum else (number ?: maximum) < maximum,
-            border =
-                BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .24f)),
-            colors =
-                IconButtonDefaults.outlinedIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .04f)
-                ),
             modifier = Modifier.size(48.dp),
         ) {
             Icon(
@@ -102,7 +96,7 @@ internal fun SetEntryField(
             )
         }
     }
-    if (stacked)
+    if (stacked || compact)
         Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Entry(Modifier.fillMaxWidth())
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

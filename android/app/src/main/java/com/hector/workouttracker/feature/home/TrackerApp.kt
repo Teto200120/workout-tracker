@@ -3,6 +3,7 @@ package com.hector.workouttracker.feature.home
 import android.content.Intent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -20,6 +21,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.hector.workouttracker.MainActivity
 import com.hector.workouttracker.core.designsystem.InteractionTheme
+import com.hector.workouttracker.core.designsystem.TrackerMotion
 import com.hector.workouttracker.core.designsystem.trackerScreenBackground
 import com.hector.workouttracker.core.model.*
 import com.hector.workouttracker.feature.backup.ImportDialog
@@ -36,6 +38,8 @@ import com.hector.workouttracker.feature.settings.SettingsScreen
 import com.hector.workouttracker.feature.stats.StatsScreen
 import com.hector.workouttracker.feature.stats.StatsViewModel
 import kotlinx.serialization.json.*
+
+private val primaryRoutes = setOf("home", "stats", "settings")
 
 @Composable
 fun TrackerApp(vm: TrackerViewModel = viewModel()) {
@@ -182,12 +186,40 @@ private fun TrackerAppContent(state: TrackerState, vm: TrackerViewModel) {
                                 startDestination = "home",
                                 modifier = Modifier.weight(1f),
                                 enterTransition = {
-                                    if (state.interactions.animations) fadeIn()
-                                    else EnterTransition.None
+                                    if (!state.interactions.animations) EnterTransition.None
+                                    else if (
+                                        initialState.destination.route in primaryRoutes &&
+                                            targetState.destination.route in primaryRoutes
+                                    )
+                                        fadeIn(tween(TrackerMotion.Quick))
+                                    else TrackerMotion.enter()
+                                },
+                                popEnterTransition = {
+                                    if (!state.interactions.animations) EnterTransition.None
+                                    else if (
+                                        initialState.destination.route in primaryRoutes &&
+                                            targetState.destination.route in primaryRoutes
+                                    )
+                                        fadeIn(tween(TrackerMotion.Quick))
+                                    else TrackerMotion.enter(forward = false)
+                                },
+                                popExitTransition = {
+                                    if (!state.interactions.animations) ExitTransition.None
+                                    else if (
+                                        initialState.destination.route in primaryRoutes &&
+                                            targetState.destination.route in primaryRoutes
+                                    )
+                                        fadeOut(tween(100))
+                                    else TrackerMotion.exit(forward = false)
                                 },
                                 exitTransition = {
-                                    if (state.interactions.animations) fadeOut()
-                                    else ExitTransition.None
+                                    if (!state.interactions.animations) ExitTransition.None
+                                    else if (
+                                        initialState.destination.route in primaryRoutes &&
+                                            targetState.destination.route in primaryRoutes
+                                    )
+                                        fadeOut(tween(100))
+                                    else TrackerMotion.exit()
                                 },
                             ) {
                                 composable("home") {

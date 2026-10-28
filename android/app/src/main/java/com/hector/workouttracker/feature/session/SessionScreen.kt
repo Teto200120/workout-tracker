@@ -3,10 +3,11 @@ package com.hector.workouttracker.feature.session
 import android.os.SystemClock
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -34,12 +35,12 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
@@ -54,7 +55,6 @@ import com.hector.workouttracker.feature.catalog.ExercisePicker
 import com.hector.workouttracker.feature.help.HelpTip
 import com.hector.workouttracker.feature.history.WorkoutTags
 import java.time.ZoneId
-import kotlin.math.roundToInt
 import kotlinx.coroutines.*
 
 @Composable
@@ -83,11 +83,19 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     var scrollTarget by remember { mutableStateOf<String?>(null) }
     val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
     val dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
-    // Start at the current card instead of laying out the heading and then jumping past it.
+    // New workouts keep their name and overview visible. Resume at the current exercise
+    // once there are entries, without a second scroll after the screen appears.
     val initialExercise = draft.exercises.indexOfFirst { !it.collapsed }
+    val hasEntries =
+        draft.exercises.any { exercise ->
+            exercise.sets.any {
+                it.done || it.weight.isNotBlank() || it.reps.isNotBlank() || it.rpe.isNotBlank()
+            }
+        }
     val list =
         rememberLazyListState(
-            initialFirstVisibleItemIndex = if (initialExercise < 0) 0 else initialExercise + 2
+            initialFirstVisibleItemIndex =
+                if (!hasEntries || initialExercise < 0) 0 else initialExercise + 2
         )
     val currentDraft by rememberUpdatedState(draft)
     val drag = rememberSessionDrag(draft.id, draft.exercises.map { it.key }, list, !state.busy)
@@ -99,22 +107,12 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
         }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(draft.id) { scrollTarget = draft.exercises.firstOrNull { !it.collapsed }?.key }
-    LaunchedEffect(scrollTarget, draft.exercises.map { it.collapsed }) {
-        val key = scrollTarget ?: return@LaunchedEffect
-        val index = draft.exercises.indexOfFirst { it.key == key && !it.collapsed }
+    LaunchedEffect(scrollTarget) {
+        val target = scrollTarget ?: return@LaunchedEffect
+        val index = draft.exercises.indexOfFirst { it.key == target && !it.collapsed }
         if (index >= 0 && drag.key == null && focusedKey == null) {
-            list.scrollToItem(index + 2)
-            // Wait for the expanded row to be measured before placing it in the usable focus band.
-            withFrameNanos {}
-            withFrameNanos {}
-            list.layoutInfo.visibleItemsInfo
-                .firstOrNull { it.key == key }
-                ?.let { item ->
-                    val available = list.layoutInfo.viewportEndOffset
-                    val desiredTop = ((available - item.size).coerceAtLeast(0) * .44f)
-                    list.scrollBy(item.offset - desiredTop)
-                }
+            if (state.interactions.animations) list.animateScrollToItem(index + 2, -8)
+            else list.scrollToItem(index + 2, -8)
         }
         scrollTarget = null
     }
@@ -153,7 +151,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     val total = draft.exercises.sumOf { it.sets.size }
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.luminance() < .5f
-    val panel = if (dark) Color(0xFF223650) else Color(0xFFE5EDF7)
+    val panel = if (dark) Color(0xFF1D3048) else colors.surfaceContainerLow
     val focusedExercise = draft.exercises.firstOrNull { it.key == focusedKey }
     LaunchedEffect(draft.exercises.map { it.key }) {
         if (focusedKey != null && focusedExercise == null) focusedKey = null
@@ -206,26 +204,13 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                             else Modifier
                         ),
                 colors = CardDefaults.cardColors(containerColor = panel),
-                shape =
-                    if (activeExercise?.key == exercise.key)
-                        RoundedCornerShape(
-                            topStart = 24.dp,
-                            topEnd = 24.dp,
-                            bottomEnd = 24.dp,
-                            bottomStart = 10.dp,
-                        )
-                    else RoundedCornerShape(24.dp),
-                elevation =
-                    CardDefaults.cardElevation(
-                        defaultElevation =
-                            if (drag.key == exercise.key) 12.dp
-                            else if (activeExercise?.key == exercise.key) 4.dp else 1.dp
-                    ),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 border =
                     BorderStroke(
-                        if (activeExercise?.key == exercise.key) 2.dp else 1.dp,
-                        if (activeExercise?.key == exercise.key) colors.primary.copy(alpha = .65f)
-                        else colors.outlineVariant,
+                        1.dp,
+                        if (activeExercise?.key == exercise.key) colors.primary.copy(alpha = .55f)
+                        else colors.outlineVariant.copy(alpha = .35f),
                     ),
             ) {
                 Column(
@@ -251,27 +236,14 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Surface(
-                            shape =
-                                RoundedCornerShape(
-                                    topStart = 16.dp,
-                                    topEnd = 16.dp,
-                                    bottomEnd = 16.dp,
-                                    bottomStart = 6.dp,
-                                ),
+                        Text(
+                            "${position + 1}".padStart(2, '0'),
+                            Modifier.widthIn(min = 24.dp),
                             color =
                                 if (activeExercise?.key == exercise.key) colors.primary
-                                else colors.primaryContainer,
-                        ) {
-                            Text(
-                                "${position + 1}",
-                                Modifier.padding(12.dp),
-                                color =
-                                    if (activeExercise?.key == exercise.key) colors.onPrimary
-                                    else colors.onPrimaryContainer,
-                                style = MaterialTheme.typography.titleSmall,
-                            )
-                        }
+                                else colors.onSurfaceVariant.copy(alpha = .7f),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
                         Column(
                             Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -304,7 +276,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     TrackerIcons.Grip,
                                     null,
                                     Modifier.size(24.dp),
-                                    tint = colors.primary,
+                                    tint = colors.onSurfaceVariant.copy(alpha = .65f),
                                 )
                             }
                         Icon(
@@ -313,7 +285,21 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                             Modifier.size(24.dp),
                         )
                     }
-                    if (!exercise.collapsed)
+                    AnimatedVisibility(
+                        visible = !exercise.collapsed,
+                        enter =
+                            if (state.interactions.animations)
+                                expandVertically(
+                                    tween(TrackerMotion.Duration, easing = TrackerMotion.Easing)
+                                ) + fadeIn(tween(TrackerMotion.Quick))
+                            else EnterTransition.None,
+                        exit =
+                            if (state.interactions.animations)
+                                shrinkVertically(
+                                    tween(TrackerMotion.Duration, easing = TrackerMotion.Easing)
+                                ) + fadeOut(tween(100))
+                            else ExitTransition.None,
+                    ) {
                         Column(
                             Modifier.testTag("session-expanded-${exercise.key}"),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -431,7 +417,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                FilledTonalIconButton(
+                                IconButton(
                                     onClick = {
                                         focus.clearFocus()
                                         activeKey = exercise.key
@@ -530,184 +516,210 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     }
                                 }
                         }
+                    }
                 }
             }
         }
-    if (focusedExercise != null) {
-        FocusedExerciseScreen(
-            state,
-            vm,
-            focusedExercise,
-            selectedSet(focusedExercise),
-            onBack = {
-                focus.clearFocus()
-                closeExercise()
-            },
-            onSelect = { select(focusedExercise, it) },
-            onChange = { value -> changeExercise(focusedExercise.key) { value } },
-            onComplete = { set, done ->
-                focus.clearFocus()
-                changeExercise(focusedExercise.key) { e ->
-                    e.copy(
-                        sets = e.sets.map { if (it.key == set.key) it.copy(done = done) else it }
-                    )
-                }
-                if (done) {
-                    chosenSets = HashMap(chosenSets).apply { remove(focusedExercise.key) }
-                    completionFeedback()
-                }
-            },
-            onCopy = { target ->
-                vm.setCopyRequest(focusedExercise.key, target)?.let {
-                    if (it.replacesInput) copyRequest = it else vm.applySets(it)
-                }
-            },
-            onPrevious = {
-                val index = draft.exercises.indexOfFirst { it.key == focusedExercise.key }
-                draft.exercises.getOrNull(index - 1)?.let {
+    AnimatedContent(
+        targetState = focusedExercise?.key,
+        modifier = Modifier.fillMaxSize(),
+        transitionSpec = {
+            if (state.interactions.animations)
+                (TrackerMotion.enter(targetState != null) togetherWith
+                        TrackerMotion.exit(targetState != null))
+                    .using(null)
+            else (EnterTransition.None togetherWith ExitTransition.None).using(null)
+        },
+        label = "exercise-details",
+    ) { shownKey ->
+        val focusedExercise = draft.exercises.firstOrNull { it.key == shownKey }
+        if (focusedExercise != null) {
+            FocusedExerciseScreen(
+                state,
+                vm,
+                focusedExercise,
+                selectedSet(focusedExercise),
+                onBack = {
                     focus.clearFocus()
-                    focusedKey = it.key
-                    activeKey = it.key
-                }
-            },
-            onNext = { advance(focusedExercise.key) },
-        )
-    } else
-        Column(Modifier.fillMaxSize().background(sessionBackgroundBrush())) {
-            Box(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
-                LazyColumn(
-                    Modifier.fillMaxSize()
-                        .testTag("session-list")
-                        .sessionDrag(
-                            drag,
-                            !state.busy && draft.exercises.size > 1,
-                            keys = { currentDraft.exercises.map { it.key } },
-                            onStart = {
-                                focus.clearFocus()
-                                scrollTarget = null
-                            },
-                            onDrop = { keys -> vm.edit { it.reorderExercises(keys) } },
-                        ),
-                    state = list,
-                    contentPadding =
-                        PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    item {
-                        TrainingHero {
-                            Row(
-                                Modifier.fillMaxWidth().padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                OutlinedIconButton(
-                                    onClick = back,
-                                    modifier = Modifier.size(48.dp),
-                                    border =
-                                        BorderStroke(
-                                            1.dp,
-                                            colors.onSurfaceVariant.copy(alpha = .24f),
-                                        ),
+                    closeExercise()
+                },
+                onSelect = { select(focusedExercise, it) },
+                onChange = { value -> changeExercise(focusedExercise.key) { value } },
+                onComplete = { set, done ->
+                    focus.clearFocus()
+                    changeExercise(focusedExercise.key) { e ->
+                        e.copy(
+                            sets =
+                                e.sets.map { if (it.key == set.key) it.copy(done = done) else it }
+                        )
+                    }
+                    if (done) {
+                        chosenSets = HashMap(chosenSets).apply { remove(focusedExercise.key) }
+                        completionFeedback()
+                    }
+                },
+                onCopy = { target ->
+                    vm.setCopyRequest(focusedExercise.key, target)?.let {
+                        if (it.replacesInput) copyRequest = it else vm.applySets(it)
+                    }
+                },
+                onPrevious = {
+                    val index = draft.exercises.indexOfFirst { it.key == focusedExercise.key }
+                    draft.exercises.getOrNull(index - 1)?.let {
+                        focus.clearFocus()
+                        focusedKey = it.key
+                        activeKey = it.key
+                    }
+                },
+                onNext = { advance(focusedExercise.key) },
+            )
+        } else
+            Column(Modifier.fillMaxSize().background(sessionBackgroundBrush())) {
+                Box(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
+                    LazyColumn(
+                        Modifier.fillMaxSize()
+                            .testTag("session-list")
+                            .sessionDrag(
+                                drag,
+                                !state.busy && draft.exercises.size > 1,
+                                keys = { currentDraft.exercises.map { it.key } },
+                                onStart = {
+                                    focus.clearFocus()
+                                    scrollTarget = null
+                                },
+                                onDrop = { keys -> vm.edit { it.reorderExercises(keys) } },
+                                animations = state.interactions.animations,
+                            ),
+                        state = list,
+                        contentPadding =
+                            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        item {
+                            TrainingHero {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    Icon(TrackerIcons.Back, "Back to Today")
-                                }
-                                Column(
-                                    Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    TextField(
-                                        draft.type,
-                                        { value -> vm.edit { it.copy(type = value) } },
-                                        label = {
-                                            Text(
-                                                "Workout name",
-                                                style = MaterialTheme.typography.labelSmall,
-                                            )
-                                        },
-                                        textStyle = MaterialTheme.typography.titleLarge,
-                                        singleLine = true,
-                                        enabled = !state.busy,
-                                        colors =
-                                            TextFieldDefaults.colors(
-                                                focusedContainerColor = Color.Transparent,
-                                                unfocusedContainerColor = Color.Transparent,
-                                                disabledContainerColor = Color.Transparent,
-                                                unfocusedIndicatorColor = Color.Transparent,
+                                    OutlinedIconButton(
+                                        onClick = back,
+                                        modifier = Modifier.size(48.dp),
+                                        border =
+                                            BorderStroke(
+                                                1.dp,
+                                                colors.onSurfaceVariant.copy(alpha = .24f),
                                             ),
-                                        modifier = Modifier.fillMaxWidth(),
-                                    )
-                                    Row(
-                                        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
-                                        SessionClock(draft, bootCount)
+                                        Icon(TrackerIcons.Back, "Back to Today")
+                                    }
+                                    Column(
+                                        Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        TextField(
+                                            draft.type,
+                                            { value -> vm.edit { it.copy(type = value) } },
+                                            label = {
+                                                Text(
+                                                    "Workout name",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                )
+                                            },
+                                            textStyle = MaterialTheme.typography.titleLarge,
+                                            singleLine = true,
+                                            enabled = !state.busy,
+                                            colors =
+                                                TextFieldDefaults.colors(
+                                                    focusedContainerColor = Color.Transparent,
+                                                    unfocusedContainerColor = Color.Transparent,
+                                                    disabledContainerColor = Color.Transparent,
+                                                    unfocusedIndicatorColor = Color.Transparent,
+                                                ),
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                        ) {
+                                            SessionClock(draft, bootCount)
+                                        }
+                                    }
+                                    FilledTonalIconButton(
+                                        onClick = {
+                                            focus.clearFocus()
+                                            finish = true
+                                        },
+                                        enabled = !state.busy,
+                                        modifier = Modifier.size(48.dp).testTag("review-session"),
+                                    ) {
+                                        Icon(TrackerIcons.Check, "Finish workout")
                                     }
                                 }
-                                FilledTonalIconButton(
-                                    onClick = {
-                                        focus.clearFocus()
-                                        finish = true
-                                    },
-                                    enabled = !state.busy,
-                                    modifier = Modifier.size(48.dp).testTag("review-session"),
-                                ) {
-                                    Icon(TrackerIcons.Check, "Finish workout")
-                                }
                             }
                         }
-                    }
-                    item {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FlowRow(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                Column {
-                                    Text(
-                                        "$completed / $total sets",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = colors.primary,
-                                    )
-                                }
-                                FilledTonalButton(
-                                    onClick = { picker = true },
-                                    enabled = !state.busy && draft.exercises.size < 100,
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FlowRow(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
-                                    Icon(TrackerIcons.Add, null, Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Browse exercises")
+                                    Column {
+                                        Text(
+                                            "$completed / $total sets",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = colors.primary,
+                                        )
+                                    }
+                                    FilledTonalButton(
+                                        onClick = { picker = true },
+                                        enabled = !state.busy && draft.exercises.size < 100,
+                                    ) {
+                                        Icon(TrackerIcons.Add, null, Modifier.size(18.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Browse exercises")
+                                    }
                                 }
-                            }
-                            LinearProgressIndicator(
-                                progress = { if (total == 0) 0f else completed.toFloat() / total },
-                                modifier =
-                                    Modifier.fillMaxWidth().semantics {
-                                        stateDescription =
-                                            if (state.pending) "Saving entries"
-                                            else "Saved on this device"
+                                LinearProgressIndicator(
+                                    progress = {
+                                        if (total == 0) 0f else completed.toFloat() / total
                                     },
-                            )
+                                    modifier =
+                                        Modifier.fillMaxWidth().semantics {
+                                            stateDescription =
+                                                if (state.pending) "Saving entries"
+                                                else "Saved on this device"
+                                        },
+                                )
+                            }
                         }
-                    }
-                    val rows = draft.exercises.associateBy { it.key }
-                    itemsIndexed(drag.preview.mapNotNull(rows::get), key = { _, e -> e.key }) {
-                        position,
-                        exercise ->
-                        if (drag.key == exercise.key) {
-                            Surface(
-                                Modifier.fillMaxWidth()
-                                    .height(with(LocalDensity.current) { drag.height.toDp() }),
-                                shape = RoundedCornerShape(24.dp),
-                                color = colors.primary.copy(alpha = .08f),
-                                border = BorderStroke(1.dp, colors.primary.copy(alpha = .3f)),
-                            ) {}
-                        } else
+                        val rows = draft.exercises.associateBy { it.key }
+                        itemsIndexed(drag.preview.mapNotNull(rows::get), key = { _, e -> e.key }) {
+                            position,
+                            exercise ->
                             renderExercise(
                                 position,
                                 exercise,
-                                if (state.interactions.animations) Modifier.animateItem()
-                                else Modifier,
+                                (if (state.interactions.animations)
+                                        Modifier.animateItem(
+                                            fadeInSpec = null,
+                                            placementSpec =
+                                                if (drag.key == exercise.key) null
+                                                else
+                                                    tween(
+                                                        TrackerMotion.Duration,
+                                                        easing = TrackerMotion.Easing,
+                                                    ),
+                                            fadeOutSpec = null,
+                                        )
+                                    else Modifier)
+                                    .graphicsLayer {
+                                        alpha = if (drag.key == exercise.key) 0f else 1f
+                                    }
+                                    .semantics {
+                                        if (drag.key == exercise.key) hideFromAccessibility()
+                                    },
                                 Modifier.sessionDragHandle(
                                     drag,
                                     exercise.key,
@@ -715,150 +727,155 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                     moveActions(exercise),
                                 ),
                             )
-                    }
-                    item {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        }
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(
+                                    exerciseName,
+                                    { exerciseName = it },
+                                    label = { Text("Exercise name") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    enabled = !state.busy,
+                                )
+                                OutlinedButton(
+                                    onClick = {
+                                        if (vm.addExercise(exerciseName)) exerciseName = ""
+                                    },
+                                    enabled =
+                                        visibleName(exerciseName, 120) &&
+                                            !state.busy &&
+                                            draft.exercises.size < 100,
+                                ) {
+                                    Text("Add exercise")
+                                }
+                            }
+                        }
+                        item {
                             OutlinedTextField(
-                                exerciseName,
-                                { exerciseName = it },
-                                label = { Text("Exercise name") },
+                                draft.notes,
+                                { v -> vm.edit { it.copy(notes = v) } },
+                                label = { Text("Workout notes") },
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
                                 enabled = !state.busy,
                             )
+                        }
+                        item { HelpTip("activeWorkoutBasics") }
+                        if (state.profile.trackRpe) item { HelpTip("rpeBasics") }
+                        item {
                             OutlinedButton(
-                                onClick = { if (vm.addExercise(exerciseName)) exerciseName = "" },
-                                enabled =
-                                    visibleName(exerciseName, 120) &&
-                                        !state.busy &&
-                                        draft.exercises.size < 100,
+                                onClick = { finish = true },
+                                enabled = !state.busy,
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                             ) {
-                                Text("Add exercise")
+                                Text("Finish workout")
+                            }
+                        }
+                        item {
+                            TextButton(onClick = { discard = true }, enabled = !state.busy) {
+                                Text("Discard workout", color = colors.error)
                             }
                         }
                     }
-                    item {
-                        OutlinedTextField(
-                            draft.notes,
-                            { v -> vm.edit { it.copy(notes = v) } },
-                            label = { Text("Workout notes") },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = !state.busy,
-                        )
-                    }
-                    item { HelpTip("activeWorkoutBasics") }
-                    if (state.profile.trackRpe) item { HelpTip("rpeBasics") }
-                    item {
-                        OutlinedButton(
-                            onClick = { finish = true },
-                            enabled = !state.busy,
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                        ) {
-                            Text("Finish workout")
-                        }
-                    }
-                    item {
-                        TextButton(onClick = { discard = true }, enabled = !state.busy) {
-                            Text("Discard workout", color = colors.error)
-                        }
-                    }
-                }
-                drag.key?.let { key ->
-                    draft.exercises
-                        .firstOrNull { it.key == key }
-                        ?.let { exercise ->
-                            renderExercise(
-                                drag.preview.indexOf(key),
-                                exercise,
-                                Modifier.offset {
-                                        IntOffset(
-                                            0,
-                                            (drag.pointerY - drag.touchOffset).roundToInt(),
-                                        )
-                                    }
-                                    .padding(horizontal = 16.dp)
-                                    .height(with(LocalDensity.current) { drag.height.toDp() })
-                                    .zIndex(2f)
-                                    .graphicsLayer { shadowElevation = 12.dp.toPx() },
-                                Modifier,
-                            )
-                        }
-                }
-            }
-            if (draft.exercises.isNotEmpty() && !keyboardVisible) {
-                Surface(
-                    Modifier.fillMaxWidth(),
-                    color = if (dark) Color(0xFF0A1F37) else colors.surface,
-                ) {
-                    Button(
-                        onClick = {
-                            focus.clearFocus()
-                            when {
-                                activeExercise == null || activeSet == null -> finish = true
-                                !activeSet.done -> {
-                                    changeExercise(activeExercise.key) { e ->
-                                        e.copy(
-                                            sets =
-                                                e.sets.map {
-                                                    if (it.key == activeSet.key)
-                                                        it.copy(done = true)
-                                                    else it
-                                                }
-                                        )
-                                    }
-                                    chosenSets =
-                                        HashMap(chosenSets).apply { remove(activeExercise.key) }
-                                    completionFeedback()
-                                }
-                                activeExercise.sets.any { !it.done } ->
-                                    chosenSets =
-                                        HashMap(chosenSets).apply { remove(activeExercise.key) }
-                                else -> advance(activeExercise.key)
-                            }
-                        },
-                        enabled = !state.busy,
-                        shape = RoundedCornerShape(20.dp),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = TrackerPalette.Coral,
-                                contentColor = TrackerPalette.OnCoral,
-                            ),
-                        modifier =
-                            Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                                .fillMaxWidth()
-                                .heightIn(min = 64.dp)
-                                .testTag(
-                                    if (activeSet != null && !activeSet.done) "complete-current-set"
-                                    else "session-primary-action"
-                                ),
-                    ) {
-                        Icon(TrackerIcons.Check, null, Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                when {
-                                    activeExercise == null || activeSet == null -> "Review workout"
-                                    !activeSet.done ->
-                                        "Complete set ${activeExercise.sets.indexOf(activeSet) + 1}"
-                                    activeExercise.sets.any { !it.done } -> "Next incomplete set"
-                                    draft.nextExerciseKey(activeExercise.key) != null ->
-                                        "Next exercise"
-                                    else -> "Review workout"
-                                }
-                            )
-                            activeExercise?.let {
-                                Text(
-                                    it.name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
+                    drag.key?.let { key ->
+                        draft.exercises
+                            .firstOrNull { it.key == key }
+                            ?.let { exercise ->
+                                renderExercise(
+                                    drag.preview.indexOf(key),
+                                    exercise,
+                                    Modifier.padding(horizontal = 16.dp)
+                                        .height(with(LocalDensity.current) { drag.height.toDp() })
+                                        .zIndex(2f)
+                                        .graphicsLayer {
+                                            translationY =
+                                                if (drag.settling) drag.settleOffset.value
+                                                else drag.pointerY - drag.touchOffset
+                                            shadowElevation = 8.dp.toPx()
+                                        },
+                                    Modifier,
                                 )
                             }
+                    }
+                }
+                if (draft.exercises.isNotEmpty() && !keyboardVisible) {
+                    Surface(
+                        Modifier.fillMaxWidth(),
+                        color = if (dark) Color(0xFF0A1F37) else colors.surface,
+                    ) {
+                        Button(
+                            onClick = {
+                                focus.clearFocus()
+                                when {
+                                    activeExercise == null || activeSet == null -> finish = true
+                                    !activeSet.done -> {
+                                        changeExercise(activeExercise.key) { e ->
+                                            e.copy(
+                                                sets =
+                                                    e.sets.map {
+                                                        if (it.key == activeSet.key)
+                                                            it.copy(done = true)
+                                                        else it
+                                                    }
+                                            )
+                                        }
+                                        chosenSets =
+                                            HashMap(chosenSets).apply { remove(activeExercise.key) }
+                                        completionFeedback()
+                                    }
+                                    activeExercise.sets.any { !it.done } ->
+                                        chosenSets =
+                                            HashMap(chosenSets).apply { remove(activeExercise.key) }
+                                    else -> advance(activeExercise.key)
+                                }
+                            },
+                            enabled = !state.busy,
+                            shape = RoundedCornerShape(20.dp),
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = TrackerPalette.Coral,
+                                    contentColor = TrackerPalette.OnCoral,
+                                ),
+                            modifier =
+                                Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                                    .fillMaxWidth()
+                                    .heightIn(min = 64.dp)
+                                    .testTag(
+                                        if (activeSet != null && !activeSet.done)
+                                            "complete-current-set"
+                                        else "session-primary-action"
+                                    ),
+                        ) {
+                            Icon(TrackerIcons.Check, null, Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    when {
+                                        activeExercise == null || activeSet == null ->
+                                            "Review workout"
+                                        !activeSet.done ->
+                                            "Complete set ${activeExercise.sets.indexOf(activeSet) + 1}"
+                                        activeExercise.sets.any { !it.done } ->
+                                            "Next incomplete set"
+                                        draft.nextExerciseKey(activeExercise.key) != null ->
+                                            "Next exercise"
+                                        else -> "Review workout"
+                                    }
+                                )
+                                activeExercise?.let {
+                                    Text(
+                                        it.name,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
+    }
     if (picker) ExercisePicker(state, onDismiss = { picker = false }, onAdd = vm::addExercise)
     guide?.let { name -> ExerciseGuide(name, state.catalog, onDismiss = { guide = null }) }
     copyRequest?.let { request ->
@@ -1005,36 +1022,57 @@ internal fun SessionSetEntry(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
             }
-        SetEntryField(
-            set.weight,
-            { onChange(set.copy(weight = it)) },
-            "Weight (lb)",
-            increment,
-            KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            enabled = enabled,
-            onFocused = onFocused,
-        )
-        SetEntryField(
-            set.reps,
-            { onChange(set.copy(reps = it)) },
-            "Reps",
-            1.0,
-            KeyboardOptions(keyboardType = KeyboardType.Number),
-            enabled = enabled,
-            onFocused = onFocused,
-        )
-        if (trackRpe)
-            SetEntryField(
-                set.rpe,
-                { onChange(set.copy(rpe = it, historicalRpeZero = false)) },
-                "RPE",
-                .5,
-                KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                enabled = enabled,
-                maximum = 10.0,
-                minimum = 1.0,
-                onFocused = onFocused,
-            )
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val columns = if (trackRpe) 3 else 2
+            val compact = maxWidth >= (columns * 104).dp && LocalDensity.current.fontScale < 1.5f
+            @Composable
+            fun Fields(modifier: Modifier) {
+                SetEntryField(
+                    set.weight,
+                    { onChange(set.copy(weight = it)) },
+                    "Weight (lb)",
+                    increment,
+                    KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = modifier,
+                    enabled = enabled,
+                    compact = compact,
+                    onFocused = onFocused,
+                )
+                SetEntryField(
+                    set.reps,
+                    { onChange(set.copy(reps = it)) },
+                    "Reps",
+                    1.0,
+                    KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = modifier,
+                    enabled = enabled,
+                    compact = compact,
+                    onFocused = onFocused,
+                )
+                if (trackRpe)
+                    SetEntryField(
+                        set.rpe,
+                        { onChange(set.copy(rpe = it, historicalRpeZero = false)) },
+                        "RPE",
+                        .5,
+                        KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = modifier,
+                        enabled = enabled,
+                        compact = compact,
+                        maximum = 10.0,
+                        minimum = 1.0,
+                        onFocused = onFocused,
+                    )
+            }
+            if (compact)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Fields(Modifier.weight(1f))
+                }
+            else
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Fields(Modifier.fillMaxWidth())
+                }
+        }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
                 Modifier.heightIn(min = 48.dp)

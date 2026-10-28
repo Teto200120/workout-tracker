@@ -1,0 +1,78 @@
+{
+  "passed": true,
+  "version_code": 34,
+  "version_name": "0.34.0-preview",
+  "apk_sha256": "e14f2fde534bd29a8caa254694659052742eae30f73ee7a46e88b356d1ddeea6",
+  "certificate_sha256": "e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88",
+  "build": "Local pinned-toolchain debug/release builds; hosted verification runs on push",
+  "checks": {
+    "unit_tests_passed": 114,
+    "device_tests_passed": 6,
+    "device_test_seconds": 144.728,
+    "device_tests": [
+      "WorkoutFlowTest",
+      "SessionDragTest (4 cases)",
+      "FeedbackScreenTest"
+    ],
+    "device_platform": "Android 16, isolated read-only MigrationQA emulator",
+    "ci_like_system_animations_disabled": true,
+    "drag_test_motion_scale": "1.0 with controlled Compose test clock",
+    "formatting": "passed",
+    "lint_errors": 0,
+    "lint_warnings": 16,
+    "signed_v33_to_v34_upgrade": {
+      "passed": true,
+      "from": 33,
+      "to": 34,
+      "device": "MigrationQA35, Android 15",
+      "same_permanent_certificate": true,
+      "installed_bytes_match_delivered_apk": true,
+      "non_debuggable": true,
+      "all_record_document_draft_payloads_and_revisions_unchanged": true,
+      "unchanged_after_cold_restart": true,
+      "profile_retained": "Alex",
+      "draft_exercises": [
+        "Squat",
+        "Bench Press"
+      ],
+      "retained_reps": "7",
+      "real_keyboard_verified": true,
+      "apk_sha256": "e14f2fde534bd29a8caa254694659052742eae30f73ee7a46e88b356d1ddeea6"
+    },
+    "upgrade_fixture_row_counts": {
+      "records": 0,
+      "documents": 2,
+      "drafts": 1
+    },
+    "visual_checks": [
+      "light/dark",
+      "200% text with scrolling",
+      "320dp layouts",
+      "real keyboard"
+    ],
+    "motion_source_unchanged_since_visual_checks": true
+  },
+  "performance": {
+    "before": {
+      "frames": "256",
+      "missed_frame_percent": "39.06",
+      "p50_ms": "28",
+      "p90_ms": "48",
+      "p95_ms": "61",
+      "p99_ms": "97"
+    },
+    "after": {
+      "frames": "277",
+      "missed_frame_percent": "33.57",
+      "p50_ms": "27",
+      "p90_ms": "53",
+      "p95_ms": "61",
+      "p99_ms": "81"
+    }
+  },
+  "performance_limits": "Single Android 16 emulator capture per build, with recording enabled; captured with the same motion code before the v34 version bump. Results are mixed; no physical-phone frame-rate claim.",
+  "remaining_acceptance": [
+    "Physical phone animation feel",
+    "TalkBack"
+  ]
+}

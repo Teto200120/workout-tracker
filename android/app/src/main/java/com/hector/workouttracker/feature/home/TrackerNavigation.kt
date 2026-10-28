@@ -1,11 +1,13 @@
 package com.hector.workouttracker.feature.home
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +43,21 @@ internal fun TrackerNavigationBar(route: String, navigate: (String) -> Unit) {
                     listOf("stats" to "Stats", "home" to "Home", "settings" to "Profile").forEach {
                         (key, label) ->
                         val active = selected == key
+                        val background by
+                            animateColorAsState(
+                                if (active) MaterialTheme.colorScheme.primary
+                                else Color.Transparent,
+                                animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                                label = "navigation-background-$key",
+                            )
+                        val foreground by
+                            animateColorAsState(
+                                if (active) MaterialTheme.colorScheme.onPrimary
+                                else if (dark) Color(0xFF9AB6D4)
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                                label = "navigation-foreground-$key",
+                            )
                         Surface(
                             Modifier.weight(1f)
                                 .heightIn(min = 56.dp)
@@ -48,13 +65,8 @@ internal fun TrackerNavigationBar(route: String, navigate: (String) -> Unit) {
                                 .selectable(active, role = Role.Tab, onClick = { navigate(key) })
                                 .testTag("nav-$key"),
                             shape = RoundedCornerShape(28.dp),
-                            color =
-                                if (active) MaterialTheme.colorScheme.primary
-                                else Color.Transparent,
-                            contentColor =
-                                if (active) MaterialTheme.colorScheme.onPrimary
-                                else if (dark) Color(0xFF9AB6D4)
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = background,
+                            contentColor = foreground,
                         ) {
                             Column(
                                 Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
