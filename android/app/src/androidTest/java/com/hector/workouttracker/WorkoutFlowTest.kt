@@ -2520,6 +2520,7 @@ class WorkoutFlowTest {
         val boundaryActions =
             compose
                 .onNodeWithTag("session-card-${target.key}", useUnmergedTree = true)
+                .assertIsDisplayed()
                 .fetchSemanticsNode()
                 .config[SemanticsActions.CustomActions]
         assertFalse(boundaryActions.any { it.label == "Move up" })

@@ -1,18 +1,16 @@
 # Android APK downloads
 
-Latest: [v35 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.35.0-preview) · [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.35.0-preview/WorkoutTracker-0.35.0-preview.apk).
+Latest: [v36 GitHub Release](https://github.com/Teto200120/workout-tracker/releases/tag/android-v0.36.0-preview) | [Download APK](https://github.com/Teto200120/workout-tracker/releases/download/android-v0.36.0-preview/WorkoutTracker-0.36.0-preview.apk).
 
-This signed, non-debuggable active-workout PWA alignment preview uses version code 35 and the permanent signing identity. It updates permanently signed v34. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
+Version code 36, signed with the permanent identity. Updates permanently signed v35 and keeps existing workouts. Export a backup before updating. Older temporary-key previews require a new installation after exporting their data.
 
-The active workout returns to the PWA's icon shapes, rotating chevrons, information action, round steppers, status badges and motion. The toolbar remains visible as cards move, numeric values have their own input targets, and details fade without horizontal travel. Existing data, set entry, drag continuity and cancellation remain intact.
+Workout cards expand from the top, their spacing closes continuously, and focus scrolling follows the changing layout. Card-center drag thresholds prevent early swaps and small finger reversals from making the order flicker. Drop settling starts at the visible position and shares a 220ms curve with neighboring cards. The v35 PWA icons and controls remain.
 
-Matching source is in the commit that adds this APK. Built locally with the pinned toolchain. SHA-256 is recorded in [SHA256SUMS](SHA256SUMS); GitHub release assets include source, signing and verification details.
+Validation: 114 unit tests, 12 device tests, formatting, debug/release builds and lint (0 errors, 17 warnings). The signed upgrade and final APK replacement preserve the original v35 synthetic database and unfinished workout through a cold restart. Real keyboard checks pass. Physical-phone animation feel and TalkBack remain unverified.
 
-Certificate SHA-256: `e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88`.
+Source matches the commit adding this APK. Built locally with the pinned toolchain. [SHA256SUMS](SHA256SUMS) records the APK checksum; GitHub assets include signing, source and verification details. Certificate SHA-256: `e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88`.
 
-Validation: 114 unit tests, eight device tests, formatting and debug/release builds pass. Lint reports zero errors and 17 warnings. The signed upgrade and final APK replacement preserve the original v34 synthetic database, profile and unfinished workout through a cold restart. Android 15 keyboard checks pass. Physical-phone and TalkBack acceptance remain outstanding.
-
-Details: [PWA alignment](../../docs/ANDROID_WORKOUT_PWA_ALIGNMENT.md) · [v35 verification](../../docs/verification/android-v35-pwa-alignment.json) · [retained drag continuity](../../docs/ANDROID_WORKOUT_MOTION.md) · [Android 15 keyboard recovery](../../docs/ANDROID_KEYBOARD_RECOVERY.md).
+Details: [motion tuning](../../docs/ANDROID_WORKOUT_MOTION_TUNING.md) | [v36 verification](../../docs/verification/android-v36-motion-tuning.json) | [PWA alignment](../../docs/ANDROID_WORKOUT_PWA_ALIGNMENT.md).
 
 ## Future Android deliveries
 

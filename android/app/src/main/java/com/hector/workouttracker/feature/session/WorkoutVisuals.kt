@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -28,12 +29,50 @@ internal object WorkoutMotion {
     const val Chevron = 180
     const val Detail = 220
     const val Disclosure = 280
+    const val Reorder = 220
     val Easing = CubicBezierEasing(.2f, .86f, .2f, 1f)
     val ControlEasing = CubicBezierEasing(.2f, .8f, .2f, 1f)
 
     fun enter(): EnterTransition = fadeIn(tween(Detail, easing = Easing))
 
     fun exit(): ExitTransition = fadeOut(tween(Press, easing = Easing))
+
+    fun disclosureEnter(shift: Int): EnterTransition =
+        expandVertically(tween(Disclosure, easing = Easing), expandFrom = Alignment.Top) +
+            fadeIn(tween(Disclosure, easing = Easing)) +
+            slideInVertically(tween(Disclosure, easing = Easing)) { -shift }
+
+    fun disclosureExit(shift: Int): ExitTransition =
+        shrinkVertically(tween(Disclosure, easing = Easing), shrinkTowards = Alignment.Top) +
+            fadeOut(tween(Disclosure, easing = Easing)) +
+            slideOutVertically(tween(Disclosure, easing = Easing)) { -shift }
+}
+
+/** Follow the measured card as another card above it shrinks; a fixed scroll delta goes stale. */
+internal suspend fun LazyListState.focusWorkoutCard(
+    key: String,
+    desiredTop: Float,
+    animations: Boolean,
+) {
+    val initialTop = layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.offset ?: return
+    scroll {
+        if (animations) {
+            animate(
+                0f,
+                1f,
+                animationSpec = tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing),
+            ) { fraction, _ ->
+                layoutInfo.visibleItemsInfo
+                    .firstOrNull { it.key == key }
+                    ?.let { item ->
+                        val frameTop = initialTop + (desiredTop - initialTop) * fraction
+                        scrollBy(item.offset - frameTop)
+                    }
+            }
+        } else {
+            scrollBy(initialTop - desiredTop)
+        }
+    }
 }
 
 /** PWA paths and 2.25-unit rounded strokes; close/back also follow its session markup. */
@@ -239,7 +278,7 @@ internal fun LazyItemScope.workoutPlacement(
         fadeInSpec = null,
         placementSpec =
             if (animations && draggedKey != null && draggedKey != itemKey)
-                tween(WorkoutMotion.Press, easing = WorkoutMotion.Easing)
+                tween(WorkoutMotion.Reorder, easing = WorkoutMotion.ControlEasing)
             else null,
         fadeOutSpec = null,
     )

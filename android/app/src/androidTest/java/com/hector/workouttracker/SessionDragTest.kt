@@ -82,6 +82,52 @@ class SessionDragTest {
     }
 
     @Test
+    fun reorderWaitsForCardCenterAndIgnoresSmallFingerReversals() {
+        content()
+        compose.mainClock.autoAdvance = false
+        val first = compose.onNodeWithTag("grip-0").fetchSemanticsNode().boundsInRoot
+        val next = compose.onNodeWithTag("grip-1").fetchSemanticsNode().boundsInRoot
+        compose.onNodeWithTag("grip-0").performTouchInput {
+            down(center)
+            moveTo(Offset(center.x, next.center.y - first.top - first.height / 2 + 2))
+        }
+        compose.mainClock.advanceTimeByFrame()
+        compose.runOnUiThread { assertEquals(listOf("0", "1"), drag.preview.take(2)) }
+        compose.onNodeWithTag("drag-list").performTouchInput {
+            moveTo(Offset(first.center.x, next.center.y + 2))
+        }
+        compose.mainClock.advanceTimeByFrame()
+        compose.runOnUiThread { assertEquals(listOf("1", "0"), drag.preview.take(2)) }
+        compose.onNodeWithTag("drag-list").performTouchInput { moveBy(Offset(0f, -12f)) }
+        compose.mainClock.advanceTimeByFrame()
+        compose.runOnUiThread {
+            assertEquals(listOf("1", "0"), drag.preview.take(2))
+            assertEquals(0, commits)
+        }
+        compose.onNodeWithTag("drag-list").performTouchInput { cancel() }
+    }
+
+    @Test
+    fun releaseStartsAtTheVisibleCardEvenBeforeTheAnimationRuns() {
+        content()
+        compose.mainClock.autoAdvance = false
+        move(false)
+        compose.runOnUiThread {
+            assertTrue(drag.settling)
+            assertEquals(drag.pointerY - drag.touchOffset, drag.overlayTop, .01f)
+        }
+        compose.mainClock.advanceTimeBy(300)
+        // A second release must also ignore the previous animation's stored value.
+        move(false)
+        compose.runOnUiThread {
+            assertTrue(drag.settling)
+            assertEquals(drag.pointerY - drag.touchOffset, drag.overlayTop, .01f)
+        }
+        compose.mainClock.advanceTimeBy(300)
+        compose.runOnIdle { assertNull(drag.key) }
+    }
+
+    @Test
     fun releaseKeepsLiftedCardUntilSettledAndCommitsOnce() {
         content()
         compose.mainClock.autoAdvance = false

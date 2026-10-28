@@ -28,10 +28,31 @@ internal class SessionDragState(val list: LazyListState, initialKeys: List<Strin
     var height by mutableIntStateOf(0)
     var settling by mutableStateOf(false)
     val settleOffset = Animatable(0f)
+    private var releaseTop = 0f
+    private var releaseAnimationStart = 0f
+    val overlayTop: Float
+        get() =
+            if (settling) releaseTop + settleOffset.value - releaseAnimationStart
+            else pointerY - touchOffset
+
     var settleJob: Job? = null
     var viewportSize = IntSize.Zero
     var coordinates: LayoutCoordinates? = null
     val handles = mutableMapOf<String, LayoutCoordinates>()
+
+    fun beginSettle() {
+        // Set the visible origin synchronously, before the animation coroutine can be dispatched.
+        releaseTop = pointerY - touchOffset
+        releaseAnimationStart = settleOffset.value
+        settling = true
+    }
+
+    suspend fun settleTo(target: Float) {
+        settleOffset.animateTo(
+            releaseAnimationStart + target - releaseTop,
+            tween(WorkoutMotion.Reorder, easing = WorkoutMotion.ControlEasing),
+        )
+    }
 
     fun cancel(keys: List<String>) {
         settleJob?.cancel()
@@ -45,19 +66,20 @@ internal class SessionDragState(val list: LazyListState, initialKeys: List<Strin
         val from = preview.indexOf(key)
         if (from < 0) return
         val visible = list.layoutInfo.visibleItemsInfo.filter { it.key in preview }
+        val center = pointerY - touchOffset + height / 2f
         val target =
             visible
                 .filter {
                     direction > 0 &&
                         preview.indexOf(it.key) > from &&
-                        pointerY - touchOffset + height > it.offset + it.size / 2f
+                        center >= it.offset + it.size / 2f
                 }
                 .maxByOrNull { preview.indexOf(it.key) }
                 ?: visible
                     .filter {
                         direction < 0 &&
                             preview.indexOf(it.key) in 0 until from &&
-                            pointerY - touchOffset < it.offset + it.size / 2f
+                            center <= it.offset + it.size / 2f
                     }
                     .minByOrNull { preview.indexOf(it.key) }
                 ?: return
@@ -204,27 +226,17 @@ internal fun Modifier.sessionDrag(
                         if (animate) {
                             // Keep the lifted card until it meets its measured list position.
                             // No fade or replacement is visible at the end of a drag.
-                            state.settling = true
+                            state.beginSettle()
                             state.settleJob =
                                 scope.launch {
                                     try {
-                                        state.settleOffset.snapTo(
-                                            state.pointerY - state.touchOffset
-                                        )
                                         withFrameNanos {}
                                         val target =
                                             state.list.layoutInfo.visibleItemsInfo
                                                 .firstOrNull { it.key == hit }
                                                 ?.offset
                                                 ?.toFloat()
-                                        if (target != null)
-                                            state.settleOffset.animateTo(
-                                                target,
-                                                tween(
-                                                    WorkoutMotion.Press,
-                                                    easing = WorkoutMotion.Easing,
-                                                ),
-                                            )
+                                        if (target != null) state.settleTo(target)
                                     } finally {
                                         state.key = null
                                         state.settling = false

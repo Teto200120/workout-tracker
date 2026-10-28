@@ -11,8 +11,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
@@ -93,7 +92,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
     val bodyHeights = remember(draft.id) { mutableStateMapOf<String, Int>() }
     val headerHeights = remember(draft.id) { mutableStateMapOf<String, Int>() }
     val collapseStates = remember(draft.id) { mutableMapOf<String, Boolean>() }
-    val contentGap = with(LocalDensity.current) { 44.dp.toPx() }
+    val contentGap = with(LocalDensity.current) { 32.dp.toPx() }
     val focusInset = with(LocalDensity.current) { 8.dp.toPx() }
     val disclosureShift = with(LocalDensity.current) { 6.dp.roundToPx() }
     val dialogModifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth()
@@ -134,7 +133,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
             withFrameNanos {}
             list.layoutInfo.visibleItemsInfo
                 .firstOrNull { it.key == target }
-                ?.let { item ->
+                ?.let {
                     val targetHeight =
                         (bodyHeights[target] ?: 0) + (headerHeights[target] ?: 0) + contentGap
                     val available =
@@ -143,13 +142,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                         list.layoutInfo.viewportStartOffset +
                             focusInset +
                             ((available - targetHeight - focusInset * 2).coerceAtLeast(0f) * .44f)
-                    val delta = item.offset - desiredTop
-                    if (state.interactions.animations)
-                        list.animateScrollBy(
-                            delta,
-                            tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing),
-                        )
-                    else list.scrollBy(delta)
+                    list.focusWorkoutCard(target, desiredTop, state.interactions.animations)
                 }
         }
         scrollTarget = null
@@ -212,6 +205,15 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                     if (state.busy || drag.key != null) false
                     else {
                         focus.clearFocus()
+                        val visible =
+                            list.layoutInfo.visibleItemsInfo.firstOrNull { it.key == exercise.key }
+                        val moved = draft.moveExercise(exercise.key, direction)
+                        // Keep the action's card visible instead of following its old neighbor's
+                        // key.
+                        visible?.let {
+                            list.requestScrollToItem(position + direction + 1, -it.offset)
+                        }
+                        drag.preview = moved.exercises.map { it.key }
                         vm.edit { it.moveExercise(exercise.key, direction) }
                         true
                     }
@@ -252,6 +254,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                     cardModifier
                         .fillMaxWidth()
                         .graphicsLayer {
+                            transformOrigin = TransformOrigin(.5f, 0f)
                             translationY = (1f - settle.value) * settleDistance
                             scaleX = .99f + .01f * settle.value
                             scaleY = scaleX
@@ -277,10 +280,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                         else colors.outlineVariant.copy(alpha = .35f),
                     ),
             ) {
-                Column(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(
                         modifier =
                             Modifier.fillMaxWidth()
@@ -368,47 +368,16 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                         visible = !exercise.collapsed,
                         enter =
                             if (state.interactions.animations)
-                                expandVertically(
-                                    tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing)
-                                ) +
-                                    fadeIn(
-                                        tween(
-                                            WorkoutMotion.Disclosure,
-                                            easing = WorkoutMotion.Easing,
-                                        )
-                                    ) +
-                                    slideInVertically(
-                                        tween(
-                                            WorkoutMotion.Disclosure,
-                                            easing = WorkoutMotion.Easing,
-                                        )
-                                    ) {
-                                        -disclosureShift
-                                    }
+                                WorkoutMotion.disclosureEnter(disclosureShift)
                             else EnterTransition.None,
                         exit =
                             if (state.interactions.animations)
-                                shrinkVertically(
-                                    tween(WorkoutMotion.Disclosure, easing = WorkoutMotion.Easing)
-                                ) +
-                                    fadeOut(
-                                        tween(
-                                            WorkoutMotion.Disclosure,
-                                            easing = WorkoutMotion.Easing,
-                                        )
-                                    ) +
-                                    slideOutVertically(
-                                        tween(
-                                            WorkoutMotion.Disclosure,
-                                            easing = WorkoutMotion.Easing,
-                                        )
-                                    ) {
-                                        -disclosureShift
-                                    }
+                                WorkoutMotion.disclosureExit(disclosureShift)
                             else ExitTransition.None,
                     ) {
                         Column(
                             Modifier.onSizeChanged { bodyHeights[exercise.key] = it.height }
+                                .padding(top = 12.dp)
                                 .testTag("session-expanded-${exercise.key}"),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
@@ -915,9 +884,7 @@ internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -
                                         .height(with(LocalDensity.current) { drag.height.toDp() })
                                         .zIndex(2f)
                                         .graphicsLayer {
-                                            translationY =
-                                                if (drag.settling) drag.settleOffset.value
-                                                else drag.pointerY - drag.touchOffset
+                                            translationY = drag.overlayTop
                                             shadowElevation = 8.dp.toPx()
                                         },
                                     Modifier,

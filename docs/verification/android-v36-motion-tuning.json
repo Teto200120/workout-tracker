@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "version_code": 36,
+  "version_name": "0.36.0-preview",
+  "apk_sha256": "3fa2349c7b5fb7d7605203c92057fad99da55f93579da6675de12398c5001a0e",
+  "certificate_sha256": "e469e4014a3adce256a292033433291b891f668aa9f243073790ba6b9db52a88",
+  "recording_reviewed": "Screen_Recording_20261028_190332.mp4, 17.864 seconds",
+  "changes": [
+    "Visible card retained after accessible moves",
+    "Top-anchored disclosure and card transform",
+    "Header/body spacing inside animated body",
+    "Card-center reorder thresholds",
+    "Synchronous visible drop origin; 220ms reorder and settle",
+    "Focus scrolling follows measured card position each frame"
+  ],
+  "checks": {
+    "unit_tests_passed": 114,
+    "device_tests_passed": 12,
+    "device_test_seconds": 181.027,
+    "formatting": "passed",
+    "debug_release_builds": "passed",
+    "lint_errors": 0,
+    "lint_warnings": 17,
+    "device": "isolated MotionQA35 Android 15 emulator",
+    "new_regressions": [
+      "Center crossing and small reversal",
+      "Immediate release origin, including second drag",
+      "Fields stay below header throughout disclosure",
+      "Next-card focus stays monotonic while previous card collapses"
+    ],
+    "signed_v35_to_v36_upgrade": {
+      "passed": true,
+      "from": 35,
+      "to": 36,
+      "installed_version_before_final_check": 36,
+      "baseline_version": 35,
+      "path": "v35 to initial v36; final signed v36 replacement checked against original v35 database",
+      "device": "MigrationQA35, Android 15",
+      "same_permanent_certificate": true,
+      "installed_bytes_match_delivered_apk": true,
+      "non_debuggable": true,
+      "all_record_document_draft_payloads_and_revisions_unchanged": true,
+      "unchanged_after_cold_restart": true,
+      "profile_retained": "Alex",
+      "draft_exercises": [
+        "Squat",
+        "Bench Press"
+      ],
+      "retained_reps": "7",
+      "real_keyboard_verified": true,
+      "apk_sha256": "3fa2349c7b5fb7d7605203c92057fad99da55f93579da6675de12398c5001a0e"
+    }
+  },
+  "release_build_timing": {
+    "device": "MotionQA35 Android 15 emulator, host GPU, speed compiled",
+    "variants": "R8 release, non-debuggable, QA certificate only for synthetic DB access",
+    "runs_per_variant": 1,
+    "flow": "Six 600ms drags; three open/close pairs; animations 1x",
+    "frame_stats": {
+      "drag": {
+        "before": {
+          "frames": 244,
+          "janky_frames": 102,
+          "jank_percent": 41.8,
+          "p50_ms": 32,
+          "p95_ms": 61,
+          "p99_ms": 77
+        },
+        "after": {
+          "frames": 307,
+          "janky_frames": 69,
+          "jank_percent": 22.48,
+          "p50_ms": 25,
+          "p95_ms": 48,
+          "p99_ms": 61
+        }
+      },
+      "disclosure": {
+        "before": {
+          "frames": 302,
+          "janky_frames": 54,
+          "jank_percent": 17.88,
+          "p50_ms": 21,
+          "p95_ms": 46,
+          "p99_ms": 121
+        },
+        "after": {
+          "frames": 321,
+          "janky_frames": 38,
+          "jank_percent": 11.84,
+          "p50_ms": 16,
+          "p95_ms": 34,
+          "p99_ms": 53
+        }
+      }
+    },
+    "trace": "30 second Perfetto scheduler/gfx/view trace per variant captured with drag flow",
+    "limitations": "Single emulator comparison; screen recording excluded from timing runs. These numbers do not establish physical-phone smoothness."
+  },
+  "remaining_acceptance": [
+    "Physical phone frame timing and animation feel",
+    "TalkBack"
+  ]
+}
