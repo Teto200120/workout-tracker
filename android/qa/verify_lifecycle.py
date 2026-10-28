@@ -131,13 +131,15 @@ class Acceptance:
 
 def certificate(apk):
     sdk = Path(os.environ["ANDROID_HOME"])
-    text = subprocess.check_output([str(sdk / "build-tools/36.0.0/apksigner"), "verify", "--print-certs", str(apk)], text=True)
+    tool = "apksigner.bat" if os.name == "nt" else "apksigner"
+    text = subprocess.check_output([str(sdk / "build-tools/36.0.0" / tool), "verify", "--print-certs", str(apk)], text=True)
     return re.search(r"certificate SHA-256 digest: ([a-f0-9]+)", text).group(1)
 
 
 def version_code(apk):
     sdk = Path(os.environ["ANDROID_HOME"])
-    text = subprocess.check_output([str(sdk / "build-tools/36.0.0/aapt2"), "dump", "badging", str(apk)], text=True)
+    tool = "aapt2.exe" if os.name == "nt" else "aapt2"
+    text = subprocess.check_output([str(sdk / "build-tools/36.0.0" / tool), "dump", "badging", str(apk)], text=True)
     match = re.search(r"^package: name='com\.hector\.workouttracker' versionCode='(\d+)'", text)
     assert match, "APK package must be the workout tracker"
     return int(match.group(1))

@@ -14,7 +14,7 @@ Only a completed drop commits the preview. Cancellation, Back, rotation or a cha
 
 ## Current exercise and compact cards
 
-Routine and scheduled-routine starts persist only the first exercise expanded. Opening another card collapses the previous one. Adding an exercise activates that new row. When loading a legacy draft with several expanded exercises, keep the first previously expanded row and collapse the others in one revision-fenced presentation repair. Preserve an intentional all-collapsed draft, valid current selection, every entered value and the interchange format.
+Routine and scheduled-routine starts persist only the first exercise expanded. Opening another card collapses the previous one. Adding an exercise activates that new row. When displaying a legacy draft with several expanded exercises, show only the first previously expanded row. Opening or resuming the app leaves its saved payload and revision untouched. An explicit edit uses that same presentation before applying and saving the change. Preserve an intentional all-collapsed draft, valid current selection, every entered value and the interchange format. See [draft recovery](ANDROID_DRAFT_RECOVERY.md).
 
 On load, header touch or Next, place the expanded card in the usable list area above the completion dock. Fitting cards center at 44 percent of the remaining space, matching the PWA's focus band; tall cards align to the top. Measure after expansion, use stable keys and do not recenter during a drag, manual scrolling, set entry or timer ticks.
 

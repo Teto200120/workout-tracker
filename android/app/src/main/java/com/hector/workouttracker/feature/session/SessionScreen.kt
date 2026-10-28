@@ -59,7 +59,8 @@ import kotlinx.coroutines.*
 
 @Composable
 internal fun SessionScreen(state: TrackerState, vm: TrackerViewModel, back: () -> Unit) {
-    val draft = state.draft ?: return
+    val savedDraft = state.draft ?: return
+    val draft = remember(savedDraft) { savedDraft.singleExpandedExercise() }
     val completionFeedback = LocalCompletionFeedback.current
     var copyRequest by remember { mutableStateOf<SetCopyRequest?>(null) }
     var focusedKey by rememberSaveable(draft.id) { mutableStateOf<String?>(null) }

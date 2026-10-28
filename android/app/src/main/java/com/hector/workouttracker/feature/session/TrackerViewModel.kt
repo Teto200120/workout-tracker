@@ -176,17 +176,13 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
             profileRevision = profile.second
             val draft = repository.readDraft()
             val epoch = maintenance.currentEpoch()
-            val focusedDraft = draft?.first?.singleExpandedExercise()
             draftRevision = draft?.second ?: 0L
-            if (focusedDraft != null && focusedDraft != draft.first) {
-                draftRevision = repository.saveDraft(focusedDraft, draftRevision)
-            }
             mutable.update {
                 it.copy(
                     loading = false,
                     profile = profile.first,
                     setupRpe = profile.first.trackRpe,
-                    draft = focusedDraft,
+                    draft = draft?.first,
                     dataEpoch = epoch,
                 )
             }
@@ -595,7 +591,8 @@ class TrackerViewModel(application: Application) : AndroidViewModel(application)
     fun edit(change: (SessionDraft) -> SessionDraft) {
         val before = state.value
         if (before.busy || before.loading) return
-        val draft = before.draft?.let(change) ?: return
+        // Normalize presentation only when an explicit edit will be saved, never during recovery.
+        val draft = before.draft?.singleExpandedExercise()?.let(change) ?: return
         val version = before.editVersion + 1
         mutable.update { it.copy(draft = draft, editVersion = version) }
         enqueue {
